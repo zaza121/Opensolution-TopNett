@@ -1,0 +1,38 @@
+<odoo>
+
+	<!-- <template id="mail_notification_layout_opsol"
+              name="Mail: mail notification layout with responsible signature (user_id of the record)"
+              inherit_id="mail.mail_notification_layout" primary="True">
+        
+        <xpath expr="//table[@role='presentation']" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+
+    </template> -->
+
+    <template id="mail_notification_layout_with_fontfamily" inherit_id="mail.mail_notification_layout" >
+        <xpath expr="//header[1]" position="inside">
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+            <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;1,300&amp;display=swap" rel="stylesheet" />
+        </xpath>
+
+        <xpath expr="//body[1]" position="attributes">
+            <attribute name="style">font-family: 'Open Sans', sans-serif !important; color: #454748;</attribute>
+        </xpath>
+
+        <xpath expr="//body[1]/div[1]" position="before">
+            <!--[if mso]>
+            <style type="text/css">
+            body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+            </style>
+            <![endif]-->
+        </xpath>
+
+        <xpath expr="//div[@t-out='message.body']" position="attributes">
+            <attribute name="style">font-family: 'Open Sans', sans-serif !important; font-size: 13px;;</attribute>
+        </xpath>
+
+    </template>
+
+</odoo>

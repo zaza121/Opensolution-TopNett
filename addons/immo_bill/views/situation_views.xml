@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_immo_bill_situation_form" model="ir.ui.view">
+        <field name="name">immo_bill.situation.form</field>
+        <field name="model">immo_bill.situation</field>
+        <field name="arch" type="xml">
+            <form string="Situation">
+                <header>
+                    <!-- <button name="action_done" states="draft" string="Done" type="object"
+                            class="oe_highlight"/>
+                    <button name="action_draft" states="done" string="Set To Draft"
+                            type="object"/>  -->
+                    <field name="state" widget="statusbar"/>
+                    <button name="open_invoice" string="Open invoice" type="object"/>
+                    <button name="create_invoice" string="Create Invoice" type="object"/>
+                </header>
+                <sheet>
+                    <group>
+                        <h1>
+                            <label for="name" />
+                            <field name="name" attrs="{'invisible': [('name','=', False)]}"/>
+                        </h1>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="situation_progress" widget="percentage"/>
+                            <field name="situation_order" />
+                            <field name="immo_has_down_payment" invisible="1" />
+                            <field name="amount_down_payment" attrs="{'invisible': [('immo_has_down_payment', '=', False)]}" />
+                            <field name="amount_down_payment_novat" attrs="{'invisible': [('amount_down_payment', '=', 0)]}" />
+                            <field name="date_confirmation"/>
+                            <field name="diff_situation_invoice_fix" invisible="1"/>
+                            <field name="enable_fix_difference_"/>
+                        </group>
+                        <group>
+                            <field name="immo_bill_id" />
+                            <field name="situation_progress" widget="percentage" invisible="1"/>
+                            <field name="untaxed_amount" />
+                            <field name="amount_total" />
+                            <field name="avancement_montant" />
+                            <field name="amount_invoice_untaxed" readonly="1" />
+                            <field name="diff_situation_invoice" readonly="1" />
+                            <field name="force_rounding_method_id" attrs="{'invisible': [('avancement_montant', '=', False)]}" />
+                            <field name="currency_id" invisible="1" />
+                            <field name="retenue_percent" widget="percentage" attrs="{'invisible': [('retenue_percent', '=', 0)]}" />
+                            <field name="rg_amount_untaxed_total" attrs="{'invisible': [('retenue_percent', '=', 0)]}" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lines">
+                            <field name="line_ids" widget="section_and_note_one2many">
+                                <tree editable="top">
+                                    <field name="invoice_id" invisible="1"/>
+                                    <field name="product_id" invisible="1" />
+                                    <field name="name" readonly="1"/>
+                                    <field name="display_type" invisible="1" />
+                                    <field name="progress_percent" widget="percentage"/>
+                                    <field name="untaxed_amount_progress" sum="Total HT"/>
+                                    <field name="rg_amount_untaxed_total" sum="Total Retenue"/>
+                                    <field name="rg_total" sum="Total HT"/>
+                                    <field name="amount_progress" sum="Total"/>
+                                    <field name="invoice_line_id" invisible="1" />
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Acomptes">
+                            <field name="pre_payments_ids" />
+                        </page>
+                        <page string="Invoices">
+                            <field name="invoices_ids" />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_immo_bill_situation_tree" model="ir.ui.view">
+        <field name="name">immo_bill.situation.tree</field>
+        <field name="model">immo_bill.situation</field>
+        <field name="arch" type="xml">
+            <tree string="Situation">
+                <field name="name"/>
+                <field name="situation_order"/>
+                <field name="situation_progress" widget="percentage" sum="Total"/>
+                <field name="immo_bill_id" invisible="1" />
+                <field name="date_confirmation" />
+                <field name="untaxed_amount" sum="Total HT"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="amount_down_payment" sum="Total"/>
+                <field name="invoices_ids" invisible="1"/>
+                <field name="state" invisible="1"/>
+                <button name="action_confirm" type="object" string="Confirm" />
+                <button name="open_invoice" type="object" string="Invoice" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_immo_bill_situation" model="ir.actions.act_window">
+        <field name="name">Situation</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">immo_bill.situation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_immo_bill_situation"
+              name="Situations"
+              sequence="15"
+              action="action_immo_bill_situation"
+              groups=""
+              parent="immo_bill.main_menu"/>
+
+</odoo>

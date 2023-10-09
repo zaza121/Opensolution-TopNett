@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_opsol_topnett_imp_salaire_line_form" model="ir.ui.view">
+        <field name="name">opsol_topnett.imp_salaire_line.form</field>
+        <field name="model">opsol_topnett.imp_salaire_line</field>
+        <field name="arch" type="xml">
+            <form string="Importation Salaire">
+                <header>
+                    <button name="generate_payslip" string="Creer Bulletin" type="object"
+                            class="oe_highlight" attrs="{'invisible': [('bulletin_id', '!=', False)]}"/>
+                    <!-- <button name="action_draft" states="done" string="Set To Draft"
+                            type="object"/>  -->
+                    <!-- <field name="state" widget="statusbar"/> -->
+                    <!-- <button name="open_invoice" string="Open invoice" type="object"/> -->
+                    <!-- <button name="create_invoice" string="Create Invoice" type="object"/> -->
+                </header>
+                <sheet>
+                    <group>
+                        <h1>
+                            <label for="code" />
+                            <field name="code" />
+                        </h1>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="employee_id" />
+                            <field name="matricule" />
+                            <field name="salaire_brut" />
+                        </group>
+                        <group string="Heures travailles">
+                            <field name="h_travailles" />
+                            <field name="h_complementaires" />
+                            <field name="h_supplementaires" />
+                        </group>
+                        <group string="Conges">
+                            <field name="c_maladie" />
+                            <field name="c_at" />
+                            <field name="c_maternite" />
+                            <field name="c_payes" />
+                            <field name="c_autres" />
+                        </group>
+                        <group string="Dates">
+                            <field name="date_salaire" />
+                            <field name="date_entree1" />
+                            <field name="date_entree2" />
+                        </group>
+                        <group string="Avantages">
+                            <field name="maintien" />
+                            <field name="prime" />
+                            <field name="date_entree2" />
+                        </group>
+                        <group string="Generes">
+                            <field name="bulletin_id" />
+                        </group>
+                    </group>
+                    <notebook></notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_opsol_topnett_imp_salaire_line_tree" model="ir.ui.view">
+        <field name="name">opsol_topnett.imp_salaire_line.tree</field>
+        <field name="model">opsol_topnett.imp_salaire_line</field>
+        <field name="arch" type="xml">
+            <tree string="Importation Salaire">
+                <field name="code"/>
+                <field name="date_salaire"/>
+                <field name="employee_id" />
+                <field name="salaire_brut" />
+                <field name="h_travailles" />
+                <!-- <button name="action_confirm" type="object" string="Confirm" />
+                <button name="open_invoice" type="object" string="Invoice" /> -->
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_opsol_topnett_imp_salaire_line" model="ir.actions.act_window">
+        <field name="name">Importation Salaire</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">opsol_topnett.imp_salaire_line</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_opsol_topnett_imp_salaire_line"
+              name="Importattion Salaire"
+              sequence="63"
+              action="action_opsol_topnett_imp_salaire_line"
+              groups=""
+              parent="hr_payroll.menu_hr_payroll_payslips"/>
+
+    <record model="ir.actions.server" id="action_impsal_generate_payslip">
+        <field name="name">Generate Payslip</field>
+        <field name="model_id" ref="opsol_topnett.model_opsol_topnett_imp_salaire_line"/>
+        <field name="binding_model_id" ref="opsol_topnett.model_opsol_topnett_imp_salaire_line"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            records.generate_payslip()
+        </field>
+    </record>
+
+</odoo>

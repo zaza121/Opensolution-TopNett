@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_form_immo" model="ir.ui.view">
+        <field name="name">sale.order.form.immo</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+            
+            <xpath expr="//field[@name='fiscal_position_id']/.." position="after">
+                <field name="is_immo_bill" invisible="1"/>
+                <field name="immo_bill_ids" invisible="1" />
+            </xpath>
+
+            <xpath expr="//field[@name='name']/../.." position="after">
+                <label for="is_avenant" class="mt-1"/>
+                <div name="pricing">
+                  <field name="is_avenant" class="oe_inline" />
+                  <label for="immo_invoice_ids" attrs="{'invisible': [('is_avenant', '=', False)]}" class="oe_inline" />
+                  <field name="immo_invoice_ids" attrs="{'required': [('is_avenant', '=', True)], 'invisible': [('is_avenant', '=', False)]}" class="oe_inline" widget="many2many_tags" domain="[('partner_id', '=', partner_id)]"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_immo_invoice" type="object" class="oe_stat_button" icon="fa-building-o" attrs="{'invisible': [('immo_bill_ids', '=', [])]}">
+                    <field name="count_immo_inv" widget="statinfo" string="Chantier(s)"/>
+                </button>
+                <button name="action_view_avenants" type="object" class="oe_stat_button" icon="fa-building-o" attrs="{'invisible': [('immo_invoice_ids', '=', [])]}">
+                    <field name="count_avenants" widget="statinfo" string="Avenant(s)"/>
+                </button>
+            </xpath>
+
+            <xpath expr="//button[@id='create_invoice']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('invoice_status', '!=', 'to invoice'), ('count_immo_inv', '&gt;', 0), ('count_avenants', '&gt;', 0)]}</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='team_id']" position="after">
+                <field name="use_rg" invisible="1" />
+                <field name="rg_sale_mode" attrs="{'invisible': [('use_rg', '=', False)]}" />
+                <field name="retenue_percent" widget="percentage" attrs="{'invisible': [('use_rg', '=', False),('retenue_percent', '=', 0)]}"/>
+                <field name="rg_date_expiration" attrs="{'invisible': [('retenue_percent', '=', 0)]}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

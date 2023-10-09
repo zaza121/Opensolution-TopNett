@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_immo_bill_invoice_form_opsol" model="ir.ui.view">
+        <field name="name">immo_bill.invoice.form.opsol</field>
+        <field name="model">immo_bill.invoice</field>
+        <field name="inherit_id" ref="immo_bill.view_immo_bill_invoice_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']/../.." position="before">
+                <h1>
+                    <label for="nom_chantier" />
+                    <div class="d-flex w-100">
+                        <field name="nom_chantier" readonly="1" />
+                    </div>
+                </h1>
+            </xpath>
+
+            <xpath expr="//label[@for='name']/.." position="replace">
+                <h3 class="d-none">
+                    <label for="name" />
+                    <div class="d-flex w-100">
+                        <field name="name" attrs="{'invisible': [('name','=', False)]}" string="reference interne" readonly="1"/>
+                    </div>
+                </h3>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="view_immo_bill_invoice_search_opsol" model="ir.ui.view">
+        <field name="name">immo_bill.invoice.search.opsol</field>
+        <field name="model">immo_bill.invoice</field>
+        <field name="inherit_id" ref="immo_bill.view_immo_bill_invoice_search" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="name" string="Nom" filter_domain="['|', ('name', 'ilike', self), ('nom_chantier', 'ilike', self)]"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="view_immo_bill_invoice_tree_opsol" model="ir.ui.view">
+        <field name="name">immo_bill.invoice.tree.opsol</field>
+        <field name="model">immo_bill.invoice</field>
+        <field name="inherit_id" ref="immo_bill.view_immo_bill_invoice_tree" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="nom_chantier" />
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

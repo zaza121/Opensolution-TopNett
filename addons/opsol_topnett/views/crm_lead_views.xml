@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="crm_lead_view_form_opsol" model="ir.ui.view">
+        <field name="name">crm.lead.form.opsol</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']/../.." position="before">
+                <h1 id="parts_name">
+                    <div class="oe_edit_only">
+                        <label for="num_affaire" string="" class="oe_edit_only pb-1"/>
+                        <div class="d-flex align-items-end">
+                            <field name="num_affaire" placeholder="Numero affaire" style="width: 9rem;"/>
+                            <span class="ml16 mr16">-</span>
+                            <field name="libelle_affaire" placeholder="Libelle" class="oe_inline"/>
+                        </div>
+                    </div>
+                </h1>
+            </xpath>
+
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//notebook[1]" position="inside">
+                <page string="Progression" attrs="{'invisible': [('amount_mission', '=', 0)]}">
+                  <group>
+                    <field name="amount_mission"/>
+                    <!-- <field name="mission_progress"/> -->
+                    <field name="amount_progress_percent" optional="show" widget="percentage" />
+                    <field name="amount_invoiced" optional="show" />
+                    <field name="amount_untaxed_residual" optional="show" />
+                  </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="quick_create_opportunity_form_opsol" model="ir.ui.view">
+        <field name="name">crm.lead.form.quick_view.opsol</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.quick_create_opportunity_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='partner_id']" position="before">
+                <field name="num_affaire" placeholder="e.g. 245"/>
+                <field name="libelle_affaire" placeholder="e.g. Achat marchandise"/>
+            </xpath>
+
+            <field name="name" position="attributes">
+                <attribute name="invisible">1</attribute> 
+            </field>
+
+        </field>
+    </record>
+
+    <record id="crm_case_tree_view_oppor_opsol" model="ir.ui.view">
+        <field name="name">crm.lead.tree.quick_view.opsol</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor" />
+        <field name="arch" type="xml">
+
+            <field name="activity_ids" position="after">
+                <field name="order_count" invisible="1" />
+                <field name="order_count_toshow" decoration-success="order_count &gt; 0" widget="badge" />
+            </field>
+
+            <field name="expected_revenue" position="after">
+                <field name="amount_mission" optional="show" />
+                <!-- <field name="mission_progress" optional="show" /> -->
+                <field name="amount_progress_percent" optional="show" widget="percentage" />
+                <field name="amount_invoiced" optional="show" />
+                <field name="amount_untaxed_residual" optional="show" />
+            </field>
+
+        </field>
+    </record>
+
+</odoo>

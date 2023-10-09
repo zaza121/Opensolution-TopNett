@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data>
+
+        <template id="report_invoice_document_immo" inherit_id="account.report_invoice_document" priority="20">
+            
+            <xpath expr="//span[@t-field='o.payment_reference']/../.." position="after">
+                <t t-set="accounts_bank" t-value="o.company_id.bank_ids"/>
+                <t t-set="bank" t-if="accounts_bank" t-value="accounts_bank[0]"/>
+                <t t-set="bank" t-if="not accounts_bank" t-value="None"/>
+                <table class="w-75 table-bordered" style="border: solid red 1px;" t-if="o.move_type not in ['out_refund', 'in_invoice']">
+                  <tr>
+                    <td class="p-1" style="background-color: lightgray">EN VOTRE AIMABLE REGLEMENT PAR VIREMENT SUR LE COMPTE:</td>
+                  </tr>
+                  <tr>
+                    <td class="p-1">
+                      BANQUE: <strong><span t-if="bank and bank.bank_id" t-field="bank.bank_id.name"/></strong><br/>
+                      CLE RIB: <strong><span t-if="bank" t-field="bank.cle_rib"/></strong><br/>
+                      IBAN: <strong><span t-if="bank" t-field="bank.acc_number"/></strong><br/>
+                      SWIFT BIC: <strong><span t-if="bank and bank.bank_id" t-field="bank.bank_id.bic"/></strong><br/>
+                    </td>
+                  </tr>
+                </table>
+            </xpath>
+
+            <xpath expr="//p[@t-field='o.invoice_date_due']/../.." position="replace">
+                <h5 t-if="o.move_type in ['out_refund', 'in_refund']"><strong><span t-field="o.ref"/></strong></h5>
+                <div class="w-100">
+                    <t t-set="sale_order" t-if="o.immo_inv_id" t-value="o.immo_inv_id.sale_order_id"/>
+                    <t t-set="sale_order" t-if="not o.immo_inv_id" t-value="o.sale_order_id"/>
+                    <!-- <p t-if="sale_order and sale_order.num_affaire" ></p> -->
+                </div>
+                <div id="informations" class="row mt-4 mb-4 d-none"/>
+                <table cellspacing="0" cellpadding="0" class="w-100 table table-borderless table-sm o_main_table" style="border: none !important; margin-bottom: 2rem;">
+                    <colgroup>
+                       <col span="1" style="width: 15%;"/>
+                       <col span="1" style="width: 36%;"/>
+                       <col span="1" style="width: 24%;"/>
+                       <col span="1" style="width: 25%;"/>
+                    </colgroup>
+                    <tr style="border: 0px">
+                        <td colspan="4" style="background-color: initial; color: indianred; font-weight: bold; border: 0px" t-if="o.move_type not in ['out_refund', 'in_refund']"><u>Référence à rappeler impérativement lors de votre règlement: <span class="m-0" t-if="o.name != '/'" t-field="o.name"/></u></td>
+                    </tr>
+                    <tr style="border: 0px">
+                        <td style="border-right: 0px; border: 0px;">
+                            <t t-if="sale_order"><strong>Devis:</strong></t>
+                        </td>
+                        <td style="border-right: 0px; border: 0px;">
+                            <t t-if="sale_order"><span class="m-0" t-esc="sale_order.nom_devis"/></t>
+                        </td>
+                        <td style="border-right: 0px; border-right: 0px; border: 0px;">
+                            <t t-if="o.move_type == 'out_invoice'"><strong>Date facturation:</strong></t>
+                            <t t-elif="o.move_type == 'out_refund'"><strong>Date de la note de credit:</strong></t>
+                            <t t-elif="o.move_type == 'out_receipt'"><strong>Date du recu:</strong></t>
+                            <t t-else=""><strong>Date:</strong></t>
+                        </td>
+                        <td style="border-right: 0px; background-color: initial; border: 0px"><p class="m-0" t-field="o.invoice_date"/></td>
+                    </tr>
+                    <tr style="border: 0px">
+                        <td style="border: 0px; border: 0px;"><t t-if="sale_order and sale_order.num_affaire"><strong>Numéro affaire:</strong></t></td>
+                            <td style="border: 0px; border: 0px;"><t t-if="sale_order and sale_order.num_affaire"><span class="m-0" t-field="sale_order.num_affaire"/></t></td>
+                        <td style="border: 0px;"><span t-if="sale_order"><strong>Montant de la mission H.T :</strong></span></td>
+                        <td class="" style="border: 0px; background-color: initial;" t-if="sale_order"><span t-field="sale_order.amount_untaxed"/></td>
+                    </tr>
+                    <tr style="border: 0px" t-if="sale_order">
+                        <td style="border: 0px; background-color: initial;"><t t-if="sale_order and sale_order.libelle_affaire"><strong>Libellé affaire:</strong></t></td>
+                        <td style="border: 0px; background-color: initial;"><t t-if="sale_order and sale_order.libelle_affaire"><span class="m-0" t-if="sale_order" t-field="sale_order.libelle_affaire"/></t></td>
+                        <td style="border: 0px; background-color: initial;"><strong>Localisation:</strong></td>
+                        <td style="border: 0px; background-color: initial; border: 0px;"><span class="m-0" t-field="o.x_studio_localisation_1"/></td>
+                    </tr>
+                    <tr style="border: 0px" t-if="sale_order">
+                        <td style="border: 0px; background-color: initial;" id="td_sous_affaire_title"/>
+                        <td style="border: 0px; background-color: initial;" id="td_sous_affaire_value"/>
+                        <td style="border: 0px; background-color: initial;"><t t-if="sale_order and sale_order.retenue_percent &gt; 0"><strong>Taux RG:</strong></t></td>
+                        <td style="border: 0px; background-color: initial; border: 0px;"><t t-if="sale_order and sale_order.retenue_percent &gt; 0"><span class="m-0" t-esc="sale_order.retenue_percent * 100" t-options="{'widget': 'float', 'precision': 2}"/> %</t></td>
+                    </tr>
+                </table>
+            </xpath>
+
+            <xpath expr="//th[@name='th_priceunit']" position="replace">
+                <th name="th_priceunit" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}"><span>Prix Unitaire HT</span></th>
+            </xpath>
+
+            <xpath expr="//th[@name='th_subtotal']" position="replace">
+                <th name="th_subtotal" class="text-end">
+                    <span class="">MONTANT HT</span>
+                    <span class="d-none">SOUS TOTAL TTC</span>
+                </th>
+            </xpath>
+
+            <xpath expr="//span[@t-field='line.price_subtotal']/.." position="replace">
+                <td class="text-end o_price_total">
+                    <span class="text-nowrap" t-field="line.price_subtotal"/>
+                    <span class="text-nowrap d-none" t-field="line.price_total"/>
+                </td>
+            </xpath>
+
+            <xpath expr="//th[@name='th_quantity']" position="replace"/>
+            <xpath expr="//th[@name='th_taxes']" position="replace"/>
+            <xpath expr="//span[@id='line_tax_ids']/.." position="replace"/>
+            <xpath expr="//span[@t-field='line.quantity']/.." position="replace"/>
+            <xpath expr="//div[@t-field='o.invoice_payment_term_id.note']" position="attributes">
+                <attribute name="class">mt-4</attribute>
+                <attribute name="t-if">o.invoice_payment_term_id and o.invoice_payment_term_id.note</attribute>
+            </xpath>
+
+        </template>
+
+    </data>
+
+</odoo>

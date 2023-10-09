@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+		<template id="report_saleorder_document_opsol" inherit_id="sale.report_saleorder_document" priority="20">
+
+	            <xpath expr="//p[@t-field='doc.user_id']/../strong[1]" position="replace">
+	            	<strong>Responsable affaire:</strong>
+	            </xpath>
+
+	            <xpath expr="//span[@t-field='doc.name']/.." position="replace">
+	            	<h2 class="mt-4">
+		                <span>Proposition</span> - 
+		                <span t-field="doc.num_affaire"/>
+		            </h2>
+		            <h3 class="mt-4">
+		                <span t-field="doc.libelle_affaire"/>
+		            </h3>
+	            </xpath>
+
+	            <xpath expr="//p[@t-field='doc.note']" position="replace">
+					<p name="order_note" t-if="not doc.note" class="mt-3">
+						Dans l’attente d’une suite favorable à cette proposition technique et financière, nous restons à votre disposition pour tous renseignements complémentaires et vous prions d’agréer, Madame, Monsieur, l’expression de nos sentiments dévoués.
+					</p>	            	
+					<p t-field="doc.note" name="order_note" t-if="doc.note" class="mt-3"/>
+	            </xpath>
+	            
+	            <xpath expr="//span[@t-field='line.product_uom_qty']/.." position="attributes">
+	            	<attribute name="class">d-none</attribute>
+	            </xpath>
+
+	            <xpath expr="//th[@name='th_quantity']" position="attributes">
+	            	<attribute name="class">d-none</attribute>
+	            </xpath>
+	            
+	            <xpath expr="//th[@name='th_priceunit']" position="replace"><th name="th_priceunit" class="text-end">Prix HT</th></xpath>
+	            <xpath expr="//th[@name='th_taxes']" position="replace"><th name="th_taxes" class="text-end">TVA</th></xpath>
+	            <xpath expr="//th[@name='th_subtotal']" position="replace">
+	              <th name="th_subtotal" class="text-end">
+                    <!--<span groups="account.group_show_line_subtotals_tax_excluded">Amount</span>-->
+                    <span>Prix TTC</span>
+                </th>
+	            </xpath>
+	            
+	            <xpath expr="//span[@t-field='line.price_total']/.." position="replace">
+	              <td t-if="not line.is_downpayment" name="td_subtotal" class="text-end o_price_total">
+                    <!--<span t-field="line.price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>-->
+                    <span t-field="line.price_total"/>
+                </td>
+	            </xpath>
+
+	            <xpath expr="//div[@id='informations']" position="replace">
+
+		            <div class="w-100">
+	                    <t t-set="sale_order" t-value="doc"/>
+	                </div>
+		            <div id="informations" class="row mt-4 mb-4 d-none"/>
+	                <table cellspacing="0" cellpadding="0" class="w-100 table table-borderless table-sm" style="border: none !important; margin-bottom: 2rem;">
+	                    <tr style="border: 0px">
+	                        <td style="border-right: 0px; border-right: 0px; border: 0px;"><strong>Date Commande:</strong></td>
+	                        <td style="border-right: 0px; border-right: 0px; background-color: initial; border: 0px"><p class="m-0" t-field="doc.date_order" t-options='{"widget": "date"}'/></td>
+	                        <td style="border: 0px;"><span t-if="sale_order"><strong>Montant de la mission H.T :</strong></span></td>
+	                        <td class="" style="border: 0px; background-color: initial;" t-if="sale_order"><span t-field="sale_order.amount_untaxed"/></td>
+	                    </tr>
+	                    <tr style="border: 0px">
+	                        <td style="border-right: 0px; border-right: 0px; border: 0px;"><strong>Responsable d'affaire:</strong></td>
+	                        <td style="border-right: 0px; border-right: 0px; background-color: initial; border: 0px"><span t-field="sale_order.x_studio_responsable_affaire"/></td>
+	                        <td style="border: 0px;"><span t-if="sale_order"><strong>Localisation:</strong></span></td>
+	                        <td class="" style="border: 0px; background-color: initial;" t-if="sale_order"><span t-field="sale_order.x_studio_localisation"/></td>
+	                    </tr>
+	                </table>
+	            </xpath>
+
+	    </template>
+
+	</data>
+</odoo>

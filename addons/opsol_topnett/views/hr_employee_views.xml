@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_employee_form_opsol" model="ir.ui.view">
+        <field name="name">hr.employee.form.opsol</field>
+        <field name="model">hr.employee</field>
+        <field name="priority">25</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='job_title']/.." position="before">
+                <h3>
+                    <div class="o_row">
+                        <label for="nom"/>
+                        <field name="nom" placeholder="Nom"/>
+                        <label for="prenom"/>
+                        <field name="prenom" placeholder="Prenom"/>
+                    </div>
+                </h3>
+            </xpath>
+
+            <!-- <xpath expr="//field[@name='registration_number']" position="attributes">
+                <attribute name="string">Matricule</attribute>
+            </xpath> -->
+
+        </field>
+    </record>
+
+    <record id="payroll_hr_employee_view_form_opsol" model="ir.ui.view">
+        <field name="name">hr.employee.form.opsol</field>
+        <field name="model">hr.employee</field>
+        <field name="priority">25</field>
+        <field name="inherit_id" ref="hr_payroll.payroll_hr_employee_view_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='registration_number']" position="after">
+                <field name="numero" />
+            </xpath>
+
+            <xpath expr="//field[@name='registration_number']" position="attributes">
+                <attribute name="string">Matricule</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

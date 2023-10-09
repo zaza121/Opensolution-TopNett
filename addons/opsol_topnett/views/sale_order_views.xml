@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_form_opsol" model="ir.ui.view">
+        <field name="name">sale.order.form.opsol</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']/../.." position="after">
+                <div class="oe_online">
+                    <label for="nom_devis" />
+                    <h2><field name="nom_devis" readonly="0" /></h2>
+                    <field name="opportunity_id" class="d-none" invisible="1" />
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="view_quotation_tree_opsol" model="ir.ui.view">
+        <field name="name">sale.order.tree.opsol</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="nom_devis" />
+            </xpath>
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="string" >Reference interne</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+    <record id="sale_order_view_search_inherit_quotation_opsol" model="ir.ui.view">
+        <field name="name">sale.order.search.opsol</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_view_search_inherit_quotation" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="name" string="Order" filter_domain="['|', '|', '|', '|', ('name', 'ilike', self), ('client_order_ref', 'ilike', self), ('partner_id', 'child_of', self), ('num_affaire', 'ilike', self), ('libelle_affaire', 'ilike', self)]"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
