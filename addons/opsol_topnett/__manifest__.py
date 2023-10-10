@@ -15,6 +15,7 @@
     'data': [
         # data
         'data/input_data.xml',
+        'data/sequence.xml',
         # security
         'security/ir.model.access.csv',
         # views

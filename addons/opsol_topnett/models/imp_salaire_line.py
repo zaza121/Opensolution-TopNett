@@ -28,7 +28,7 @@ class ImpSalaireLine(models.Model):
     prime = fields.Float(string='Prime')
     date_salaire = fields.Date(string='Date du salaire')
     employee_id = fields.Many2one(
-        comodel_name='hr.employee',
+        comodel_name='hr.employee', 
         string='Employe',
         compute="compute_employee"
     )
@@ -36,10 +36,22 @@ class ImpSalaireLine(models.Model):
         comodel_name='hr.payslip',
         string='Bulletin de paie',
     )
+    lot_id = fields.Many2one(
+        comodel_name='hr.payslip.run',
+        string='Lot de bulletin',
+    )
     company_id = fields.Many2one(
         comodel_name='res.company', string='Company', required=True,
         store=True, readonly=False, default=lambda self: self.env.company,
     )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            vals['code'] = self.env['ir.sequence'].next_by_code(
+                'opsol_topnett.imp_sal_seq') or _("New")
+
+        return super().create(vals_list)
 
     @api.depends('matricule')
     def compute_employee(self):
@@ -69,14 +81,16 @@ class ImpSalaireLine(models.Model):
             last_day_month = first_day_month + relativedelta(months=1) - relativedelta(days=1)
             contract = rec.get_current_contract(first_day_month, last_day_month)
             struct = contract.structure_type_id or structure_id
+            lot_bulletin = rec.payslip_lot(first_day_month, last_day_month)
             values.update({
+                'payslip_run_id': lot_bulletin.id,
                 'date_from': first_day_month,
                 'date_to': last_day_month,
                 'contract_id': contract.id,
                 'struct_id': struct.id
             })
             rec.bulletin_id = payslip_obj.create(values)
-            inputs_values = self.get_input_values()
+            inputs_values = rec.get_input_values()
             rec.bulletin_id.update({'input_line_ids': inputs_values})
             rec.bulletin_id.compute_sheet()
 
@@ -99,6 +113,19 @@ class ImpSalaireLine(models.Model):
                 'date_start': date_from,
                 'resource_calendar_id': self.env.company.resource_calendar_id.id,
                 'wage': 0
+            })
+
+    @api.model
+    def payslip_lot(self, date_from, date_to):
+        lot_id = self.env['hr.payslip.run'].search([
+            ('date_start', '<=', date_to),
+            ('date_end', '>=', date_from)], limit=1)
+        if lot_id:
+            return lot_id
+        else:
+            return self.env["hr.payslip.run"].create({
+                'name': f"Lot salaire {date_from.month} / {date_to.year}",
+                'date_start': date_from, 'date_end': date_to
             })
 
     @api.model
