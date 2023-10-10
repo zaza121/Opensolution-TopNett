@@ -24,11 +24,8 @@
         # 'views/sale_order_views.xml',
         'views/hr_employee_views.xml',
         'views/imp_salaire_line_views.xml',
-        # 'views/res_partner_bank_views.xml',
-        # 'views/account_move_views.xml',
-        # 'views/mail_templates_email_layouts.xml',
-        # 'views/account_invoice_send_views.xml',
-        # 'views/templates.xml',
+        'views/imp_conge_views.xml',
+        'views/hr_payroll_structure_views.xml',
         # wizards
         # reports
         # 'reports/situation_invoice_report.xml',

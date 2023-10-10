@@ -8,6 +8,11 @@ class HrEmployee(models.Model):
     nom = fields.Char(string='Nom')
     prenom = fields.Char(string='Prenom')
     numero = fields.Integer(string='Numero')
+    affiliation_ac = fields.Boolean(string='Affiliation AC', default=True)
+    affiliation_rc = fields.Boolean(string='Affiliation RC', default=True)
+    affiliation_car = fields.Boolean(string='Affiliation CAR', default=True)
+    teletravail = fields.Boolean(string='Teletravail ?', default=False)
+    administrateur_salarie = fields.Boolean(string='Administrateur Salarie ?', default=False)
 
     @api.model_create_multi
     def create(self, vals_list):

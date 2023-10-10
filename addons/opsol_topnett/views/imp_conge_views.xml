@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- <record id="view_opsol_topnett_imp_conge_form" model="ir.ui.view">
+        <field name="name">opsol_topnett.imp_conge.form</field>
+        <field name="model">opsol_topnett.imp_conge</field>
+        <field name="arch" type="xml">
+            <form string="Importation Salaire">
+                <header>
+                    <button name="generate_payslip" string="Creer Bulletin" type="object"
+                            class="oe_highlight" attrs="{'invisible': [('bulletin_id', '!=', False)]}"/>
+                </header>
+                <sheet>
+                    <h1>
+                      <div class="o_row">
+                        <label for="code" />
+                        <field name="code" colspan="4" />
+                      </div>
+                    </h1>
+                    <group>
+                        <group string="Employe">
+                            <field name="employee_id" />
+                            <field name="matricule" />
+                            <field name="salaire_brut" />
+                        </group>
+                        <group string="Heures travailles">
+                            <field name="h_travailles" />
+                            <field name="h_complementaires" />
+                            <field name="h_supplementaires" />
+                        </group>
+                        <group string="Conges">
+                            <field name="c_maladie" />
+                            <field name="c_at" />
+                            <field name="c_maternite" />
+                            <field name="c_payes" />
+                            <field name="c_autres" />
+                        </group>
+                        <group string="Dates">
+                            <field name="date_salaire" />
+                            <field name="date_entree1" />
+                            <field name="date_entree2" />
+                        </group>
+                        <group string="Avantages">
+                            <field name="maintien" />
+                            <field name="prime" />
+                            <field name="date_entree2" />
+                        </group>
+                        <group string="Generes">
+                            <field name="bulletin_id" />
+                        </group>
+                    </group>
+                    <notebook></notebook>
+                </sheet>
+            </form>
+        </field>
+    </record> -->
+
+    <record id="view_opsol_topnett_imp_conge_tree" model="ir.ui.view">
+        <field name="name">opsol_topnett.imp_conge.tree</field>
+        <field name="model">opsol_topnett.imp_conge</field>
+        <field name="arch" type="xml">
+            <tree string="Importation Conge" editable="top">
+                <field name="code"/>
+                <field name="code_conge"/>
+                <field name="matricule"/>
+                <field name="employee_id" readonly="1"/>
+                <field name="date_start" />
+                <field name="date_end" />
+                <field name="nb_heures" />
+                <field name="nb_jours" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_opsol_topnett_imp_conge" model="ir.actions.act_window">
+        <field name="name">Conge Non valides</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">opsol_topnett.imp_conge</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_opsol_topnett_imp_conge"
+              name="Conges Non Valides"
+              sequence="64"
+              action="action_opsol_topnett_imp_conge"
+              groups=""
+              parent="hr_payroll.menu_hr_payroll_payslips"/>
+
+</odoo>

@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 
 class ImpSalaireLine(models.Model):
     _name = "opsol_topnett.imp_salaire_line"
+    _description = "Importation de salaire"
     _rec_name = 'code'
 
     code = fields.Char(string='Code')
@@ -40,6 +41,15 @@ class ImpSalaireLine(models.Model):
         comodel_name='hr.payslip.run',
         string='Lot de bulletin',
     )
+    nombre_conges = fields.Integer(
+        string='Nombre de conges',
+        compute="_compute_nombres_conges"
+    )
+    conges_ids = fields.One2many(
+        comodel_name='opsol_topnett.imp_conge',
+        string='Conges lies',
+        compute="_compute_nombres_conges"
+    )
     company_id = fields.Many2one(
         comodel_name='res.company', string='Company', required=True,
         store=True, readonly=False, default=lambda self: self.env.company,
@@ -58,6 +68,30 @@ class ImpSalaireLine(models.Model):
         emp_obj = self.env["hr.employee"]
         for rec in self:
             rec.employee_id = emp_obj.search([('registration_number', '=', rec.matricule)], limit=1)
+
+    def open_conges(self):
+        self.ensure_one()
+        action = self.env['ir.actions.actions']._for_xml_id('opsol_topnett.action_opsol_topnett_imp_conge')
+        if action:
+            action['domain'] = [('id', 'in', self.conges_ids.ids)]
+        else:
+            action = {'type': 'ir.actions.act_window_close'}
+        return action
+
+    def _compute_nombres_conges(self):
+        imp_conge_obj = self.env["opsol_topnett.imp_conge"]
+        for rec in self:
+            if rec.date_salaire:
+                first_day_month = rec.date_salaire.replace(day=1)
+                last_day_month = first_day_month + relativedelta(months=1) - relativedelta(days=1)
+                result = imp_conge_obj.search([
+                    ('date_end', '>', first_day_month),
+                    ('date_start', '<', last_day_month),
+                    ('employee_id', '=', rec.employee_id and rec.employee_id.id or False)
+                ])
+                rec.update({'nombre_conges': len(result), 'conges_ids': [Command.set(result.ids)]})
+            else:
+                rec.update({'nombre_conges': 0, 'conges_ids': [Command.set([])]})
 
     def generate_payslip(self):
         payslip_obj = self.env["hr.payslip"]
