@@ -26,7 +26,9 @@
         'views/imp_salaire_line_views.xml',
         'views/imp_conge_views.xml',
         'views/hr_payroll_structure_views.xml',
+        'views/hr_payslip_run_views.xml',
         # wizards
+        'wizards/genxml_cot_wiz_views.xml',
         # reports
         # 'reports/situation_invoice_report.xml',
         # 'reports/account_move_report.xml',

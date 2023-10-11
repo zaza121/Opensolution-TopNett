@@ -1,0 +1,45 @@
+<odoo>
+
+    <record id="view_genxml_cot_wiz" model="ir.ui.view">
+        <field name="name">Generer Fichier Cotisations Sociales</field>
+        <field name="model">opsol_topnett.genxml_cot_wiz</field>
+        <field name="arch" type="xml">
+            <form string="Cotisation Sociales XML">
+                <p class="oe_grey">
+                    Invoices will be created in draft so that you can review
+                    them before validation.
+                </p>
+                <group>
+                    <group>
+                        <field name="lot_id" />
+                        <field name="name" />
+                        <field name="data" readonly="1" filename="name"/>
+                    </group>
+                </group>
+                <footer>
+                    <!-- <button name="action_update" type="object"
+                        id="create_invoice_open"
+                        string="Update Situation"
+                        class="btn-primary" data-hotkey="q"/> -->
+                    <!-- <button name="create_invoices" type="object"
+                        id="create_invoice"
+                        string="Create Invoice"
+                        context="{'open_invoices': True}"
+                        data-hotkey="w"/> -->
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_view_genxml_cot_wiz" model="ir.actions.act_window">
+        <field name="name">Generer Fichier Cotisations Sociales</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">opsol_topnett.genxml_cot_wiz</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="hr_payroll.model_hr_payslip_run" />
+        <field name="binding_view_types">list</field>
+    </record>
+
+</odoo>
