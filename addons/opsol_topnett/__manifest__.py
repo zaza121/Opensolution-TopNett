@@ -27,6 +27,7 @@
         'views/imp_conge_views.xml',
         'views/hr_payroll_structure_views.xml',
         'views/hr_payslip_run_views.xml',
+        'views/hr_payslip_input_type_views.xml',
         # wizards
         'wizards/genxml_cot_wiz_views.xml',
         # reports
