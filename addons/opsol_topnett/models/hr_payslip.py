@@ -10,7 +10,6 @@ class HrPayslip(models.Model):
     def _compute_input_line_ids(self):
 
         super(HrPayslip, self)._compute_input_line_ids()
-        inp_typ_id = self.env['ir.model.data']._load_xmlid("hr_payroll.input_attachment_salary")
 
         for slip in self:
             if not slip.employee_id or not slip.struct_id:
@@ -25,5 +24,5 @@ class HrPayslip(models.Model):
 
             # insert in input
             inputs_values.extend(
-                [Command.create({'input_type_id': inp_typ_id and inp_typ_id.id or 3, 'name': elt.code, 'amount': elt.amount}) for elt in other_inputs])
+                [Command.create({'input_type_id': elt.id, 'name': elt.code, 'amount': elt.amount}) for elt in other_inputs])
             slip.update({'input_line_ids': inputs_values})
