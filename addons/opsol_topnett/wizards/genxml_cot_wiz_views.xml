@@ -6,27 +6,17 @@
         <field name="arch" type="xml">
             <form string="Cotisation Sociales XML">
                 <p class="oe_grey">
-                    Invoices will be created in draft so that you can review
-                    them before validation.
+                    <field name="description" nolabel="1" />
                 </p>
                 <group>
                     <group>
                         <field name="lot_id" />
-                        <field name="name" />
+                        <field name="name" invisible="1" />
                         <field name="data" readonly="1" filename="name"/>
                     </group>
                 </group>
                 <footer>
-                    <!-- <button name="action_update" type="object"
-                        id="create_invoice_open"
-                        string="Update Situation"
-                        class="btn-primary" data-hotkey="q"/> -->
-                    <!-- <button name="create_invoices" type="object"
-                        id="create_invoice"
-                        string="Create Invoice"
-                        context="{'open_invoices': True}"
-                        data-hotkey="w"/> -->
-                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>
             </form>
         </field>

@@ -21,6 +21,7 @@ class GenXMLCotWiz(models.TransientModel):
         comodel_name='hr.payslip.run',
         string='Lot de bulletin',
     )
+    description = fields.Text(string='Description')
     data = fields.Binary(
         string='Fichier',
         readonly=False,
