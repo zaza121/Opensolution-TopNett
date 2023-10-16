@@ -40,6 +40,8 @@ class ImpSalaireLine(models.Model):
     lot_id = fields.Many2one(
         comodel_name='hr.payslip.run',
         string='Lot de bulletin',
+        related="bulletin_id.payslip_run_id",
+        store=True
     )
     nombre_conges = fields.Integer(
         string='Nombre de conges',

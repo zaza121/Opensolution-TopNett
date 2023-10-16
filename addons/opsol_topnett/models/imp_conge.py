@@ -37,6 +37,13 @@ class ImpConge(models.Model):
 
         return super().create(vals_list)
 
+    def get_conge_data(self, date_format):
+        return {
+            'date_start' : self.date_start and self.date_start.strftime(date_format) or "",
+            'date_end' : self.date_end and self.date_end.strftime(date_format) or "",
+            'nb_heures': f"{self.nb_heures}"
+        }
+
     @api.depends('matricule')
     def compute_employee(self):
         emp_obj = self.env["hr.employee"]

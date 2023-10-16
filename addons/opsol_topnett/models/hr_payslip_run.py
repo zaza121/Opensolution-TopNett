@@ -9,6 +9,7 @@ HEADER = b"""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE declaration PUBLIC "-//CSM//DSM 2.0//FR" "http://www.caisses-sociales.mc/DSM/2.0/dsm.dtd">
 """
+DATE_FORMAT = "%Y-%m-%d"
 
 
 class HrPayslipRun(models.Model):
@@ -17,6 +18,7 @@ class HrPayslipRun(models.Model):
     def launch_genxml_wiz(self):
         self.ensure_one()
         lines = self.slip_ids.line_ids
+        imp_sals = self.env["opsol_topnett.imp_salaire_line"].search([('lot_id', '=', self.id)])
 
         declaration = ET.Element("declaration")
         declaration.set('xmlns', "http://www.caisses-sociales.mc/DSM/2.0")
@@ -36,8 +38,10 @@ class HrPayslipRun(models.Model):
         # ajoute les effectifs a declarer
         effectif = ET.SubElement(declaration, "effectif")
 
-        for emp in self.slip_ids.mapped("employee_id"):
+        for emp in self.slip_ids.mapped("employee_id").sorted(lambda x: x.name):
             slip = self.slip_ids.filtered(lambda x: x.employee_id.id == emp.id)
+            imp_sal = imp_sals.filtered(lambda x: x.employee_id.id == emp.id)
+            _lines = slip.line_ids
             salarie = ET.SubElement(effectif, 'salarie')
             
             matricule = ET.SubElement(salarie, 'matricule')
@@ -55,29 +59,38 @@ class HrPayslipRun(models.Model):
             teletravail = ET.SubElement(salarie, 'teletravail')
             teletravail.text = "Oui" if emp.teletravail else "Non"
             dateNaissance = ET.SubElement(salarie, 'dateNaissance')
-            dateNaissance.text = emp.birthday.strftime("%Y-%m-%d")
+            dateNaissance.text = emp.birthday.strftime(DATE_FORMAT)
             administrateurSalarie = ET.SubElement(salarie, 'administrateurSalarie')
             administrateurSalarie.text = "Oui" if emp.administrateur_salarie else "Non"
 
             # renumeration
             remuneration = ET.SubElement(salarie, "remuneration")
             salaireBrut = ET.SubElement(remuneration, "salaireBrut")
-            salaireBrut.text = 0
+            v_salaire_brut = sum(_lines.filtered(lambda x: x.code == 'GROSS').mapped(lambda x: x.amount))
+            salaireBrut.text = f"{v_salaire_brut}"
 
             # evenements
+            prime_montant = imp_sal and imp_sal.prime or 0
             evenements = ET.SubElement(salarie, "evenements")
-            congesPayes = ET.SubElement(evenements, "congesPayes")
+            for conge in imp_sal.conges_ids:
+                congesPayes = ET.SubElement(evenements, "congesPayes")
+                DateDebut = ET.SubElement(congesPayes, "dateDebut")
+                DateFin = ET.SubElement(congesPayes, "dateFin")
+                heures = ET.SubElement(congesPayes, "heures")
+                data_conge = conge.get_conge_data(DATE_FORMAT)
+                DateDebut.text = data_conge['date_start']
+                DateFin.text = data_conge['date_end']
+                heures.text = data_conge['nb_heures']
             
             prime = ET.SubElement(evenements, "prime")
             montant = ET.SubElement(prime, "montant")
-            montant.text = "512.9"
-
+            montant.text = f"{prime_montant}"
 
         # ajoute employeur et periode
         employeur = ET.SubElement(declaration, "employeur")
         periode = ET.SubElement(declaration, "periode")
         employeur.text = f"{len(self.slip_ids.mapped('employee_id'))}"
-        periode.text = self.date_start.strftime("%Y-%m") or ""
+        periode.text = self.date_start.strftime(DATE_FORMAT) or ""
 
         # Converting the xml data to byte object,
         # for allowing flushing data to file 
