@@ -83,13 +83,13 @@ class ImpSalaireLine(models.Model):
     def _compute_nombres_conges(self):
         imp_conge_obj = self.env["opsol_topnett.imp_conge"]
         for rec in self:
-            if rec.date_salaire:
+            if rec.date_salaire and rec.employee_id:
                 first_day_month = rec.date_salaire.replace(day=1)
                 last_day_month = first_day_month + relativedelta(months=1) - relativedelta(days=1)
                 result = imp_conge_obj.search([
                     ('date_end', '>', first_day_month),
                     ('date_start', '<', last_day_month),
-                    ('employee_id', '=', rec.employee_id and rec.employee_id.id or False)
+                    ('matricule', '=', rec.employee_id.numero)
                 ])
                 rec.update({'nombre_conges': len(result), 'conges_ids': [Command.set(result.ids)]})
             else:

@@ -14,7 +14,7 @@ class ImpConge(models.Model):
 
     code = fields.Char(string='Code')
     code_conge = fields.Char(string='Code conges', required=True)
-    matricule = fields.Integer(string='Matricule', required=True)
+    matricule = fields.Integer(string='Numero', required=True)
     date_start = fields.Date(string='Date de debut', required=True)
     date_end = fields.Date(string='Date de fin', required=True)
     nb_heures = fields.Float(string='Nombres d\'heures')
