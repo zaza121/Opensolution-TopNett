@@ -97,7 +97,7 @@ class ImpSalaireLine(models.Model):
 
     def generate_payslip(self):
         payslip_obj = self.env["hr.payslip"]
-        structure_id = self.env["hr.payroll.structure.type"].search([], limit=1)
+        structure_id = self.env["hr.payroll.structure"].search([], limit=1)
         for rec in self:
 
             if rec.bulletin_id:
@@ -126,7 +126,7 @@ class ImpSalaireLine(models.Model):
                 'struct_id': struct.id
             })
             rec.bulletin_id = payslip_obj.create(values)
-            inputs_values = rec.get_input_values()
+            inputs_values = rec.get_input_values(structure=struct)
             rec.bulletin_id.update({'input_line_ids': inputs_values})
             rec.bulletin_id.compute_sheet()
 
@@ -165,8 +165,10 @@ class ImpSalaireLine(models.Model):
             })
 
     @api.model
-    def get_input_values(self):
+    def get_input_values(self, structure=None):
         R_INP_GROSS = self.env['hr.payslip.input.type'].search([('code', '=', 'INP_GROSS')], limit=1)
+        inputs_values = []
+
         if not R_INP_GROSS:
             raise UserError("Veuillez creer un input type pour le salaire de base")
         v_command = Command.create({
@@ -174,4 +176,11 @@ class ImpSalaireLine(models.Model):
             'name': "Salaire de base",
             'amount': self.salaire_brut
         })
-        return [v_command]
+        inputs_values.append(v_command)
+
+        if structure:
+            other_inputs = structure.input_line_type_ids
+            # insert in input
+            inputs_values.extend(
+                [Command.create({'input_type_id': elt.id, 'name': elt.code, 'amount': elt.amount}) for elt in other_inputs])
+        return inputs_values
