@@ -31,6 +31,34 @@ class HrPayslipRun(models.Model):
         compute="compute_info_cotisation"
     )
 
+    contracts_count = fields.Integer(
+        string='Nombre de contrats',
+        compute="compute_contracts_ids"
+    )
+    contracts_ids = fields.One2many(
+        comodel_name='hr.contract',
+        string='Contrats du lot',
+        compute="compute_contracts_ids"
+    )
+    employee_count = fields.Integer(
+        string='Nombres d\'employes',
+        compute="compute_contracts_ids"
+    )
+    employee_ids = fields.One2many(
+        comodel_name='hr.employee',
+        string='Employes du lot',
+        compute="compute_contracts_ids"
+    )
+
+    def compute_contracts_ids(self):
+        for rec in self:
+            contracts = rec.slip_ids.mapped('contract_id')
+            employes = rec.slip_ids.mapped('employee_id')
+            rec.contracts_ids = contracts
+            rec.contracts_count = len(contracts)
+            rec.employee_ids = employes
+            rec.employee_count = len(employes)
+
     def compute_info_cotisation(self):
         for rec in self:
             lines = rec.slip_ids.line_ids
@@ -39,6 +67,18 @@ class HrPayslipRun(models.Model):
             ass_car = sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total'))
             ass_ccss = sum(lines.filtered(lambda x: x.code == 'CCSS').mapped('total'))
             rec.update({'ass_chomage': ass_assur, 'ass_car': ass_car, 'ass_ccss': ass_ccss, 'effectif': effectif})
+
+    def action_open_contracts(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("hr_contract.action_hr_contract")
+        action['domain'] = [('id', 'in', self.contracts_ids.ids)]
+        return action
+
+    def action_open_employees(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("hr.open_view_employee_list_my")
+        action['domain'] = [('id', 'in', self.employee_ids.ids)]
+        return action
 
     def launch_genxml_wiz(self):
         self.ensure_one()
