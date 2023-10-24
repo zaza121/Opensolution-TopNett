@@ -49,15 +49,38 @@ class HrPayslipRun(models.Model):
         string='Employes du lot',
         compute="compute_contracts_ids"
     )
+    importation_count = fields.Integer(
+        string='Nombres d\'importations',
+        compute="compute_contracts_ids"
+    )
+    importation_sal_ids = fields.One2many(
+        comodel_name='opsol_topnett.imp_salaire_line',
+        inverse_name='lot_id',
+        string='Importations de salaire',
+    )
+    imp_conge_count = fields.Integer(
+        string='Nombres de conges',
+        compute="compute_contracts_ids"
+    )
+    importation_con_ids = fields.One2many(
+        comodel_name='opsol_topnett.imp_conge',
+        compute="compute_contracts_ids",
+        string='Importations de conges',
+    )
 
     def compute_contracts_ids(self):
         for rec in self:
             contracts = rec.slip_ids.mapped('contract_id')
             employes = rec.slip_ids.mapped('employee_id')
+            importation_conges = rec.mapped('importation_sal_ids.conges_ids')
+
             rec.contracts_ids = contracts
             rec.contracts_count = len(contracts)
             rec.employee_ids = employes
             rec.employee_count = len(employes)
+            rec.importation_count = len(rec.importation_sal_ids)
+            rec.imp_conge_count = len(importation_conges)
+            rec.importation_con_ids = importation_conges
 
     def compute_info_cotisation(self):
         for rec in self:
@@ -78,6 +101,20 @@ class HrPayslipRun(models.Model):
         self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id("hr.open_view_employee_list_my")
         action['domain'] = [('id', 'in', self.employee_ids.ids)]
+        return action
+
+    def action_open_importation(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("opsol_topnett.action_opsol_topnett_imp_salaire_line")
+        action['domain'] = [('id', 'in', self.importation_sal_ids.ids)]
+        action['context'] = {}
+        return action
+
+    def action_open_imp_conges(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("opsol_topnett.action_opsol_topnett_imp_conge")
+        action['domain'] = [('id', 'in', self.importation_con_ids.ids)]
+        action['context'] = {}
         return action
 
     def launch_genxml_wiz(self):

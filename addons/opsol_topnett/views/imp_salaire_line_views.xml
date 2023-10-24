@@ -91,10 +91,29 @@
         </field>
     </record>
 
+    <record id="imp_salaire_line_view_search" model="ir.ui.view">
+        <field name="name">opsol_topnett.imp_salaire_line.view.search</field>
+        <field name="model">opsol_topnett.imp_salaire_line</field>
+        <field name="arch" type="xml">
+            <search string="Search Importation Salaire">
+                <field name="code"/>
+                <field name="employee_id"/>
+                <field name="date_salaire"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Date salaire" name="groupby_date_salaire" domain="[]" context="{'group_by': 'date_salaire'}"/>
+                    <filter string="Employe" name="groupby_employee" domain="[]" context="{'group_by': 'employee_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_opsol_topnett_imp_salaire_line" model="ir.actions.act_window">
         <field name="name">Importation Salaire</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">opsol_topnett.imp_salaire_line</field>
+        <field name="context">{'search_default_groupby_date_salaire': 1}</field>
         <field name="view_mode">tree,form</field>
     </record>
 

@@ -60,6 +60,7 @@ class ImpSalaireLine(models.Model):
         comodel_name='res.company', string='Company', required=True,
         store=True, readonly=False, default=lambda self: self.env.company,
     )
+    active = fields.Boolean(string='Active', default=True)
 
     @api.model_create_multi
     def create(self, vals_list):

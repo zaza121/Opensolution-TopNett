@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 
 class ImpConge(models.Model):
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _name = "opsol_topnett.imp_conge"
     _description = "Importation Conge"
     _rec_name = 'code'
@@ -28,6 +29,7 @@ class ImpConge(models.Model):
         comodel_name='res.company', string='Company', required=True,
         store=True, readonly=False, default=lambda self: self.env.company,
     )
+    active = fields.Boolean(string='Active', default=True)
 
     @api.model_create_multi
     def create(self, vals_list):
