@@ -20,14 +20,13 @@
         'security/ir.model.access.csv',
         # views
         # 'views/menus.xml',
-        # 'views/crm_lead_views.xml',
-        # 'views/sale_order_views.xml',
         'views/hr_employee_views.xml',
         'views/imp_salaire_line_views.xml',
         'views/imp_conge_views.xml',
         'views/hr_payroll_structure_views.xml',
         'views/hr_payslip_run_views.xml',
         'views/hr_payslip_input_type_views.xml',
+        'views/hr_contract_views.xml',
         # wizards
         'wizards/genxml_cot_wiz_views.xml',
         # reports

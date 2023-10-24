@@ -8,11 +8,13 @@ from dateutil.relativedelta import relativedelta
 
 
 class ImpSalaireLine(models.Model):
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _name = "opsol_topnett.imp_salaire_line"
     _description = "Importation de salaire"
     _rec_name = 'code'
 
     code = fields.Char(string='Code')
+    matricule_sex = fields.Char(string='Genre')
     matricule = fields.Char(string='Matricule')
     salaire_brut = fields.Float(string='Salaire Brut')
     h_travailles = fields.Float(string='Heures travailes')
@@ -31,11 +33,13 @@ class ImpSalaireLine(models.Model):
     employee_id = fields.Many2one(
         comodel_name='hr.employee', 
         string='Employe',
-        compute="compute_employee"
+        compute="compute_employee",
+        tracking=True,
     )
     bulletin_id = fields.Many2one(
         comodel_name='hr.payslip',
         string='Bulletin de paie',
+        tracking=True,
     )
     lot_id = fields.Many2one(
         comodel_name='hr.payslip.run',
