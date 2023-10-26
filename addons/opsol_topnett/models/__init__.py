@@ -8,3 +8,4 @@ from . import hr_payslip_run
 from . import hr_payslip
 from . import hr_payslip_input_type
 from . import hr_contract
+from . import documents_workflow_action

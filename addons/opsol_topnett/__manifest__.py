@@ -10,7 +10,7 @@
     'summary': '',
     'sequence': 11,
     'website': 'https://www.opensolution.mc',
-    'depends': ['hr', 'hr_payroll'],
+    'depends': ['hr', 'hr_payroll', 'documents'],
     'license': 'LGPL-3',
     'data': [
         # data
