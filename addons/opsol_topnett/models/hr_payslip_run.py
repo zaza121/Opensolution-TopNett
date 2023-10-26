@@ -67,6 +67,15 @@ class HrPayslipRun(models.Model):
         compute="compute_contracts_ids",
         string='Importations de conges',
     )
+    pay_struct_count = fields.Integer(
+        string='Structures du lot',
+        compute="compute_contracts_ids"
+    )
+    structure_ids = fields.One2many(
+        comodel_name='hr.payroll.structure',
+        compute="compute_contracts_ids",
+        string='Importations de conges',
+    )
 
     def compute_contracts_ids(self):
         for rec in self:
@@ -117,6 +126,10 @@ class HrPayslipRun(models.Model):
         action['context'] = {}
         return action
 
+    def get_tag_from_code(self, code_conge):
+        TAG_CONGE = {'CP': 'congesPayes', 'AT': 'Accident du travail', 'MAL': 'Maladie', 'CSS': 'Congés sans solde'}
+        return TAG_CONGE.get(code_conge, "")
+
     def launch_genxml_wiz(self):
         self.ensure_one()
         lines = self.slip_ids.line_ids
@@ -149,8 +162,10 @@ class HrPayslipRun(models.Model):
         for emp in self.slip_ids.mapped("employee_id").sorted(lambda x: x.name):
             slip = self.slip_ids.filtered(lambda x: x.employee_id.id == emp.id)
             imp_sal = imp_sals.filtered(lambda x: x.employee_id.id == emp.id)
+            contract = slip.contract_id
             _lines = slip.line_ids
             salarie = ET.SubElement(effectif, 'salarie')
+            period = imp_sal.date_salaire and imp_sal.date_salaire.strftime("%Y-%m")
             
             matricule = ET.SubElement(salarie, 'matricule')
             matricule.text = emp.registration_number
@@ -191,15 +206,52 @@ class HrPayslipRun(models.Model):
             # evenements
             prime_montant = imp_sal and imp_sal.prime or 0
             evenements = ET.SubElement(salarie, "evenements")
+            
+            # ==> Conge payes
             for conge in imp_sal.conges_ids:
-                congesPayes = ET.SubElement(evenements, "congesPayes")
+                tag_code = self.get_tag_from_code(conge.code_conge)
+                if not tag_code:
+                    continue
+                congesPayes = ET.SubElement(evenements, tag_code)
                 DateDebut = ET.SubElement(congesPayes, "dateDebut")
                 DateFin = ET.SubElement(congesPayes, "dateFin")
-                heures = ET.SubElement(congesPayes, "heures")
-                data_conge = conge.get_conge_data(DATE_FORMAT)
+                slip = slip[0] if len(slip) > 1 else slip
+                data_conge = conge.get_conge_data(slip.date_from, slip.date_to, DATE_FORMAT)
                 DateDebut.text = data_conge['date_start']
                 DateFin.text = data_conge['date_end']
-                heures.text = data_conge['nb_heures']
+                if data_conge['nb_heures']:
+                    heures = ET.SubElement(congesPayes, "heures")
+                    heures.text = data_conge['nb_heures']
+
+            # ==> Entree du salarie
+            if contract and contract.date_start and contract.date_start.strftime("%Y-%m") == period:
+                entree_salarie = ET.SubElement(evenements, "Entree du salarié")
+                es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
+                es_dateDebut.text = contract.date_start.strftime(DATE_FORMAT)
+
+            # ==> Entree du salarie
+            if contract and contract.date_start_2 and contract.date_start_2.strftime("%Y-%m") == period:
+                entree_salarie = ET.SubElement(evenements, "Entree du salarié")
+                es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
+                es_dateDebut.text = contract.date_start_2.strftime(DATE_FORMAT)
+
+            # ==> Sortie du salarie
+            date_depart_adm = contract and contract.date_depart_administratif or None
+            date_depart_phy = contract and contract.date_depart_physique or None
+            if date_depart_phy or date_depart_adm:
+                sortie_salarie = ET.SubElement(evenements, "Sortie du salarie")
+                es_dateADM = ET.SubElement(sortie_salarie, "dateSortieAdministrative")
+                es_dateADM.text = contract.date_start.strftime(DATE_FORMAT)
+                es_datePHY = ET.SubElement(sortie_salarie, "dateSortiePhysique")
+                es_datePHY.text = contract.date_depart_physique.strftime(DATE_FORMAT)
+
+            # ==> Préavis
+            if contract.date_depart_preavis or contract.date_fin_preavis:
+                preavis = ET.SubElement(evenements, "Preavis")
+                pr_dateDebut = ET.SubElement(preavis, "dateDebut")
+                pr_dateDebut.text = contract.date_depart_preavis.strftime(DATE_FORMAT)
+                es_dateFin = ET.SubElement(preavis, "dateFin")
+                es_dateFin.text = contract.date_fin_preavis.strftime(DATE_FORMAT)
             
             if prime_montant != 0:
                 prime = ET.SubElement(evenements, "prime")
