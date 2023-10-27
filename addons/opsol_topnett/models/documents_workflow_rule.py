@@ -71,7 +71,7 @@ class WorkflowRules(models.Model):
                 if self.topnet_action == "load_emp":
                     self.execute_load_employee(document)
                 if self.topnet_action == "load_sal":
-                    pass
+                    self.execute_load_salaire(document)
 
             return True
         else:
@@ -149,6 +149,112 @@ class WorkflowRules(models.Model):
         _logger.info("end updating employee..............................")
         return True
 
+    def get_salaire_data(self, url):
+        """Get les donnees de salaire from URL."""
+        _logger.info("Start get excel file ..............................")
+
+        excel_file = pd.read_excel(url) # get excel file for salary
+        excel_file.columns = excel_file.iloc[3]
+        _datas = excel_file.iloc[4:].dropna(axis=1, how='all')
+        _datas = _datas.replace({np.nan:None})
+        datas = _datas.to_dict('records')
+        datas = ['nan' in dt.keys() and dt.pop('nan') and dt or dt for dt in datas]
+
+        #for values in datas:
+        #    val = values['date_salaire'] and type(values['date_salaire']) == 'Timestamp' and values['date_salaire'].to_pydatetime().strftime("%Y-%m-%d") or values['date_salaire']
+        #    values['date_salaire'] = val
+
+        _logger.info(f" template line: {datas}")
+        _logger.info("end extract..............................")
+        return datas
+
+    def transform(self, datas):
+        """Change les nom des colonnes de salaire."""
+        def v_get_value(value, key):
+            if key in ['standard_price', 'supplier_stock']:
+                return float(value.replace(',', '.')) if value else 0
+            elif key in ['image_1920']:
+                if 'http://' not in value:
+                    value = value and 'http://' + value or value
+                return value
+            else:
+                return value
+
+        _logger.info("Start transform..............................")
+        map_croisement = {
+            'Matricule': 'matricule', 'Salaire brut': 'salaire_brut', 'Travaillées': 'h_travailles', 'Complémentaires': 'h_complementaires',
+            'Supplémentaires': 'h_supplementaires', 'Maladie': 'c_maladie', 'A.T.': 'c_at', 'Maternité': 'c_maternite', 'Congés.P': 'c_payes', 'Autres Abs.': 'c_autres',
+            'DateEntree1': 'date_entree1', 'DateEntree2': 'date_entree2', 'Maintien': 'maintien', 'Prime': 'prime', 'date_salaire': 'date_salaire'
+        }
+        transformed = []
+        for line in datas:
+            transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
+
+        _logger.info(f"{str(transformed[:5])}")
+        _logger.info("end transform..............................")
+        return transformed
+
+    def transform2(self, lines):
+        """Adapte les valeurs des salaires."""
+
+        _logger.info("Start transform2..............................")
+        transformed = []
+        for line in lines:
+            vals = line['matricule'].split("/")
+            line['matricule'] = len(vals) > 1 and vals[-1].strip() or line['matricule']
+            line['salaire_brut'] = float(line['salaire_brut'].replace(";", "")) if type(line['salaire_brut']) == 'str' else line['salaire_brut']
+            line['date_entree1'] = get_date_formated(line['date_entree1'])
+            line['date_entree2'] = get_date_formated(line['date_entree2'])
+            line['date_salaire'] = get_date_formated(line['date_salaire'])
+            transformed.append(line)
+
+            if not line["date_entree1"]:
+                line.pop('date_entree1')
+            if not line["date_entree2"]:
+                line.pop('date_entree2')
+
+        _logger.info(f"{str(transformed[:5])}")
+        _logger.info("end transform2..............................")
+        return transformed
+
+    def split_nouveau_existant(self, transformed):
+        """Separe creation et mise a jour."""
+        _logger.info(f"data : {transformed[:5]}")
+        _logger.info("Start Separation nouveau et anciens ..............................")
+
+        imp_lines = odoorpc_searc_read(MODEL, [('date_salaire', '!=', False)], ['id', 'date_salaire', 'matricule'])
+        existing_products = []
+        new_products = []
+        for lp_ in transformed:
+            if 'date_salaire' not in lp_.keys():
+                continue
+
+            exist = list(filter(lambda x: x['date_salaire'] and lp_['date_salaire'] and x['matricule'] == lp_['matricule'] and x['date_salaire'][:7] == lp_['date_salaire'][:7], imp_lines))
+            if exist:
+                existing_products.append((exist[0]['id'], lp_))
+            else:
+                new_products.append(lp_)
+        _logger.info(f" existing: {existing_products} et news: {new_products}")
+        return {'exist': existing_products, 'news': new_products}
+
+    def creer_line(self, imp_create):
+        """Creation des nouvelles lignes de salaire."""
+
+        _logger.info(f"data : {imp_create}")
+        _logger.info("Start Creer nouvelles lignes ..............................")
+        elts = []
+        for line in imp_create:
+            elts.append(self.env["opsol_topnett.imp_salaire_line"].create(line))
+        # _logger.info(str(ids))
+        _logger.info("end of pipeline!")
+
+    def mettre_a_jour_line(self, update_salaire):
+        """Mise a jour des importation salaire."""
+        _logger.info(f"data : {update_salaire}")
+        _logger.info("Start update existing products..............................")
+        for _id, vals in update_salaire:
+            self.env["opsol_topnett.imp_salaire_line"].browse(_id).update(vals)
+        _logger.info("end of pipeline!")
 
     def execute_load_employee(self, document):
         # load employee
@@ -156,5 +262,13 @@ class WorkflowRules(models.Model):
         datas = self.file_to_dict(url)
         transformed = self.transform_employee(datas)
         transformed = self.update_employee(datas)
-        # raise UserError(transformed)
 
+    def execute_load_salaire(self, document):
+        # load salaire
+        url = document.raw
+        datas = self.file_to_dict(url)
+        transformed = self.transform(datas)
+        transformed = self.transform2(transformed)
+        result = self.split_nouveau_existant(transformed)
+        result1 = self.creer_line(result['news'])
+        result2 =  self.mettre_a_jour_line(result['exist'])
