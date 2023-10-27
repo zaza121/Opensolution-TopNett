@@ -27,6 +27,7 @@
         'views/hr_payslip_run_views.xml',
         'views/hr_payslip_input_type_views.xml',
         'views/hr_contract_views.xml',
+        'views/documents_workflow_rule_views.xml',
         # wizards
         'wizards/genxml_cot_wiz_views.xml',
         # reports

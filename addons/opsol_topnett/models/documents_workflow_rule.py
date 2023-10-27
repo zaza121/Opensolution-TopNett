@@ -18,8 +18,64 @@ def get_date_formated(date):
         return date
 
 
-class WorkflowTagAction(models.Model):
-    _inherit = "documents.workflow.action"
+class WorkflowRules(models.Model):
+    _inherit = "documents.workflow.rule"
+
+    topnet_action = fields.Selection(
+        selection=[('load_emp', "Charger Employe"), ('load_sal', 'Charger Salaire')],
+        string="Action Speciales Topnett",
+        default="",
+        required=False
+    )
+
+    def apply_actions(self, document_ids):
+        """
+        called by the front-end Document Inspector to apply the actions to the selection of ID's.
+
+        :param document_ids: the list of documents to apply the action.
+        :return: if the action was to create a new business object, returns an action to open the view of the
+                newly created object, else returns True.
+        """
+        topnett_rules = self.filtered(lambda x: x.topnet_action)
+        others = self - topnett_rules
+        if self.topnet_action:
+
+            documents = self.env['documents.document'].browse(document_ids)
+
+            # partner/owner/share_link/folder changes
+            document_dict = {}
+            if self.user_id:
+                document_dict['owner_id'] = self.user_id.id
+            if self.partner_id:
+                document_dict['partner_id'] = self.partner_id.id
+            if self.folder_id:
+                document_dict['folder_id'] = self.folder_id.id
+
+            # Use sudo if user has write access on document else allow to do the
+            # other workflow actions(like: schedule activity, send mail etc...)
+            try:
+                documents.check_access_rights('write')
+                documents.check_access_rule('write')
+                documents = documents.sudo()
+            except AccessError:
+                pass
+
+            documents.write(document_dict)
+
+            for document in documents:
+                if self.remove_activities:
+                    document.activity_ids.action_feedback(
+                        feedback="completed by rule: %s. %s" % (self.name, self.note or '')
+                    )
+
+                if self.topnet_action == "load_emp":
+                    self.execute_load_employee(document)
+                if self.topnet_action == "load_sal":
+                    pass
+
+            return True
+        else:
+            return super(WorkflowRules, others).apply_actions(document_ids)
 
     def file_to_dict(self, url):
         """Get the data from URL."""
@@ -94,14 +150,11 @@ class WorkflowTagAction(models.Model):
         return True
 
 
-    def execute_tag_action(self, document):
-        if self.action == "call_api":
-            # load employee
-            url = document.raw
-            datas = self.file_to_dict(url)
-            transformed = self.transform_employee(datas)
-            transformed = self.update_employee(datas)
-            raise UserError(transformed)
+    def execute_load_employee(self, document):
+        # load employee
+        url = document.raw
+        datas = self.file_to_dict(url)
+        transformed = self.transform_employee(datas)
+        transformed = self.update_employee(datas)
+        # raise UserError(transformed)
 
-        else:
-            return super(WorkflowTagAction, self).execute_tag_action(document)
