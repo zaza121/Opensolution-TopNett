@@ -11,11 +11,11 @@ from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
 def get_date_formated(date):
-   if date:
-        _date = datetime.strptime(date, "%d/%m/%Y")
+   if date and type(date) in [str, datetime, date]:
+        _date = datetime.strptime(date, "%d/%m/%Y") if type(date) != datetime else date
         return _date.strftime("%Y-%m-%d")
    else:
-        return date
+        return "" 
 
 
 class WorkflowRules(models.Model):
@@ -222,14 +222,14 @@ class WorkflowRules(models.Model):
         _logger.info(f"data : {transformed[:5]}")
         _logger.info("Start Separation nouveau et anciens ..............................")
 
-        imp_lines = odoorpc_searc_read(MODEL, [('date_salaire', '!=', False)], ['id', 'date_salaire', 'matricule'])
+        imp_lines = self.env["opsol_topnett.imp_salaire_line"].search_read([('date_salaire', '!=', False)], ['id', 'date_salaire', 'matricule'])
         existing_products = []
         new_products = []
         for lp_ in transformed:
-            if 'date_salaire' not in lp_.keys():
+            if 'date_salaire' not in lp_.keys() or type(lp_['date_salaire']) == float:
                 continue
 
-            exist = list(filter(lambda x: x['date_salaire'] and lp_['date_salaire'] and x['matricule'] == lp_['matricule'] and x['date_salaire'][:7] == lp_['date_salaire'][:7], imp_lines))
+            exist = list(filter(lambda x: x['date_salaire'] and lp_['date_salaire'] and x['matricule'] == lp_['matricule'] and (type(x['date_salaire']) == str and  x['date_salaire'][:7] or x['date_salaire'].strftime('%Y-%m')) == lp_['date_salaire'][:7], imp_lines))
             if exist:
                 existing_products.append((exist[0]['id'], lp_))
             else:
@@ -261,7 +261,7 @@ class WorkflowRules(models.Model):
         url = document.raw
         datas = self.file_to_dict(url)
         transformed = self.transform_employee(datas)
-        transformed = self.update_employee(datas)
+        transformed = self.update_employee(transformed)
 
     def execute_load_salaire(self, document):
         # load salaire
