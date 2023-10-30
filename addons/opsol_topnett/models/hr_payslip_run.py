@@ -76,12 +76,19 @@ class HrPayslipRun(models.Model):
         compute="compute_contracts_ids",
         string='Importations de conges',
     )
+    summary_pay = fields.Html(
+        string='Resume du Lot',
+        compute="compute_info_cotisation"
+    )
+
+    @api.depends()
 
     def compute_contracts_ids(self):
         for rec in self:
             contracts = rec.slip_ids.mapped('contract_id')
             employes = rec.slip_ids.mapped('employee_id')
             importation_conges = rec.mapped('importation_sal_ids.conges_ids')
+            structures = rec.mapped('slip_ids.struct_id')
 
             rec.contracts_ids = contracts
             rec.contracts_count = len(contracts)
@@ -90,15 +97,108 @@ class HrPayslipRun(models.Model):
             rec.importation_count = len(rec.importation_sal_ids)
             rec.imp_conge_count = len(importation_conges)
             rec.importation_con_ids = importation_conges
+            rec.pay_struct_count = len(structures)
+            rec.structure_ids = structures
 
     def compute_info_cotisation(self):
         for rec in self:
             lines = rec.slip_ids.line_ids
             effectif = len(rec.slip_ids.mapped('employee_id'))
-            ass_assur = sum(lines.filtered(lambda x: x.code == 'ASSUR').mapped('total'))
-            ass_car = sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total'))
-            ass_ccss = sum(lines.filtered(lambda x: x.code == 'CCSS').mapped('total'))
-            rec.update({'ass_chomage': ass_assur, 'ass_car': ass_car, 'ass_ccss': ass_ccss, 'effectif': effectif})
+            assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2)
+            car = round(sum(lines.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 2)
+            ccss = round(sum(lines.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 2)
+            
+            ccss_total = round(sum(lines.filtered(lambda x: x.code == 'CCSS').mapped('total')), 2)
+            car_total = round(sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total')), 2)
+            
+            gross = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
+            base_car = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
+            base_assur = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
+
+            rate_ccss = round(ccss / gross * 100 if gross else 0, 2)
+            rate_car = round(car / base_car * 100 if base_car else 0, 2)
+            rate_assur = round(assur / base_assur * 100 if base_assur else 0, 2)
+            summary_pay = f"""
+                <div>
+                    <table class="table table-bordered table-dark" style="width: 100%;">
+                        <colgroup>
+                            <col style="width: 40%;" />
+                            <col style="width: 20%;" />
+                            <col style="width: 20%;" />
+                            <col style="width: 20%;" />
+                        </colgroup>
+                        <thead>
+                            <th>CALCUL DES COTISATIONS</th>
+                            <th>C.C.S.S</th>
+                            <th>C.A.R</th>
+                            <th>Assurance chomage</th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4">DECLARATION DES SALAIRES DU MOIS DE : {self.name}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>REMUNERATION BRUTES</td>
+                                <td class="text-end">{gross}</td>
+                                <td class="text-end">{gross}</td>
+                                <td class="text-end">{gross}</td>
+                            </tr>
+                            <tr>
+                                <td>DEPASSEMENTS</td>
+                                <td class="text-end">0.0</td>
+                                <td class="text-end">0.0</td>
+                                <td class="text-end">0.0</td>
+                            </tr>
+                            <tr>
+                                <td>SALAIRES SOUMIS A COTISATIONS</td>
+                                <td class="text-end">{gross}</td>
+                                <td class="text-end">{base_car}</td>
+                                <td class="text-end">{base_assur}</td>
+                            </tr>
+                            <tr>
+                                <td>TAUX APPLIQUES</td>
+                                <td class="text-end">{rate_ccss}</td>
+                                <td class="text-end">{rate_car}</td>
+                                <td class="text-end">{rate_assur}</td>
+                            </tr>
+                            <tr>
+                                <td><br/></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td><br/></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>COTISATION DU MOIS</td>
+                                <td class="text-end">{ccss}</td>
+                                <td class="text-end">{car}</td>
+                                <td class="text-end">{assur}</td>
+                            </tr>
+                             <tr>
+                                <td>TOTAUX CUMULES</td>
+                                <td class="text-end">{ccss}</td>
+                                <td class="text-end">{car}</td>
+                                <td class="text-end">{assur}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            """
+            rec.update({
+                'ass_chomage': assur, 'ass_car': car, 'ass_ccss': ccss,
+                'effectif': effectif, 'summary_pay': summary_pay
+            })
 
     def action_open_contracts(self):
         self.ensure_one()
@@ -126,9 +226,29 @@ class HrPayslipRun(models.Model):
         action['context'] = {}
         return action
 
+    def action_open_structures(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("hr_payroll.action_view_hr_payroll_structure_list_form")
+        action['domain'] = [('id', 'in', self.structure_ids.ids)]
+        if self.pay_struct_count == 1:
+            action['view_mode'] = 'form'
+            action['res_id'] = self.structure_ids[0].id
+            if 'views' in action:
+                action['views'] = [(view_id, view_type) for view_id, view_type in action['views'] if view_type == 'form']
+        return action
+
     def get_tag_from_code(self, code_conge):
         TAG_CONGE = {'CP': 'congesPayes', 'AT': 'Accident du travail', 'MAL': 'Maladie', 'CSS': 'Congés sans solde'}
         return TAG_CONGE.get(code_conge, "")
+
+    def action_recompute_payslip(self):
+        for rec in self:
+            rec.slip_ids.compute_sheet()
+
+    def action_reload_and_recompute_payslip(self):
+        for rec in self:
+            rec.slip_ids._compute_input_line_ids()
+            rec.slip_ids.compute_sheet()
 
     def launch_genxml_wiz(self):
         self.ensure_one()
@@ -225,13 +345,13 @@ class HrPayslipRun(models.Model):
 
             # ==> Entree du salarie
             if contract and contract.date_start and contract.date_start.strftime("%Y-%m") == period:
-                entree_salarie = ET.SubElement(evenements, "Entree du salarie")
+                entree_salarie = ET.SubElement(evenements, "EntreeDuSalarie")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start.strftime(DATE_FORMAT)
 
             # ==> Entree du salarie
             if contract and contract.date_start_2 and contract.date_start_2.strftime("%Y-%m") == period:
-                entree_salarie = ET.SubElement(evenements, "Entree du salarié")
+                entree_salarie = ET.SubElement(evenements, "EntreeDuSalarie")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start_2.strftime(DATE_FORMAT)
 
@@ -239,7 +359,7 @@ class HrPayslipRun(models.Model):
             date_depart_adm = contract and contract.date_depart_administratif or None
             date_depart_phy = contract and contract.date_depart_physique or None
             if date_depart_phy or date_depart_adm:
-                sortie_salarie = ET.SubElement(evenements, "Sortie du salarie")
+                sortie_salarie = ET.SubElement(evenements, "SortieDuSalarie")
                 es_dateADM = ET.SubElement(sortie_salarie, "dateSortieAdministrative")
                 es_dateADM.text = contract.date_start.strftime(DATE_FORMAT)
                 es_datePHY = ET.SubElement(sortie_salarie, "dateSortiePhysique")

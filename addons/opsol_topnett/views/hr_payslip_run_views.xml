@@ -10,18 +10,31 @@
 
             <xpath expr="//field[@name='state']" position="before">
                 <button string="Download XML Cotisations" name="launch_genxml_wiz" type="object" />
+                <button string="Recalculer Bulletins" name="action_recompute_payslip" type="object" state="draft,verify"/>
+                <button string="Recharger Params et Recalculer Bulletins" name="action_reload_and_recompute_payslip" type="object" state="draft,verify"/>
             </xpath>
 
             <xpath expr="//field[@name='company_id']/.." position="before">
-                <group string="Info Cotisation">
-                    <field name="effectif" />
-                    <field name="ass_chomage" />
+                <!-- <group string="Info Cotisation">
+                    <div class="o_row" colspan="2">
+                        Assurance chomage <field name="ass_chomage" /> - Taux : 14,4 - Montant : 
+                    </div>
+                    
                     <field name="ass_car" />
                     <field name="ass_ccss" />
+                </group> -->
+                <group name="resume_description" string="" colspan="4">
+                    <field name="summary_pay" nolabel="1" colspan="2"/>
                 </group>
             </xpath>
 
             <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_structures" class="oe_stat_button" icon="fa-puzzle-piece" type="object" help="Structures du lot" attrs="{'invisible': [('pay_struct_count', '=', 0)]}">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value"><field name="pay_struct_count"/></span>
+                        <span class="o_stat_text">Structures</span>
+                    </div>
+                </button>
                 <button name="action_open_contracts" class="oe_stat_button" icon="fa-book" type="object" help="Contrats du lot" attrs="{'invisible': [('contracts_count', '=', 0)]}">
                     <div class="o_field_widget o_stat_info">
                         <span class="o_stat_value"><field name="contracts_count"/></span>
@@ -43,7 +56,7 @@
                 <button name="action_open_imp_conges" class="oe_stat_button" icon="fa-calendar" type="object" help="Importation de conges" attrs="{'invisible': [('imp_conge_count', '=', 0)]}">
                     <div class="o_field_widget o_stat_info">
                         <span class="o_stat_value"><field name="imp_conge_count"/></span>
-                        <span class="o_stat_text">Conges</span>
+                        <span class="o_stat_text">Conges / Absences</span>
                     </div>
                 </button>
             </xpath>
