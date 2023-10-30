@@ -245,15 +245,22 @@ class WorkflowRules(models.Model):
         elts = []
         for line in imp_create:
             elts.append(self.env["opsol_topnett.imp_salaire_line"].create(line))
-        # _logger.info(str(ids))
+        for elt in elts:
+            elt.generate_payslip()
         _logger.info("end of pipeline!")
 
     def mettre_a_jour_line(self, update_salaire):
         """Mise a jour des importation salaire."""
         _logger.info(f"data : {update_salaire}")
         _logger.info("Start update existing products..............................")
+        ids = []
         for _id, vals in update_salaire:
             self.env["opsol_topnett.imp_salaire_line"].browse(_id).update(vals)
+            ids.append(_id)
+        records = self.env["opsol_topnett.imp_salaire_line"].browse(ids)
+        records.mapped('bulletin_id').action_payslip_cancel()
+        records.mapped('bulletin_id').unlink()
+        records.generate_payslip()
         _logger.info("end of pipeline!")
 
     def execute_load_employee(self, document):
