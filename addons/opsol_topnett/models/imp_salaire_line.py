@@ -146,12 +146,13 @@ class ImpSalaireLine(models.Model):
             ('date_end', '>=', date_from),
             ('date_end', '=', False)], limit=1)
         if contract:
+            contract.update({'date_start': self.date_entree2 or self.date_entree1 or date_from})
             return contract
         else:
             return self.env["hr.contract"].create({
                 'name': f"Contrat pour {self.employee_id.name}",
                 'employee_id': self.employee_id.id,
-                'date_start': date_from,
+                'date_start': self.date_entree2 or self.date_entree1 or date_from,
                 'resource_calendar_id': self.env.company.resource_calendar_id.id,
                 'wage': 0
             })
