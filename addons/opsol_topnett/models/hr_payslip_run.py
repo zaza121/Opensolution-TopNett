@@ -238,7 +238,7 @@ class HrPayslipRun(models.Model):
         return action
 
     def get_tag_from_code(self, code_conge):
-        TAG_CONGE = {'CP': 'congesPayes', 'AT': 'Accident du travail', 'MAL': 'Maladie', 'CSS': 'Congés sans solde'}
+        TAG_CONGE = {'CP': 'congesPayes', 'AT': 'accidentTravail', 'MAL': 'maladie', 'CSS': 'congesSansSolde'}
         return TAG_CONGE.get(code_conge, "")
 
     def action_recompute_payslip(self):
@@ -252,6 +252,7 @@ class HrPayslipRun(models.Model):
 
     def launch_genxml_wiz(self):
         self.ensure_one()
+        company = self.env.company
         lines = self.slip_ids.line_ids
         imp_sals = self.env["opsol_topnett.imp_salaire_line"].search([('lot_id', '=', self.id)])
 
@@ -263,7 +264,7 @@ class HrPayslipRun(models.Model):
         # ajoute employeur et periode
         employeur = ET.SubElement(declaration, "employeur")
         periode = ET.SubElement(declaration, "periode")
-        employeur.text = f"9999"
+        employeur.text = f"{company and company.code_employeur or 9999}"
         periode.text = self.date_start.strftime("%Y-%m") or ""
 
         # Ajout des assiettes
@@ -294,17 +295,22 @@ class HrPayslipRun(models.Model):
             prenom = ET.SubElement(salarie, 'prenom')
             prenom.text = emp.prenom
             affiliationAC = ET.SubElement(salarie, 'affiliationAC')
-            affiliationAC.text = "Oui" if emp.affiliation_ac else "Non"
+            affiliationAC.text = "Oui" if contract.affiliation_ac else "Non"
             affiliationRC = ET.SubElement(salarie, 'affiliationRC')
-            affiliationRC.text = "Oui" if emp.affiliation_rc else "Non"
+            affiliationRC.text = "Oui" if contract.affiliation_rc else "Non"
             affiliationCAR = ET.SubElement(salarie, 'affiliationCAR')
-            affiliationCAR.text = "Oui" if emp.affiliation_car else "Non"
-            teletravail = ET.SubElement(salarie, 'teletravail')
-            teletravail.text = "Oui" if emp.teletravail else "Non"
+            affiliationCAR.text = "Oui" if contract.affiliation_car else "Non"
             dateNaissance = ET.SubElement(salarie, 'dateNaissance')
             dateNaissance.text = emp.birthday.strftime(DATE_FORMAT)
             administrateurSalarie = ET.SubElement(salarie, 'administrateurSalarie')
-            administrateurSalarie.text = "Oui" if emp.administrateur_salarie else "Non"
+            administrateurSalarie.text = "Oui" if contract.administrateur_salarie else "Non"
+            teletravail = ET.SubElement(salarie, 'teletravail')
+            teletravail.text = "Oui" if contract.teletravail else "Non"
+            tempsPartiel = ET.SubElement(salarie, 'tempsPartiel')
+            tempsPartiel.text = "Oui" if contract.temps_partiel else "Non"
+            if contract.teletravail:
+                paysTeletravail = ET.SubElement(salarie, 'paysTeletravail')
+                paysTeletravail.text = f"{contract.teletravail_country_id and contract.teletravail_country_id.name or ''}"
 
             # renumeration
             remuneration = ET.SubElement(salarie, "remuneration")
@@ -345,13 +351,13 @@ class HrPayslipRun(models.Model):
 
             # ==> Entree du salarie
             if contract and contract.date_start and contract.date_start.strftime("%Y-%m") == period:
-                entree_salarie = ET.SubElement(evenements, "EntreeDuSalarie")
+                entree_salarie = ET.SubElement(evenements, "entreeDuSalarie")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start.strftime(DATE_FORMAT)
 
             # ==> Entree du salarie
             if contract and contract.date_start_2 and contract.date_start_2.strftime("%Y-%m") == period:
-                entree_salarie = ET.SubElement(evenements, "EntreeDuSalarie")
+                entree_salarie = ET.SubElement(evenements, "entreeDuSalarie")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start_2.strftime(DATE_FORMAT)
 
@@ -359,7 +365,7 @@ class HrPayslipRun(models.Model):
             date_depart_adm = contract and contract.date_depart_administratif or None
             date_depart_phy = contract and contract.date_depart_physique or None
             if date_depart_phy or date_depart_adm:
-                sortie_salarie = ET.SubElement(evenements, "SortieDuSalarie")
+                sortie_salarie = ET.SubElement(evenements, "sortieDuSalarie")
                 es_dateADM = ET.SubElement(sortie_salarie, "dateSortieAdministrative")
                 es_dateADM.text = contract.date_start.strftime(DATE_FORMAT)
                 es_datePHY = ET.SubElement(sortie_salarie, "dateSortiePhysique")
@@ -367,7 +373,7 @@ class HrPayslipRun(models.Model):
 
             # ==> Préavis
             if contract.date_depart_preavis or contract.date_fin_preavis:
-                preavis = ET.SubElement(evenements, "Preavis")
+                preavis = ET.SubElement(evenements, "preavis")
                 pr_dateDebut = ET.SubElement(preavis, "dateDebut")
                 pr_dateDebut.text = contract.date_depart_preavis.strftime(DATE_FORMAT)
                 es_dateFin = ET.SubElement(preavis, "dateFin")
