@@ -6,6 +6,12 @@ from odoo.fields import Command
 class HrPayslip(models.Model):
     _inherit = "hr.payslip"
 
+    imp_sal_ids = fields.One2many(
+        comodel_name='opsol_topnett.imp_salaire_line',
+        inverse_name='bulletin_id',
+        string='Importation Salaire',
+    )
+
     @api.depends('employee_id', 'contract_id', 'struct_id', 'date_from', 'date_to', 'struct_id')
     def _compute_input_line_ids(self):
 
