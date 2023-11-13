@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import logging
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.fields import Command
 
 from dateutil.relativedelta import relativedelta
+
+_logger = logging.getLogger(__name__)
 
 
 class ImpSalaireLine(models.Model):
@@ -92,8 +95,8 @@ class ImpSalaireLine(models.Model):
                 first_day_month = rec.date_salaire.replace(day=1)
                 last_day_month = first_day_month + relativedelta(months=1) - relativedelta(days=1)
                 result = imp_conge_obj.search([
-                    ('date_end', '>', first_day_month),
-                    ('date_start', '<', last_day_month),
+                    ('date_start', '>=', first_day_month),
+                    ('date_end', '<=', last_day_month),
                     ('matricule', '=', rec.employee_id.numero)
                 ])
                 rec.update({'nombre_conges': len(result), 'conges_ids': [Command.set(result.ids)]})
@@ -105,16 +108,24 @@ class ImpSalaireLine(models.Model):
         structure_id = self.env["hr.payroll.structure"].search([], limit=1)
         for rec in self:
 
+            skip_error = self.env.context.get('skip_error', False)
+
             if rec.bulletin_id:
                 continue
 
             if not rec.employee_id:
+                if skip_error:
+                    continue
                 raise UserError(_("Pas d employe trouve avec le matricule %s", rec.matricule))
 
             if not rec.date_salaire:
+                if skip_error:
+                    continue
                 raise UserError(_("veuillez renseigner la date de salaire pour le matricule %s", rec.matricule))
 
             if not structure_id:
+                if skip_error:
+                    continue
                 raise UserError(_("Aucune structure salariale trouvee"))
 
             values = {'name': f"Bulletin {rec.matricule}: {rec.date_salaire}", 'employee_id': rec.employee_id.id}
@@ -131,9 +142,6 @@ class ImpSalaireLine(models.Model):
                 'struct_id': struct.id
             })
             rec.bulletin_id = payslip_obj.create(values)
-            inputs_values = rec.get_input_values(structure=struct)
-            rec.bulletin_id.update({'input_line_ids': inputs_values})
-            rec.bulletin_id.compute_sheet()
 
     @api.model
     def get_current_contract(self, date_from, date_to):

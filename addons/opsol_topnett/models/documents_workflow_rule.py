@@ -11,22 +11,35 @@ from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
 def get_date_formated(date):
-   if date and type(date) in [str, datetime, date]:
-        _date = datetime.strptime(date, "%d/%m/%Y") if type(date) != datetime else date
-        return _date.strftime("%Y-%m-%d")
+   if date and type(date) in [pd.Timestamp]:
+       return _date.strftime("%Y-%m-%d")
+   elif date and type(date) in [str, datetime, date]:
+       _date = datetime.strptime(date, "%d/%m/%Y") if type(date) not in [datetime, date] else date
+       return _date.strftime("%Y-%m-%d")
    else:
-        return "" 
+       return "" 
 
 
 class WorkflowRules(models.Model):
     _inherit = "documents.workflow.rule"
 
     topnet_action = fields.Selection(
-        selection=[('load_emp', "Charger Employe"), ('load_sal', 'Charger Salaire')],
+        selection=[('load_emp', "Charger Employe"), ('load_sal', 'Charger Salaire'), ('load_hol', 'Charger Conge')],
         string="Action Speciales Topnett",
         default="",
         required=False
     )
+
+    def get_display_notif(self, title, message):
+        action= {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': title, 'message': message, 'sticky': True, #True/False will display for few seconds if false
+                'next': {'type': 'ir.actions.act_window_close'},
+            }
+        }
+        return action
 
     def apply_actions(self, document_ids):
         """
@@ -72,16 +85,26 @@ class WorkflowRules(models.Model):
                     self.execute_load_employee(document)
                 if self.topnet_action == "load_sal":
                     self.execute_load_salaire(document)
+                if self.topnet_action == "load_hol":
+                    self.execute_load_holiday(document)
 
             return True
         else:
             return super(WorkflowRules, others).apply_actions(document_ids)
 
-    def file_to_dict(self, url):
+    def file_to_dict(self, url, handler=None):
         """Get the data from URL."""
         _logger.info("Start get excel file ..............................")
 
-        excel_file = pd.read_excel(url) # get excel file for salary
+        if handler == 'spreadsheet':
+            raise UserError("EXTENSION NON PRISE EN COMPTE")
+            excel_file = pd.read_json(url)
+        else:
+            import io
+            input_b = io.BytesIO(url)
+            excel_file = pd.read_excel(input_b, keep_default_na=False, na_values=['nan', 'NAN', 'NaN', 'Nan', 'NA']) # get excel file for salary
+            excel_file.replace(np.nan, "")
+            excel_file.fillna("")
         excel_file.columns = excel_file.iloc[3]
         _datas = excel_file.iloc[4:].dropna(axis=1, how='all')
         datas = _datas.to_dict('records')
@@ -99,11 +122,15 @@ class WorkflowRules(models.Model):
             if not value:                
                 return value
             elif key == 'numero':
-                return value and int(value) or 0
+                try:
+                    value = value and int(value)
+                except ValueError:
+                    value = None
+                return value
             elif key == 'birthday':                
                 return get_date_formated(value)
             elif key == 'registration_number':
-                vals = value.split("/")
+                vals = value.split("/") if value and type(value) == str else []
                 return len(vals) > 1 and vals[-1].strip() or value
             else:
                 return value
@@ -122,7 +149,6 @@ class WorkflowRules(models.Model):
         """Recupere les employee existants et les met a jour."""
         _logger.info("Start update employee ..............................")
         emp_lines = self.sudo().env["hr.employee"].search_read([], ['id', 'numero'])
-        _logger.info(f" request {emp_lines}")
 
         existing_products = []
         new_products = []
@@ -139,34 +165,72 @@ class WorkflowRules(models.Model):
         # write ou update
         for _id, vals in existing_products:
             self.env["hr.employee"].browse(_id).update(vals)
-        # odoorpc_write("hr.employee", existing_products)
 
         # create new employee
         for elt in new_products:
             self.env["hr.employee"].create(elt)
-        # ids = odoorpc_create("hr.employee", new_products)
 
         _logger.info("end updating employee..............................")
         return True
 
-    def get_salaire_data(self, url):
-        """Get les donnees de salaire from URL."""
-        _logger.info("Start get excel file ..............................")
+    def transform_holiday(self, data_holiday):
+        """Changement du nom des colonnes conges et adaptation des valeurs"""
+        _logger.info("Start transform conge data ..............................")
 
-        excel_file = pd.read_excel(url) # get excel file for salary
-        excel_file.columns = excel_file.iloc[3]
-        _datas = excel_file.iloc[4:].dropna(axis=1, how='all')
-        _datas = _datas.replace({np.nan:None})
-        datas = _datas.to_dict('records')
-        datas = ['nan' in dt.keys() and dt.pop('nan') and dt or dt for dt in datas]
+        def v_get_value(value, key):
+            if not value:                
+                return value
+            elif key in ['nb_heures', 'nb_jours']:
+                try:
+                    value = value and int(value)
+                except ValueError:
+                    value = None
+                return value
+            elif key in ['date_start', 'date_end']:                
+                return get_date_formated(value)
+            elif key == 'registration_number':
+                vals = value.split("/") if value and type(value) == str else []
+                return len(vals) > 1 and vals[-1].strip() or value
+            else:
+                return value.strip() if type(value) == str else value
 
-        #for values in datas:
-        #    val = values['date_salaire'] and type(values['date_salaire']) == 'Timestamp' and values['date_salaire'].to_pydatetime().strftime("%Y-%m-%d") or values['date_salaire']
-        #    values['date_salaire'] = val
+        _logger.info("Start transform..............................")
+        map_croisement = {'Motif': 'code_conge', 'Employé': 'matricule', 'Du': 'date_start', 'Au': 'date_end', 'Nb Heures': 'nb_heures', 'Nb Jours': 'nb_jours'}
+        transformed = []
+        for line in data_holiday:
+            transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
 
-        _logger.info(f" template line: {datas}")
-        _logger.info("end extract..............................")
-        return datas
+        _logger.info(f"{str(transformed[:5])}")
+        _logger.info("end transform..............................")
+        return transformed
+
+    def update_holiday(self, transformed):
+        """Recupere les holidays existants et les met a jour."""
+        _logger.info("Start update holiday ..............................")
+        holi_lines = self.sudo().env["opsol_topnett.imp_conge"].search_read([], ['id', 'code_conge', 'matricule', 'date_start'])
+
+        existing_holi = []
+        new_holi = []
+        for lp_ in transformed:
+            if not lp_.get('matricule', False) or not lp_.get('date_start', False):
+                continue
+
+            exist = list(filter(lambda x: x['matricule'] and str(x['matricule']) == str(lp_['matricule']) and x['date_start'] and str(x['date_start'])[:7] == str(lp_['date_start'])[:7], holi_lines))
+            if exist:
+                existing_holi.append((exist[0]['id'], lp_))
+            else:
+                new_holi.append(lp_)
+
+        # write ou update
+        for _id, vals in existing_holi:
+            self.env["opsol_topnett.imp_conge"].browse(_id).update(vals)
+
+        # create new employee
+        for elt in new_holi:
+            self.env["opsol_topnett.imp_conge"].create(elt)
+
+        _logger.info("end updating holiday..............................")
+        return True
 
     def transform(self, datas):
         """Change les nom des colonnes de salaire."""
@@ -200,12 +264,12 @@ class WorkflowRules(models.Model):
         _logger.info("Start transform2..............................")
         transformed = []
         for line in lines:
-            vals = line['matricule'].split("/")
+            vals = line['matricule'].split("/") if type(line['matricule']) == str else []
             line['matricule'] = len(vals) > 1 and vals[-1].strip() or line['matricule']
             line['salaire_brut'] = float(line['salaire_brut'].replace(";", "")) if type(line['salaire_brut']) == 'str' else line['salaire_brut']
             line['date_entree1'] = get_date_formated(line['date_entree1'])
             line['date_entree2'] = get_date_formated(line['date_entree2'])
-            line['date_salaire'] = get_date_formated(line['date_salaire'])
+            line['date_salaire'] = get_date_formated(line['date_salaire']) if 'date_salaire' in line.keys() else get_date_formated(datetime.today())
             transformed.append(line)
 
             if not line["date_entree1"]:
@@ -234,24 +298,23 @@ class WorkflowRules(models.Model):
                 existing_products.append((exist[0]['id'], lp_))
             else:
                 new_products.append(lp_)
-        _logger.info(f" existing: {existing_products} et news: {new_products}")
         return {'exist': existing_products, 'news': new_products}
 
     def creer_line(self, imp_create):
         """Creation des nouvelles lignes de salaire."""
 
-        _logger.info(f"data : {imp_create}")
         _logger.info("Start Creer nouvelles lignes ..............................")
-        elts = []
+        elts = self.env["opsol_topnett.imp_salaire_line"]
         for line in imp_create:
-            elts.append(self.env["opsol_topnett.imp_salaire_line"].create(line))
-        for elt in elts:
-            elt.generate_payslip()
+            elts |= self.env["opsol_topnett.imp_salaire_line"].create(line)
+        elts.with_context(skip_error=True).generate_payslip()
+        _logger.info("compute lot....")
+        lots = elts.mapped('lot_id')
+        lots.action_reload_and_recompute_payslip()
         _logger.info("end of pipeline!")
 
     def mettre_a_jour_line(self, update_salaire):
         """Mise a jour des importation salaire."""
-        _logger.info(f"data : {update_salaire}")
         _logger.info("Start update existing products..............................")
         ids = []
         for _id, vals in update_salaire:
@@ -260,22 +323,32 @@ class WorkflowRules(models.Model):
         records = self.env["opsol_topnett.imp_salaire_line"].browse(ids)
         records.mapped('bulletin_id').action_payslip_cancel()
         records.mapped('bulletin_id').unlink()
-        records.generate_payslip()
+        records.with_context(skip_error=True).generate_payslip()
         _logger.info("end of pipeline!")
 
-    def execute_load_employee(self, document):
+    def execute_load_employee(self, document):  
         # load employee
         url = document.raw
-        datas = self.file_to_dict(url)
+        datas = self.file_to_dict(url, handler=document.handler)
         transformed = self.transform_employee(datas)
         transformed = self.update_employee(transformed)
+        return self.get_display_notif("Importation Employee", "Fin Importation")
+
+    def execute_load_holiday(self, document):
+        # load holiday
+        url = document.raw
+        datas = self.file_to_dict(url, handler=document.handler)
+        transformed = self.transform_holiday(datas)
+        transformed = self.update_holiday(transformed)
+        return self.get_display_notif("Importation Conge", "Fin Importation")
 
     def execute_load_salaire(self, document):
         # load salaire
         url = document.raw
-        datas = self.file_to_dict(url)
+        datas = self.file_to_dict(url, handler=document.handler)
         transformed = self.transform(datas)
         transformed = self.transform2(transformed)
         result = self.split_nouveau_existant(transformed)
-        result1 = self.creer_line(result['news'])
-        result2 =  self.mettre_a_jour_line(result['exist'])
+        self.mettre_a_jour_line(result['exist'])
+        self.creer_line(result['news'])
+        return self.get_display_notif("Importation Salaire", "Fin Importation")

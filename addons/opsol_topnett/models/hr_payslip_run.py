@@ -112,10 +112,11 @@ class HrPayslipRun(models.Model):
             car_total = round(sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total')), 2)
             
             gross = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
-            base_car = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
-            base_assur = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
+            base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 2)
+            base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 2)
+            base_assur = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
 
-            rate_ccss = round(ccss / gross * 100 if gross else 0, 2)
+            rate_ccss = round(ccss / base_ccss * 100 if base_ccss else 0, 2)
             rate_car = round(car / base_car * 100 if base_car else 0, 2)
             rate_assur = round(assur / base_assur * 100 if base_assur else 0, 2)
             summary_pay = f"""
@@ -157,7 +158,7 @@ class HrPayslipRun(models.Model):
                             </tr>
                             <tr>
                                 <td>SALAIRES SOUMIS A COTISATIONS</td>
-                                <td class="text-end">{gross}</td>
+                                <td class="text-end">{base_ccss}</td>
                                 <td class="text-end">{base_car}</td>
                                 <td class="text-end">{base_assur}</td>
                             </tr>
@@ -273,9 +274,13 @@ class HrPayslipRun(models.Model):
         ass_car = ET.SubElement(assiettes, 'CAR')
         ass_ccss = ET.SubElement(assiettes, 'CCSS')
 
-        ass_assur.text = f"{round(self.ass_chomage)}"
-        ass_car.text = ass_assur.text = f"{round(self.ass_car)}"
-        ass_ccss.text = ass_assur.text = f"{round(self.ass_ccss)}"
+        lines = self.slip_ids.line_ids
+        base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 2)
+        base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 2)
+        base_assur = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
+        ass_assur.text = f"{round(base_assur)}"
+        ass_car.text = ass_assur.text = f"{round(base_car)}"
+        ass_ccss.text = ass_assur.text = f"{round(base_ccss)}"
 
         # ajoute les effectifs a declarer
         effectif = ET.SubElement(declaration, "effectif")
@@ -322,19 +327,25 @@ class HrPayslipRun(models.Model):
             baseCMRCTB = ET.SubElement(remuneration, "baseCMRCTB")
             
             v_salaire_brut = sum(_lines.filtered(lambda x: x.code == 'GROSS').mapped(lambda x: x.amount))
+            v_base_ccss = sum(_lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped(lambda x: x.amount))
+            v_base_car = sum(_lines.filtered(lambda x: x.code == 'BASE_CAR').mapped(lambda x: x.amount))
+            v_base_assur = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped(lambda x: x.amount))
+
             salaireBrut.text = f"{round(v_salaire_brut)}"
             heuresTotales.text = f"{round(imp_sal.h_travailles + imp_sal.h_complementaires)}"
-            baseCCSS.text = f"{round(v_salaire_brut)}"
-            baseCAR.text = f"{round(5504)}"
-            baseCMRCTA.text = f"{round(5504)}"
+            baseCCSS.text = f"{round(v_base_ccss)}"
+            baseCAR.text = f"{round(v_base_car)}"
+            baseCMRCTA.text = f"{round(v_base_assur)}"
             baseCMRCTB.text = f"{round(5504)}"
 
             # evenements
             prime_montant = imp_sal and imp_sal.prime or 0
             evenements = ET.SubElement(salarie, "evenements")
+            delEvent = True
             
             # ==> Conge payes
             for conge in imp_sal.conges_ids:
+                delEvent = False
                 tag_code = self.get_tag_from_code(conge.code_conge)
                 if not tag_code:
                     continue
@@ -351,12 +362,14 @@ class HrPayslipRun(models.Model):
 
             # ==> Entree du salarie
             if contract and contract.date_start and contract.date_start.strftime("%Y-%m") == period:
+                delEvent = False
                 entree_salarie = ET.SubElement(evenements, "entreeDuSalarie")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start.strftime(DATE_FORMAT)
 
             # ==> Entree du salarie
             if contract and contract.date_start_2 and contract.date_start_2.strftime("%Y-%m") == period:
+                delEvent = False
                 entree_salarie = ET.SubElement(evenements, "entreeDuSalarie")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start_2.strftime(DATE_FORMAT)
@@ -365,6 +378,7 @@ class HrPayslipRun(models.Model):
             date_depart_adm = contract and contract.date_depart_administratif or None
             date_depart_phy = contract and contract.date_depart_physique or None
             if date_depart_phy or date_depart_adm:
+                delEvent = False
                 sortie_salarie = ET.SubElement(evenements, "sortieDuSalarie")
                 es_dateADM = ET.SubElement(sortie_salarie, "dateSortieAdministrative")
                 es_dateADM.text = contract.date_start.strftime(DATE_FORMAT)
@@ -373,6 +387,7 @@ class HrPayslipRun(models.Model):
 
             # ==> Préavis
             if contract.date_depart_preavis or contract.date_fin_preavis:
+                delEvent = False
                 preavis = ET.SubElement(evenements, "preavis")
                 pr_dateDebut = ET.SubElement(preavis, "dateDebut")
                 pr_dateDebut.text = contract.date_depart_preavis.strftime(DATE_FORMAT)
@@ -380,9 +395,13 @@ class HrPayslipRun(models.Model):
                 es_dateFin.text = contract.date_fin_preavis.strftime(DATE_FORMAT)
             
             if prime_montant != 0:
+                delEvent = False
                 prime = ET.SubElement(evenements, "prime")
                 montant = ET.SubElement(prime, "montant")
                 montant.text = f"{prime_montant}"
+
+            if delEvent:
+                salarie.remove(evenements)
 
         # Converting the xml data to byte object,
         # for allowing flushing data to file 
