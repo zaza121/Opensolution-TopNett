@@ -381,7 +381,7 @@ class HrPayslipRun(models.Model):
                 delEvent = False
                 sortie_salarie = ET.SubElement(evenements, "sortieDuSalarie")
                 es_dateADM = ET.SubElement(sortie_salarie, "dateSortieAdministrative")
-                es_dateADM.text = contract.date_start.strftime(DATE_FORMAT)
+                es_dateADM.text = contract.date_depart_administratif.strftime(DATE_FORMAT)
                 es_datePHY = ET.SubElement(sortie_salarie, "dateSortiePhysique")
                 es_datePHY.text = contract.date_depart_physique.strftime(DATE_FORMAT)
 
