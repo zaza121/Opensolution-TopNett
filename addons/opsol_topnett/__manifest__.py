@@ -40,5 +40,6 @@
     'assets': {
         # 'web.report_assets_common': ['opsol_sammy/static/src/scss/_fonts.scss'],
         # 'web.assets_backend': ['opsol_sammy/static/src/scss/_fonts.scss'],
+        'web.assets_backend': ['opsol_topnett/static/src/js/documents_hooks_inh.js'],
     },
 }

@@ -75,6 +75,7 @@ class WorkflowRules(models.Model):
 
             documents.write(document_dict)
 
+            msg = ""
             for document in documents:
                 if self.remove_activities:
                     document.activity_ids.action_feedback(
@@ -82,13 +83,20 @@ class WorkflowRules(models.Model):
                     )
 
                 if self.topnet_action == "load_emp":
-                    self.execute_load_employee(document)
+                    msg = self.execute_load_employee(document)
                 if self.topnet_action == "load_sal":
-                    self.execute_load_salaire(document)
+                    msg = self.execute_load_salaire(document)
                 if self.topnet_action == "load_hol":
-                    self.execute_load_holiday(document)
+                    msg = self.execute_load_holiday(document)
 
-            return True
+                # tag and facet actions
+                for tag_action in self.tag_action_ids:
+                    tag_action.execute_tag_action(document)
+
+            if self.create_model:
+                return self.with_company(documents.company_id).create_record(documents=documents)
+
+            return {'message': msg}
         else:
             return super(WorkflowRules, others).apply_actions(document_ids)
 
@@ -162,6 +170,8 @@ class WorkflowRules(models.Model):
             else:
                 new_products.append(lp_)
 
+        msg = f"{len(existing_products)} employe(s) mis a jour et {len(new_products)} nouveaux employes"
+
         # write ou update
         for _id, vals in existing_products:
             self.env["hr.employee"].browse(_id).update(vals)
@@ -171,7 +181,7 @@ class WorkflowRules(models.Model):
             self.env["hr.employee"].create(elt)
 
         _logger.info("end updating employee..............................")
-        return True
+        return msg
 
     def transform_holiday(self, data_holiday):
         """Changement du nom des colonnes conges et adaptation des valeurs"""
@@ -221,6 +231,8 @@ class WorkflowRules(models.Model):
             else:
                 new_holi.append(lp_)
 
+        msg = f"{len(existing_holi)} absence(s) mise a jour et {len(new_holi)} nouvelles absences"
+
         # write ou update
         for _id, vals in existing_holi:
             self.env["opsol_topnett.imp_conge"].browse(_id).update(vals)
@@ -230,7 +242,7 @@ class WorkflowRules(models.Model):
             self.env["opsol_topnett.imp_conge"].create(elt)
 
         _logger.info("end updating holiday..............................")
-        return True
+        return msg
 
     def transform(self, datas):
         """Change les nom des colonnes de salaire."""
@@ -331,16 +343,16 @@ class WorkflowRules(models.Model):
         url = document.raw
         datas = self.file_to_dict(url, handler=document.handler)
         transformed = self.transform_employee(datas)
-        transformed = self.update_employee(transformed)
-        return self.get_display_notif("Importation Employee", "Fin Importation")
+        msg = self.update_employee(transformed)
+        return msg
 
     def execute_load_holiday(self, document):
         # load holiday
         url = document.raw
         datas = self.file_to_dict(url, handler=document.handler)
         transformed = self.transform_holiday(datas)
-        transformed = self.update_holiday(transformed)
-        return self.get_display_notif("Importation Conge", "Fin Importation")
+        msg = self.update_holiday(transformed)
+        return msg
 
     def execute_load_salaire(self, document):
         # load salaire
@@ -351,4 +363,5 @@ class WorkflowRules(models.Model):
         result = self.split_nouveau_existant(transformed)
         self.mettre_a_jour_line(result['exist'])
         self.creer_line(result['news'])
-        return self.get_display_notif("Importation Salaire", "Fin Importation")
+        msg = f"{len(result['exist'])} Importations mises a jour et {len(result['news'])} Nouvelles Importations"
+        return msg
