@@ -3,6 +3,7 @@ from xml.etree import ElementTree as ET
 import base64
 import contextlib
 import io
+from datetime import datetime
 
 from odoo import api, fields, models
 HEADER = b"""<?xml version="1.0" encoding="UTF-8"?>
@@ -102,11 +103,21 @@ class HrPayslipRun(models.Model):
 
     def compute_info_cotisation(self):
         for rec in self:
+            first_day_of_year = datetime.strptime(f"{rec.date_start.year}-01-01", "%Y-%m-%d")
+            cumul_domain = [('date_start', '<=', rec.date_start), ('date_start', '>=', first_day_of_year)]
+            cumul_lot = self.env["hr.payslip.run"].search(cumul_domain)
+
             lines = rec.slip_ids.line_ids
+            lines_cumul = cumul_lot.mapped('slip_ids.line_ids')
+
             effectif = len(rec.slip_ids.mapped('employee_id'))
             assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2)
             car = round(sum(lines.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 2)
             ccss = round(sum(lines.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 2)
+
+            cumul_assur = round(sum(lines_cumul.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2) if lines_cumul else 0
+            cumul_car = round(sum(lines_cumul.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 2) if lines_cumul else 0
+            cumul_ccss = round(sum(lines_cumul.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 2) if lines_cumul else 0
             
             ccss_total = round(sum(lines.filtered(lambda x: x.code == 'CCSS').mapped('total')), 2)
             car_total = round(sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total')), 2)
@@ -188,9 +199,9 @@ class HrPayslipRun(models.Model):
                             </tr>
                              <tr>
                                 <td>TOTAUX CUMULES</td>
-                                <td class="text-end">{ccss}</td>
-                                <td class="text-end">{car}</td>
-                                <td class="text-end">{assur}</td>
+                                <td class="text-end">{cumul_ccss}</td>
+                                <td class="text-end">{cumul_car}</td>
+                                <td class="text-end">{cumul_assur}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -262,12 +273,6 @@ class HrPayslipRun(models.Model):
         declaration.set('xmlns:xsi', "http://www.w3.org/2001/XMLSchema-instance")
         declaration.set('xsi:schemaLocation', "http://www.caisses-sociales.mc/DSM/2.0 http://www.caisses-sociales.mc/DSM/2.0/dsm.xsd")
 
-        # ajoute employeur et periode
-        employeur = ET.SubElement(declaration, "employeur")
-        periode = ET.SubElement(declaration, "periode")
-        employeur.text = f"{company and company.code_employeur or 9999}"
-        periode.text = self.date_start.strftime("%Y-%m") or ""
-
         # Ajout des assiettes
         assiettes = ET.SubElement(declaration, "assiettes")
         ass_assur = ET.SubElement(assiettes, 'AssuranceChomage')
@@ -278,9 +283,9 @@ class HrPayslipRun(models.Model):
         base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 2)
         base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 2)
         base_assur = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
-        ass_assur.text = f"{round(base_assur)}"
-        ass_car.text = ass_assur.text = f"{round(base_car)}"
-        ass_ccss.text = ass_assur.text = f"{round(base_ccss)}"
+        ass_assur.text = f"{base_assur}"
+        ass_car.text = ass_assur.text = f"{base_car}"
+        ass_ccss.text = ass_assur.text = f"{base_ccss}"
 
         # ajoute les effectifs a declarer
         effectif = ET.SubElement(declaration, "effectif")
@@ -331,12 +336,12 @@ class HrPayslipRun(models.Model):
             v_base_car = sum(_lines.filtered(lambda x: x.code == 'BASE_CAR').mapped(lambda x: x.amount))
             v_base_assur = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped(lambda x: x.amount))
 
-            salaireBrut.text = f"{round(v_salaire_brut)}"
-            heuresTotales.text = f"{round(imp_sal.h_travailles + imp_sal.h_complementaires)}"
-            baseCCSS.text = f"{round(v_base_ccss)}"
-            baseCAR.text = f"{round(v_base_car)}"
-            baseCMRCTA.text = f"{round(v_base_assur)}"
-            baseCMRCTB.text = f"{round(5504)}"
+            salaireBrut.text = f"{v_salaire_brut}"
+            heuresTotales.text = f"{imp_sal.h_travailles}"
+            baseCCSS.text = f"{v_base_ccss}"
+            baseCAR.text = f"{v_base_car}"
+            baseCMRCTA.text = f"{v_base_assur}"
+            baseCMRCTB.text = f"{5504}"
 
             # evenements
             prime_montant = imp_sal and imp_sal.prime or 0
@@ -402,6 +407,13 @@ class HrPayslipRun(models.Model):
 
             if delEvent:
                 salarie.remove(evenements)
+
+        
+        # ajoute employeur et periode
+        employeur = ET.SubElement(declaration, "employeur")
+        periode = ET.SubElement(declaration, "periode")
+        employeur.text = f"{company and company.code_employeur or 9999}"
+        periode.text = self.date_start.strftime("%Y-%m") or ""
 
         # Converting the xml data to byte object,
         # for allowing flushing data to file 
