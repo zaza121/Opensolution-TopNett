@@ -52,13 +52,13 @@ class L10nLuGenerateTaxReport(models.TransientModel):
         Gets the formatted values for LU's tax report.
         Exact format depends on the period (monthly, quarterly, annual(simplified)).
         """
-        report = self.env.ref('l10n_lu.tax_report')
-        options = report._get_options()
+        report_gen_options = self.env.context.get('report_generation_options', {})
+        report = self.env['account.report'].browse(report_gen_options.get('report_id'))
+        options = report._get_options(report_gen_options)
         form = self.env[report.custom_handler_model_name].get_tax_electronic_report_values(options)['forms'][0]
         self.period = form['declaration_type'][-1]
         form['field_values'] = self._remove_zero_fields(form['field_values'], report.id)
         if self.period == 'A':
-            options = report._get_options()
             date_from = fields.Date.from_string(options['date'].get('date_from'))
             date_to = fields.Date.from_string(options['date'].get('date_to'))
             self._adapt_to_annual_report(form, date_from, date_to)
@@ -111,7 +111,7 @@ class L10nLuGenerateTaxReport(models.TransientModel):
             form['field_values']['164'] = {'value': data.report_section_163 - data.report_section_165, 'field_type': 'float'}
         elif data.report_section_163 and data.report_section_164 and not data.report_section_165:
             form['field_values']['165'] = {'value': data.report_section_163 - data.report_section_164, 'field_type': 'float'}
-        elif data.report_section_163:
+        elif (data.report_section_163 and not data.report_section_164 and not data.report_section_165) or (data.report_section_163 != data.report_section_164 + data.report_section_165):
             raise ValidationError(_("Fields 164 and 165 are mandatory when 163 is filled in and must add up to field 163 (Appendix E)."))
 
         if '361' not in form['field_values']:
@@ -300,7 +300,7 @@ class L10nLuGenerateTaxReport(models.TransientModel):
         annex_options = options.copy()
         annex_options['group_by'] = 'account.tax'
         lines = self.env.ref('l10n_lu.tax_report')._get_lines(annex_options)
-        annex_fields, expenditures_table, total_base_amount, total_vat = self._add_annex_fields_expenditures(self, annex_fields, lines)
+        annex_fields, expenditures_table, total_base_amount, total_vat = self._add_annex_fields_expenditures(annex_fields, lines)
         # Annex totals
         if annex_fields:
             annex_fields['192'] = total_base_amount

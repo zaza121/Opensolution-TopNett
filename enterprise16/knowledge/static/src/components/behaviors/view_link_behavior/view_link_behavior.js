@@ -44,8 +44,15 @@ export class ViewLinkBehavior extends AbstractBehavior {
         action.globalState = {
             searchModel: this.props.context.knowledge_search_model_state
         };
+        const props = {};
+        if (action.context.orderBy) {
+            try {
+                props.orderBy = JSON.parse(action.context.orderBy);
+            } catch {};
+        }
         this.actionService.doAction(action, {
-            viewType: this.props.view_type
+            viewType: this.props.view_type,
+            props
         });
     }
 }

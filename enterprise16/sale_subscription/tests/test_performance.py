@@ -76,6 +76,5 @@ class TestSubscriptionPerformance(TestSubscriptionCommon):
             ],
 
         } for idx in range(NR_COUNT)])
-
-        with self.assertQueryCount(__system__=4):
+        with self.assertQueryCount(__system__=3):
             (sale_orders | non_recuring_sale_orders)._compute_recurring_live()

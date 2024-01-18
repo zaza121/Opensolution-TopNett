@@ -212,7 +212,7 @@ class L10nBeHrPayrollScheduleChange(models.TransientModel):
             'date_end': self.date_end,
             self.contract_id._get_contract_wage_field(): self.wage,
             'resource_calendar_id': self.resource_calendar_id.id,
-            'standard_calendar_id': self.contract_id.resource_calendar_id.id,
+            'standard_calendar_id': self.full_resource_calendar_id.id,
             'time_credit': self.part_time,
             'work_time_rate': self.work_time_rate / 100 if self.part_time else False,
             'state': 'draft',

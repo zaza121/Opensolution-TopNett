@@ -54,3 +54,11 @@ class TestAccountAvalaraAddressValidation(TestAvataxCommon):
         with self.assertRaises(ValidationError):
             wizard = self.env['avatax.validate.address'].create({'partner_id': partner.id})
             wizard._compute_validated_address()
+
+    def test_auto_apply_fp_on_payment(self):
+        self.partner.zip = False
+        self.fp_avatax.auto_apply = True
+        self.fp_avatax.state_ids = self.partner.state_id
+
+        # ensure this doesn't raise ValidationError from _check_address
+        self.env["account.payment"].create({"partner_id": self.partner.id})

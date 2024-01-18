@@ -37,7 +37,7 @@ class QualityCheck(models.Model):
         # get the operation in the eco's new bom similar to the current one
         operation = eco.new_bom_id.operation_ids.filtered(lambda o: o._get_comparison_values() == self.workorder_id.operation_id._get_comparison_values())
         quality_point_data = {
-            'title': _("New Step Suggestion: %s", self.title),
+            'title': _("New Step Suggestion: %s", self.title or ''),
             'operation_id': operation.id,
             'product_ids': self.product_id.ids,
             'team_id': self.team_id.id,

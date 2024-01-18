@@ -2,8 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.addons.test_marketing_automation.tests.common import TestMACommon
+from dateutil.relativedelta import relativedelta
+
 from odoo.tests import tagged, users
 from odoo.tools import mute_logger
+from odoo.fields import Datetime
 
 
 @tagged('marketing_automation')
@@ -131,3 +134,62 @@ class MarketingCampaignTest(TestMACommon):
 
         self.assertEqual(campaign.running_participant_count, 4)
         self.assertEqual(campaign.participant_ids.mapped('res_id'), (test_records[0:3] | test_records[-1]).ids)
+
+    @users('user_markauto')
+    @mute_logger('odoo.addons.base.ir.ir_model', 'odoo.models')
+    def test_archive_ma_campaign(self):
+        """
+        Ensures that campaigns are stopped when archived.
+        """
+        campaign = self.env['marketing.campaign'].create({
+            'name': 'Test Campaign',
+            'model_id': self.env['ir.model']._get('marketing.test.sms').id,
+            'domain': '%s' % [('id', 'in', self.test_records[0].ids)],
+        })
+
+        mailing = self._create_mailing()
+        self._create_activity(campaign, mailing=mailing, interval_number=0)
+
+        campaign.action_start_campaign()
+        self.assertEqual(campaign.state, 'running')
+
+        campaign.active = False
+        self.assertEqual(campaign.state, 'stopped')
+
+    @mute_logger('odoo.addons.base.ir.ir_model', 'odoo.models')
+    def test_update_child_in_running_campaign(self):
+        marketing_campaign = self.env['marketing.campaign'].create({
+            'name': 'My First Campaign',
+            'model_id': self.env['ir.model']._get('marketing.test.sms').id,
+            'domain': '%s' % [('id', 'in', self.test_records.ids)],
+        })
+        mailing = self._create_mailing()
+        mailing2 = self._create_mailing()
+        parent_activity = self._create_activity(
+            marketing_campaign,
+            mailing=mailing,
+            name="parent activity",
+        )
+        child_activity = self._create_activity(
+            marketing_campaign,
+            mailing=mailing2,
+            name="child activity",
+            parent_id=parent_activity.id,
+            trigger_type="mail_open",
+        )
+
+        marketing_campaign.action_start_campaign()
+        marketing_campaign.sync_participants()
+        [trace.action_execute() for trace in parent_activity.trace_ids]
+
+        child_activity.update({
+            'interval_type': 'days',
+            'interval_number': 5,
+        })
+        trace_offset = relativedelta(**{'days': 5})
+
+        expected_schedule_date = Datetime.from_string(child_activity.trace_ids.parent_id.mailing_trace_ids.mapped('write_date')[0]) + trace_offset
+        marketing_campaign.action_update_participants()
+
+        trace_schedule_date = child_activity.trace_ids.mapped('schedule_date')[0]
+        self.assertEqual(trace_schedule_date, expected_schedule_date)

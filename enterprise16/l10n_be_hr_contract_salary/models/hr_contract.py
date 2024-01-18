@@ -3,7 +3,7 @@
 
 import ast
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 
 
 class HrContract(models.Model):
@@ -18,10 +18,10 @@ class HrContract(models.Model):
     contract_type_id = fields.Many2one('hr.contract.type', "Contract Type",
                                        default=lambda self: self.env.ref('l10n_be_hr_payroll.l10n_be_contract_type_cdi',
                                                                          raise_if_not_found=False))
-    has_bicycle = fields.Boolean(related="employee_id.has_bicycle")
+    has_bicycle = fields.Boolean(related="employee_id.has_bicycle", readonly=False)
     l10n_be_bicyle_cost = fields.Float(compute='_compute_l10n_be_bicyle_cost')
 
-    @api.depends('employee_id.has_bicycle', 'employee_id.has_bicycle')
+    @api.depends('employee_id.has_bicycle')
     def _compute_l10n_be_bicyle_cost(self):
         for contract in self:
             if not contract.employee_id.has_bicycle:
@@ -33,7 +33,7 @@ class HrContract(models.Model):
     def _get_private_bicycle_cost(self, distance):
         amount_per_km = self.env['hr.rule.parameter'].sudo()._get_parameter_from_code('cp200_cycle_reimbursement_per_km', raise_if_not_found=False) or 0.20
         amount_max = self.env['hr.rule.parameter'].sudo()._get_parameter_from_code('cp200_cycle_reimbursement_max', raise_if_not_found=False) or 8
-        return 52 * min(amount_max, amount_per_km * distance * 2)
+        return 4 * min(amount_max, amount_per_km * distance * 2)
 
     @api.depends(
         'wage_with_holidays', 'wage_on_signature', 'state',
@@ -124,7 +124,7 @@ class HrContract(models.Model):
 
     def _get_description_company_car_total_depreciated_cost(self, new_value=None):
         advantage = self.env.ref('l10n_be_hr_contract_salary.l10n_be_transport_company_car')
-        description = advantage.description
+        description = advantage.description or ""
         if new_value is None or not new_value:
             if self.car_id:
                 new_value = 'old-%s' % self.car_id.id
@@ -138,13 +138,16 @@ class HrContract(models.Model):
         except:
             return description
         if car_option == "new":
-            vehicle = self.env['fleet.vehicle.model'].sudo().browse(vehicle_id)
+            vehicle = self.env['fleet.vehicle.model'].with_company(self.company_id).sudo().browse(vehicle_id)
             co2 = vehicle.default_co2
             fuel_type = vehicle.default_fuel_type
             transmission = vehicle.transmission
             door_number = odometer = immatriculation = trailer_hook = False
+            bik_display = "%s €" % round(vehicle.default_atn, 2)
+            monthly_cost_display = _("%s € (CO2 Fee) + %s € (Rent)") % (round(vehicle.co2_fee, 2), round(vehicle.default_total_depreciated_cost - vehicle.co2_fee, 2))
+
         else:
-            vehicle = self.env['fleet.vehicle'].sudo().browse(vehicle_id)
+            vehicle = self.env['fleet.vehicle'].with_company(self.company_id).sudo().browse(vehicle_id)
             co2 = vehicle.co2
             fuel_type = vehicle.fuel_type
             door_number = vehicle.doors
@@ -152,9 +155,14 @@ class HrContract(models.Model):
             immatriculation = vehicle.acquisition_date
             transmission = vehicle.transmission
             trailer_hook = "Yes" if vehicle.trailer_hook else "No"
+            bik_display = "%s €" % round(vehicle.atn, 2)
+            monthly_cost_display = _("%s € (CO2 Fee) + %s € (Rent)") % (round(vehicle.co2_fee, 2), round(vehicle.total_depreciated_cost - vehicle.co2_fee, 2))
+
         car_elements = {
             'CO2 Emission': co2,
+            'Monthly Cost': monthly_cost_display,
             'Fuel Type': fuel_type,
+            'BIK': bik_display,
             'Transmission': transmission,
             'Doors Number': door_number,
             'Trailer Hook': trailer_hook,

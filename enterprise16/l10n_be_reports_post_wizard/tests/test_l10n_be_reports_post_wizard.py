@@ -30,8 +30,10 @@ class TestL10nBeReportsPostWizard(TestAccountReportsCommon):
     @classmethod
     def setup_company_data(cls, company_name, **kwargs):
         res = super().setup_company_data(company_name, **kwargs)
+        country_be_id = cls.env.ref('base.be').id
         res['company'].update({
-            'country_id': cls.env.ref('base.be').id,
+            'country_id': country_be_id,
+            'account_fiscal_country_id': country_be_id,
             'vat': 'BE0477472701',
         })
         res['company'].partner_id.update({
@@ -84,6 +86,6 @@ class TestL10nBeReportsPostWizard(TestAccountReportsCommon):
         attachment_ids = self.env['ir.attachment'].search([
             ('res_model', '=', 'account.move'),
             ('res_id', '=', self.tax_return_move.id),
-            ('name', '=', 'vat_report.xml'),
+            ('name', '=', 'vat_return.xml'),
         ])
         self.assertEqual(len(attachment_ids), 1)

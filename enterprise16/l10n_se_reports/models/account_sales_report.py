@@ -83,9 +83,10 @@ class SwedishECSalesReportCustomHandler(models.AbstractModel):
         date_to = fields.Date.from_string(options['date'].get('date_to'))
         if options['date']['period_type'] == 'month':
             return date_to.strftime('%y%m')
-        if options['date']['period_type'] == 'quarter':
+        elif options['date']['period_type'] == 'quarter':
             return '%s-%s' % (date_to.strftime('%y'), date_utils.get_quarter_number(date_to))
-        raise UserError(_('You can only export Monthly or Quarterly reports.'))
+        else:
+            return '%s-to-%s' % (options['date']['date_from'], options['date']['date_to'])
 
     def export_sales_report_to_kvr(self, options):
         """

@@ -18,8 +18,14 @@
                     </label>
                     <div class="col-md-3">
                         <div class="input-group">
-                            <input class="form-control" type="text" t-att-value="data[1]" disabled="disabled" t-att-name="data[2]"/>
-                            <div class="input-group-text"> €</div>
+                            <t t-if="data[4] == 'before'">
+                                <input class="form-control" type="text" t-att-value="data[5]" disabled="disabled" t-att-name="data[2]"/>
+                                <div class="input-group-text"><t t-esc="data[1]"/></div>
+                            </t>
+                            <t t-if="data[4] == 'after'">
+                                <input class="form-control" type="text" t-att-value="data[1]" disabled="disabled" t-att-name="data[2]"/>
+                                <div class="input-group-text"><t t-esc="data[5]"/></div>
+                            </t>
                         </div>
                     </div>
                 </div>

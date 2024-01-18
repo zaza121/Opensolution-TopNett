@@ -23,10 +23,6 @@ class CommissionPlan(models.Model):
     def _match_rules(self, product, template, pricelist):
         self.ensure_one()
 
-        # order of precedence is ensured by leveraging SQL ordering (NULLS LAST (default)):
-        # 1. product_id
-        # 2. template_id
-        # 3. pricelist_id
         rule = self.env['commission.rule'].search([
             ('plan_id', '=', self.id),
             ('category_id', '=', product.categ_id.id),
@@ -39,7 +35,7 @@ class CommissionPlan(models.Model):
             '|',
             ('pricelist_id', '=', pricelist),
             ('pricelist_id', '=', False),
-        ], limit=1, order='product_id, template_id, pricelist_id')
+        ], limit=1, order='sequence')
 
         return rule
 

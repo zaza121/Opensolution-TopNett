@@ -11,5 +11,6 @@ class DataCleaningTestModel(models.Model):
     name = fields.Char()
     phone = fields.Char()
     note = fields.Text()
+    translated_field = fields.Char(translate=True)
     country_id = fields.Many2one('res.country', default=lambda x: x.env.company.country_id.id)
     company_id = fields.Many2one('res.company', default=lambda x: x.env.company.id)

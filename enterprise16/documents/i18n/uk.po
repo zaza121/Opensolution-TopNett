@@ -4,16 +4,17 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022
+# Bohdan Lisnenko, 2023
+# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:27+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022\n"
-"Language-Team: Ukrainian (https://www.transifex.com/odoo/teams/41243/uk/)\n"
+"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023\n"
+"Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -26,6 +27,11 @@ msgstr ""
 #, python-format
 msgid " + Add a tag"
 msgstr " + Додати тег"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.share_page
+msgid "#{document_is_url and 'Link to ' or 'Download '}#{document.name}"
+msgstr "#{document_is_url and 'Link to ' or 'Download '}#{document.name}"
 
 #. module: documents
 #. odoo-javascript
@@ -68,13 +74,13 @@ msgstr ""
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_finance_fiscal_year_2017
-msgid "2021"
-msgstr "2021"
+msgid "2022"
+msgstr "2022"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_finance_fiscal_year_2018
-msgid "2022"
-msgstr "2022"
+msgid "2023"
+msgstr "2023"
 
 #. module: documents
 #: model_terms:digest.tip,tip_description:documents.digest_tip_documents_0
@@ -239,16 +245,16 @@ msgid ""
 "                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                                    <tr><td valign=\"middle\">\n"
 "                                        <span style=\"font-size: 10px;\">\n"
-"                                            Document Request: <br/>\n"
+"                                            Document Request: <br>\n"
 "                                            <t t-if=\"object.name\">\n"
 "                                                <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Inbox Financial</span>\n"
 "                                            </t>\n"
-"                                        </span><br/>\n"
+"                                        </span><br>\n"
 "                                    </td><td valign=\"middle\" align=\"right\">\n"
-"                                        <img t-attf-src=\"/logo.png?company={{ object.create_uid.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.create_uid.company_id.name\"/>\n"
+"                                        <img t-attf-src=\"/logo.png?company={{ object.create_uid.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.create_uid.company_id.name\">\n"
 "                                    </td></tr>\n"
 "                                    <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
-"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
 "                                    </td></tr>\n"
 "                                </table>\n"
 "                            </td>\n"
@@ -260,9 +266,9 @@ msgid ""
 "                                    <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                                        <div>\n"
 "                                            Hello <t t-out=\"object.owner_id.name or ''\">OdooBot</t>,\n"
-"                                            <br/><br/>\n"
+"                                            <br><br>\n"
 "                                            <t t-out=\"object.create_uid.name or ''\">OdooBot</t> (<t t-out=\"object.create_uid.email or ''\">odoobot@example.com</t>) asks you to provide the following document:\n"
-"                                            <br/><br/>\n"
+"                                            <br><br>\n"
 "                                            <center>\n"
 "                                                <div>\n"
 "                                                    <t t-if=\"object.name\">\n"
@@ -274,23 +280,23 @@ msgid ""
 "                                                        <i t-out=\"object.activity_note or ''\">Example of a note.</i>\n"
 "                                                    </t>\n"
 "                                                </div>\n"
-"                                                <br/>\n"
+"                                                <br>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
 "                                                    <a t-att-href=\"object.full_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                                                        Upload the requested document\n"
 "                                                    </a>\n"
 "                                                </div>\n"
-"                                            </center><br/>\n"
-"                                            Please provide us with the missing document before the link expires (planned on <t t-out=\"object.date_deadline or ''\">2021-05-17</t>).\n"
+"                                            </center><br>\n"
+"                                            Please provide us with the missing document<t t-if=\"object.date_deadline\"> before the link expires (planned on <t t-out=\"object.date_deadline\">2021-05-17</t>)</t>.\n"
 "                                            <t t-if=\"user and user.signature\">\n"
-"                                                <br/>\n"
-"                                                <t t-out=\"user.signature or ''\">--<br/>Mitchell Admin</t>\n"
-"                                                <br/>\n"
+"                                                <br>\n"
+"                                                <t t-out=\"user.signature or ''\">--<br>Mitchell Admin</t>\n"
+"                                                <br>\n"
 "                                            </t>\n"
 "                                        </div>\n"
 "                                    </td></tr>\n"
 "                                    <tr><td style=\"text-align:center;\">\n"
-"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
 "                                    </td></tr>\n"
 "                                </table>\n"
 "                            </td>\n"
@@ -322,7 +328,7 @@ msgid ""
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
 "                            <t t-if=\"object.date_deadline\">\n"
-"                                This link expires on <b t-out=\"object.date_deadline or ''\">2021-05-17</b>.<br/>\n"
+"                                This link expires on <b t-out=\"object.date_deadline or ''\">2021-05-17</b>.<br>\n"
 "                            </t>\n"
 "                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
 "                          </td></tr>\n"
@@ -342,7 +348,7 @@ msgstr ""
 "                                        <span style=\"font-size: 10px;\">\n"
 "                                            Запит на документ: <br/>\n"
 "                                            <t t-if=\"object.name\">\n"
-"                                                <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Вхідні фінансові документи</span>\n"
+"                                                <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Inbox Financial</span>\n"
 "                                            </t>\n"
 "                                        </span><br/>\n"
 "                                    </td><td valign=\"middle\" align=\"right\">\n"
@@ -362,12 +368,12 @@ msgstr ""
 "                                        <div>\n"
 "                                            Вітаємо <t t-out=\"object.owner_id.name or ''\">OdooBot</t>,\n"
 "                                            <br/><br/>\n"
-"                                            <t t-out=\"object.create_uid.name or ''\">OdooBot</t> (<t t-out=\"object.create_uid.email or ''\">odoobot@example.com</t>) просить вас надати наступні документи:\n"
+"                                            <t t-out=\"object.create_uid.name or ''\">OdooBot</t> (<t t-out=\"object.create_uid.email or ''\">odoobot@example.com</t>) просить вас надати наступний документ:\n"
 "                                            <br/><br/>\n"
 "                                            <center>\n"
 "                                                <div>\n"
 "                                                    <t t-if=\"object.name\">\n"
-"                                                        <b t-out=\"object.name or ''\">Вхідні фінансові документи</b>\n"
+"                                                        <b t-out=\"object.name or ''\">Inbox Financial</b>\n"
 "                                                    </t>\n"
 "                                                </div>\n"
 "                                                <div>\n"
@@ -378,11 +384,11 @@ msgstr ""
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
 "                                                    <a t-att-href=\"object.full_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
-"                                                        Завантажте запитувані документи\n"
+"                                                        Завантажити запитуваний документ\n"
 "                                                    </a>\n"
 "                                                </div>\n"
 "                                            </center><br/>\n"
-"                                            Надайте нам документ, поки не минув термін дії посилання (заплановано на <t t-out=\"object.date_deadline or ''\">2021-05-17</t>).\n"
+"                                            Будь ласка, надайте нам відсутній документ<t t-if=\"object.date_deadline\"> до закінчення терміну дії посилання (заплановано <t t-out=\"object.date_deadline\">2021-05-17</t>)</t>.\n"
 "                                            <t t-if=\"user and user.signature\">\n"
 "                                                <br/>\n"
 "                                                <t t-out=\"user.signature or ''\">--<br/>Mitchell Admin</t>\n"
@@ -423,7 +429,7 @@ msgstr ""
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
 "                            <t t-if=\"object.date_deadline\">\n"
-"                                Термін дії цього посилання до <b t-out=\"object.date_deadline or ''\">2021-05-17</b>.<br/>\n"
+"                                Посилання діє до <b t-out=\"object.date_deadline or ''\">2021-05-17</b>.<br/>\n"
 "                            </t>\n"
 "                            Зроблено <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Документами Odoo</a>\n"
 "                          </td></tr>\n"
@@ -1335,7 +1341,7 @@ msgstr "Вміст файлу (base64)"
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__raw
 msgid "File Content (raw)"
-msgstr "Вміст файлу (рядок)"
+msgstr "Вміст файлу (сирий)"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__file_size
@@ -1347,7 +1353,7 @@ msgstr "Розмір файлу"
 #: code:addons/documents/static/src/views/hooks.js:0
 #, python-format
 msgid "File is too large."
-msgstr "Файл занадто важкий."
+msgstr "Файл занадто великий."
 
 #. module: documents
 #: model:ir.model,name:documents.model_ir_binary
@@ -1400,7 +1406,7 @@ msgstr "Підписники (Партнери)"
 #. module: documents
 #: model:ir.model.fields,help:documents.field_documents_document__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "Іконка з чудовим шрифтом, напр. fa-tasks"
+msgstr "Іконка Font awesome, напр. fa-tasks"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
@@ -1672,7 +1678,10 @@ msgid "Limit Write Groups to the documents of which they are owner."
 msgstr "Обмежте групи запису документами, власниками яких вони є."
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/inspector/documents_inspector.xml:0
 #: model_terms:ir.ui.view,arch_db:documents.documents_link_to_record_form_view
+#, python-format
 msgid "Link"
 msgstr "Посилання"
 
@@ -1948,8 +1957,8 @@ msgstr "Кількість помилок"
 #. module: documents
 #: model:ir.model.fields,help:documents.field_documents_document__message_needaction_counter
 #: model:ir.model.fields,help:documents.field_documents_share__message_needaction_counter
-msgid "Number of messages which requires an action"
-msgstr "Кількість повідомлень, які потебують дії"
+msgid "Number of messages requiring action"
+msgstr "Кількість повідомлень, які вимагають дії"
 
 #. module: documents
 #: model:ir.model.fields,help:documents.field_documents_document__message_has_error_counter
@@ -2304,8 +2313,8 @@ msgstr "Послідовність"
 
 #. module: documents
 #: model:documents.workflow.rule,name:documents.documents_rule_finance_2018contracts
-msgid "Set As 2022 Contracts"
-msgstr "Встановити як Контракти 2022"
+msgid "Set As 2023 Contracts"
+msgstr "Встановіть як Контракти 2023"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_workflow_rule__partner_id

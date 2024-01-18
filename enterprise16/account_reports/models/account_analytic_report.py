@@ -13,9 +13,10 @@ class AccountReport(models.AbstractModel):
     )
 
     def _get_options_initializers_forced_sequence_map(self):
-        """ Force the sequence for the init_options so columns groups are already generated """
+        """ Force the sequence for the init_options so columns headers are already generated but not the columns
+            So, between _init_options_column_headers and _init_options_columns"""
         sequence_map = super(AccountReport, self)._get_options_initializers_forced_sequence_map()
-        sequence_map[self._init_options_analytic_groupby] = 1050
+        sequence_map[self._init_options_analytic_groupby] = 995
         return sequence_map
 
     def _init_options_analytic_groupby(self, options, previous_options=None):
@@ -78,13 +79,11 @@ class AccountReport(models.AbstractModel):
             })
         if analytic_headers:
             analytic_headers.append({'name': ''})
-            default_group_vals = {'horizontal_groupby_element': {}, 'forced_options': {}}
+            # We add the analytic layer to the column_headers before creating the columns
             options['column_headers'] = [
                 *options['column_headers'],
                 analytic_headers,
             ]
-            initial_column_group_vals = self._generate_columns_group_vals_recursively(options['column_headers'], default_group_vals)
-            options['columns'], options['column_groups'] = self._build_columns_from_column_group_vals(options, initial_column_group_vals)
 
     @api.model
     def _prepare_lines_for_analytic_groupby(self):
@@ -107,7 +106,7 @@ class AccountReport(models.AbstractModel):
 
         line_fields = self.env['account.move.line'].fields_get()
         self.env.cr.execute("SELECT column_name FROM information_schema.columns WHERE table_name='account_move_line'")
-        stored_fields = set(f[0] for f in self.env.cr.fetchall())
+        stored_fields = set(f[0] for f in self.env.cr.fetchall() if f[0] in line_fields)
         changed_equivalence_dict = {
             "id": sql.Identifier("id"),
             "balance": sql.SQL("-amount"),
@@ -131,7 +130,11 @@ class AccountReport(models.AbstractModel):
             elif fname == 'analytic_distribution':
                 selected_fields.append(sql.SQL('to_jsonb(account_id) AS "account_move_line.analytic_distribution"'))
             else:
-                if line_fields[fname].get("type") in ("many2one", "one2many", "many2many", "monetary"):
+                if line_fields[fname].get("translate"):
+                    typecast = sql.SQL('jsonb')
+                elif line_fields[fname].get("type") == "monetary":
+                    typecast = sql.SQL('numeric')
+                elif line_fields[fname].get("type") == "many2one":
                     typecast = sql.SQL('integer')
                 elif line_fields[fname].get("type") == "datetime":
                     typecast = sql.SQL('date')
@@ -170,7 +173,7 @@ class AccountReport(models.AbstractModel):
 
         # We add the domain filter for analytic_distribution here, as the search is not available
         tables, where_clause, where_params = super(AccountReport, context_self)._query_get(options, date_scope, domain)
-        if options.get('analytic_accounts'):
+        if options.get('analytic_accounts') and not any(x in options.get('analytic_accounts_list', []) for x in options['analytic_accounts']):
             analytic_account_ids = [[str(account_id) for account_id in options['analytic_accounts']]]
             where_params.append(analytic_account_ids)
             where_clause = f'{where_clause} AND "account_move_line".analytic_distribution ?| array[%s]'

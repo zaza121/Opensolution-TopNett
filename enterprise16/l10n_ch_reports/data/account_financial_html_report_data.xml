@@ -285,28 +285,28 @@
                                 <field name="code">CH_100</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">100 + 102</field>
+                                <field name="account_codes_formula">100 + 101 + 102 + 103 + 104 + 105</field>
                             </record>
                             <record id="account_financial_report_line_ch_106" model="account.report.line">
                                 <field name="name">Short-term assets with stock exchange price</field>
                                 <field name="code">CH_106</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">109 + 106</field>
+                                <field name="account_codes_formula">106 + 107 + 108 + 109</field>
                             </record>
                             <record id="account_financial_report_line_ch_110" model="account.report.line">
                                 <field name="name">Accounts receivable from goods and services</field>
                                 <field name="code">CH_110</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">110</field>
+                                <field name="account_codes_formula">110 + 111 + 112 + 113</field>
                             </record>
                             <record id="account_financial_report_line_ch_114" model="account.report.line">
                                 <field name="name">Other short-term receivables</field>
                                 <field name="code">CH_114</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">117 + 118 + 119 + 114</field>
+                                <field name="account_codes_formula">114 + 115 + 116 + 117 + 118 + 119</field>
                             </record>
                             <record id="account_financial_report_line_ch_120" model="account.report.line">
                                 <field name="name">Inventories</field>
@@ -334,14 +334,14 @@
                                 <field name="code">CH_140</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">144 + 140</field>
+                                <field name="account_codes_formula">14\(148,149)</field>
                             </record>
                             <record id="account_financial_report_line_ch_148" model="account.report.line">
                                 <field name="name">Participations</field>
                                 <field name="code">CH_148</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">148</field>
+                                <field name="account_codes_formula">148 + 149</field>
                             </record>
                             <record id="account_financial_report_line_ch_150" model="account.report.line">
                                 <field name="name">Movable tangible assets</field>
@@ -369,7 +369,7 @@
                                 <field name="code">CH_180</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">18</field>
+                                <field name="account_codes_formula">18 + 19</field>
                             </record>
                         </field>
                     </record>
@@ -439,7 +439,7 @@
                                 <field name="code">CH_260</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">-26</field>
+                                <field name="account_codes_formula">-26 - 27</field>
                             </record>
                         </field>
                     </record>
@@ -469,7 +469,7 @@
                                                 <field name="engine">domain</field>
                                                 <field name="date_scope">from_beginning</field>
                                                 <field name="formula">[('account_id.code', '&gt;=', '290'), ('account_id.code', '&lt;', '2991'), ('account_id.account_type', '!=', 'equity_unaffected')]</field>
-                                                <field name="subformula">sum</field>
+                                                <field name="subformula">-sum</field>
                                             </record>
                                         </field>
                                     </record>
@@ -487,7 +487,7 @@
                                             <record id="account_financial_report_line_ch_290_b_balance" model="account.report.expression">
                                                 <field name="label">balance</field>
                                                 <field name="engine">aggregation</field>
-                                                <field name="formula">CH_290_A.balance - CH_290_B.domain</field>
+                                                <field name="formula">CH_290_B.domain - CH_299.balance</field>
                                             </record>
                                         </field>
                                     </record>
@@ -502,7 +502,7 @@
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
                                         <field name="formula" eval="[('account_id.internal_group', 'in', ['income','expense'])]"/>
-                                        <field name="date_scope">from_beginning</field>
+                                        <field name="date_scope">from_fiscalyear</field>
                                         <field name="subformula">-sum</field>
                                     </record>
                                 </field>

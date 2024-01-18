@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from collections import defaultdict
 import time
 
 from markupsafe import Markup
@@ -133,6 +134,32 @@ class VoipPhonecall(models.Model):
             infos.append(info)
         return infos
 
+    def _filter_allowed_records(self):
+        """Filter calls in self based on access to related record (if applicable).
+        This includes multi-company check.
+        """
+        call_by_record_by_model_name = defaultdict(lambda: defaultdict(lambda: self.env["voip.phonecall"]))
+        allowed_calls = self.env["voip.phonecall"]
+        for call in self:
+            if call.activity_id:
+                record = self.env[call.activity_id.res_model].browse(call.activity_id.res_id)
+            elif call.mail_message_id:
+                record = self.env[call.mail_message_id.model].browse(call.mail_message_id.res_id)
+            else:
+                allowed_calls += call
+                continue
+            call_by_record_by_model_name[record._name][record] += call
+        for model_name, calls_by_record in call_by_record_by_model_name.items():
+            domain = [("id", "in", list({r.id for r in calls_by_record.keys()}))]
+            allowed_records = self.env[model_name].search(domain)
+            if not allowed_records:
+                continue
+            for record, call in calls_by_record.items():
+                if record in allowed_records:
+                    allowed_calls += call
+        # filter self instead of returning allowed_calls to preserve original order
+        return self.filtered(lambda call: call in allowed_calls)
+
     @api.model
     def get_next_activities_list(self):
         return self.search([
@@ -143,7 +170,7 @@ class VoipPhonecall(models.Model):
             ('user_id', '=', self.env.user.id),
             ('date_deadline', '<=', fields.Date.today()),
             ('state', '!=', 'done')
-        ], order='sequence,date_deadline,id')._get_info()
+        ], order='sequence,date_deadline,id')._filter_allowed_records()._get_info()
 
     @api.model
     def get_recent_list(self, search_expr=None, offset=0, limit=None):
@@ -154,7 +181,11 @@ class VoipPhonecall(models.Model):
         ]
         if search_expr:
             domain += [['name', 'ilike', search_expr]]
-        return self.search(domain, offset=offset, limit=limit, order='call_date desc')._get_info()
+        return (
+            self.search(domain, offset=offset, limit=limit, order="call_date desc")
+            ._filter_allowed_records()
+            ._get_info()
+        )
 
     @api.model
     def get_missed_call_info(self):
@@ -265,9 +296,14 @@ class VoipPhonecall(models.Model):
         else:
             record = self.env[model].browse(res_id)
             fields = self.env[model]._fields.items()
-            partner_field_name = [k for k, v in fields if v.type == 'many2one' and v.comodel_name == 'res.partner'][0]
-            if len(partner_field_name):
-                partner_id = record[partner_field_name].id
+            partner_id = next(
+                (
+                    record[key]
+                    for key, value in fields
+                    if value.comodel_name == "res.partner" and value.type == "many2one"
+                ),
+                self.env["res.partner"]
+            ).id
         vals = {
             'name': _('Call to %s', number),
             'phone': number,

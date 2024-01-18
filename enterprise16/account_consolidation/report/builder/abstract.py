@@ -32,7 +32,7 @@ class AbstractBuilder(ABC):
             return []
         params = self._get_params(period_ids, options, line_id)
 
-        if options.get('consolidation_hierarchy', True):
+        if options.get('consolidation_hierarchy'):
             return self._get_hierarchy(options, line_id, **params)
         else:
             return self._get_plain(options, **params)

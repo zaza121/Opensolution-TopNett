@@ -56,7 +56,7 @@
                         <h1 class="text-center">
                             <i class="fa fa-check-circle fa-1x text-success me-2" role="img" aria-label="Success" title="Success"/>
                             <t t-if="ticket">
-                                <span>Your Ticket Number is <a t-if="request.session.uid" t-attf-href="/helpdesk/ticket/#{ticket.id}">#<span t-field="ticket.id"/></a><t t-if="not request.session.get('uid')">#<span t-field="ticket.id"/></t>.</span>
+                                <span>Your Ticket Number is <a t-if="request.session.uid" t-attf-href="/helpdesk/ticket/#{ticket.id}">#<span t-field="ticket.ticket_ref"/></a><t t-if="not request.session.get('uid')">#<span t-field="ticket.id"/></t>.</span>
                             </t>
                         </h1>
                         <h1 class="text-center">Thank you for submitting your issue, our team will get right on it!</h1>
@@ -137,7 +137,7 @@
                                             <span class="s_website_form_label_content">Attachment</span>
                                         </label>
                                         <div class="col-sm">
-                                            <input type="file" class="form-control-file s_website_form_input" name="Attachment" id="helpdesk5"/>
+                                            <input type="file" class="form-control s_website_form_input" name="Attachment" id="helpdesk5"/>
                                         </div>
                                     </div>
                                 </div>

@@ -1,7 +1,7 @@
 /** @odoo-module */
 
 import tour from 'web_tour.tour';
-import { openCommandBar } from '../knowledge_tour_utils.js';
+import { endKnowledgeTour, openCommandBar } from '../knowledge_tour_utils.js';
 
 
 tour.register('knowledge_file_command_tour', {
@@ -25,4 +25,5 @@ tour.register('knowledge_file_command_tour', {
     run: 'click'
 }, { // wait for the block to appear in the editor
     trigger: '.o_knowledge_behavior_type_file',
-}]);
+}, ...endKnowledgeTour()
+]);

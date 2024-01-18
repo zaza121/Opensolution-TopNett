@@ -1,9 +1,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.http import request
-from odoo import http
+from odoo import fields, http
 
-from odoo.addons.website_sale_renting.controllers.product import WebsiteSaleRenting, parse_date
+from odoo.addons.website_sale_renting.controllers.product import WebsiteSaleRenting
 
 class WebsiteSaleStockRenting(WebsiteSaleRenting):
 
@@ -23,7 +23,7 @@ class WebsiteSaleStockRenting(WebsiteSaleRenting):
         result = {'preparation_time': product_sudo.preparation_time}
         if not product_sudo.allow_out_of_stock_order:
             result['renting_availabilities'] = product_sudo._get_availabilities(
-                parse_date(min_date), parse_date(max_date),
+                fields.Datetime.to_datetime(min_date), fields.Datetime.to_datetime(max_date),
                 request.website._get_warehouse_available(), with_cart=True
             )
         return result

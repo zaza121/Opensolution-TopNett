@@ -171,7 +171,9 @@
                                     </div>
                                 </a>
                             </td>
+                            <t t-set="success_rate_percentege" t-value="`/ %`"/>
                             <td t-if="state.dashboardValues.success_rate_enable" t-attf-class="{{demoClass}} p-0">
+                                <t t-if="state.dashboardValues.today.sla_ticket_count > 0" t-set="success_rate_percentege" t-value="`${formatFloat(state.dashboardValues.today.success)} %`"/>
                                 <a name="helpdesk.helpdesk_ticket_action_success"
                                    title="Percentage of tickets that were closed without failing any SLAs."
                                    t-attf-class="btn w-100 h-100 p-0 border-0 text-capitalize fw-normal {{(state.dashboardValues and state.dashboardValues.helpdesk_target_success and state.dashboardValues.helpdesk_target_success &lt;= state.dashboardValues.today.success) ? 'btn-primary': 'btn-light bg-100' }} {{showDemo ? 'o_cursor_default' : ''}}"
@@ -180,7 +182,7 @@
                                    data-hotkey="k"
                                 >
                                     <div class="p-2">
-                                        <h2 class="mb-0 text-reset" t-out="`${formatFloat(state.dashboardValues.today.success)} %`"/>
+                                        <h2 class="mb-0 text-reset" t-out="success_rate_percentege"/>
                                         Success Rate
                                     </div>
                                 </a>
@@ -213,6 +215,7 @@
                                 </a>
                             </td>
                             <td t-if="state.dashboardValues.success_rate_enable" t-attf-class="{{demoClass}} p-0">
+                                <t t-if="state.dashboardValues['7days'].sla_ticket_count > 0" t-set="success_rate_percentege" t-value="`${formatFloat(state.dashboardValues['7days'].success)} %`"/>
                                 <a name="helpdesk.helpdesk_ticket_action_7dayssuccess"
                                    t-attf-class="btn btn-light align-items-center d-flex w-100 h-100 p-0 border-0 bg-100 fw-normal {{showDemo ? 'o_cursor_default' : ''}}"
                                    title="Percentage of tickets that were closed without failing any SLAs."
@@ -220,7 +223,7 @@
                                    data-action-title="Tickets Analysis"
                                    data-hotkey="n"
                                 >
-                                    <div class="w-100 p-2" t-out="`${formatFloat(state.dashboardValues['7days'].success)} %`"/>
+                                    <div class="w-100 p-2" t-out="success_rate_percentege"/>
                                 </a>
                             </td>
                             <td t-if="state.dashboardValues.rating_enable" t-attf-class="{{demoClass}} p-0">

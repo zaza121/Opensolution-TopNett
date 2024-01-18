@@ -22,7 +22,7 @@ class TestAvataxSubscriptionController(TestSaleSubscriptionAvalaraCommon, Paymen
             self.url_open(url, allow_redirects=False)
 
         self.assertEqual(
-            capture.val and capture.val['json']['referenceCode'],
+            capture.val and capture.val['json']['createTransactionModel']['referenceCode'],
             self.subscription.name,
             'Should have queried avatax when viewing the subscription.'
         )

@@ -142,3 +142,15 @@ class Project(models.Model):
         revenues['total']['invoiced'] += amount_invoiced
         revenues['total']['to_invoice'] += amount_to_invoice
         return profitability_items
+
+    def _get_profitability_sale_order_items_domain(self, domain=None):
+        return expression.AND([
+            super()._get_profitability_sale_order_items_domain(domain),
+            [('order_id.is_subscription', '=', False)],
+        ])
+
+    def _get_revenues_items_from_invoices_domain(self, domain=None):
+        return expression.AND([
+            super()._get_revenues_items_from_invoices_domain(domain),
+            [('subscription_id', '=', False)],
+        ])

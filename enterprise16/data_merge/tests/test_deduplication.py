@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from . import test_common
+from odoo.tests.common import users
 
 class TestDeduplication(test_common.TestCommon):
     def test_deduplication_exact(self):
@@ -171,3 +172,39 @@ class TestDeduplication(test_common.TestCommon):
 
         self.assertEqual(records_model1[0].name, 'abc', "Should have read name abc")
         self.assertEqual(records_model2[0].name, 'abc', "Should have read name abc")
+
+    @users('admin')
+    def test_merge_multi_company_rule(self):
+        PartnerModel = self.env['ir.model'].search([('model', '=', 'res.partner')])
+
+        self._create_record('res.partner', name='toto test')
+        self._create_record('res.partner', name='toto test')
+
+        MyModel = self.DMModel.create({
+            'name': 'test of test partner',
+            'res_model_id': PartnerModel.id,
+            'domain': [('name', 'like', 'toto test')],
+        })
+
+        self.DMRule.create({
+            'model_id': MyModel.id,
+            'field_id': self.env['ir.model.fields']._get('res.partner', 'name').id,
+            'match_mode': 'exact'
+        })
+
+        MyModel.find_duplicates()
+
+        groups = self.env['data_merge.group'].search([('model_id', '=', MyModel.id)])
+        self.assertEqual(len(groups), 1, 'Should have found 1 group')
+
+        group = groups[0]
+        group.merge_records() # should not raise multi company ir.rule error
+
+        company_2 = self.env['res.company'].create({'name': 'Company 2'})
+        self._create_record('res.partner', name='toto test 2')
+        self._create_record('res.partner', name='toto test 2', company_id=company_2.id)
+
+        MyModel.find_duplicates()
+
+        groups = self.env['data_merge.group'].search([('model_id', '=', MyModel.id), ('record_ids', '!=', False)])
+        self.assertFalse(groups.exists(), "Should not have found a group") # Not found due to the multi company ir.rule

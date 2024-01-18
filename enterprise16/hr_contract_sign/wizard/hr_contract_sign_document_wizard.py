@@ -123,18 +123,20 @@ class HrContractSignDocumentWizard(models.TransientModel):
             if employee.user_id.partner_id:
                 partner_by_employee[employee] = employee.user_id.partner_id
             else:
-                if not employee.work_email:
+                email = employee.work_email if employee.work_email else employee.private_email
+                if not email:
                     return {
                         'type': 'ir.actions.client',
                         'tag': 'display_notification',
                         'params': {
-                            'message': _("%s does not have a work email set.", employee.name),
+                            'message': _("%s does not have a work or private email set.", employee.name),
                             'sticky': False,
                             'type': 'danger',
                         }
                     }
-                partner_by_employee[employee] = self.env['mail.thread']._mail_find_partner_from_emails(
-                    [employee.work_email], records=self, force_create=True)[0]
+                else:
+                    partner_by_employee[employee] = self.env['mail.thread']._mail_find_partner_from_emails(
+                        [email], records=self, force_create=True)[0]
 
         sign_request = self.env['sign.request']
         if not self.check_access_rights('create', raise_exception=False):

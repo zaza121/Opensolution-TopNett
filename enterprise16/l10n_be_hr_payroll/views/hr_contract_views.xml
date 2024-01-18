@@ -32,10 +32,6 @@
                         type="action" groups="hr_contract.group_hr_contract_manager"
                         attrs="{'invisible': [('country_code', '!=', 'BE')]}"/>
             </xpath>
-            <xpath expr="//group[@name='yearly_advantages']" position="attributes">
-                <attribute name="string">Yearly Advantages</attribute>
-                <attribute name="attrs">{'invisible': ['|', ('country_code', '!=', 'BE'), ('wage_type', '=', 'hourly')]}</attribute>
-            </xpath>
             <xpath expr="//group[@name='yearly_advantages']" position="inside">
                 <label for="commission_on_target" attrs="{'invisible': ['|', ('country_code', '!=', 'BE'), ('wage_type', '=', 'hourly')]}"/>
                 <div class="o_row" attrs="{'invisible': ['|', ('country_code', '!=', 'BE'), ('wage_type', '=', 'hourly')]}">
@@ -194,8 +190,8 @@
                 <group string="ONSS Reduction" name="onss_retructuring" attrs="{'invisible': ['|', ('wage_type', '=', 'hourly'), ('country_code', '!=', 'BE')]}">
                     <field name="l10n_be_onss_restructuring"/>
                 </group>
-                <group name="fiscal_voluntarism" string="Fiscal Voluntarism">
-                    <field name="fiscal_voluntarism" attrs="{'invisible': [('wage_type', '=', 'hourly')]}"/>
+                <group name="fiscal_voluntarism" string="Fiscal Voluntarism" attrs="{'invisible': [('country_code', '!=', 'BE')]}">
+                    <field name="fiscal_voluntarism" attrs="{'invisible': ['|', ('country_code', '!=', 'BE'),('wage_type', '=', 'hourly')]}"/>
                     <label for="fiscal_voluntary_rate"
                            attrs="{'invisible': ['|', ('wage_type', '=', 'hourly'), ('fiscal_voluntarism', '=', False)]}"/>
                     <div class="o_row" attrs="{'invisible': ['|', ('wage_type', '=', 'hourly'), ('fiscal_voluntarism', '=', False)]}">

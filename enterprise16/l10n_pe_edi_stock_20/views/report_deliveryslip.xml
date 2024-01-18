@@ -29,7 +29,7 @@
                         <div class="row mt-3">
                             <t t-set="qr_url" t-value="o._l10n_pe_edi_get_qr()"/>
                             <div t-if="qr_url and o.l10n_pe_edi_status == 'sent'" class="barcode col-3">
-                                <img alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s&amp;width=180&amp;height=180' % quote_plus(qr_url)"/>
+                                <img alt="Barcode" t-att-src="'/report/barcode/?barcode_type=QR&amp;value=%s&amp;width=180&amp;height=180' % quote_plus(qr_url)"/>
                             </div>
                             <div class="col-6" t-if="o.l10n_pe_edi_related_document_type">
                                 <strong>Related Documents:</strong>

@@ -1,10 +1,10 @@
 /** @odoo-module **/
 
 import { CheckBox } from "@web/core/checkbox/checkbox";
-import { useService } from "@web/core/utils/hooks";
+import { useService, useBus } from "@web/core/utils/hooks";
 import fieldUtils from 'web.field_utils';
 
-const { Component, useRef, onPatched, onWillStart } = owl;
+const { Component, useRef, onPatched } = owl;
 
 export default class MpsLineComponent extends Component {
 
@@ -29,10 +29,8 @@ export default class MpsLineComponent extends Component {
             }
         });
 
-        onWillStart(async () => {
-            this.model.on('mouse-over', this, () => this._onMouseOverReplenish());
-            this.model.on('mouse-out', this, () => this._onMouseOutReplenish());
-        });
+        useBus(this.model, 'mouse-over', () => this._onMouseOverReplenish());
+        useBus(this.model, 'mouse-out', () => this._onMouseOutReplenish());
     }
 
     get productionSchedule() {

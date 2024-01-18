@@ -121,7 +121,7 @@ export class StreamPostComment extends Component {
         return this.isAuthor;
     }
 
-    get isManageable() {
+    isManageable() {
         return this.isDeletable || this.isEditable;
     }
 

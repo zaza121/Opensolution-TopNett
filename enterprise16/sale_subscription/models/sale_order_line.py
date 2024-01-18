@@ -2,7 +2,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from dateutil.relativedelta import relativedelta
-from collections import defaultdict
 
 from odoo import fields, models, api, _, Command
 from odoo.tools.date_utils import get_timedelta
@@ -29,7 +28,7 @@ class SaleOrderLine(models.Model):
     def _check_line_unlink(self):
         """ Override. Check wether a line can be deleted or not."""
         undeletable_lines = super()._check_line_unlink()
-        not_subscription_lines = self.filtered(lambda line: not line.order_id.is_subscription)
+        not_subscription_lines = self.filtered(lambda line: not (line.order_id.is_subscription and line.product_id.recurring_invoice))
         return not_subscription_lines and undeletable_lines
 
     @api.depends('product_template_id', 'order_id.recurrence_id')
@@ -62,45 +61,62 @@ class SaleOrderLine(models.Model):
             if to_invoice_check and line.order_id.start_date and line.order_id.start_date > today or (currency_id.is_zero(line.price_subtotal)):
                 line.invoice_status = 'no'
 
-    @api.depends('order_id.subscription_management', 'order_id.start_date', 'order_id.next_invoice_date')
+    @api.depends('order_id.subscription_management', 'order_id.start_date')
     def _compute_discount(self):
+        """ For upsells : this method compute the prorata ratio for upselling when the current and possibly future
+                        period have already been invoiced.
+                        The algorithm work backward by trying to remove one period at a time from the end to have a number of
+                        complete period before computing the prorata for the current period.
+                        For the current period, we use the remaining number of days / by the number of day in the current period.
+        """
         today = fields.Date.today()
         other_lines = self.env['sale.order.line']
+
         for line in self:
-            if not line.order_id.next_invoice_date or line.order_id.subscription_management != 'upsell':
-                other_lines |= line
+            parent_so = line.order_id.subscription_id
+            if not line.temporal_type == 'subscription':
+                other_lines += line # normal sale line are handled by super
                 continue
-            period_end = line.order_id.next_invoice_date
-            current_period_start = line.order_id.start_date or today
-            previous_period_start = line.order_id.subscription_id.last_invoice_date or line.order_id.subscription_id.start_date
-            time_to_invoice = period_end - current_period_start
-            if period_end and (period_end - previous_period_start).days != 0:
-                ratio = float(time_to_invoice.days) / float((period_end - previous_period_start).days)
+            if not parent_so.next_invoice_date or line.order_id.subscription_management != 'upsell':
+                # We don't compute discount
+                continue
+            start_date = max(line.order_id.start_date or today, line.order_id.origin_order_id.start_date or today)
+            end_date = line.order_id.subscription_id.next_invoice_date
+            if start_date >= end_date:
+                ratio = 0
             else:
-                ratio = 1
-            # Warning: we allow here ratio > 1 to be able to have negative discount.
-            # Negative discount are useful when we want to upsell a renewal order that not started yet.
-            # In that case, the upsell will also impact the renewed contract for a prorata temporis of the previous period
-            if ratio < 0:
-                ratio = 1.00  # Something went wrong in the dates
-            if line.order_id.subscription_management == 'upsell' and line.product_id.recurring_invoice and line.order_id.next_invoice_date:
+                recurrence = line.order_id.subscription_id.recurrence_id.get_recurrence_timedelta()
+                complete_rec = 0
+                while end_date - recurrence >= start_date:
+                    complete_rec += 1
+                    end_date -= recurrence
+                ratio = (end_date - start_date).days / ((start_date + recurrence) - start_date).days + complete_rec
+            # If the parent line had a discount, we reapply it to keep the same conditions.
+            # E.G. base price is 200€, parent line has a 10% discount and upsell has a 25% discount.
+            # We want to apply a final price equal to 200 * 0.75 (prorata) * 0.9 (discount) = 135 or 200*0,675
+            # We need 32.5 in the discount
+            if line.parent_line_id and line.parent_line_id.discount:
+                line.discount = (1 - ratio * (1 - line.parent_line_id.discount / 100)) * 100
+            else:
                 line.discount = (1 - ratio) * 100
-                if line.parent_line_id:
-                    # If the parent line had a discount, we reapply it to keep the same conditions. E.G. base price is 200€
-                    # parent line has a 10% discount and upsell has a 25% discount.
-                    # We want to apply a final price equal to 200 * 0.75 (prorata) * 0.9 (discount) = 135 or 200*0,675
-                    # We save 32.5 in the discount
-                    line.discount = (1 - (1 - line.discount / 100) * (1 - line.parent_line_id.discount / 100)) * 100
+
         return super(SaleOrderLine, other_lines)._compute_discount()
 
     @api.depends('order_id.recurrence_id', 'parent_line_id')
     def _compute_price_unit(self):
         line_to_recompute = self.env['sale.order.line']
         for line in self:
-            if not line.parent_line_id:
+            # Recompute order lines if part of a regular sale order.
+            # This check avoids breaking other module's tests which trigger this function.
+            if not line.order_id.is_subscription:
                 line_to_recompute |= line
                 continue
-            line.price_unit = line.parent_line_id.price_unit
+            if line.parent_line_id:
+                # Carry custom price of recurring products from previous subscription after renewal.
+                line.price_unit = line.parent_line_id.price_unit
+            elif line.product_id.recurring_invoice or not line.price_unit:
+                # Recompute prices for subscription products or regular products when these are first inserted.
+                line_to_recompute |= line
         super(SaleOrderLine, line_to_recompute)._compute_price_unit()
 
     @api.depends('product_id', 'order_id.recurrence_id')
@@ -196,18 +212,23 @@ class SaleOrderLine(models.Model):
 
     @api.depends('temporal_type', 'price_subtotal', 'pricing_id')
     def _compute_recurring_monthly(self):
-        subscription_lines = self.filtered(lambda l: l.temporal_type == 'subscription')
-        for line in subscription_lines:
-            if not line.order_id.recurrence_id:
+        for line in self:
+            if not line.temporal_type == 'subscription' or not line.order_id.recurrence_id.duration:
+                line.recurring_monthly = 0
                 continue
-            if line.order_id.recurrence_id.unit not in INTERVAL_FACTOR.keys():
+            elif line.order_id.recurrence_id.unit not in INTERVAL_FACTOR.keys():
                 raise ValidationError(_("The time unit cannot be used. Please chose one of these unit: %s.",
                                         ", ".join(['Month, Year', 'One Time'])))
             line.recurring_monthly = line.price_subtotal * INTERVAL_FACTOR[line.order_id.recurrence_id.unit] / line.order_id.recurrence_id.duration
-        (self - subscription_lines).recurring_monthly = 0
 
-    @api.depends('order_id.subscription_id', 'product_id', 'product_uom', 'price_unit', 'order_id')
+    @api.depends('order_id.subscription_id', 'product_id', 'product_uom', 'price_unit', 'order_id', 'order_id.recurrence_id')
     def _compute_parent_line_id(self):
+        """
+        Compute the link between a SOL and the line in the parent order. The matching is done based on several
+        fields values like the price_unit, the uom, etc. The method does not depend on pricelist_id or currency_id
+        on purpose because '_compute_price_unit' depends on 'parent_line_id' and it triggered side effects
+        when we added these dependencies.
+        """
         parent_line_ids = self.order_id.subscription_id.order_line
         for line in self:
             if not line.order_id.subscription_id or not line.product_id.recurring_invoice:
@@ -216,9 +237,9 @@ class SaleOrderLine(models.Model):
             matching_line_ids = parent_line_ids.filtered(
                 lambda l:
                 (l.order_id, l.product_id, l.product_uom, l.order_id.currency_id,
-                 l.order_id.currency_id.round(l.price_unit) if l.order_id.currency_id else round(l.price_unit, 2)) ==
+                 l.order_id.currency_id.round(l.price_unit) if l.order_id.currency_id else round(l.price_unit, 2), l.order_id.recurrence_id) ==
                 (line.order_id.subscription_id, line.product_id, line.product_uom, line.order_id.currency_id,
-                 line.order_id.currency_id.round(line.price_unit) if line.order_id.currency_id else round(line.price_unit, 2)
+                 line.order_id.currency_id.round(line.price_unit) if line.order_id.currency_id else round(line.price_unit, 2), line.order_id.recurrence_id
                  )
             )
             if matching_line_ids:
@@ -229,18 +250,15 @@ class SaleOrderLine(models.Model):
     def _prepare_invoice_line(self, **optional_values):
         self.ensure_one()
         res = super()._prepare_invoice_line(**optional_values)
+        today = fields.Date.today()
         if self.display_type:
             return res
         elif self.temporal_type == 'subscription' or self.order_id.subscription_management == 'upsell':
-            product_desc = self.product_id.get_product_multiline_description_sale() + self._get_sale_order_line_multiline_description_variants()
-            description = _("%(product)s - %(duration)d %(unit)s",
-                            product=product_desc,
-                            duration=round(self.order_id.recurrence_id.duration),
-                            unit=self.order_id.recurrence_id.unit)
+            description = "%s - %s" % (self.name, self.order_id.recurrence_id.duration_display)
             lang_code = self.order_id.partner_id.lang
             if self.order_id.subscription_management == 'upsell':
                 # We start at the beginning of the upsell as it's a part of recurrence
-                new_period_start = self.order_id.start_date or fields.Datetime.today()
+                new_period_start = max(self.order_id.start_date or today, self.order_id.origin_order_id.start_date or today)
             else:
                 # We need to invoice the next period: last_invoice_date will be today once this invoice is created. We use get_timedelta to avoid gaps
                 # We always use next_invoice_date as the recurrence are synchronized with the invoicing periods.
@@ -302,6 +320,7 @@ class SaleOrderLine(models.Model):
     def _get_renew_upsell_values(self, subscription_management, period_end=None):
         order_lines = []
         description_needed = False
+        today = fields.Date.today()
         for line in self:
             if line.temporal_type != 'subscription':
                 continue
@@ -318,16 +337,20 @@ class SaleOrderLine(models.Model):
             }))
             description_needed = True
         if subscription_management == 'upsell' and description_needed and period_end:
-            format_start = format_date(self.env, fields.Date.today())
-            end_period = period_end - relativedelta(days=1)  # the period ends the day before the next invoice
-            format_next_invoice = format_date(self.env, end_period)
-            order_lines.append((
-                0,
-                0,
+            start_date = max(today, line.order_id.origin_order_id.start_date or today)
+            end_date = period_end - relativedelta(days=1)  # the period ends the day before the next invoice
+            if start_date >= end_date:
+                line_name = _('Recurring product are entirely discounted as the next period has not been invoiced yet.')
+            else:
+                format_start = format_date(self.env, start_date)
+                format_end = format_date(self.env, end_date)
+                line_name = _('Recurring product are discounted according to the prorated period from %s to %s', format_start, format_end)
+
+            order_lines.append((0, 0,
                 {
                     'display_type': 'line_note',
                     'sequence': 999,
-                    'name': _('Recurring product are discounted according to the prorated period from %s to %s', format_start, format_next_invoice)
+                    'name': line_name
                 }
             ))
 

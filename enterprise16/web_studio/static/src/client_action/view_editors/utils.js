@@ -67,6 +67,7 @@ export function getDroppedValues({ droppedData, xpath, fieldName, position }) {
             xpath,
             position: position,
             structure: "field",
+            sourceXpath: droppedData.studioXpath,
             new_attrs: {
                 name: droppedData.fieldName,
             },

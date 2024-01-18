@@ -45,7 +45,7 @@ patch(AttendeeCalendarController.prototype, "appointment_calendar_controller", {
         if (!this.appointmentState.lastAppointmentUrl) {
             return;
         }
-        navigator.clipboard.writeText(this.appointmentState.lastAppointmentUrl);
+        setTimeout(async () => await navigator.clipboard.writeText(this.appointmentState.lastAppointmentUrl));
     },
 
     onClickSelectAvailabilities() {

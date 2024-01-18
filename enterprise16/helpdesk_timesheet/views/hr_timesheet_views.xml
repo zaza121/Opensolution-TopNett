@@ -10,10 +10,10 @@
             </xpath>
             <xpath expr="//field[@name='task_id']" position="after">
                 <field name="has_helpdesk_team" invisible="1"/>
-                <field name="helpdesk_ticket_id" invisible="1"/>
                 <field name="helpdesk_ticket_id" string="Ticket"
                     attrs="{'invisible': ['|', ('has_helpdesk_team', '=', False), ('task_id', '!=', False)]}"
                     optional="hide" groups="helpdesk_timesheet.group_use_helpdesk_timesheet"/>
+                <field name="helpdesk_ticket_id" invisible="1"/>
             </xpath>
         </field>
     </record>

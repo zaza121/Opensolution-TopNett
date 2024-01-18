@@ -4,11 +4,13 @@
 from odoo import models, api, fields
 from odoo.models import MAGIC_COLUMNS
 from odoo.osv import expression
+from odoo.tools import split_every
 
 import logging
 _logger = logging.getLogger(__name__)
 
 IGNORED_FIELDS = MAGIC_COLUMNS
+DM_CRON_BATCH_SIZE = 100
 
 
 class DataMergeGroup(models.Model):
@@ -68,6 +70,8 @@ class DataMergeGroup(models.Model):
         if records is not None:
             domain = expression.AND([domain, [('id', 'in', records)]])
         self.env['data_merge.record'].search(domain).write({'is_discarded': True, 'is_master': False})
+        if all(not record.active for record in self.record_ids):
+            self.active = False
         self._elect_master_record()
 
     ###################
@@ -227,10 +231,15 @@ class DataMergeGroup(models.Model):
     ##########
     ### Cron
     ##########
-    def _cron_cleanup(self):
+    def _cron_cleanup(self, auto_commit=True):
         """ Perform cleanup activities for each data_merge.group. """
         groups = self.with_context(active_test=False).env['data_merge.group'].search([])
-        groups._cleanup()
+
+        for batched_groups in split_every(DM_CRON_BATCH_SIZE, groups.ids, self.with_context(active_test=False).browse):
+            batched_groups._cleanup()
+
+            if auto_commit:
+                self.env.cr.commit()
 
     def _cleanup(self):
         """
@@ -248,10 +257,20 @@ class DataMergeGroup(models.Model):
             records_kept = 0
 
             # Delete records no longer existing
+            original_records = {r.id: r for r in group.record_ids._original_records()} if group.record_ids else {}
+            # Delete group if all original records in a group have been deleted
+            if not original_records:
+                groups_to_delete += group
+                continue
+
             for rec in group.record_ids:
-                original_record = rec._original_records()
+                original_record = original_records.get(rec.res_id)
+                if not original_record:
+                    records_to_delete += rec
+                    continue
+
                 origin_inactive = (original_record._active_name and not original_record[original_record._active_name])
-                if not original_record or origin_inactive:
+                if origin_inactive:
                     records_to_delete += rec
                     continue
 

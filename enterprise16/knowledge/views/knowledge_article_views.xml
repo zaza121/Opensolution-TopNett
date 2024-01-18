@@ -106,7 +106,7 @@
                                 <!-- Buttons -->
                                 <div class="d-flex align-items-center pe-2">
                                     <a role="button" t-on-click="() => this.createArticle('private')" class="btn btn-light btn-create text-nowrap me-1" data-hotkey="c">
-                                        <i class="fa fa-plus-circle me-1"/>Create
+                                        <i class="fa fa-plus-circle me-1"/>New
                                     </a>
                                     <div class="o-dropdown dropdown o-dropdown--no-caret">
                                         <a role="button" class="btn btn-light btn-share dropdown-toggle me-1"
@@ -119,14 +119,14 @@
                                              aria-labelledby="dropdown_share_panel"
                                              t-attf-class="o_knowledge_share_panel dropdown-menu user-select-none">
                                             <div t-if="state.displaySharePanel"
-                                                 class="o_knowledge_share_panel_invite d-flex align-items-center ps-3 py-1" attrs="{'invisible': [('user_can_write', '=', False)]}">
+                                                 class="o_knowledge_share_panel_invite d-flex align-items-center px-3 py-1" attrs="{'invisible': [('user_can_write', '=', False)]}">
                                                 <div class="o_knowledge_share_panel_icon rounded-circle d-flex flex-shrink-0 justify-content-center align-items-center bg-light">
                                                     <i class="fa fa-user-plus fs-3" title="Invite People"/>
                                                 </div>
                                                 <button type="action" name="%(knowledge_invite_action_from_article)d"
-                                                        class="input-group o_cursor_pointer pe-3 pb-2 d-flex flex-grow-1"
+                                                        class="input-group o_cursor_pointer d-flex flex-grow-1 min-w-0 p-0 ms-3"
                                                         attrs="{'invisible': [('user_can_write', '=', False)]}">
-                                                    <div class="form-control text-start">Add people or email addresses...</div>
+                                                    <div class="form-control text-start text-truncate">Add people or email addresses...</div>
                                                     <button class="btn btn-primary">Invite</button>
                                                 </button>
                                             </div>
@@ -185,7 +185,7 @@
                                                 </button>
                                                 <button class="dropdown-item" type="object" name="action_unarchive_article"
                                                         attrs="{'invisible': ['|',  ('to_delete', '=', False), ('user_can_write', '=', False)]}">
-                                                    <i class="fa fa-fw fa-lg fa-trash-o"/> Remove from Trash
+                                                    <i class="fa fa-fw fa-lg fa-trash-o"/> Restore from Trash
                                                 </button>
                                                 <button class="dropdown-item" type="object" name="action_unarchive_article"
                                                         attrs="{'invisible': ['|', '|', ('user_can_write', '=', False), ('active', '=', True), ('to_delete', '=', True)]}">
@@ -234,7 +234,7 @@
                                 <button type="object" name="action_unarchive_article"
                                         class="oe_link alert-link"
                                         attrs="{'invisible': [('user_can_write', '=', False)]}" >
-                                    Remove from Trash
+                                    Restore
                                 </button>
                             </div>
                             <div class="flex-grow-1 position-relative">
@@ -329,11 +329,11 @@
                                             </div>
                                         </div>
                                         <!-- Properties -->
-                                        <div t-if="state.displayPropertyPanel" class="o_knowledge_properties o_field_highlight col-12 col-lg-2 position-relative d-print-none p-0 border-start"
+                                        <div t-if="state.displayPropertyPanel" class="o_knowledge_properties col-12 col-lg-2 position-relative d-print-none p-0 border-start"
                                              attrs="{'invisible': [('parent_id', '=', False)]}">
                                             <div class="m-2 o_scroll_view_lg">
                                                 <h3 class="mt-2 mb-4">Property Fields</h3>
-                                                <field name="article_properties" nolabel="1" class="d-block"
+                                                <field name="article_properties" nolabel="1" class="d-block o_field_highlight"
                                                        attrs="{'readonly': ['|', ('is_locked', '=', True), ('user_can_write', '=', False)]}"/>
                                             </div>
                                         </div>
@@ -387,7 +387,7 @@
         <field name="model">knowledge.article</field>
         <field name="priority">100</field>
         <field name="arch" type="xml">
-            <tree create="0" default_order="deletion_date desc"
+            <tree create="0" default_order="write_date desc"
                   js_class="knowledge_article_view_tree">
                 <field name="display_name" string="Name"/>
                 <field name="is_user_favorite" widget="boolean_favorite" nolabel="1"
@@ -435,7 +435,7 @@
                         <div class="oe_kanban_global_click">
                             <div class="o_knowledge_kanban_card d-flex flex-column">
                                 <div class="d-flex align-items-center">
-                                    <div class="flex-grow-1 lead">
+                                    <div class="flex-grow-1 lead text-truncate">
                                         <field name="display_name"/>
                                     </div>
                                     <!-- When the user does not have 'write' access on an article, the user will not be
@@ -452,7 +452,7 @@
                                         <i class="fa fa-star-o" title="Add to favorites"/>
                                     </a>
                                 </div>
-                                <div class="flex-grow-1 text-muted">
+                                <div class="text-muted text-truncate">
                                     <field name="parent_id"/>
                                 </div>
                             </div>
@@ -480,12 +480,10 @@
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click">
                             <div class="o_knowledge_kanban_card d-flex flex-column">
-                                <div class="d-flex flex-column align-items-start">
-                                    <div class="flex-grow-1 lead text-truncate">
-                                        <field name="display_name"/>
-                                    </div>
-                                    <field name="article_properties" widget="properties"/>
+                                <div class="lead text-truncate">
+                                    <field name="display_name"/>
                                 </div>
+                                <field name="article_properties" widget="properties"/>
                             </div>
                         </div>
                     </t>

@@ -106,7 +106,16 @@ class SignTemplate(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        attachments = self.env['ir.attachment'].browse([vals.get('attachment_id') for vals in vals_list])
+        # Sometimes the attachment is not already created in database when the sign template create method is called
+        attachment_vals = [{'name': val['name'], 'datas': val.pop('datas')} for val in vals_list if not val.get('attachment_id') and val.get('datas')]
+        attachments_iter = iter(self.env['ir.attachment'].create(attachment_vals))
+        for val in vals_list:
+            if not val.get('attachment_id', True):
+                try:
+                    val['attachment_id'] = next(attachments_iter).id
+                except StopIteration:
+                    raise UserError(_('No attachment was provided'))
+        attachments = self.env['ir.attachment'].browse([vals.get('attachment_id') for vals in vals_list if vals.get('attachment_id')])
         for attachment in attachments:
             self._check_pdf_data_validity(attachment.datas)
         # copy the attachment if it has been attached to a record
@@ -121,7 +130,14 @@ class SignTemplate(models.Model):
                 'res_model': self._name,
                 'res_id': template.id
             })
+        templates.attachment_id.check('read')
         return templates
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'attachment_id' in vals:
+            self.attachment_id.check('read')
+        return res
 
     def copy(self, default=None):
         self.ensure_one()
@@ -210,7 +226,10 @@ class SignTemplate(models.Model):
 
         # update existing sign items
         for item in self.sign_item_ids.filtered(lambda r: str(r.id) in new_sign_items):
-            item.write(new_sign_items.pop(str(item.id)))
+            str_item_id = str(item.id)
+            if 'option_ids' in new_sign_items.get(str_item_id):
+                new_sign_items[str_item_id]['option_ids'] = list(map(int, new_sign_items[str_item_id]['option_ids']))
+            item.write(new_sign_items.pop(str_item_id))
 
         # create new sign items
         new_values_list = []
@@ -255,6 +274,8 @@ class SignTemplate(models.Model):
         self.ensure_one()
         shared_sign_request = self.sign_request_ids.filtered(lambda sr: sr.state == 'shared' and sr.create_uid == self.env.user)
         if not shared_sign_request:
+            if len(self.sign_item_ids.mapped('responsible_id')) > 1:
+                raise ValidationError(_("You cannot share this document by link, because it has fields to be filled by different roles. Use Send button instead."))
             shared_sign_request = self.env['sign.request'].with_context(no_sign_mail=True).create({
                 'template_id': self.id,
                 'request_item_ids': [Command.create({'role_id': self.sign_item_ids.responsible_id.id or self.env.ref('sign.sign_item_role_default').id})],
@@ -386,11 +407,11 @@ class SignItemType(models.Model):
 
     @api.constrains('auto_field')
     def _check_auto_field_exists(self):
-        Partner = self.env['res.partner']
+        partner = self.env['res.partner'].browse(self.env.user.partner_id.id)
         for sign_type in self:
             if sign_type.auto_field:
                 try:
-                    if isinstance(Partner.sudo().mapped(sign_type.auto_field), models.BaseModel):
+                    if isinstance(partner.mapped(sign_type.auto_field), models.BaseModel):
                         raise AttributeError
                 except (KeyError, AttributeError):
                     raise ValidationError(_("Malformed expression: %(exp)s", exp=sign_type.auto_field))

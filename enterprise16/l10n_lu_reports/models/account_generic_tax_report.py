@@ -65,11 +65,10 @@ class LuxembourgishTaxReportCustomHandler(models.AbstractModel):
         ], limit=1)
         values['204'] = {'value': on_payment and '0' or '1', 'field_type': 'boolean'}
         values['205'] = {'value': on_payment and '1' or '0', 'field_type': 'boolean'}
-        for code, field_type in (('403', 'number'), ('418', 'number'), ('453', 'number')):
+        for code, field_type in (
+                ('403', 'number'), ('418', 'number'), ('453', 'number'), ('042', 'float'), ('416', 'float'), ('417', 'float'), ('451', 'float'), ('452', 'float')
+            ):
             values[code] = {'value': 0, 'field_type': field_type}
-        if declaration_type == 'TVA_DECA':
-            for code, field_type in (('042', 'float'), ('416', 'float'), ('417', 'float'), ('451', 'float'), ('452', 'float')):
-                values[code] = {'value': 0, 'field_type': field_type}
 
         lu_template_values.update({
             'forms': [{
@@ -106,5 +105,4 @@ class LuxembourgishTaxReportCustomHandler(models.AbstractModel):
         """ Creates a new export wizard for this report."""
         new_context = self.env.context.copy()
         new_context['report_generation_options'] = options
-        new_context['report_generation_options']['report_id'] = options['report_id']
         return self.env['l10n_lu.generate.tax.report'].with_context(new_context).create({}).get_xml()

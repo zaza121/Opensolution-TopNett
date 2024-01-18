@@ -18,6 +18,8 @@ export class StreamPostCommentsReply extends Component {
 
         this.messagingService.get().then(messaging => this.messaging = messaging);
         this._onAddEmoji = this._onAddEmoji.bind(this);
+        this.notification = useService("notification");
+
         onMounted(() => {
             this.messaging.messagingBus.addEventListener(`social_add_emoji_to_${this.inputRef.el.dataset.id}`, this._onAddEmoji);
         });
@@ -87,6 +89,12 @@ export class StreamPostCommentsReply extends Component {
             const comment = JSON.parse(xhr.response);
             if (!comment.error) {
                 this.props.onAddComment(comment);
+            } else {
+                this.notification.add(
+                    this.env._t("Something went wrong while posting the comment.") +
+                        `\n${comment.error}`,
+                    { type: "danger" }
+                );
             }
             this.state.attachmentSrc = false;
             this.inputRef.el.value = '';

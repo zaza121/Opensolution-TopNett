@@ -50,7 +50,7 @@
                 </div>
             </field>
             <xpath expr="//group[@name='contract_details']" position="inside">
-                <field name="default_contract_id"/>
+                <field name="default_contract_id" context="{'form_view_ref': 'hr_contract_salary.hr_contract_view_form_contract_templates'}"/>
                 <field name="sign_template_id" options="{'no_create': True}" kanban_view_ref="%(sign.sign_template_view_kanban_mobile)s" required="1"/>
                 <field name="contract_update_template_id" options="{'no_create': True}" required="1"/>
                 <field name="signatures_count" invisible="1"/>
@@ -98,6 +98,9 @@
                 <field name="sign_template_id" kanban_view_ref="%(sign.sign_template_view_kanban_mobile)s"/>
                 <field name="contract_update_template_id"/>
             </field>
+            <header position="attributes">
+                <attribute name="invisible">1</attribute>
+            </header>
             <field name="date_start" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>

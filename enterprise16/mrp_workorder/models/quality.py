@@ -5,7 +5,7 @@ from markupsafe import Markup
 from odoo import SUPERUSER_ID, api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.fields import Command
-from odoo.tools import float_compare, float_round, is_html_empty
+from odoo.tools import float_compare, float_round, is_html_empty, float_is_zero
 
 
 class TestType(models.Model):
@@ -132,9 +132,6 @@ class QualityPoint(models.Model):
     def _compute_component_ids(self):
         self.component_ids = False
         for point in self:
-            if not point.is_workorder_step or not self.bom_id or point.test_type not in ('register_consumed_materials', 'register_byproducts'):
-                point.component_id = None
-                continue
             if point.test_type == 'register_byproducts':
                 point.component_ids = point.bom_id.byproduct_ids.product_id
             else:
@@ -169,6 +166,11 @@ class QualityPoint(models.Model):
     def _onchange_operation_id(self):
         if self.operation_id:
             self._change_product_ids_for_bom(self.bom_id)
+
+    @api.onchange('test_type_id')
+    def _onchange_test_type_id(self):
+        if self.test_type_id.technical_name not in ('register_byproducts', 'register_consumed_materials'):
+            self.component_id = False
 
 
 class QualityAlert(models.Model):
@@ -208,7 +210,7 @@ class QualityCheck(models.Model):
 
     # Workorder specific fields
     component_remaining_qty = fields.Float('Remaining Quantity for Component', compute='_compute_component_data', digits='Product Unit of Measure')
-    component_qty_to_do = fields.Float(compute='_compute_component_qty_to_do')
+    component_qty_to_do = fields.Float(compute='_compute_component_qty_to_do', digits='Product Unit of Measure')
     is_user_working = fields.Boolean(related="workorder_id.is_user_working")
     consumption = fields.Selection(related="workorder_id.consumption")
     working_state = fields.Selection(related="workorder_id.working_state")
@@ -291,36 +293,48 @@ class QualityCheck(models.Model):
                 check.component_uom_id = check.move_id.product_uom
 
     def action_print(self):
-        if self.product_id.uom_id.category_id == self.env.ref('uom.product_uom_categ_unit'):
-            qty = int(self.workorder_id.qty_producing)
-        else:
-            qty = 1
-
         quality_point_id = self.point_id
         report_type = quality_point_id.test_report_type
 
         if self.product_id.tracking == 'none':
-            xml_id = 'product.action_open_label_layout'
-            wizard_action = self.env['ir.actions.act_window']._for_xml_id(xml_id)
-            wizard_action['context'] = {'default_product_ids': self.product_id.ids}
-            if report_type == 'zpl':
-                wizard_action['context']['default_print_format'] = 'zpl'
-            res = wizard_action
+            res = self._get_product_label_action(report_type)
         else:
             if self.workorder_id.finished_lot_id:
-                if report_type == 'zpl':
-                    xml_id = 'stock.label_lot_template'
-                else:
-                    xml_id = 'stock.action_report_lot_label'
-                res = self.env.ref(xml_id).report_action([self.workorder_id.finished_lot_id.id] * qty)
+                res = self._get_lot_label_action(report_type)
             else:
                 raise UserError(_('You did not set a lot/serial number for '
                                 'the final product'))
 
-        res['id'] = self.env.ref(xml_id).id
-
         # The button goes immediately to the next step
         self._next()
+        return res
+
+    def _get_print_qty(self):
+        if self.product_id.uom_id.category_id == self.env.ref('uom.product_uom_categ_unit'):
+            qty = int(self.workorder_id.qty_producing)
+        else:
+            qty = 1
+        return qty
+
+    def _get_product_label_action(self, report_type):
+        self.ensure_one()
+        xml_id = 'product.action_open_label_layout'
+        wizard_action = self.env['ir.actions.act_window']._for_xml_id(xml_id)
+        wizard_action['context'] = {'default_product_ids': self.product_id.ids}
+        if report_type == 'zpl':
+            wizard_action['context']['default_print_format'] = 'zpl'
+        wizard_action['id'] = self.env.ref(xml_id).id
+        return wizard_action
+
+    def _get_lot_label_action(self, report_type):
+        qty = self._get_print_qty()
+
+        if report_type == 'zpl':
+            xml_id = 'stock.label_lot_template'
+        else:
+            xml_id = 'stock.action_report_lot_label'
+        res = self.env.ref(xml_id).report_action([self.workorder_id.finished_lot_id.id] * qty)
+        res['id'] = self.env.ref(xml_id).id
         return res
 
     def action_next(self):
@@ -348,7 +362,7 @@ class QualityCheck(models.Model):
                 'res_id': self.workorder_id.production_id.bom_id.id,
                 'user_id': self.workorder_id.product_id.responsible_id.id or SUPERUSER_ID,
                 'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
-                'summary': _('BoM feedback %s (%s)', self.title, self.workorder_id.production_id.name),
+                'summary': _('BoM feedback %s (%s)', self.title or self.test_type, self.workorder_id.production_id.name),
                 'note': body,
             })
 
@@ -386,30 +400,31 @@ class QualityCheck(models.Model):
             'lot_id': self.lot_id.id,
             'company_id': self.move_id.company_id.id,
         }
+        qty_done = self.qty_done
         for quant in quants:
             vals = shared_vals.copy()
             quantity = quant.quantity - quant.reserved_quantity
-            quantity = self.product_id.uom_id._compute_quantity(quantity, move_uom, rounding_method='HALF-UP')
+            quantity = self.component_id.uom_id._compute_quantity(quantity, move_uom, rounding_method='HALF-UP')
             rounding = quant.product_uom_id.rounding
             if (float_compare(quant.quantity, 0, precision_rounding=rounding) <= 0 or
                     float_compare(quantity, 0, precision_rounding=move_uom.rounding) <= 0):
                 continue
             vals.update({
                 'location_id': quant.location_id.id,
-                'qty_done': min(quantity, self.qty_done),
+                'qty_done': min(quantity, qty_done),
             })
 
             vals_list.append(vals)
-            self.qty_done -= vals['qty_done']
+            qty_done -= vals['qty_done']
             # If all the qty_done is distributed, we can close the loop
-            if float_compare(self.qty_done, 0, precision_rounding=self.product_id.uom_id.rounding) <= 0:
+            if float_compare(qty_done, 0, precision_rounding=self.product_id.uom_id.rounding) <= 0:
                 break
 
-        if float_compare(self.qty_done, 0, precision_rounding=self.product_id.uom_id.rounding) > 0:
+        if float_compare(qty_done, 0, precision_rounding=self.product_id.uom_id.rounding) > 0:
             vals = shared_vals.copy()
             vals.update({
                 'location_id': self.move_id.location_id.id,
-                'qty_done': self.qty_done,
+                'qty_done': qty_done,
             })
 
             vals_list.append(vals)
@@ -438,6 +453,13 @@ class QualityCheck(models.Model):
 
             # Write the lot and qty to the move line
             if self.move_line_id:
+                # In case of a tracked component, another SML may already exists for
+                # the reservation of self.lot_id, so let's try to find and use it
+                if self.move_line_id.product_id.tracking != 'none':
+                    self.move_line_id = next((sml
+                                              for sml in self.move_line_id.move_id.move_line_ids
+                                              if sml.lot_id == self.lot_id and float_is_zero(sml.qty_done, precision_rounding=sml.product_uom_id.rounding)),
+                                             self.move_line_id)
                 rounding = self.move_line_id.product_uom_id.rounding
                 if float_compare(self.qty_done, self.move_line_id.reserved_uom_qty, precision_rounding=rounding) >= 0:
                     self.move_line_id.write({

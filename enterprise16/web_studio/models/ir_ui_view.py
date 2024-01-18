@@ -25,8 +25,17 @@ class Model(models.AbstractModel):
 
     @api.model
     def _get_view_cache_key(self, *args, **kwargs):
-        key = super()._get_view_cache_key(*args, **kwargs)
+        if self._context.get('studio'):
+            self = self.with_context(no_address_format=True)
+        key = super(Model, self)._get_view_cache_key(*args, **kwargs)
         return key + (self._context.get("studio"),)
+
+    @api.model
+    def _get_view_field_attributes(self):
+        keys = super()._get_view_field_attributes()
+        if self._context.get("studio"):
+            keys.append('manual')
+        return keys
 
 
 class View(models.Model):
@@ -92,6 +101,15 @@ class View(models.Model):
                     else:
                         node.attrib.pop('groups')
                         set_invisible_nodes.add(node)
+                elif node.tag == 't' and not node.get('postprocess_added'):
+                    # Special case
+                    # `<t groups="..."/></t>` block. In the super call, if the user has the group, the content
+                    # of the node is moved out and the <t> is removed.
+                    # In the case of Studio, we want this node to remain, so the arch of the view sent to the web client
+                    # represents the actual view in the database
+                    # So, we just pop the `groups` attribute temporary, before the call to super, so the super call
+                    # doesn't remove the node. The `groups` attribute is set back after the call to super.
+                    node.attrib.pop('groups')
 
                 if node.tag == 'field':
                     # fields with `groups` in the Python model cannot be read at all by users not part of the group.
@@ -105,9 +123,16 @@ class View(models.Model):
                     if field and field.groups and not self.user_has_groups(field.groups):
                         node.set('studio_no_fetch', '1')
 
+            def is_in_tree(node):
+                parent = node.getparent()
+                if parent is None:
+                    return False
+                parent = parent if not (parent.tag == "t" and "postprocess_added" in parent.attrib) else parent.getparent()
+                return parent is not None and parent.tag == "tree"
+
             for node in set_invisible_nodes:
                 modifiers = json.loads(node.attrib.pop('modifiers', '{}'))
-                if node.getparent() is not None and node.getparent().tag == 'tree':
+                if is_in_tree(node):
                     modifiers['column_invisible'] = True
                 else:
                     modifiers['invisible'] = True
@@ -117,6 +142,7 @@ class View(models.Model):
                     modifiers.pop('invisible', None)
                     node.set('context-dependent-modifiers', json.dumps(modifiers))
 
+            model = tree.get('model_access_rights')
             res = super(View, self)._postprocess_access_rights(tree)
 
             for node, groups in node_groups.items():
@@ -124,9 +150,9 @@ class View(models.Model):
                 node.set('groups', groups)
                 self.set_studio_groups(node)
             if tree.tag == 'map':
-                self.set_studio_map_popup_fields(tree.get('model_access_rights'), tree)
+                self.set_studio_map_popup_fields(model, tree)
             if tree.tag == 'pivot':
-                self.set_studio_pivot_measure_fields(tree.get('model_access_rights'), tree)
+                self.set_studio_pivot_measure_fields(model, tree)
 
             return res
 
@@ -225,7 +251,7 @@ class View(models.Model):
         sheet_content = list()
         header_content = list()
         if 'x_studio_stage_id' in model._fields:
-            header_content.append(E.field(name='x_studio_stage_id', widget='statusbar', clickable='1'))
+            header_content.append(E.field(name='x_studio_stage_id', widget='statusbar', options="{'clickable': '1'}"))
             sheet_content.append(E.field(name='x_studio_kanban_state', widget='state_selection'))
         if 'x_active' in model._fields:
             sheet_content.append(E.widget(name='web_ribbon', text=_('Archived'), bg_color='bg-danger', attrs="{'invisible': [('x_active', '=', True)]}"))
@@ -275,7 +301,7 @@ class View(models.Model):
         right_group.extend(right_group_content)
         sheet_content.append(E.group(left_group, right_group, name=group_name))
         if 'x_studio_notes' in model._fields:
-            sheet_content.append(E.group(E.field(name='x_studio_notes', placeholder=_('Type down your notes here...'), nolabel='1')))
+            sheet_content.append(E.group(E.field(name='x_studio_notes', placeholder=_('Type down your notes here...'), nolabel='1', colspan="2")))
 
         # if there is a '%_line_ids' field, display it as a list in a notebook
         lines_field = [f for f in model._fields if ("%s_line_ids" % model._name) in f]
@@ -471,7 +497,7 @@ class View(models.Model):
             bottom_right_div.append(unassigned_var)
             bottom_right_div.append(img)
         content_div.extend([top_div, body_div, bottom_div])
-        card_div = E.div({'class': "o_kanban_record oe_kanban_global_click o_kanban_record_has_image_fill", 'color': 'x_color'})
+        card_div = E.div({'t-attf-class': "#{!selection_mode ? kanban_color(record.x_color.raw_value) : ''} oe_kanban_global_click"})
         if 'x_studio_value' and 'x_studio_currency_id' in model._fields:
             pre_fields.append(E.field(name='x_studio_currency_id'))
             bottom_left_div.append(E.field(name='x_studio_value', widget='monetary', options="{'currency_field': 'x_studio_currency_id'}"))
@@ -479,7 +505,7 @@ class View(models.Model):
             body_div.append(E.field(name='x_studio_tag_ids', options="{'color_field': 'x_color'}"))
         if 'x_studio_image' in model._fields:
             image_field = E.field({
-                'class': 'o_kanban_image_fill_left',
+                'class': 'o_kanban_image',
                 'name': 'x_studio_image',
                 'widget': 'image',
                 'options': '{"zoom": true, "background": true, "preventClicks": false}'

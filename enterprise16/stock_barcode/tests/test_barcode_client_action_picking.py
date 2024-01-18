@@ -630,6 +630,42 @@ class TestPickingBarcodeClientAction(TestBarcodeClientAction):
         self.assertEqual(lines[0].qty_done, 2)
         self.assertEqual(lines[1].qty_done, 2)
 
+    def test_delivery_from_scratch_with_incompatible_lot(self):
+        """
+        If a product and a lot have the same barcode, when this barcode is
+        scanned, both are found, but to avoid issue, the lot is ignored because
+        a lot shouldn't be applied to a line if its product is not the same.
+        """
+        self.clean_access_rights()
+        grp_lot = self.env.ref('stock.group_production_lot')
+        self.env.user.write({'groups_id': [(4, grp_lot.id)]})
+
+        self.picking_type_out.use_create_lots = False
+        self.picking_type_out.use_existing_lots = True
+
+        lot = self.env['stock.lot'].create({
+            'name': '0000000001',
+            'product_id': self.productlot1.id,
+            'company_id': self.env.company.id,
+        })
+
+        for product in [self.product1, self.productserial1]:
+            product.barcode = lot.name
+
+            delivery_picking = self.env['stock.picking'].create({
+                'location_id': self.stock_location.id,
+                'location_dest_id': self.customer_location.id,
+                'picking_type_id': self.picking_type_out.id,
+            })
+            url = self._get_client_action_url(delivery_picking.id)
+            self.start_tour(url, 'test_delivery_from_scratch_with_incompatible_lot', login='admin', timeout=180)
+
+            self.assertRecordValues(delivery_picking.move_line_ids, [
+                {'product_id': product.id, 'lot_name': False, 'lot_id': False},
+            ])
+
+            product.barcode = False
+
     def test_delivery_from_scratch_with_common_lots_name(self):
         """
         Suppose:
@@ -872,6 +908,26 @@ class TestPickingBarcodeClientAction(TestBarcodeClientAction):
 
         self.assertEqual(len(delivery_picking.move_line_ids), 4)
         self.assertEqual(delivery_picking.move_line_ids.mapped('qty_done'), [2, 3, 4, 2])
+
+    def test_remaining_decimal_accuracy(self):
+        """ Checks if the remaining value of a move is correct
+        """
+        self.clean_access_rights()
+        self.env['stock.quant']._update_available_quantity(self.product1, self.stock_location, 4)
+
+        # Create the delivery transfer.
+        delivery_form = Form(self.env['stock.picking'])
+        delivery_form.picking_type_id = self.picking_type_out
+        with delivery_form.move_ids_without_package.new() as move:
+            move.product_id = self.product1
+            move.product_uom_qty = 4
+
+        delivery_picking = delivery_form.save()
+        delivery_picking.action_confirm()
+        delivery_picking.action_assign()
+
+        url = self._get_client_action_url(delivery_picking.id)
+        self.start_tour(url, 'test_remaining_decimal_accuracy', login='admin', timeout=90)
 
     def test_receipt_reserved_lots_multiloc_1(self):
         self.clean_access_rights()
@@ -1691,6 +1747,34 @@ class TestPickingBarcodeClientAction(TestBarcodeClientAction):
         self.start_tour(url, 'test_receipt_delete_button', login='admin', timeout=180)
         self.assertEqual(len(receipt_picking.move_line_ids), 2, "2 lines expected: product1 + product2")
 
+    def test_scrap(self):
+        """ Checks the scrap button is displayed for when it's possible to scrap
+        and the corresponding barcode command follows the same rules."""
+        # Creates a receipt and a delivery.
+        receipt_form = Form(self.env['stock.picking'])
+        receipt_form.picking_type_id = self.picking_type_in
+        with receipt_form.move_ids_without_package.new() as move:
+            move.product_id = self.product1
+            move.product_uom_qty = 1
+        receipt_picking = receipt_form.save()
+        receipt_picking.action_confirm()
+        receipt_picking.action_assign()
+        receipt_picking.name = "receipt_scrap_test"
+
+        delivery_form = Form(self.env['stock.picking'])
+        delivery_form.picking_type_id = self.picking_type_out
+        with delivery_form.move_ids_without_package.new() as move:
+            move.product_id = self.product1
+            move.product_uom_qty = 1
+        delivery_picking = delivery_form.save()
+        delivery_picking.action_confirm()
+        delivery_picking.action_assign()
+        delivery_picking.name = "delivery_scrap_test"
+        # Opens the barcode main menu to be able to open the pickings by scanning their name.
+        action_id = self.env.ref('stock_barcode.stock_barcode_action_main_menu')
+        url = "/web#action=" + str(action_id.id)
+        self.start_tour(url, "test_scrap", login="admin", timeout=180)
+
     def test_show_entire_package(self):
         """ Enables 'Move Entire Packages' for delivery and then creates two deliveries:
           - One where we use package level;
@@ -1938,6 +2022,8 @@ class TestPickingBarcodeClientAction(TestBarcodeClientAction):
         """ Creates a receipt for a product tracked by lot, then process it in the Barcode App.
         """
         self.clean_access_rights()
+        grp_lot = self.env.ref('stock.group_production_lot')
+        self.env.user.write({'groups_id': [(4, grp_lot.id, 0)]})
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
 
         picking_form = Form(self.env['stock.picking'])

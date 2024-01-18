@@ -4,6 +4,7 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
+# Tony Ng, 2023
 # 
 msgid ""
 msgstr ""
@@ -11,8 +12,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-15 13:28+0000\n"
 "PO-Revision-Date: 2022-09-22 05:48+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Chinese (Taiwan) (https://www.transifex.com/odoo/teams/41243/zh_TW/)\n"
+"Last-Translator: Tony Ng, 2023\n"
+"Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -38,26 +39,41 @@ msgid ""
 "        </div>\n"
 "        "
 msgstr ""
+"<div>\n"
+"            <p>Amazon 亞馬遜訂單（參考單號 <t t-out=\"ctx.get('amazon_order_ref') or ''\">REF</t> ）同步處理時出錯，尚未完成。</p>\n"
+"            <p>除非前往 SellerCentral 取消訂單，否則系統不會再嘗試同步。</p>\n"
+"            <p>若想排期再嘗試同步，請參考下列步驟：\n"
+"                <ol>\n"
+"                    <li>進入開發者工具。</li>\n"
+"                    <li>找出下單所用的亞馬遜帳戶，開啟帳戶表格。</li>\n"
+"                    <li>前往「訂單跟進」分頁。</li>\n"
+"                    <li>設定「<b>訂單最後同步</b>」日期，將它設為早於訂單最後狀態更新的日期。</li>\n"
+"                    <li>儲存變更，然後按下「<b>同步處理訂單</b>」按鈕。</li>\n"
+"                </ol>\n"
+"            </p>\n"
+"            <p>若問題持續，請聯絡 <a href=\"https://www.odoo.com/help/\">Odoo 技術支援</a>。</p>\n"
+"        </div>\n"
+"        "
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__api_ref
 msgid "API Identifier"
-msgstr ""
+msgstr "API 識別代碼"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__aws_access_key
 msgid "AWS Access Key"
-msgstr ""
+msgstr "AWS 存取密鑰"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__aws_secret_key
 msgid "AWS Secret Key"
-msgstr ""
+msgstr "AWS 秘密金鑰"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__aws_session_token
 msgid "AWS Session Token"
-msgstr ""
+msgstr "AWS 操作時段代碼"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__account_id
@@ -83,30 +99,33 @@ msgid ""
 "                                                to which this account has access will be\n"
 "                                                synchronized and automatically made available."
 msgstr ""
+"驗證登入資訊後，\n"
+"                                                此帳戶能夠存取的市場\n"
+"                                                將會被同步處理並自動可用。"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_amazon_account
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Amazon Account"
-msgstr ""
+msgstr "亞馬遜帳戶"
 
 #. module: sale_amazon
 #: model:ir.actions.act_window,name:sale_amazon.list_amazon_account_action
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_tree
 #: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 msgid "Amazon Accounts"
-msgstr ""
+msgstr "亞馬遜帳戶"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_res_partner__amazon_email
 #: model:ir.model.fields,field_description:sale_amazon.field_res_users__amazon_email
 msgid "Amazon Email"
-msgstr ""
+msgstr "亞馬遜電郵"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_sale_order_line__amazon_item_ref
 msgid "Amazon Item Ref"
-msgstr ""
+msgstr "亞馬遜項目參考"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_stock_location__amazon_location
@@ -117,25 +136,25 @@ msgstr ""
 #: model:ir.model,name:sale_amazon.model_amazon_marketplace
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_marketplace_view_form
 msgid "Amazon Marketplace"
-msgstr ""
+msgstr "亞馬遜市場"
 
 #. module: sale_amazon
 #: model:ir.actions.act_window,name:sale_amazon.list_amazon_marketplace_action
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_marketplace_view_tree
 #: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 msgid "Amazon Marketplaces"
-msgstr ""
+msgstr "亞馬遜市場"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_amazon_offer
 #: model:ir.model.fields,field_description:sale_amazon.field_sale_order_line__amazon_offer_id
 msgid "Amazon Offer"
-msgstr ""
+msgstr "亞馬遜促銷優惠"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_tree
 msgid "Amazon Offers"
-msgstr ""
+msgstr "亞馬遜促銷優惠"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_sale_order__amazon_order_ref
@@ -145,12 +164,12 @@ msgstr ""
 #. module: sale_amazon
 #: model:product.template,name:sale_amazon.default_product_product_template
 msgid "Amazon Sale"
-msgstr ""
+msgstr "亞馬遜銷售"
 
 #. module: sale_amazon
 #: model:product.template,name:sale_amazon.shipping_product_product_template
 msgid "Amazon Shipping"
-msgstr ""
+msgstr "亞馬遜貨運"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_stock_picking__amazon_sync_pending
@@ -165,14 +184,14 @@ msgstr ""
 #. module: sale_amazon
 #: model_terms:ir.actions.act_window,help:sale_amazon.list_amazon_account_action
 msgid "Amazon accounts correspond to Amazon Seller Central accounts."
-msgstr ""
+msgstr "亞馬遜帳戶是對應至亞馬遜賣家中心帳戶的。"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/models/amazon_marketplace.py:0
 #, python-format
 msgid "Amazon marketplaces cannot be deleted."
-msgstr ""
+msgstr "亞馬遜商城無法刪除。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -189,7 +208,7 @@ msgid ""
 "Amazon requires that a tracking reference is provided with each delivery. "
 "Since the current carrier doesn't automatically provide a tracking "
 "reference, you need to set one manually."
-msgstr ""
+msgstr "亞馬遜要求每次送貨都提供追蹤參考。由於目前的物流商不會自動提供追蹤參考，因此你需要手動設定一個。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -198,123 +217,123 @@ msgstr ""
 msgid ""
 "Amazon requires that a tracking reference is provided with each delivery. "
 "You need to assign a carrier to this delivery."
-msgstr ""
+msgstr "亞馬遜要求每次送貨都提供追蹤參考。你需要為今次送貨指定貨運商。"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_AE
 msgid "Amazon.ae"
-msgstr ""
+msgstr "Amazon.ae"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_CA
 msgid "Amazon.ca"
-msgstr ""
+msgstr "Amazon.ca"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_JP
 msgid "Amazon.co.jp"
-msgstr ""
+msgstr "Amazon.co.jp"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_UK
 msgid "Amazon.co.uk"
-msgstr ""
+msgstr "Amazon.co.uk"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_US
 msgid "Amazon.com"
-msgstr ""
+msgstr "Amazon.com"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_AU
 msgid "Amazon.com.au"
-msgstr ""
+msgstr "Amazon.com.au"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_BE
 msgid "Amazon.com.be"
-msgstr ""
+msgstr "Amazon.com.be"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_BR
 msgid "Amazon.com.br"
-msgstr ""
+msgstr "Amazon.com.br"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_MX
 msgid "Amazon.com.mx"
-msgstr ""
+msgstr "Amazon.com.mx"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_TR
 msgid "Amazon.com.tr"
-msgstr ""
+msgstr "Amazon.com.tr"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_DE
 msgid "Amazon.de"
-msgstr ""
+msgstr "Amazon.de"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_EG
 msgid "Amazon.eg"
-msgstr ""
+msgstr "Amazon.eg"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_ES
 msgid "Amazon.es"
-msgstr ""
+msgstr "Amazon.es"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_FR
 msgid "Amazon.fr"
-msgstr ""
+msgstr "Amazon.fr"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_IN
 msgid "Amazon.in"
-msgstr ""
+msgstr "Amazon.in"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_IT
 msgid "Amazon.it"
-msgstr ""
+msgstr "Amazon.it"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_NL
 msgid "Amazon.nl"
-msgstr ""
+msgstr "Amazon.nl"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_PL
 msgid "Amazon.pl"
-msgstr ""
+msgstr "Amazon.pl"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_SA
 msgid "Amazon.sa"
-msgstr ""
+msgstr "Amazon.sa"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_SE
 msgid "Amazon.se"
-msgstr ""
+msgstr "Amazon.se"
 
 #. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_SG
 msgid "Amazon.sg"
-msgstr ""
+msgstr "Amazon.sg"
 
 #. module: sale_amazon
 #: model:mail.template,name:sale_amazon.order_sync_failure
 msgid "Amazon: Order Synchronization Failure"
-msgstr ""
+msgstr "亞馬遜：訂單同步失敗"
 
 #. module: sale_amazon
 #: model:ir.actions.server,name:sale_amazon.ir_cron_sync_amazon_orders_ir_actions_server
 #: model:ir.cron,cron_name:sale_amazon.ir_cron_sync_amazon_orders
 msgid "Amazon: sync orders"
-msgstr ""
+msgstr "亞馬遜：同步處理訂單"
 
 #. module: sale_amazon
 #: model:ir.actions.server,name:sale_amazon.ir_cron_sync_amazon_pickings_ir_actions_server
@@ -330,17 +349,17 @@ msgstr "發生了錯誤"
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.authorization_error
 msgid "An error occurred while linking your account with Amazon."
-msgstr ""
+msgstr "將你的帳戶連結至亞馬遜時，發生錯誤。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__available_marketplace_ids
 msgid "Available Marketplaces"
-msgstr ""
+msgstr "可用市場"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.authorization_error
 msgid "Back to my account"
-msgstr ""
+msgstr "返回我的帳戶"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__company_id
@@ -363,28 +382,28 @@ msgstr "聯絡人"
 #: code:addons/sale_amazon/utils.py:0
 #, python-format
 msgid "Could not establish the connection to the API."
-msgstr ""
+msgstr "無法建立與 API 的連線。"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 #, python-format
 msgid "Could not establish the connection to the feed URL."
-msgstr ""
+msgstr "未能建立與資料流網址的連線。"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 #, python-format
 msgid "Could not establish the connection to the proxy."
-msgstr ""
+msgstr "未能建立與代理的連線。"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/controllers/onboarding.py:0
 #, python-format
 msgid "Could not find Amazon account with id %s"
-msgstr ""
+msgstr "找不到亞馬遜帳戶符合識別碼 %s"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__create_uid
@@ -411,7 +430,7 @@ msgstr "授權認證"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 #, python-format
 msgid "Default Products"
-msgstr ""
+msgstr "預設產品"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__display_name
@@ -425,7 +444,7 @@ msgstr "顯示名稱"
 #: code:addons/sale_amazon/utils.py:0
 #, python-format
 msgid "Error code: %s; description: %s"
-msgstr ""
+msgstr "錯誤代碼：%s，描述：%s"
 
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__eu-west-1
@@ -435,32 +454,32 @@ msgstr "歐洲"
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__us-west-2
 msgid "Far East"
-msgstr ""
+msgstr "遠東"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
 msgid "Fulfilled by Amazon"
-msgstr ""
+msgstr "由亞馬遜履行"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
 msgid "Fulfilled by Merchant"
-msgstr ""
+msgstr "由商家履行"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_sale_order__amazon_channel
 msgid "Fulfillment Channel"
-msgstr ""
+msgstr "履行渠道"
 
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__sale_order__amazon_channel__fba
 msgid "Fulfillment by Amazon"
-msgstr ""
+msgstr "亞馬遜履行"
 
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__sale_order__amazon_channel__fbm
 msgid "Fulfillment by Merchant"
-msgstr ""
+msgstr "商家履行"
 
 #. module: sale_amazon
 #. odoo-python
@@ -470,6 +489,8 @@ msgid ""
 "Gift message:\n"
 "%s"
 msgstr ""
+"禮品訊息：\n"
+"%s"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__id
@@ -482,7 +503,7 @@ msgstr "ID"
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__active
 msgid ""
 "If made inactive, this account will no longer be synchronized with Amazon."
-msgstr ""
+msgstr "若設為非運行狀態，帳戶將不會與亞馬遜同步。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -492,6 +513,8 @@ msgid ""
 "If the date is set in the past, orders placed on this Amazon Account before the first synchronization of the module might be synchronized with Odoo.\n"
 "If the date is set in the future, orders placed on this Amazon Account between the previous and the new date will not be synchronized with Odoo."
 msgstr ""
+"若設為過去日期，模組首次同步前以此亞馬遜帳戶下單的訂單，可能會與 Odoo 同步。\n"
+"若設為將來日期，先前日期與新日期之間以此亞馬遜帳戶下單的訂單，將不會與 Odoo 同步。"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
@@ -500,6 +523,8 @@ msgid ""
 "                                         synchronize and add them to the "
 "current sync marketplaces"
 msgstr ""
+"如果此帳戶獲得新市場的存取權限，                                         "
+"請將其同步並新增相關市場至目前同步的市場"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
@@ -514,17 +539,17 @@ msgstr "盤點位置"
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__is_follow_up_displayed
 msgid "Is Follow Up Displayed"
-msgstr ""
+msgstr "是否顯示跟進行動"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__access_token
 msgid "LWA Access Token"
-msgstr ""
+msgstr "LWA 存取代碼"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__refresh_token
 msgid "LWA Refresh Token"
-msgstr ""
+msgstr "LWA 重新整理代碼"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account____last_update
@@ -536,7 +561,7 @@ msgstr "最後修改於"
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__last_orders_sync
 msgid "Last Orders Sync"
-msgstr ""
+msgstr "最後訂單同步"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__write_uid
@@ -555,7 +580,7 @@ msgstr "最後更新於"
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Link with Amazon"
-msgstr ""
+msgstr "連結至亞馬遜"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
@@ -563,6 +588,8 @@ msgid ""
 "Link your Amazon account with Odoo to start synchronizing your\n"
 "                                Amazon orders."
 msgstr ""
+"將你的亞馬遜帳戶與 Odoo 連結，以開始同步處理你的\n"
+"                                亞馬遜訂單。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__marketplace_id
@@ -572,7 +599,7 @@ msgstr "Marketplace"
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Marketplaces"
-msgstr ""
+msgstr "市場"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__name
@@ -583,14 +610,14 @@ msgstr "名稱"
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__us-east-1
 msgid "North America"
-msgstr ""
+msgstr "北美"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__offer_count
 #: model:ir.model.fields,field_description:sale_amazon.field_product_product__offer_count
 #: model:ir.model.fields,field_description:sale_amazon.field_product_template__offer_count
 msgid "Offer Count"
-msgstr ""
+msgstr "優惠數目"
 
 #. module: sale_amazon
 #. odoo-python
@@ -602,14 +629,14 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_product_template_view_form
 #, python-format
 msgid "Offers"
-msgstr ""
+msgstr "促銷優惠"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/models/amazon_account.py:0
 #, python-format
 msgid "Only available marketplaces can be selected"
-msgstr ""
+msgstr "只可選擇可用的市場"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__order_count
@@ -619,7 +646,7 @@ msgstr "訂購數量"
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Order Follow-up"
-msgstr ""
+msgstr "訂單跟進"
 
 #. module: sale_amazon
 #. odoo-python
@@ -643,7 +670,7 @@ msgstr "產品模板"
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_product_product
 msgid "Product Variant"
-msgstr "產品變體"
+msgstr "產品款式"
 
 #. module: sale_amazon
 #. odoo-python
@@ -653,7 +680,7 @@ msgid ""
 "Products delivered to Amazon customers must have their respective parts in "
 "the same package. Operations related to the product %s were not all "
 "confirmed at once."
-msgstr ""
+msgstr "交付給亞馬遜客戶的產品，其相應的零件必須放在同一個包裝中。與產品 %s 相關的操作，並未立即全部確認。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__region
@@ -663,22 +690,22 @@ msgstr "地區"
 #. module: sale_amazon
 #: model_terms:ir.actions.act_window,help:sale_amazon.list_amazon_account_action
 msgid "Register your Amazon account"
-msgstr ""
+msgstr "註冊你的亞馬遜帳戶"
 
 #. module: sale_amazon
 #: model_terms:ir.actions.act_window,help:sale_amazon.list_amazon_account_action
 msgid "Register yours to start synchronizing your orders into Odoo."
-msgstr ""
+msgstr "註冊你的帳戶，以開始將你的訂單同步至 Odoo。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__restricted_data_token
 msgid "Restricted Data Token"
-msgstr ""
+msgstr "受限制資料代碼"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sku
 msgid "SKU"
-msgstr ""
+msgstr "SKU（存貨單位）"
 
 #. module: sale_amazon
 #: model:ir.model.constraint,message:sale_amazon.constraint_amazon_offer_unique_sku
@@ -716,12 +743,12 @@ msgstr ""
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__seller_central_url
 msgid "Seller Central URL"
-msgstr ""
+msgstr "賣家中心網址"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__seller_key
 msgid "Seller Key"
-msgstr ""
+msgstr "賣家密鑰"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__base_marketplace_id
@@ -738,18 +765,18 @@ msgstr "庫存位置"
 #: code:addons/sale_amazon/models/amazon_account.py:0
 #, python-format
 msgid "Successfully updated the marketplaces available to this account!"
-msgstr ""
+msgstr "已成功更新此帳戶可用的市場！"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active_marketplace_ids
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__active_marketplace_ids
 msgid "Sync Marketplaces"
-msgstr ""
+msgstr "同步市場資料"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Sync Orders"
-msgstr ""
+msgstr "同步訂單"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
@@ -760,7 +787,7 @@ msgstr ""
 #: model:mail.template,subject:sale_amazon.order_sync_failure
 msgid ""
 "Synchronization of Amazon order {{ ctx.get('amazon_order_ref') }} has failed"
-msgstr ""
+msgstr "亞馬遜訂單 {{ ctx.get('amazon_order_ref') }} 同步失敗"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__tax_included
@@ -772,39 +799,39 @@ msgstr "含稅"
 msgid ""
 "The Amazon region of the marketplace. Please refer to the Selling Partner "
 "API documentation to find the correct region."
-msgstr ""
+msgstr "市場的亞馬遜區域。請參閱銷售合作夥伴 API 使用說明文件，以尋找正確的區域。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_sale_order_line__amazon_item_ref
 msgid "The Amazon-defined item reference."
-msgstr ""
+msgstr "亞馬遜定義的商品參考。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_marketplace__api_ref
 msgid "The Amazon-defined marketplace reference."
-msgstr ""
+msgstr "亞馬遜定義的市場參考。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_sale_order__amazon_order_ref
 msgid "The Amazon-defined order reference."
-msgstr ""
+msgstr "亞馬遜定義的訂單參考。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__team_id
 msgid "The Sales Team assigned to Amazon orders for reporting"
-msgstr ""
+msgstr "分配給亞馬遜訂單作報告用途的銷售團隊"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_offer__sku
 msgid "The Stock Keeping Unit."
-msgstr ""
+msgstr "庫存單位，即存貨的保管單位。"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 #, python-format
 msgid "The communication with the API failed."
-msgstr ""
+msgstr "與 API 通訊失敗。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -814,12 +841,14 @@ msgid ""
 "The communication with the API failed.\n"
 "Error code: %s; description: %s"
 msgstr ""
+"與 API 通訊失敗。\n"
+"錯誤代碼：%s，描述：%s"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_res_partner__amazon_email
 #: model:ir.model.fields,help:sale_amazon.field_res_users__amazon_email
 msgid "The encrypted email of the customer. Does not forward mails."
-msgstr ""
+msgstr "客戶的加密電子郵件。不會轉寄郵件。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__last_orders_sync
@@ -827,50 +856,50 @@ msgid ""
 "The last synchronization date for orders placed on this account. Orders "
 "whose status has not changed since this date will not be created nor updated"
 " in Odoo."
-msgstr ""
+msgstr "對此帳戶所下訂單的最後同步日期。此日期之後狀態未更改的訂單，將不會在 Odoo 建立或更新。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__location_id
 msgid ""
 "The location of the stock managed by Amazon under the Amazon Fulfillment "
 "program."
-msgstr ""
+msgstr "亞馬遜根據亞馬遜配送計劃管理的庫存位置。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__refresh_token
 msgid "The long-lived token that can be exchanged for a new access token."
-msgstr ""
+msgstr "可以交換新的存取代碼的長期有效代碼。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_offer__marketplace_id
 msgid "The marketplace of this offer."
-msgstr ""
+msgstr "此促銷優惠的市場。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__available_marketplace_ids
 msgid "The marketplaces this account has access to."
-msgstr ""
+msgstr "此帳戶能夠存取的市場。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__active_marketplace_ids
 #: model:ir.model.fields,help:sale_amazon.field_amazon_offer__active_marketplace_ids
 msgid "The marketplaces this account sells on."
-msgstr ""
+msgstr "此帳戶能夠銷售的市場。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__aws_credentials_expiry
 msgid "The moment at which the AWS credentials become invalid."
-msgstr ""
+msgstr "AWS 登入資訊失效的時刻。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__restricted_data_token_expiry
 msgid "The moment at which the Restricted Data Token becomes invalid."
-msgstr ""
+msgstr "受限制資料代碼失效的時刻。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__access_token_expiry
 msgid "The moment at which the token becomes invalid."
-msgstr ""
+msgstr "代碼失效的時刻。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -880,7 +909,7 @@ msgid ""
 "The order has been canceled by the Amazon customer while someproducts have "
 "already been delivered. Please create a return for this order to adjust the "
 "stock."
-msgstr ""
+msgstr "亞馬遜客戶已取消訂單，但部份產品已出貨。請為此訂單建立退貨，以調整庫存數量。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__base_marketplace_id
@@ -892,60 +921,60 @@ msgstr ""
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_offer__account_id
 msgid "The seller account used to manage this product."
-msgstr ""
+msgstr "用於管理此產品的賣家帳戶。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__aws_access_key
 msgid "The short-lived key used to identify the assumed ARN role on AWS."
-msgstr ""
+msgstr "用於識別 AWS 上假定 ARN 角色的短期有效密鑰。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__aws_secret_key
 msgid ""
 "The short-lived key used to verify the access to the assumed ARN role on "
 "AWS."
-msgstr ""
+msgstr "用於驗證對 AWS 上假定 ARN 角色的存取的短期有效密鑰。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__restricted_data_token
 msgid ""
 "The short-lived token used instead of the LWA Access Token to access "
 "restricted data"
-msgstr ""
+msgstr "代替 LWA 存取代碼用於存取受限制資料的短期有效密鑰"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__access_token
 msgid "The short-lived token used to query Amazon API on behalf of a seller."
-msgstr ""
+msgstr "用於代表賣家查詢亞馬遜 API 的短期有效密鑰。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__aws_session_token
 msgid ""
 "The short-lived token used to query the SP-API with the assumed ARN role on "
 "AWS."
-msgstr ""
+msgstr "用於查詢具有 AWS 上假定 ARN 角色的 SP-API 的短期有效代碼。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__name
 msgid "The user-defined name of the account."
-msgstr ""
+msgstr "使用者定義的帳戶名稱。"
 
 #. module: sale_amazon
 #: model:ir.model.constraint,message:sale_amazon.constraint_amazon_marketplace_unique_api_ref
 msgid "There can only exist one marketplace for a given API Identifier."
-msgstr ""
+msgstr "同一個 API 識別碼內，只可存在一個市場。"
 
 #. module: sale_amazon
 #: model:ir.model.constraint,message:sale_amazon.constraint_sale_order_unique_amazon_order_ref
 msgid ""
 "There can only exist one sale order for a given Amazon Order Reference."
-msgstr ""
+msgstr "同一個亞馬遜訂單參考號碼內，只可存在一張銷售訂單。"
 
 #. module: sale_amazon
 #: model:ir.model.constraint,message:sale_amazon.constraint_sale_order_line_unique_amazon_item_ref
 msgid ""
 "There can only exist one sale order line for a given Amazon Item Reference."
-msgstr ""
+msgstr "同一個亞馬遜商品參考，只能存在一個銷售訂單資料行。"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
@@ -953,7 +982,7 @@ msgid ""
 "This action will disconnect your account with Amazon and"
 "                                          cannot be undone. Are you sure you"
 " want to proceed?"
-msgstr ""
+msgstr "此操作會斷開你的帳戶與亞馬遜的連接，而且無法撤銷還原。確定要繼續？"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_stock_picking
@@ -963,17 +992,17 @@ msgstr "調撥"
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Unlink account"
-msgstr ""
+msgstr "取消連結帳戶"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Update Available Marketplaces"
-msgstr ""
+msgstr "更新可用市場"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_tree
 msgid "View on Seller Central"
-msgstr ""
+msgstr "在賣家中心查看"
 
 #. module: sale_amazon
 #. odoo-python
@@ -990,7 +1019,7 @@ msgstr ""
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_marketplace__tax_included
 msgid "Whether the price includes the tax amount or not."
-msgstr ""
+msgstr "價格是否連稅。"
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_stock_location__amazon_location
@@ -1009,7 +1038,7 @@ msgstr ""
 #: code:addons/sale_amazon/utils.py:0
 #, python-format
 msgid "You first need to authorize the Amazon account %s."
-msgstr ""
+msgstr "你首先需要授權亞馬遜帳戶 %s。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -1018,7 +1047,7 @@ msgstr ""
 msgid ""
 "You first need to set the marketplaces to synchronize for the Amazon account"
 " %s."
-msgstr ""
+msgstr "你首先需要設定要為亞馬遜帳戶 %s 同步的市場。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -1027,12 +1056,12 @@ msgstr ""
 msgid ""
 "You reached the maximum number of requests for this operation; please try "
 "again later."
-msgstr ""
+msgstr "你已達到此操作的最大請求數，請稍後再試。"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Your Amazon account is linked with Odoo."
-msgstr ""
+msgstr "你的亞馬遜帳戶已與 Odoo 連結。"
 
 #. module: sale_amazon
 #. odoo-python
@@ -1042,22 +1071,24 @@ msgid ""
 "[%s] %s\n"
 "Condition: %s - %s"
 msgstr ""
+"[%s] %s\n"
+"條件： %s - %s"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/models/amazon_account.py:0
 #, python-format
 msgid "[%s] Delivery Charges for %s"
-msgstr ""
+msgstr "[%s] 送貨費用 - %s"
 
 #. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/models/amazon_account.py:0
 #, python-format
 msgid "[%s] Gift Wrapping Charges for %s"
-msgstr ""
+msgstr "[%s] 禮品包裝費用 - %s"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "e.g. American Market"
-msgstr ""
+msgstr "例：美國市場"

@@ -1837,6 +1837,43 @@ QUnit.module('documents_kanban_tests.js', {
         );
     });
 
+    QUnit.test(
+        "document inspector: download button on selecting the requested document",
+        async function (assert) {
+            assert.expect(2);
+
+            pyEnv["documents.document"].create({
+                folder_id: 1,
+                name: "request",
+                type: "empty",
+            });
+
+            await createDocumentsView({
+                type: "kanban",
+                resModel: "documents.document",
+                arch: `
+                <kanban js_class="documents_kanban"><templates><t t-name="kanban-box">
+                    <div draggable="true" class="oe_kanban_global_area">
+                        <i class="fa fa-circle-thin o_record_selector"/>
+                        <field name="name"/>
+                    </div>
+                </t></templates></kanban>`,
+            });
+
+            await click(target.querySelector(".o_kanban_record:nth-of-type(6) .o_record_selector"));
+            assert.ok(
+                target.querySelector(".fa-download").disabled,
+                "the download button should be disabled when a requested document is selected"
+            );
+
+            await click(target.querySelector(".o_kanban_record .o_record_selector"));
+            assert.ok(
+                target.querySelector(".fa-download"),
+                "the download button should be enabled when selecting requested document with another document"
+            );
+        }
+    );
+
     QUnit.module('DocumentChatter');
 
     QUnit.test('document chatter: open and close chatter', async function (assert) {
@@ -2102,6 +2139,7 @@ QUnit.module('documents_kanban_tests.js', {
             "should display the activity Edit button");
         assert.containsOnce(target, '.o_Activity_cancelButton',
             "should display the activity Cancel button");
+        await click(find(target, '.o_Activity_cancelButton'));
         
         await click(find(target, '.o_kanban_record', 'blip'));
 
@@ -3579,5 +3617,139 @@ QUnit.module('documents_kanban_tests.js', {
 
         assert.verifySteps(["storage get 343"]);
     });
+
+    QUnit.test('documents Kanban: workspace user will be able to share document', async function (assert) {
+        assert.expect(2);
+        pyEnv['documents.folder'].create({
+            name: 'Workspace5', description: '_F1-test-description_', has_write_access: false
+        });
+
+        await createDocumentsView({
+            type: "kanban",
+            resModel: 'documents.document',
+            arch: `
+                <kanban js_class="documents_kanban"><templates><t t-name="kanban-box">
+                    <div>
+                        <i class="fa fa-circle-thin o_record_selector"/>
+                        <field name="name"/>
+                    </div>
+                </t></templates></kanban>`,
+        });
+
+        await click(target, ".o_search_panel_category_value:nth-of-type(4) header");
+        await nextTick();
+        assert.strictEqual(target.querySelector('.o_search_panel_category_value > header.active').textContent.trim(), 'Workspace5',
+            'should have a "Workspace5" selected')
+        assert.notOk(target.querySelector('.o_documents_kanban_share_domain').disabled,
+            "the share button should be enabled when a folder is selected");
+    });
+
+    QUnit.test(
+        "documents previewer : download button on documents without attachment",
+        async function (assert) {
+            assert.expect(4);
+            pyEnv["documents.document"].create({
+                folder_id: pyEnv["documents.folder"].search([])[0],
+                name: "newYoutubeVideo",
+                type: "url",
+                url: "https://youtu.be/Ayab6wZ_U1A",
+            });
+            const views = {
+                "documents.document,false,kanban": `<kanban js_class="documents_kanban"><templates><t t-name="kanban-box">
+                    <div class="o_kanban_image">
+                        <div name="document_preview" class="o_kanban_image_wrapper" t-if="record.type.raw_value == 'url'">
+                            <img width="100" height="100" class="o_attachment_image"/>
+                        </div>
+                    </div>
+                    <div>
+                        <field name="name"/>
+                    </div>
+                </t></templates></kanban>`,
+            };
+            const { openView } = await createDocumentsViewWithMessaging({
+                serverData: { views },
+            });
+            await openView({
+                res_model: "documents.document",
+                views: [[false, "kanban"]],
+            });
+
+            [...target.querySelectorAll(".oe_kanban_previewer")].pop().click();
+            await nextTick();
+
+            assert.containsOnce(target, ".o_AttachmentViewer", "should have a document preview");
+            assert.containsOnce(
+                target,
+                ".o_AttachmentViewer_headerItemButtonClose",
+                "should have a close button"
+            );
+            assert.containsNone(
+                target,
+                ".o_AttachmentViewer_buttonDownload",
+                "should not have a download button"
+            );
+            target.querySelector(".o_AttachmentViewer_headerItemButtonClose").click();
+            await nextTick();
+            assert.containsNone(
+                target,
+                ".o_AttachmentViewer",
+                "should not have a document preview"
+            );
+        }
+    );
+
+    QUnit.test(
+        "documents list : uploding the requested documents with multiple selection",
+        async function (assert) {
+            assert.expect(4);
+            pyEnv["documents.document"].unlink(pyEnv["documents.document"].search([]));
+            const documentIds = pyEnv["documents.document"].create([
+                {
+                    folder_id: 1,
+                    name: "request",
+                    type: "empty",
+                },
+                {
+                    folder_id: 1,
+                    name: "request1",
+                    type: "empty",
+                },
+                {
+                    folder_id: 1,
+                    name: "request2",
+                    type: "empty",
+                },
+            ]);
+            this.patchDocumentXHR([], (data) => {
+                const datas = Object.fromEntries(data.entries());
+                assert.strictEqual(
+                    Number(datas.document_id),
+                    documentIds[1],
+                    "The selected requsted document should be uploaded"
+                );
+                assert.strictEqual(datas.ufile.name, file.name);
+                assert.step("xhrSend");
+            });
+            const file = await testUtils.file.createFile({
+                name: "text.txt",
+                content: "hello, world",
+                contentType: "text/plain",
+            });
+            await createDocumentsView({
+                type: "list",
+                resModel: "documents.document",
+                arch: `<tree js_class="documents_list">
+                    <field name="name"/>
+                </tree>`,
+            });
+            // select 3 requested documents
+            await click(target, ".o_list_record_selector.o_list_controller");
+            const fileInput = target.querySelector(".o_inspector_replace_input");
+            // click on the 2nd document to upload
+            fileInput.setAttribute("data-index", 1);
+            testUtils.file.inputFiles(fileInput, [file]);
+            assert.verifySteps(["xhrSend"]);
+        }
+    );
 });
 });

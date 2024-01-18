@@ -1,4 +1,4 @@
-from odoo import fields, models, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -6,6 +6,16 @@ class L10nLatamDocumentType(models.Model):
     _inherit = 'l10n_latam.document.type'
 
     l10n_cl_dte_caf_ids = fields.One2many('l10n_cl.dte.caf', 'l10n_latam_document_type_id', string='DTE Caf')
+    l10n_cl_show_caf_button = fields.Boolean(compute='_l10n_cl_show_caf_button')
+
+    @api.depends_context('company')
+    @api.depends('l10n_cl_dte_caf_ids', 'country_id', 'internal_type')
+    def _l10n_cl_show_caf_button(self):
+        company = self.env.company
+        for r in self:
+            r.l10n_cl_show_caf_button = r.internal_type and \
+                company.l10n_cl_dte_service_provider == 'SIIDEMO' and r.country_id.code == 'CL' and not \
+                r.l10n_cl_dte_caf_ids.filtered(lambda c: c.company_id == company)
 
     def _is_doc_type_ticket(self):
         return self.code in ['35', '38', '39', '41', '70', '71']
@@ -44,3 +54,6 @@ class L10nLatamDocumentType(models.Model):
         if not caf:
             raise UserError(_('There are no CAFs available. Please upload a CAF file or ask for a new one at www.sii.cl website'))
         return caf.start_nb
+
+    def create_demo_caf_file(self):
+        self.env.company._create_demo_caf_files(enabled_dte_documents=self)

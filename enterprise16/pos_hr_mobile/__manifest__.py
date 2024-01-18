@@ -17,6 +17,7 @@
             'pos_hr_mobile/static/src/scss/barcode_mobile.scss',
             'barcodes_mobile/static/src/scss/barcode_mobile.scss',
             'pos_hr_mobile/static/src/xml/**/*',
+            'web/static/src/webclient/barcode/*.scss',
         ],
     }
 }

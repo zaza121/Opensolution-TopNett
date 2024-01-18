@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from odoo import Command
 
 from odoo.addons.project.tests.test_project_base import TestProjectCommon
+from odoo.exceptions import AccessError
 
 GIF = b"R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs="
 TEXT = base64.b64encode(bytes("workflow bridge project", 'utf-8'))
@@ -199,3 +200,68 @@ class TestCaseDocumentsBridgeProject(TestProjectCommon):
         })
         projects._compute_attached_document_count()
         self.assertEqual(self.project_pigs.document_count, 2, "The documents linked to the tasks of the project should be taken into account.")
+
+    def test_upload_document_to_workspace_with_edit_shared(self):
+        """
+        A user that has Users access to both Documents and Projects, has been invited with an Editable Share link to the project,
+        should be able to upload new documents to the project workspace folder
+        """
+        some_user = self.env['res.users'].create({
+            'name': 'Some User',
+            'login': 'some_user',
+            'password': 'some_user',
+            'groups_id': [(6, 0, [self.env.ref('documents.group_documents_user').id,
+                                  self.env.ref('project.group_project_user').id])]
+        })
+        some_partner = self.env['res.partner'].create({
+            'name': 'Some Partner',
+            'user_id': some_user.id,
+        })
+        # create a folder for the project
+        folder = self.env['documents.folder'].sudo().create({
+            'name': 'folder_name',
+        })
+        self.project_pigs.sudo().write({
+            'collaborator_ids': [(0, 0, {"partner_id": some_partner.id})],
+            'collaborator_count': 1,
+            'documents_folder_id': folder.id,
+        })
+        try:
+            self.env['documents.document'].with_user(some_user).create({
+                'datas': GIF,
+                'name': 'fileText_test.txt',
+                'mimetype': 'text/plain',
+                'folder_id': folder.id,
+                'res_model': 'project.project',
+                'res_id': self.project_pigs.id,
+            })
+        except AccessError:
+            self.fail("We got an access error, when we shouldn't have it, because we have edit access to the project (via shared link)")
+
+    def test_project_task_access_document(self):
+        """
+        Tests that 'MissingRecord' error should not be rasied when trying to switch
+        workspace for a non-existing document.
+
+        - The 'active_id' here is the 'id' of a non-existing document.
+        - We then try to access 'All' workspace by calling the 'search_panel_select_range'
+            method. We should be able to access the workspace.
+        """
+        missing_id = self.env['documents.document'].search([], order='id DESC', limit=1).id + 1
+        result = self.env['documents.document'].with_context(
+            active_id=missing_id, active_model='project.task',
+            limit_folders_to_project=True).search_panel_select_range('folder_id')
+        self.assertTrue(result)
+
+    def test_copy_project(self):
+        """
+        When duplicating a project, there should be exactly one copy of the folder linked to the project.
+        If there is the `no_create_folder` context key, then the folder should not be copied (note that in normal flows,
+        when this context key is used, it is expected that a folder will be copied/created manually, so that we don't
+        end up with a project having the documents feature enabled but no folder).
+        """
+        last_folder_id = self.env['documents.folder'].search([], order='id desc', limit=1).id
+        self.project_pigs.copy()
+        self.assertEqual(len(self.env['documents.folder'].search([('id', '>', last_folder_id)])), 1, "There should only be one new folder created.")
+        self.project_goats.with_context(no_create_folder=True).copy()
+        self.assertEqual(len(self.env['documents.folder'].search([('id', '>', last_folder_id + 1)])), 0, "There should be no new folder created.")

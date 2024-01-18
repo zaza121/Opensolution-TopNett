@@ -159,7 +159,7 @@ export const ActionEditorMain = Widget.extend({
             // add studio in loadViews context to retrieve groups server-side
             // We load views in the base language to make sure we read/write on the source term field
             // of ir.ui.view
-            const context = Object.assign({}, self.action.context, { studio: true, lang: false });
+            const context = Object.assign({}, self.action.context, { studio: true, lang: false, no_address_format: true });
             const resModel = self.action.res_model;
             const views = self.views;
             const actionId = self.action.id;

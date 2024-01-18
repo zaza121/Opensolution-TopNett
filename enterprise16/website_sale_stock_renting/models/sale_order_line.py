@@ -38,10 +38,8 @@ class SaleOrderLine(models.Model):
             raise ValueError("Expected singleton or no record: %s" % self.product_id)
         rented_quantities = defaultdict(float)
         for so_line in self:
-            qty_to_deliver = so_line.product_uom_qty - so_line.qty_delivered
-            qty_to_return = so_line.product_uom_qty - so_line.qty_returned
-            rented_quantities[so_line.reservation_begin] += qty_to_deliver
-            rented_quantities[so_line.return_date] -= qty_to_return
+            rented_quantities[so_line.reservation_begin] += so_line.product_uom_qty
+            rented_quantities[so_line.return_date] -= so_line.product_uom_qty
 
         # Key dates means either the dates of the keys, either the fact that those dates are key
         # dates, where there is a quantity modification.
@@ -58,6 +56,10 @@ class SaleOrderLine(models.Model):
     def _is_invalid_renting_dates(self, company, start_date=None, end_date=None):
         """ Check the pickup and return dates are invalid
         """
+        res = super()._is_invalid_renting_dates(company, start_date=start_date, end_date=end_date)
+        if res:
+            return res
         preparation_delta = timedelta(hours=self.product_id.preparation_time)
-        return super()._is_invalid_renting_dates(company, start_date=start_date, end_date=end_date)\
-            or ((self.start_date or start_date) - preparation_delta) < fields.Datetime.now()
+        reservation_begin = (self.start_date or start_date) - preparation_delta
+        # 15 minutes of allowed time between adding the product to cart and paying it.
+        return reservation_begin < fields.Datetime.now() - timedelta(minutes=15)

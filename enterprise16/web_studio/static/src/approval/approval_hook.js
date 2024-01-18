@@ -3,7 +3,7 @@ import { useService } from "@web/core/utils/hooks";
 import { _lt } from "@web/core/l10n/translation";
 import { renderToMarkup } from "@web/core/utils/render";
 
-import { xml, reactive } from "@odoo/owl";
+import { xml, reactive, useComponent, useEnv } from "@odoo/owl";
 
 const missingApprovalsTemplate = xml`
     <ul>
@@ -49,11 +49,11 @@ class StudioApproval {
      * does the update of every component using that state.
      */
     get state() {
-        if (!(this.dataKey in this._data)) {
-            this._data[this.dataKey] = { rules: null };
+        const state = this._getState();
+        if (state.rules === null && !state.syncing) {
             this.fetchApprovals();
         }
-        return this._data[this.dataKey];
+        return state;
     }
 
     get inStudio() {
@@ -84,14 +84,20 @@ class StudioApproval {
         const kwargs = {
             res_id: !this.studio.mode && this.resId,
         };
-        Object.assign(this.state, { syncing: true });
-        const spec = await this.orm.silent.call(
-            "studio.approval.rule",
-            "get_approval_spec",
-            args,
-            kwargs
-        );
-        Object.assign(this.state, spec, { syncing: false });
+
+        const state = this._getState();
+        state.syncing = true;
+        try {
+            const spec = await this.orm.silent.call(
+                "studio.approval.rule",
+                "get_approval_spec",
+                args,
+                kwargs
+            );
+            Object.assign(state, spec);
+        } finally {
+            state.syncing = false;
+        }
     }
 
     /**
@@ -123,19 +129,33 @@ class StudioApproval {
             await this.fetchApprovals();
         }
     }
+
+    _getState() {
+        if (!(this.dataKey in this._data)) {
+            this._data[this.dataKey] = { rules: null };
+        }
+        return this._data[this.dataKey];
+    }
 }
 
 const approvalMap = new WeakMap();
 
-export function useApproval({ record, method, action }) {
-    const orm = useService("orm");
+export function useApproval({ getRecord, method, action }) {
+    /* The component using this hook can be destroyed before ever being mounted.
+    In practice, we do an rpc call in the component setup without knowing if it will be mounted.
+    When a new instance of the component is created, it will share the same data, and the
+    promise from `useService("orm")` will never resolve due to the old instance being destroyed.
+    What we can do to prevent that, is initially use an unprotected orm and once
+    the component has been mounted, we can switch the orm to the one from useService. */
+    const protectedOrm = useService("orm");
+    const unprotectedOrm = useEnv().services.orm;
     const studio = useService("studio");
     const notification = useService("notification");
-
-    let approval = approvalMap.get(record.model);
-    if (!approval) {
-        approval = new StudioApproval();
-        approvalMap.set(record.model, approval);
+    let record = getRecord(useComponent().props);
+    let _approval = approvalMap.get(record.model);
+    if (!_approval) {
+        _approval = new StudioApproval();
+        approvalMap.set(record.model, _approval);
     }
 
     const specialize = {
@@ -143,9 +163,20 @@ export function useApproval({ record, method, action }) {
         resId: record.resId,
         method,
         action,
-        orm,
+        orm: unprotectedOrm,
         studio,
         notification,
     };
-    return Object.assign(Object.create(approval), specialize);
+    const approval = Object.assign(Object.create(_approval), specialize);
+    owl.onWillUpdateProps((nextProps) => {
+        const nextRecord = getRecord(nextProps);
+        approval.resId = nextRecord.resId;
+        approval.resModel = nextRecord.resModel;
+        record = nextRecord;
+    });
+    owl.onMounted(() => {
+        approval.orm = protectedOrm;
+    });
+
+    return approval;
 }

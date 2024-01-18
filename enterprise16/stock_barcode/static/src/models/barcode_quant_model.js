@@ -280,15 +280,18 @@ export default class BarcodeQuantModel extends BarcodeModel {
             ['location_id', '=', this.location.id],
             ['product_id', '=', product.id],
         ];
+        const { lot_id, package_id } = params.fieldsParams;
         if (product.tracking !== 'none') {
             if (params.fieldsParams.lot_name) { // Search for a quant with the exact same lot.
                 domain.push(['lot_id.name', '=', params.fieldsParams.lot_name]);
+            } else if (params.fieldsParams.lot_id) { // Search for a quant with the exact same lot.
+                domain.push(['lot_id', '=', lot_id.id || lot_id]);
             } else { // Search for a quant with no lot.
                 domain.push(['lot_id', '=', false]);
             }
         }
         if (params.fieldsParams.package_id) {
-            domain.push(['package_id', '=', params.fieldsParams.package_id]);
+            domain.push(['package_id', '=', package_id.id || package_id]);
         }
         const quant = await this.orm.searchRead(
             'stock.quant',
@@ -297,7 +300,8 @@ export default class BarcodeQuantModel extends BarcodeModel {
             { limit: 1 }
         );
         if (quant.length) {
-            Object.assign(params.fieldsParams, quant[0], { inventory_quantity: 1 });
+            const inventory_quantity = params.fieldsParams.inventory_quantity || 1;
+            Object.assign(params.fieldsParams, quant[0], { inventory_quantity });
         }
         const newLine = await super._createNewLine(params);
         if (quant.length) {

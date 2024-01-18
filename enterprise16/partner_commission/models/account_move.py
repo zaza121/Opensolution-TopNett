@@ -163,6 +163,14 @@ class AccountMove(models.Model):
         self.filtered(lambda move: move.move_type == 'out_invoice')._make_commission()
         return res
 
+    def button_draft(self):
+        res = super(AccountMove, self).button_draft()
+        for move in self:
+            cpo = self.env['purchase.order'].sudo().search(move._get_commission_purchase_order_domain(), limit=1)
+            if cpo and move.move_type == 'out_refund' and cpo.state == 'draft':
+                message_body = _("The commission partner order %s must be checked manually (especially refund lines which can be duplicated).", cpo._get_html_link())
+                move.message_post(body=message_body)
+        return res
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
@@ -174,10 +182,13 @@ class AccountMoveLine(models.Model):
         template_products = template.sale_order_template_line_ids.product_id.mapped('product_tmpl_id')
         template_id = template.id if template and self.product_id.product_tmpl_id in template_products.ids else None
         sub_pricelist = self.subscription_id.pricelist_id
-        pricelist_id =  sub_pricelist and sub_pricelist.id or self.sale_line_ids.mapped('order_id.pricelist_id')[:1].id
+        pricelist_id = sub_pricelist and sub_pricelist.id or self.sale_line_ids.mapped('order_id.pricelist_id')[:1].id
 
-        # a specific commission plan can be set on the subscription, taking predence over the referrer's commission plan
-        plan = self.move_id.referrer_id.commission_plan_id
+        # In order of precedence, the commission plan can be one of:
+        # 1. the commission plan set on the subscription
+        # 2. the commission plan set on the sale order
+        # 3. the referrer's commission plan
+        plan = self.sale_line_ids.order_id.commission_plan_id or self.move_id.referrer_id.commission_plan_id
         if self.subscription_id:
             plan = self.subscription_id.commission_plan_id
 

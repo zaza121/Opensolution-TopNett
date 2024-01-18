@@ -5,15 +5,17 @@
 # Translators:
 # JH CHOI <hwangtog@gmail.com>, 2022
 # Martin Trigaux, 2022
+# Sarah Park, 2023
+# Daye Jeong, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:30+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:48+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Korean (https://www.transifex.com/odoo/teams/41243/ko/)\n"
+"Last-Translator: Daye Jeong, 2023\n"
+"Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,7 +27,7 @@ msgstr ""
 #: code:addons/sale_temporal/models/product_template.py:0
 #, python-format
 msgid "%(amount)s (fixed)"
-msgstr ""
+msgstr "%(amount)s (고정)"
 
 #. module: sale_temporal
 #. odoo-python
@@ -54,7 +56,7 @@ msgstr "회사"
 #: model_terms:ir.actions.act_window,help:sale_temporal.product_pricing_action
 #: model_terms:ir.actions.act_window,help:sale_temporal.sale_temporal_recurrence_action
 msgid "Create a new recurrence"
-msgstr ""
+msgstr "새 반복 항목 만들기"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__create_uid
@@ -77,11 +79,12 @@ msgstr "통화"
 #: model:ir.model.fields,field_description:sale_temporal.field_product_product__product_pricing_ids
 #: model:ir.model.fields,field_description:sale_temporal.field_product_template__product_pricing_ids
 msgid "Custom Pricings"
-msgstr ""
+msgstr "맞춤 가격"
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Day"
 msgstr "일"
@@ -108,14 +111,20 @@ msgid "Duration"
 msgstr "기간"
 
 #. module: sale_temporal
+#: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__duration_display
+msgid "Duration Display"
+msgstr "기간 표시"
+
+#. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_product__display_price
 #: model:ir.model.fields,help:sale_temporal.field_product_template__display_price
 msgid "First leasing pricing of the product"
-msgstr ""
+msgstr "해당 품목의 최초 임대 가격"
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Hour"
 msgstr "시간"
@@ -134,13 +143,13 @@ msgstr "내부 노트"
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.sale_subscription_order_view_form
 msgid "Internal notes"
-msgstr ""
+msgstr "내부 메모"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_product__is_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_template__is_temporal
 msgid "Is Temporal"
-msgstr ""
+msgstr "임시 항목입니다"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing____last_update
@@ -164,18 +173,19 @@ msgstr "최근 갱신 일자"
 #: model:ir.model.fields,field_description:sale_temporal.field_product_product__display_price
 #: model:ir.model.fields,field_description:sale_temporal.field_product_template__display_price
 msgid "Leasing price"
-msgstr ""
+msgstr "임대 가격"
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_sale_temporal_recurrence__duration
 msgid ""
 "Minimum duration before this rule is applied. If set to 0, it represents a "
 "fixed temporal price."
-msgstr ""
+msgstr "이 규칙이 적용되기 전까지의 최소 기간입니다. 0으로 설정하면, 고정 임시 가격을 나타냅니다."
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Month"
 msgstr "월"
@@ -233,7 +243,7 @@ msgstr "가격"
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_pricing
 msgid "Pricing rule of temporal products"
-msgstr ""
+msgstr "임시 품목 가격 책정 규칙"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_template
@@ -248,12 +258,12 @@ msgstr "상품 서식"
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_product
 msgid "Product Variant"
-msgstr "파생 품목"
+msgstr "품목 세부선택"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__product_variant_ids
 msgid "Product Variants"
-msgstr "파생 품목"
+msgstr "품목 세부선택"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
@@ -268,17 +278,17 @@ msgstr "반복"
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricelist__product_pricing_ids
 msgid "Recurring Price Rules"
-msgstr ""
+msgstr "반복 가격 규칙"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
 msgid "Recurring Pricelist Rules"
-msgstr ""
+msgstr "반복 가격표 규칙"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_sale_temporal_recurrence
 msgid "Sale temporal Recurrence"
-msgstr ""
+msgstr "판매 임시 반복"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_sale_order
@@ -295,7 +305,7 @@ msgstr "판매 주문 내역"
 msgid ""
 "Select Variants of the Product for which this rule applies. Leave empty if "
 "this rule applies for any variant of this template."
-msgstr ""
+msgstr "이 규칙을 적용시킬 품목별 속성을 선택하십시오. 공란으로 둘 경우 이 서식의 속성 전체에 적용됩니다."
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_pricing__product_template_id
@@ -303,9 +313,14 @@ msgid "Select products on which this pricing will be applied."
 msgstr "이 가격 책정이 적용될 제품을 선택하십시오."
 
 #. module: sale_temporal
+#: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__subscription_unit_display
+msgid "Subscription Unit Display"
+msgstr ""
+
+#. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_order_line__temporal_type
 msgid "Temporal Type"
-msgstr ""
+msgstr "임시 유형"
 
 #. module: sale_temporal
 #: model:ir.model.constraint,message:sale_temporal.constraint_sale_temporal_recurrence_temporal_recurrence_duration
@@ -317,17 +332,17 @@ msgstr "가격 책정 기간은 0보다 크거나 같아야 합니다."
 #: code:addons/sale_temporal/models/product_template.py:0
 #, python-format
 msgid "The product (%s) has incompatible values: %s"
-msgstr ""
+msgstr "해당 품목 (%s)에 호환되지 않는 값이 있습니다: %s"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_template_form_view_pricing
-msgid "Time based pricing"
-msgstr ""
+msgid "Time-based pricing"
+msgstr "시간 기준 가격 책정"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
-msgid "Time based rules"
-msgstr ""
+msgid "Time-based rules"
+msgstr "시간 기준 규칙"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__unit
@@ -337,11 +352,12 @@ msgstr "단위"
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
 msgid "Variants"
-msgstr "파생 상품"
+msgstr "세부선택"
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Week"
 msgstr "주"
@@ -354,6 +370,7 @@ msgstr "주"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Year"
 msgstr "년"
@@ -370,7 +387,7 @@ msgstr "년"
 msgid ""
 "You can not have a time-based rule for products that are not recurring or "
 "rentable."
-msgstr ""
+msgstr "반복되지 않거나 대여할 수 없는 품목에 대해서는 시간 기준 규칙을 세울 수 없습니다."
 
 #. module: sale_temporal
 #. odoo-python
@@ -379,7 +396,7 @@ msgstr ""
 msgid ""
 "You cannot have multiple pricing for the same variant, recurrence and "
 "pricelist"
-msgstr ""
+msgstr "동일한 속성과 반복, 가격표에 대해 가격을 다르게 책정할 수 없습니다."
 
 #. module: sale_temporal
 #. odoo-python
@@ -387,4 +404,53 @@ msgstr ""
 #: code:addons/sale_temporal/models/product_pricing.py:0
 #, python-format
 msgid "all variants"
-msgstr ""
+msgstr "전체 세부선택 사항"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s months"
+msgstr "%s개월 당 "
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s weeks"
+msgstr "%s주당"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s years"
+msgstr "%s년당"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per month"
+msgstr "매월"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per week"
+msgstr "매주"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per year"
+msgstr "매년"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "This recurrence unit is not supported."
+msgstr "이 반복 단위는 지원되지 않습니다."

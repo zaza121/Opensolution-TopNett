@@ -54,6 +54,8 @@ class SignContract(Sign):
         if request_item.sign_request_id.nb_closed == 2:
             if contract.employee_id:
                 contract.employee_id.active = True
+                if contract.applicant_id:
+                    contract.applicant_id._move_to_hired_stage()
             if contract.employee_id.address_home_id:
                 contract.employee_id.address_home_id.active = True
             self._create_activity_advantage(contract, 'countersigned')
@@ -171,11 +173,13 @@ class HrContractSalary(http.Controller):
 
     @http.route(['/salary_package/simulation/contract/<int:contract_id>'], type='http', auth="public", website=True, sitemap=False)
     def salary_package(self, contract_id=None, **kw):
-
-        # Used to flatten the response after the rollback.
-        # Otherwise assets are generated and rollbacked before the page loading.
-        # Leading to crashes (assets not found) when loading the page.
         response = False
+
+        debug = request.session.debug
+        for bundle_name in ["web.assets_frontend", "web.assets_frontend_lazy"]:
+            request.env["ir.qweb"]._get_asset_nodes(bundle_name, debug=debug, js=True, css=True)
+        request.env.cr.commit()
+
         request.env.cr.execute('SAVEPOINT salary')
 
         contract = request.env['hr.contract'].sudo().browse(contract_id)
@@ -224,11 +228,21 @@ class HrContractSalary(http.Controller):
                 'active': False,
                 'company_id': contract.company_id.id,
             })
+            # Pre-filling
+            temporary_name = ""
+            temporary_mobile = ""
+            # Pre-filling name / phone / mail if coming from an applicant
+            if kw.get('applicant_id'):
+                applicant = request.env['hr.applicant'].sudo().browse(int(kw.get('applicant_id')))
+                temporary_name = applicant.partner_name
+                temporary_mobile = applicant.partner_phone
+                address_home_id.email = applicant.email_from
             contract.employee_id = request.env['hr.employee'].with_context(
                 tracking_disable=True,
                 salary_simulation=True,
             ).with_user(SUPERUSER_ID).sudo().create({
-                'name': '',
+                'name': temporary_name,
+                'phone': temporary_mobile,
                 'active': False,
                 'country_id': contract_country.id,
                 'certificate': False,  # To force encoding it
@@ -254,7 +268,7 @@ class HrContractSalary(http.Controller):
             'default_mobile': request.env['ir.default'].sudo().get('hr.contract', 'mobile'),
             'original_link': get_current_url(request.httprequest.environ),
             'token': kw.get('token'),
-            'master_department_id': request.env['hr.department'].browse(int(values['department_id'])).master_department_id.id if values['department_id'] else False
+            'master_department_id': request.env['hr.department'].sudo().browse(int(values['department_id'])).master_department_id.id if values['department_id'] else False
         })
 
         response = request.render("hr_contract_salary.salary_package", values)
@@ -462,6 +476,9 @@ class HrContractSalary(http.Controller):
                 field_value = int(field_value) if field_value else False
             return field_value
 
+        def _is_valid_date(date):
+            return fields.Date.from_string(date) < fields.Date.from_string('1900-01-01')
+
         personal_infos = request.env['hr.contract.salary.personal.info'].sudo().search([
             '|', ('structure_type_id', '=', False), ('structure_type_id', '=', contract.structure_type_id.id)])
 
@@ -485,6 +502,10 @@ class HrContractSalary(http.Controller):
         address_home_vals = {}
         bank_account_vals = {}
         attachment_create_vals = []
+
+        if employee_infos.get('birthday') and _is_valid_date(employee_infos['birthday']):
+            employee_infos['birthday'] = ''
+
         for personal_info in personal_infos:
             field_name = personal_info.field
 
@@ -719,7 +740,7 @@ class HrContractSalary(http.Controller):
         contract = self._check_access_rights(contract_id)
         advantage = request.env['hr.contract.salary.advantage'].sudo().search([
             ('structure_type_id', '=', contract.structure_type_id.id),
-            ('res_field_id.name', '=', advantage_field)])
+            ('res_field_id.name', '=', advantage_field)], limit=1)
         if hasattr(contract, '_get_description_%s' % advantage_field):
             description = getattr(contract, '_get_description_%s' % advantage_field)(new_value)
         else:

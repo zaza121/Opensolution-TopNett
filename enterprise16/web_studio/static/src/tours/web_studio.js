@@ -217,3 +217,30 @@ tour.register(
         },
     ]
 );
+
+tour.register(
+    "web_studio_test_edit_modifier_domain_with_no_literal",
+    {
+        test: true,
+        url: "/web",
+    },
+    [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']"
+        },
+        {
+            extra_trigger: ".o_form_view",
+            trigger: ".o_web_studio_navbar_item a",
+        },
+        {
+            trigger:".o_web_studio_form_view_editor .o_field_widget[name='company_name']"
+        },
+        {
+            trigger:"input[id=required]",
+        },
+        {
+            trigger:".o_web_studio_snackbar_text:contains('Saved')",
+            run: () => {}
+        },
+    ]
+);

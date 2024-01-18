@@ -5,16 +5,16 @@
 # Translators:
 # Ikhsanul Wirsa <iwirsa02@outlook.co.id>, 2022
 # Martin Trigaux, 2022
-# Abe Manyo, 2022
+# Abe Manyo, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Abe Manyo, 2022\n"
-"Language-Team: Indonesian (https://www.transifex.com/odoo/teams/41243/id/)\n"
+"Last-Translator: Abe Manyo, 2023\n"
+"Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -26,19 +26,19 @@ msgstr ""
 #: code:addons/account_followup/models/account_followup.py:0
 #, python-format
 msgid "%s (copy)"
-msgstr "%s (salinan)"
+msgstr "%s (salin)"
 
 #. module: account_followup
 #. odoo-python
 #: code:addons/account_followup/models/account_followup_report.py:0
 #, python-format
 msgid "%s Payment Reminder - %s"
-msgstr ""
+msgstr "%s Pengingat Pembayaran - %s"
 
 #. module: account_followup
 #: model:ir.actions.report,print_report_name:account_followup.action_report_followup
 msgid "'Follow-up ' + object.display_name"
-msgstr ""
+msgstr "'Follow-up ' + object.display_name"
 
 #. module: account_followup
 #: model:ir.model.fields,help:account_followup.field_res_partner__type
@@ -50,6 +50,11 @@ msgid ""
 "- Private: Private addresses are only visible by authorized users and contain sensitive data (employee home addresses, ...).\n"
 "- Other: Other address for the company (e.g. subsidiary, ...)"
 msgstr ""
+"- Kontak: Gunakan ini untuk mengatur detail kontak karyawan di perusahaan (misalnya CEO, CFO, ...).\n"
+"- Alamat Faktur : Alamat yang dipilih untuk semua faktur. Secara default dipilih saat Anda membuat faktur untuk order dari perusahaan ini.\n"
+"- Alamat Pengiriman : Alamat yang dipilih untuk semua pengiriman. Secara default dipilih saat Anda mengirimkan order dari perusahaan ini.\n"
+"- Privat: Alamat privat hanya dapat dilihat oleh user yang diberikan wewenang dan memiliki data yang sensitif (alamat rumah karyawan, ...).\n"
+"- Lainnya: Alamat lainnya untuk perusahaan (contoh cabang, ...)"
 
 #. module: account_followup
 #: model:account_followup.followup.line,name:account_followup.demo_followup_line1
@@ -64,29 +69,29 @@ msgstr "30 Hari"
 #. module: account_followup
 #: model:account_followup.followup.line,name:account_followup.demo_followup_line3
 msgid "40 Days"
-msgstr ""
+msgstr "40 Hari"
 
 #. module: account_followup
 #: model:account_followup.followup.line,name:account_followup.demo_followup_line4
 msgid "50 Days"
-msgstr ""
+msgstr "50 Hari"
 
 #. module: account_followup
 #: model:account_followup.followup.line,name:account_followup.demo_followup_line5
 msgid "60 Days"
-msgstr ""
+msgstr "60 Hari"
 
 #. module: account_followup
 #: model:mail.template,body_html:account_followup.email_template_followup_1
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
-"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"/>,</t>\n"
-"                        <br/>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"></t> (<t t-out=\"object.commercial_partner_id.name or ''\"></t>),</t>\n"
+"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"></t>,</t>\n"
+"                        <br>\n"
 "                    </p>\n"
 "                    <p>\n"
-"                        Exception made if there was a mistake of ours, it seems that an amount of <t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"/>\n"
+"                        Exception made if there was a mistake of ours, it seems that an amount of <t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"></t>\n"
 "                        stays unpaid. Please, take appropriate measures in order to carry out this payment in the next 8 days.\n"
 "                    </p>\n"
 "                    <p>\n"
@@ -96,57 +101,28 @@ msgid ""
 "                    <p>\n"
 "                        Best Regards,\n"
 "                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"></t>\n"
 "                        </t>\n"
 "                        <t t-else=\"\">\n"
-"                            <br/>\n"
+"                            <br>\n"
 "                            --\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"></t>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
 "            "
 msgstr ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Yth <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
-"                        <t t-else=\"\">Yth <t t-out=\"object.name or ''\"/>,</t>\n"
-"                        <br/>\n"
-"                    </p>\n"
-"                    <p>\n"
-"                        Pengecualian akan dibuat bila kesalahan dari pihak kami, namun sepertinya terdapat jumlah sebesar <t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"/>\n"
-"                        yang belum dibayar. Mohon ambil tindakan yang sesuai untuk melakukan pembayaran dalam 8 hari ke depan.\n"
-"                    </p>\n"
-"                    <p>\n"
-"                        Apabila pembayaran Anda telah dilakukan setelah email ini dikirim, silakan abaikan pesan ini.\n"
-"                        Jangan sungkan untuk menghubungi departemen akuntansi kami.\n"
-"                    </p>\n"
-"                    <p>\n"
-"                        Salam Hormat,\n"
-"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
-"                        </t>\n"
-"                        <t t-else=\"\">\n"
-"                            <br/>\n"
-"                            --\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
-"                        </t>\n"
-"                    </p>\n"
-"                </div>\n"
-"            "
 
 #. module: account_followup
 #: model:mail.template,body_html:account_followup.demo_followup_email_template_4
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p>\n"
-"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
-"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"/>,</t>\n"
-"                        <br/>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"></t> (<t t-out=\"object.commercial_partner_id.name or ''\"></t>),</t>\n"
+"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"></t>,</t>\n"
+"                        <br>\n"
 "                    </p>\n"
 "                    <p>\n"
 "                        Despite several reminders, your account is still not settled.\n"
@@ -157,28 +133,55 @@ msgid ""
 "                    <p>\n"
 "                        Best Regards,\n"
 "                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"></t>\n"
 "                        </t>\n"
 "                        <t t-else=\"\">\n"
-"                            <br/>\n"
+"                            <br>\n"
 "                            --\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"></t>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
 "            "
 msgstr ""
+"<div style=\"margin: 0px; padding: 0px;\">\n"
+"                    <p>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Yth <t t-out=\"object.name or ''\"></t> (<t t-out=\"object.commercial_partner_id.name or ''\"></t>),</t>\n"
+"                        <t t-else=\"\">Yth <t t-out=\"object.name or ''\"></t>,</t>\n"
+"                        <br>\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Walaupun beberapa pengingat telah dikirim, Anda masih belum melakukan pembayaran.\n"
+"                        Kecuali pembayaran penuh dilakukan dalam 8 hari kedepan, kami akan mengambil langkah hukum tanpa pemberitahuan lebih dahulu untuk menuntut utang Anda.\n"
+"                        Kami yakin pengambilan langkah tersebut tidak harus dilakuan dan detail untuk pembayaran yang jatuh tempo dicetak di bawah.\n"
+"                        Apabila Anda memiliki pertanyaan mengenai masalah ini, jangan sungkan untuk menghubungi departemen akuntansi kami.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Salam Hormat,\n"
+"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"></t>\n"
+"                        </t>\n"
+"                        <t t-else=\"\">\n"
+"                            <br>\n"
+"                            --\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"></t>\n"
+"                        </t>\n"
+"                    </p>\n"
+"                </div>\n"
+"            "
 
 #. module: account_followup
 #: model:mail.template,body_html:account_followup.demo_followup_email_template_2
 msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p>\n"
-"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
-"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"/>,</t>\n"
-"                        <br/>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"></t> (<t t-out=\"object.commercial_partner_id.name or ''\"></t>),</t>\n"
+"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"></t>,</t>\n"
+"                        <br>\n"
 "                    </p>\n"
 "                    <p>\n"
 "                        We are disappointed to see that despite sending a reminder, that your account is now seriously overdue.\n"
@@ -196,19 +199,53 @@ msgid ""
 "                    <p>\n"
 "                        Best Regards,\n"
 "                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"></t>\n"
 "                        </t>\n"
 "                        <t t-else=\"\">\n"
-"                            <br/>\n"
+"                            <br>\n"
 "                            --\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"></t>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
 "            "
 msgstr ""
+"<div style=\"margin: 0px; padding: 0px;\">\n"
+"                    <p>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Yth <t t-out=\"object.name or ''\"></t> (<t t-out=\"object.commercial_partner_id.name or ''\"></t>),</t>\n"
+"                        <t t-else=\"\">Yth <t t-out=\"object.name or ''\"></t>,</t>\n"
+"                        <br>\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Kami kecewa untuk melihat bahwa akun Anda sekarang melewati masa tenggat pembayaran, walaupun kami sudah mengirimkan pengingat untuk Anda.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Penting sekali bagi Anda untuk melakukan pembayaran sesegera mungkin, karena bila tidak kami harus mempertimbangkan untuk menghentikan akun Anda yang berarti Anda tidak akan lagi bisa menyuplai perusahaan Anda dengan barang/layanan.\n"
+"                        Kami mohon, ambil langkah-langkah yang diperlukan untuk mengirimkan pembayaran ini dalam 8 hari kedepan.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Buka terdapat masalah dengan membayaran faktur yang tidak kami sadari, jangan sungkan untuk menghubungi departemen akuntansi kami, supaya kami dapat menyelesaikan masalah tersebut secepat mungkin.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Detail pembayaran yang jatuh tempo dicetak di bawah.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Salam Hormat,\n"
+"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"></t>\n"
+"                        </t>\n"
+"                        <t t-else=\"\">\n"
+"                            <br>\n"
+"                            --\n"
+"                            <br>\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"></t>\n"
+"                        </t>\n"
+"                    </p>\n"
+"                </div>\n"
+"            "
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.followup_search_template
@@ -226,28 +263,30 @@ msgid ""
 "A follow-up action name must be unique. This name is already set to another "
 "action."
 msgstr ""
+"Nama action follow-up harus unik. Nama ini sudah ditetapkan untuk action "
+"lain."
 
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_chart_template
 msgid "Account Chart Template"
-msgstr "Template Bagan Akun"
+msgstr "Templat Bagan Akun"
 
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__account_followup_followup_line__activity_default_responsible_type__account_manager
 msgid "Account Manager"
-msgstr ""
+msgstr "Account Manager"
 
 #. module: account_followup
 #: model:ir.actions.server,name:account_followup.ir_cron_auto_post_draft_entry_ir_actions_server
 #: model:ir.cron,cron_name:account_followup.ir_cron_auto_post_draft_entry
 msgid "Account Report Followup; Execute followup"
-msgstr ""
+msgstr "Followup Laporan Akun; Lakukan followup"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "Actions"
-msgstr "Tindakan"
+msgstr "Action"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
@@ -258,12 +297,12 @@ msgstr "Aktivitas"
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "Activity Notes"
-msgstr ""
+msgstr "Catatan Aktivitas"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__activity_type_id
 msgid "Activity Type"
-msgstr "Jenis Aktivitas"
+msgstr "Tipe Aktivitas"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.template_followup_report
@@ -279,18 +318,18 @@ msgstr "Tambah kontak yang akan diberitahu..."
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__type
 #: model:ir.model.fields,field_description:account_followup.field_res_users__type
 msgid "Address Type"
-msgstr "Jenis Alamat"
+msgstr "Tipe Alamat"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_search_view
 msgid "Assigned to me"
-msgstr ""
+msgstr "Ditugaskan ke saya"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__join_invoices
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__join_invoices
 msgid "Attach Invoices"
-msgstr ""
+msgstr "Lampirkan Faktur"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__attachment_ids
@@ -308,12 +347,12 @@ msgstr "Otomatis"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__body_html
 msgid "Body Html"
-msgstr ""
+msgstr "Body Html"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__can_edit_body
 msgid "Can Edit Body"
-msgstr ""
+msgstr "Dapat Mengedit Body"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
@@ -341,7 +380,7 @@ msgstr "Kontak"
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "Content Template"
-msgstr ""
+msgstr "Templat Konten"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__body
@@ -406,7 +445,7 @@ msgstr "Tanggal:"
 #. module: account_followup
 #: model:ir.model.constraint,message:account_followup.constraint_account_followup_followup_line_days_uniq
 msgid "Days of the follow-up lines must be different per company"
-msgstr ""
+msgstr "Hari-hari baris follow-up yang harus berbeda per perusahaan"
 
 #. module: account_followup
 #. odoo-python
@@ -423,6 +462,15 @@ msgid ""
 "Best Regards,\n"
 "\n"
 msgstr ""
+"Yth %s,\n"
+"\n"
+"\n"
+"Pengecualian akan dibuat apabila kesalahan datang dari sisi kami, namun nampaknya jumlah berikut masih belum dibayar. Mohon ambil tindakan yang sesuai untuk melakukan pembayaran tersebut dalam 8 hari kedepan.\n"
+"\n"
+"Apabila pembayaran Anda telah dilakukan setelah email ini dikirim, mohon abaikan pesan ini. Jangan sungkan untuk menghubungi departemen akuntasi kami.\n"
+"\n"
+"Salam Hormat,\n"
+"\n"
 
 #. module: account_followup
 #. odoo-python
@@ -432,11 +480,13 @@ msgid ""
 "Dear client, we kindly remind you that you still have unpaid invoices. "
 "Please check them and take appropriate action. %s"
 msgstr ""
+"Client terhormat, kami sekadar kami mengingatkan bahwa Anda masih memiliki "
+"faktur yang belum dibayar. Mohon periksa dan ambil tindakan yang sesuai. %s"
 
 #. module: account_followup
 #: model_terms:ir.actions.act_window,help:account_followup.action_account_followup_line_definition_form
 msgid "Define follow-up levels and their related actions"
-msgstr ""
+msgstr "Definisikan tingkat follow-up dan action terkait tingkatannya"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__name
@@ -451,6 +501,10 @@ msgid ""
 "- Salesperson: Sales Person defined on the invoice\n"
 "- Account Manager: Sales Person defined on the customer"
 msgstr ""
+"Tentukan siapa yang akan ditugaskan kegiatan tersebut::\n"
+"- Penanggungjawab Follow-up (default)\n"
+"- Salesperson: Sales Person yang didefinisikan pada faktur\n"
+"- Account Manager: Sales Person yang didedifinisikan pada pelanggan "
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__display_name
@@ -478,96 +532,96 @@ msgstr "Email"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__email_add_signature
 msgid "Email Add Signature"
-msgstr ""
+msgstr "Email Tambahkan Tanda Tangan"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Email Recipients"
-msgstr ""
+msgstr "Penerima Email"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Email Subject"
-msgstr ""
+msgstr "Subject Email"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
 msgid "Exclude from Follow-ups"
-msgstr ""
+msgstr "Kecualikan dari Follow-up"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__email_recipient_ids
 msgid "Extra Recipients"
-msgstr ""
+msgstr "Penerima Tambahan"
 
 #. module: account_followup
 #. odoo-python
 #: code:addons/account_followup/models/chart_template.py:0
 #, python-format
 msgid "First Reminder"
-msgstr ""
+msgstr "Pengingat Pertama"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
 msgid "Follow up"
-msgstr ""
+msgstr "Follow up"
 
 #. module: account_followup
 #. odoo-python
 #: code:addons/account_followup/models/account_followup_report.py:0
 #, python-format
 msgid "Follow-up %s - %s"
-msgstr ""
+msgstr "Follow-up %s - %s"
 
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__res_partner__type__followup
 msgid "Follow-up Address"
-msgstr ""
+msgstr "Alamat Follow-up"
 
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_followup_line
 msgid "Follow-up Criteria"
-msgstr "Kriteria Tindaklanjut"
+msgstr "Kriteria Follow-up"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_move_line__followup_line_id
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__followup_line_id
 #: model:ir.model.fields,field_description:account_followup.field_res_users__followup_line_id
 msgid "Follow-up Level"
-msgstr "Tingkat Tindaklanjut"
+msgstr "Tingkat Follow-up"
 
 #. module: account_followup
 #: model:ir.actions.act_window,name:account_followup.action_account_followup_line_definition_form
 #: model:ir.ui.menu,name:account_followup.account_followup_menu
 msgid "Follow-up Levels"
-msgstr "Tingkatan Tindak Lanjut"
+msgstr "Tingkatan Follow-up"
 
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_report
 msgid "Follow-up Report"
-msgstr ""
+msgstr "Laporan Follow-up"
 
 #. module: account_followup
 #: model:ir.actions.act_window,name:account_followup.action_view_list_customer_statements
 #: model:ir.ui.menu,name:account_followup.customer_statements_menu
 msgid "Follow-up Reports"
-msgstr ""
+msgstr "Laporan-Laporan Follow-up"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_tree_view
 msgid "Follow-up Reports Tree View"
-msgstr ""
+msgstr "Tampilan Pohon Laporan Follow-up"
 
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__account_followup_followup_line__activity_default_responsible_type__followup
 msgid "Follow-up Responsible"
-msgstr "Penanggungjawab Tindaklanjut"
+msgstr "Penanggungjawab Follow-up"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__followup_status
 #: model:ir.model.fields,field_description:account_followup.field_res_users__followup_status
 msgid "Follow-up Status"
-msgstr ""
+msgstr "Status Follow-up"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
@@ -580,12 +634,12 @@ msgstr "Langkah Tindaklanjut"
 #: code:addons/account_followup/models/account_followup_report.py:0
 #, python-format
 msgid "Follow-up letter generated"
-msgstr ""
+msgstr "Surat follow-up yang dibuat"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.account_followup_journal_dashboard_kanban_view
 msgid "Follow-up reports"
-msgstr ""
+msgstr "Laporan follow-up"
 
 #. module: account_followup
 #: model_terms:ir.actions.act_window,help:account_followup.action_account_followup_line_definition_form
@@ -594,11 +648,14 @@ msgid ""
 "            possible to use print and e-mail templates to send specific messages to\n"
 "            the customer."
 msgstr ""
+"Untuk setiap langkah, tentukan tindakan yang akan diambil dan penundaan dalam hitungan hari. Templat cetak\n"
+"            dan e-mail dapat digunakan untuk mengirim pesan-pesan spesifik ke\n"
+"            pelanggan."
 
 #. module: account_followup
 #: model:mail.template,name:account_followup.demo_followup_email_template_4
 msgid "Fourth reminder followup"
-msgstr ""
+msgstr "Pengingat followup keempat"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_search_view
@@ -621,17 +678,17 @@ msgstr "Butuh Tindakan"
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_search_view
 msgid "In need of action"
-msgstr ""
+msgstr "Butuh tindakan"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
 msgid "Invoice No."
-msgstr ""
+msgstr "Faktur Nomor."
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_move_line__invoice_date
 msgid "Invoice/Bill Date"
-msgstr "Invoice/Bill Date"
+msgstr "Tanggal Faktur/Tagihan"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
@@ -641,7 +698,7 @@ msgstr "Faktur"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__is_mail_template_editor
 msgid "Is Editor"
-msgstr ""
+msgstr "Adalah Editor"
 
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_move_line
@@ -651,7 +708,7 @@ msgstr "Item Jurnal"
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Kind reminder!"
-msgstr ""
+msgstr "Pengingat halus!"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__lang
@@ -662,35 +719,35 @@ msgstr "Bahasa"
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line____last_update
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder____last_update
 msgid "Last Modified on"
-msgstr "Terakhir diubah pada"
+msgstr "Terakhir Diubah pada"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__write_uid
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__write_uid
 msgid "Last Updated by"
-msgstr "Terakhir diperbarui oleh"
+msgstr "Terakhir Diperbarui oleh"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__write_date
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__write_date
 msgid "Last Updated on"
-msgstr "Terakhir diperbarui pada"
+msgstr "Terakhir Diperbarui pada"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_move_line__last_followup_date
 msgid "Latest Follow-up"
-msgstr "Tindaklanjut Terbaru"
+msgstr "Follow-up Terbaru"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Letter/Email Content"
-msgstr ""
+msgstr "Konten Surat/Email"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__mail_template_id
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__template_id
 msgid "Mail Template"
-msgstr ""
+msgstr "Templat Email"
 
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__res_partner__followup_reminder_type__manual
@@ -702,30 +759,30 @@ msgstr "Manual"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_move_line__next_action_date
 msgid "Next Action Date"
-msgstr "Berikutnya Aksi Tanggal"
+msgstr "Tanggal Action Berikutnya"
 
 #. module: account_followup
 #. odoo-python
 #: code:addons/account_followup/models/res_partner.py:0
 #, python-format
 msgid "Next Reminder Date set to %s"
-msgstr ""
+msgstr "Tanggal Pengingat Berikutnya disetel pada %s"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__followup_next_action_date
 #: model:ir.model.fields,field_description:account_followup.field_res_users__followup_next_action_date
 msgid "Next reminder"
-msgstr ""
+msgstr "Pengingat berikutnya"
 
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__res_partner__followup_status__no_action_needed
 msgid "No action needed"
-msgstr ""
+msgstr "Tidak ada action yang dibutuhkan"
 
 #. module: account_followup
 #: model_terms:ir.actions.act_window,help:account_followup.action_view_list_customer_statements
 msgid "No follow-up to send!"
-msgstr ""
+msgstr "Tidak ada folow-up untuk dikirim!"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__activity_note
@@ -745,6 +802,10 @@ msgid ""
 "a placeholder expression that provides the appropriate language, e.g. {{ "
 "object.partner_id.lang }}."
 msgstr ""
+"Bahasa terjemahan opsional (kode ISO) yang dipilih ketika mengirim email. "
+"Bila tidak diatur, versi Bahasa Inggris akan digunakan. Ini seharusnya "
+"merupakan expression placeholder yang menyediakan bahasa yang sesuai, "
+"misalnya {{ object.partner_id.lang }}."
 
 #. module: account_followup
 #: model:ir.model.fields,help:account_followup.field_res_partner__followup_responsible_id
@@ -753,6 +814,9 @@ msgid ""
 "Optionally you can assign a user to this field, which will make him "
 "responsible for the activities. If empty, we will find someone responsible."
 msgstr ""
+"Anda juga dapat menetapkan user ke field ini, yang akan membuat mereka "
+"bertanggung jawab untuk kegiatan tersebut. Bila kosong, kita akan mencari "
+"orang yang bisa menjadi penanggungjawab."
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
@@ -770,7 +834,7 @@ msgstr "Asal"
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_search_view
 msgid "Overdue Invoices"
-msgstr ""
+msgstr "Faktur Terlambat"
 
 #. module: account_followup
 #. odoo-python
@@ -790,7 +854,7 @@ msgstr "Rekanan"
 #: model:mail.template,name:account_followup.email_template_followup_1
 #, python-format
 msgid "Payment Reminder"
-msgstr ""
+msgstr "Pengingat Pembayaran"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__print
@@ -801,12 +865,12 @@ msgstr "Cetak"
 #. module: account_followup
 #: model:ir.actions.report,name:account_followup.action_report_followup
 msgid "Print Follow-up Letter"
-msgstr ""
+msgstr "Cetak Surat Follow-up"
 
 #. module: account_followup
 #: model:ir.actions.server,name:account_followup.action_account_reports_customer_statements_do_followup
 msgid "Process Automatic Follow-ups"
-msgstr ""
+msgstr "Proses Follow-up Otomatis"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
@@ -816,7 +880,7 @@ msgstr "Rekonsiliasi"
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "Remind"
-msgstr ""
+msgstr "Ingatkan"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__followup_reminder_type
@@ -827,7 +891,7 @@ msgstr "Pengingat"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__render_model
 msgid "Rendering Model"
-msgstr ""
+msgstr "Model Rendering"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
@@ -855,7 +919,7 @@ msgstr "Penjual"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__create_activity
 msgid "Schedule Activity"
-msgstr ""
+msgstr "Jadwalkan Aktivitas"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_line_filter
@@ -865,7 +929,7 @@ msgstr "Cari Tindak lanjut"
 #. module: account_followup
 #: model:mail.template,name:account_followup.demo_followup_email_template_2
 msgid "Second reminder followup"
-msgstr ""
+msgstr "Pengingat followup kedua"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
@@ -875,7 +939,7 @@ msgstr "Kirim"
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Send & Print"
-msgstr "Send & Print"
+msgstr "Kirim & Cetak"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__send_email
@@ -885,33 +949,33 @@ msgstr "Kirim Email"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__send_sms
 msgid "Send SMS Message"
-msgstr ""
+msgstr "Kirim Pesan SMS"
 
 #. module: account_followup
 #: model:ir.actions.act_window,name:account_followup.manual_reminder_action
 msgid "Send and Print"
-msgstr ""
+msgstr "Kirim dan Cetak"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__sms
 msgid "Sms"
-msgstr ""
+msgstr "Sms"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__sms_body
 msgid "Sms Body"
-msgstr ""
+msgstr "Sms Body"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Sms Content"
-msgstr ""
+msgstr "Konten SMS"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__sms_template_id
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__sms_template_id
 msgid "Sms Template"
-msgstr ""
+msgstr "Templat SMS"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__subject
@@ -927,12 +991,12 @@ msgstr "Ringkasan"
 #: model:ir.model.fields,help:account_followup.field_res_partner__followup_next_action_date
 #: model:ir.model.fields,help:account_followup.field_res_users__followup_next_action_date
 msgid "The date before which no follow-up action should be taken."
-msgstr ""
+msgstr "Tindakan follow-up apapun tidak dapat dilakukan sebelum tanggal ini."
 
 #. module: account_followup
 #: model:ir.model.fields,help:account_followup.field_account_move_line__invoice_origin
 msgid "The document(s) that generated the invoice."
-msgstr "The document(s) that generated the invoice."
+msgstr "Dokumen yang membuat faktur tersebut."
 
 #. module: account_followup
 #: model:ir.model.fields,help:account_followup.field_account_followup_followup_line__delay
@@ -941,6 +1005,9 @@ msgid ""
 "the reminder. Can be negative if you want to send the reminder before the "
 "invoice due date."
 msgstr ""
+"Jumlah hari setelah jatuh tempo faktur yang akan terlewati sebelum "
+"mengirimkan pengingat. Dapat menjadi negatif bila Anda ingin mengirimkan "
+"pengingat sebelum tanggal jatuh tempo faktur."
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_tree_view
@@ -975,13 +1042,13 @@ msgstr "Total Lewat Jatuh Tempo"
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__unpaid_invoice_ids
 #: model:ir.model.fields,field_description:account_followup.field_res_users__unpaid_invoice_ids
 msgid "Unpaid Invoice"
-msgstr ""
+msgstr "Faktur yang Belum Dibayar"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__unpaid_invoices_count
 #: model:ir.model.fields,field_description:account_followup.field_res_users__unpaid_invoices_count
 msgid "Unpaid Invoices Count"
-msgstr ""
+msgstr "Jumlah Faktur yang Belum Dibayar"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__unreconciled_aml_ids
@@ -998,17 +1065,17 @@ msgstr "Dengan Faktur Lewat Tempo"
 #: model:ir.model.fields.selection,name:account_followup.selection__res_partner__followup_status__with_overdue_invoices
 #: model_terms:ir.ui.view,arch_db:account_followup.customer_statements_form_view
 msgid "With overdue invoices"
-msgstr ""
+msgstr "Dengan faktur lewat jatuh tempo"
 
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_manual_reminder
 msgid "Wizard for sending manual reminders to clients"
-msgstr ""
+msgstr "Wizard untuk mengirim pengingat manual ke klien"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "Write your message here..."
-msgstr ""
+msgstr "Tuliskan pesan Anda di sini..."
 
 #. module: account_followup
 #. odoo-python
@@ -1016,8 +1083,10 @@ msgstr ""
 #, python-format
 msgid ""
 "You are trying to send an Email, but no follow-up contact has any email "
-"address set"
+"address set for customer '%s'"
 msgstr ""
+"Anda mencoba mengirim Email, tapi tidak ada kontak follow-up yang memiliki "
+"alamat email untuk pelanggan '%s'"
 
 #. module: account_followup
 #. odoo-python
@@ -1025,25 +1094,27 @@ msgstr ""
 #, python-format
 msgid ""
 "You are trying to send an SMS, but no follow-up contact has any mobile/phone"
-" number set"
+" number set for customer '%s'"
 msgstr ""
+"Anda mencoba mengirim Email, tapi tidak ada kontak follow-up yang memiliki "
+"nomor mobile/telepon untuk pelanggan '%s' "
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "days after due date"
-msgstr ""
+msgstr "hari setelah tanggal jatuh tempo"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "e.g. First Reminder Email"
-msgstr ""
+msgstr "misalnya Email Pengingat Pertama"
 
 #. module: account_followup
 #. odoo-python
 #: code:addons/account_followup/models/account_followup_report.py:0
 #, python-format
 msgid "payment reminder"
-msgstr ""
+msgstr "pengingat pembayaran"
 
 #. module: account_followup
 #: model:mail.template,subject:account_followup.demo_followup_email_template_2
@@ -1053,3 +1124,5 @@ msgid ""
 "{{ (object.company_id or object._get_followup_responsible().company_id).name"
 " }} Payment Reminder - {{ object.commercial_company_name }}"
 msgstr ""
+"{{ (object.company_id or object._get_followup_responsible().company_id).name"
+" }} Pengingat Pembayaran - {{ object.commercial_company_name }}"

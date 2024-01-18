@@ -10,16 +10,18 @@ export class UseAsAttachmentMacro extends AbstractMacro {
      */
     macroAction() {
         const action = super.macroAction();
+        let attachFilesLastClickedEl = null;
         action.steps.push({
             trigger: function() {
                 this.validatePage();
-                const el = this.getFirstVisibleElement('.o_ChatterTopbar_buttonToggleAttachments');
+                const el = this.getFirstVisibleElement('.o_ChatterTopbar_buttonToggleAttachments:not([disabled])');
                 if (el) {
                     const attachmentBoxEl = this.getFirstVisibleElement('.o_AttachmentBox_content');
                     if (attachmentBoxEl) {
                         return attachmentBoxEl;
-                    } else {
+                    } else if (el !== attachFilesLastClickedEl) {
                         el.click();
+                        attachFilesLastClickedEl = el;
                     }
                 } else {
                     this.searchInXmlDocNotebookTab('.oe_chatter');
@@ -39,15 +41,17 @@ export class AttachToMessageMacro extends AbstractMacro {
      */
     macroAction() {
         const action = super.macroAction();
+        let sendMessageLastClickedEl = null;
         action.steps.push({
             trigger: function() {
                 this.validatePage();
-                const el = this.getFirstVisibleElement('.o_ChatterTopbar_buttonSendMessage');
+                const el = this.getFirstVisibleElement('.o_ChatterTopbar_buttonSendMessage:not([disabled])');
                 if (el) {
                     if (el.classList.contains('o-active')) {
                         return el;
-                    } else {
+                    } else if (el !== sendMessageLastClickedEl) {
                         el.click();
+                        sendMessageLastClickedEl = el;
                     }
                 } else {
                     this.searchInXmlDocNotebookTab('.oe_chatter');
@@ -60,7 +64,7 @@ export class AttachToMessageMacro extends AbstractMacro {
         }, {
             trigger: function() {
                 this.validatePage();
-                return this.getFirstVisibleElement('.o_Composer_buttonAttachment');
+                return this.getFirstVisibleElement('.o_Composer_buttonAttachment:not([disabled])');
             }.bind(this),
             action: dragAndDrop.bind(this, 'dragenter', this.data.dataTransfer),
         }, {

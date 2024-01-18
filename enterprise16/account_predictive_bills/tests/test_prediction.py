@@ -74,6 +74,7 @@ class TestBillsPrediction(AccountTestInvoicingCommon):
         default_account = self.company_data['default_journal_purchase'].default_account_id
         self._create_bill(self.test_partners[0], "Maintenance and repair", self.test_accounts[0])
         self._create_bill(self.test_partners[5], "Subsidies obtained", default_account, account_to_set=self.test_accounts[1])
+        self._create_bill(self.test_partners[6], "Prepare subsidies file", default_account, account_to_set=self.test_accounts[1])
         self._create_bill(self.test_partners[6], "Prepare subsidies file", self.test_accounts[1])
         self._create_bill(self.test_partners[1], "Contributions January", self.test_accounts[2])
         self._create_bill(self.test_partners[2], "Coca-cola", default_account, account_to_set=self.test_accounts[4])
@@ -81,6 +82,7 @@ class TestBillsPrediction(AccountTestInvoicingCommon):
         self._create_bill(self.test_partners[3], "Electricity Bruxelles", default_account, account_to_set=self.test_accounts[3])
         self._create_bill(self.test_partners[3], "Electricity Grand-Rosière", self.test_accounts[3])
         self._create_bill(self.test_partners[2], "Purchase of coca-cola", self.test_accounts[4])
+        self._create_bill(self.test_partners[4], "Crate of coca-cola", default_account, account_to_set=self.test_accounts[4])
         self._create_bill(self.test_partners[4], "Crate of coca-cola", self.test_accounts[4])
         self._create_bill(self.test_partners[1], "March", self.test_accounts[2])
 

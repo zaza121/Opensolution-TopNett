@@ -22,16 +22,26 @@ class MrpWorkcenter(models.Model):
         action['context'] = dict(literal_eval(context), employee_id=request.session.get('employee_id'))
         return action
 
+    def get_employee_barcode(self, barcode):
+        employee_ids = self.employee_ids or self.env['hr.employee'].search([])
+        return employee_ids.sudo().filtered(lambda e: e.barcode == barcode)[:1].id
+
 
 class MrpWorkcenterProductivity(models.Model):
     _inherit = "mrp.workcenter.productivity"
 
     employee_id = fields.Many2one(
-        'hr.employee', string="Employee",
-        help='employee that record this working time')
+        'hr.employee', string="Employee", compute='_compute_employee', store=True,
+        help='employee that record this working time', readonly=False)
     employee_cost = fields.Monetary('employee_cost', compute='_compute_cost', default=0, store=True)
     total_cost = fields.Float('Cost', compute='_compute_cost', compute_sudo=True)
     currency_id = fields.Many2one(related='company_id.currency_id')
+
+    @api.depends('user_id')
+    def _compute_employee(self):
+        for time in self:
+            if time.workcenter_id.allow_employee and time.user_id and time.user_id.employee_id:
+                time.employee_id = time.user_id.employee_id
 
     @api.depends('duration')
     def _compute_cost(self):

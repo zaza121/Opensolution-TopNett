@@ -313,5 +313,13 @@ QUnit.module(
             await insertInSpreadsheetAndClickLink(target);
             assert.strictEqual(getCurrentViewType(webClient), "map");
         });
+
+        QUnit.test("action with domain being the empty string", async function (assert) {
+            assert.expect(1);
+            serverData.actions["1"].domain = "";
+            const webClient = await openView("list");
+            await insertInSpreadsheetAndClickLink(target);
+            assert.strictEqual(getCurrentViewType(webClient), "list");
+        });
     }
 );

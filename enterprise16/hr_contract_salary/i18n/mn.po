@@ -15,15 +15,16 @@
 # baaska sh <sh.baaskash@gmail.com>, 2022
 # Baskhuu Lodoikhuu <baskhuujacara@gmail.com>, 2022
 # Martin Trigaux, 2022
+# Sanjaajamts Badamjunai <b.sanjaajamtsfc@gmail.com>, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-04 09:42+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Mongolian (https://www.transifex.com/odoo/teams/41243/mn/)\n"
+"Last-Translator: Sanjaajamts Badamjunai <b.sanjaajamtsfc@gmail.com>, 2023\n"
+"Language-Team: Mongolian (https://app.transifex.com/odoo/teams/41243/mn/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -57,9 +58,26 @@ msgstr "<i class=\"fa fa-check-circle-o mr8\"/>Баяр хүргэе"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
 msgid ""
+"<span attrs=\"{'invisible': [('contract_id', '!=', False)]}\">An offer "
+"template need to be selected to have an offer link.</span>"
+msgstr ""
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
 "<span class=\"alert alert-warning\" role=\"alert\" colspan=\"2\" attrs=\"{'invisible':[('contract_id', '!=', False)]}\">\n"
 "                            Before accessing the simulation link, you first need to set up an offer template.\n"
 "                    </span>"
+msgstr ""
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+msgid "<span class=\"ms-3\">/ month</span>"
+msgstr ""
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+msgid "<span class=\"ms-3\">/ year</span>"
 msgstr ""
 
 #. module: hr_contract_salary
@@ -96,11 +114,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
 msgid "<span>/ month</span>"
 msgstr "<span>/ сар</span>"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "<span>/ year</span>"
-msgstr ""
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
@@ -149,6 +162,7 @@ msgid "Add a section"
 msgstr "Бүлэг нэмэх"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/models/hr_contract_salary_advantage.py:0
 #, python-format
 msgid "Advanges that are not linked to a field should always be displayed."
@@ -194,6 +208,7 @@ msgid "Annual Employee Budget"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Annual Employer Cost"
@@ -220,7 +235,6 @@ msgstr "Зөвшөөрөх"
 #. module: hr_contract_salary
 #: model:ir.actions.server,name:hr_contract_salary.ir_cron_clean_redundant_salary_data_ir_actions_server
 #: model:ir.cron,cron_name:hr_contract_salary.ir_cron_clean_redundant_salary_data
-#: model:ir.cron,name:hr_contract_salary.ir_cron_clean_redundant_salary_data
 msgid "Archive/Delete redundant generated salary data"
 msgstr "Илүү бодогдсон цалинг архивлах/устгах"
 
@@ -327,6 +341,7 @@ msgid "Contract Advantage Value"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Contract Information:"
@@ -350,6 +365,7 @@ msgid "Contract Templates"
 msgstr "Гэрээний загварууд"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Contract Type"
@@ -396,7 +412,7 @@ msgstr ""
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_history
 msgid "Contract history"
-msgstr ""
+msgstr "Гэрээний түүх"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_advantage__activity_creation__countersigned
@@ -483,6 +499,7 @@ msgid "Date"
 msgstr "Огноо"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_advantage__uom__days
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_resume__uom__days
@@ -497,11 +514,11 @@ msgid "Default Access Token Validity Duration"
 msgstr ""
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__default_contract_id
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__default_contract_id
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_job__default_contract_id
-msgid "Default contract used when making an offer to an applicant."
-msgstr "Өргөдөл гаргагчид санал өгөхөд ашигласан үндсэн гэрээ"
+msgid ""
+"Default contract used to generate an offer. If empty, advantages will be "
+"taken from current contract of the employee/nothing for an applicant."
+msgstr ""
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__sign_template_id
@@ -533,7 +550,7 @@ msgid "Description"
 msgstr "Тайлбар"
 
 #. module: hr_contract_salary
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/xml/resume_sidebar.xml:0
 #, python-format
 msgid "Details"
@@ -626,6 +643,7 @@ msgid "Employee Contract"
 msgstr "Ажилтны гэрээ"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Employee Name"
@@ -647,6 +665,7 @@ msgid "Employee: Contract And Salary Package"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid ""
@@ -737,18 +756,12 @@ msgid "Group By"
 msgstr "Бүлэглэлт"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/models/hr_contract.py:0
 #, python-format
 msgid ""
 "HR Responsible %s should be a User of Sign and have a valid email address "
 "when New Contract Document Template is specified"
-msgstr ""
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
-msgid ""
-"He/She will review your contract.<br/> Feel free to contact him/her if you "
-"have further questions."
 msgstr ""
 
 #. module: hr_contract_salary
@@ -843,6 +856,7 @@ msgid "Is origin contract a contract template ?"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: model:ir.model,name:hr_contract_salary.model_hr_job
 #: model:ir.model.fields,field_description:hr_contract_salary.field_generate_simulation_link__employee_job_id
@@ -851,6 +865,7 @@ msgid "Job Position"
 msgstr "Албан тушаал"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: model:ir.model.fields,field_description:hr_contract_salary.field_generate_simulation_link__job_title
 #, python-format
@@ -942,6 +957,7 @@ msgid "Master"
 msgstr "Магистр"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/models/hr_contract_salary_personal_info.py:0
 #, python-format
 msgid ""
@@ -966,6 +982,7 @@ msgid "Monthly Cost (Real)"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Monthly Gross Salary"
@@ -1022,12 +1039,14 @@ msgid "New Contract Document Template"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "No"
 msgstr "Үгүй"
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid ""
@@ -1043,12 +1062,14 @@ msgid "No Template found"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/models/hr_contract.py:0
 #, python-format
 msgid "No private address defined on the employee!"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid ""
@@ -1057,14 +1078,14 @@ msgid ""
 msgstr ""
 
 #. module: hr_contract_salary
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 #, python-format
 msgid "Not a valid e-mail address"
 msgstr ""
 
 #. module: hr_contract_salary
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 #, python-format
 msgid "Not a valid input in integer field"
@@ -1086,6 +1107,14 @@ msgid "Offer link"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/wizard/generate_simulation_link.py:0
+#, python-format
+msgid "Offer link can not be send. The applicant needs to have a name."
+msgstr ""
+
+#. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
@@ -1105,6 +1134,7 @@ msgid "Origin Contract"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Original Link"
@@ -1151,6 +1181,7 @@ msgid "Personal Info"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Personal Information"
@@ -1214,7 +1245,7 @@ msgid "Radio Buttons"
 msgstr "Радио Товчнууд"
 
 #. module: hr_contract_salary
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/xml/resume_sidebar.xml:0
 #: code:addons/hr_contract_salary/static/src/xml/resume_sidebar.xml:0
 #, python-format
@@ -1310,6 +1341,7 @@ msgid "Salary Package Resume Category"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Salary Package Summary"
@@ -1401,6 +1433,7 @@ msgid "Sign document in contract"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
@@ -1425,7 +1458,7 @@ msgid "Slider Min"
 msgstr ""
 
 #. module: hr_contract_salary
-#. openerp-web
+#. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 #, python-format
@@ -1497,6 +1530,21 @@ msgid "The contract from which this contract has been duplicated."
 msgstr ""
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
+"The employee does not have a valid work email set. The Simulation Link won't"
+" be able to be completed."
+msgstr ""
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
+"The employee does not have a valid email set in the private information. The"
+" Simulation Link won't be able to be completed."
+msgstr ""
+
+#. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid ""
@@ -1505,6 +1553,7 @@ msgid ""
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/models/hr_contract_salary_advantage.py:0
 #, python-format
 msgid ""
@@ -1529,6 +1578,14 @@ msgid "There is no available option to customize your salary"
 msgstr ""
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
+msgid ""
+"They will review your contract.<br/> Feel free to contact them if you have "
+"any questions."
+msgstr ""
+
+#. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "This contract has been updated, please request an updated link.."
@@ -1543,6 +1600,7 @@ msgid ""
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
@@ -1585,6 +1643,7 @@ msgid "Value Type"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Wage"
@@ -1641,6 +1700,7 @@ msgid "Yearly Cost (Real)"
 msgstr ""
 
 #. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
 msgid "Yes"

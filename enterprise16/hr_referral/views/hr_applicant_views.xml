@@ -97,7 +97,7 @@
                             <div class="progress" style="z-index: 0;">
                                 <div class="progress-bar" role="progressbar" t-att-style="'width: ' + record.earned_points.value / record.max_points.value * 100 + '%;'" t-att-aria-valuenow="record.earned_points.value" aria-valuemin="0" t-att-aria-valuemax="record.max_points.value"/>                     </div>
                             <table class="table">
-                                <tr t-foreach="JSON.parse(record.shared_item_infos.raw_value)" t-as="stage" t-key="stage">
+                                <tr t-foreach="JSON.parse(record.shared_item_infos.raw_value)" t-as="stage" t-key="stage_index">
                                     <td>
                                         <t t-if="stage.done"><i class="text-success fa fa-check" title="Done"></i></t>
                                         <t t-elif="record.referral_state.raw_value == 'closed'"><i class="text-danger fa fa-times" title="Closed"></i></t>

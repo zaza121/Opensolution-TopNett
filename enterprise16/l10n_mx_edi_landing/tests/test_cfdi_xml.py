@@ -26,6 +26,13 @@ class TestEdiResults(TestMxExtendedEdiCommon, ValuationReconciliationTestCommon)
         self.env.user.groups_id |= self.env.ref('stock.group_stock_manager')
         self.env.user.groups_id |= self.env.ref('sales_team.group_sale_manager')
 
+        inventory_user = self.env['res.users'].with_context({'no_reset_password': True}).create({
+            'name': 'Inventory user',
+            'login': 'sliwa',
+            'email': 'queen@goth.mx',
+            'groups_id': [(6, 0, [self.env.ref('stock.group_stock_user').id])]
+        })
+
         with freeze_time(self.frozen_today):
             self.product.write({
                 'categ_id': self.stock_account_product_categ.id,
@@ -91,6 +98,7 @@ class TestEdiResults(TestMxExtendedEdiCommon, ValuationReconciliationTestCommon)
             res_dict = picking_sale.button_validate()
             self.env[res_dict['res_model']]\
                 .with_context(res_dict['context'])\
+                .with_user(inventory_user)\
                 .process()
 
             picking_backorder = sale.picking_ids.filtered(lambda r: r.state == 'assigned')

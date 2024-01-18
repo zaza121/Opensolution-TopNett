@@ -36,7 +36,7 @@ class AccountDebitNote(models.TransientModel):
         if move.company_id.country_id.code != "CO" or not self.copy_lines:
             return default_values
 
-        default_values['line_ids'] = [[5, 0]]
+        default_values['line_ids'] = [[5, 0, 0]]
         for line in move.line_ids.filtered(lambda x: x.display_type == 'product'):
             default_values['line_ids'].append([0, 0, {
                 'product_id': line.product_id.id,

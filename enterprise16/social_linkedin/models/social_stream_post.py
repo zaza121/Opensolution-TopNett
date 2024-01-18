@@ -105,7 +105,7 @@ class SocialStreamPostLinkedIn(models.Model):
         element_urn = comment_urn or self.linkedin_post_urn
 
         response = requests.get(
-            url_join(self.env['social.media']._LINKEDIN_ENDPOINT, 'socialActions/%s/comments/' % quote(element_urn)),
+            url_join(self.env['social.media']._LINKEDIN_ENDPOINT, 'socialActions/%s/comments' % quote(element_urn)),
             params={
                 'start': offset,
                 'count': count,
@@ -137,13 +137,15 @@ class SocialStreamPostLinkedIn(models.Model):
 
     def _linkedin_format_comment(self, json_data):
         """Formats a comment returned by the LinkedIn API to a dict that will be interpreted by our frontend."""
+        author_image_url = self.account_id._extract_linkedin_picture_url(json_data.get('created', {}).get('actor~'))
+        author_image_url = self.env['social.stream']._enforce_url_scheme(author_image_url)
         data = {
             'id': json_data.get('$URN'),
             'from': {
                 'id': json_data.get('created', {}).get('actor'),
                 'name': self.stream_id._format_linkedin_name(json_data.get('created', {}).get('actor~')),
                 'authorUrn': json_data.get('created', {}).get('actor'),
-                'picture': self.account_id._extract_linkedin_picture_url(json_data.get('created', {}).get('actor~')),
+                'picture': author_image_url,
                 'vanityName': json_data.get('created', {}).get('actor~').get('vanityName'),
                 'isOrganization': 'organization' in json_data.get('created', {}).get('actor', ''),
             },

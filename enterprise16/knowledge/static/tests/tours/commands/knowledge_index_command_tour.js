@@ -1,7 +1,7 @@
 /** @odoo-module */
 
 import tour from 'web_tour.tour';
-import { openCommandBar } from '../knowledge_tour_utils.js';
+import { endKnowledgeTour, openCommandBar } from '../knowledge_tour_utils.js';
 
 
 tour.register('knowledge_index_command_tour', {
@@ -23,4 +23,5 @@ tour.register('knowledge_index_command_tour', {
 }, { // click on the refresh button
     trigger: '.o_knowledge_behavior_type_articles_structure button[title="Update"]',
     run: 'click',
-}]);
+}, ...endKnowledgeTour()
+]);

@@ -9,15 +9,18 @@
 # Raymond Yu <cl_yu@hotmail.com>, 2022
 # digitalliuzg8888, 2022
 # Jeffery CHEN <jeffery9@gmail.com>, 2022
+# Emily Jia <eji@odoo.com>, 2023
+# Tony Ng, 2023
+# Chloe Wang, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:47+0000\n"
-"Last-Translator: Jeffery CHEN <jeffery9@gmail.com>, 2022\n"
-"Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
+"Last-Translator: Chloe Wang, 2023\n"
+"Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -49,16 +52,16 @@ msgid ""
 "- Error: %s"
 msgstr ""
 "%s:\n"
-"- 雇员。%s\n"
-"- 合同：%s\n"
-"- 工资单。%s\n"
-"- 工资规则：%s(%s)\n"
-"- 错误。%s"
+"- 员工: %s\n"
+"- 合同: %s\n"
+"- 工资单: %s\n"
+"- 工资规则: %s (%s)\n"
+"- 错误: %s"
 
 #. module: hr_payroll
 #: model:ir.actions.report,print_report_name:hr_payroll.action_report_payslip
 msgid "'Payslip - %s' % (object.name)"
-msgstr "“工资单 - %s” % （object.name）"
+msgstr "'工资单 － %s' % (object.name)"
 
 #. module: hr_payroll
 #. odoo-python
@@ -155,16 +158,20 @@ msgid ""
 " selected employee(s) based on the dates and credit note specified on "
 "Payslips Run.</span>"
 msgstr ""
+"<span nolabel=\"1\" colspan=\"2\">此向导将根据Payslips "
+"Run应用程序中规定的日期和贷记通知单，为所有选定员工生成工资单。</span>"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.hr_payroll_index_form_view
 msgid ""
-"<span role=\"status\" class=\"alert alert-warning\" attrs=\"{'invisible': "
-"[('display_warning', '=', False)]}\">You have selected contracts that are "
-"not running, this wizard can only index running contracts.</span>"
+"<span role=\"status\" class=\"alert alert-warning d-block\" "
+"attrs=\"{'invisible': [('display_warning', '=', False)]}\">You have selected"
+" contracts that are not running, this wizard can only index running "
+"contracts.</span>"
 msgstr ""
-"<span role=\"status\" class=\"alert alert-warning\" attrs=\"{'invisible': "
-"[('display_warning', '=', False)]}\">你选择了未运行的合同，此向导只能索引正在运行的合同。</span>"
+"<span role=\"status\" class=\"alert alert-warning d-block\" "
+"attrs=\"{'invisible': [('display_warning', '=', "
+"False)]}\">您选择的合同未运行，此向导只能为运行中的合同编制索引。</span>"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.payroll_resource_calendar_view_form
@@ -268,9 +275,9 @@ msgstr "<strong>工作日程</strong>"
 msgid ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "    <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"        Dear <t t-esc=\"object.employee_id.name\"/>, a new payslip is available for you.<br/><br/>\n"
-"        Please find the PDF in your employee portal.<br/><br/>\n"
-"        Have a nice day,<br/>\n"
+"        Dear <t t-esc=\"object.employee_id.name\"></t>, a new payslip is available for you.<br><br>\n"
+"        Please find the PDF in your employee portal.<br><br>\n"
+"        Have a nice day,<br>\n"
 "        The HR Team\n"
 "    </td></tr>\n"
 "</tbody></table>\n"
@@ -278,10 +285,10 @@ msgid ""
 msgstr ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "    <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"        亲爱的<t t-esc=\"object.employee_id.name\"/> ，新的工资单已提供给你。<br/><br/>\n"
-"        请在您的员工门户网站上找到PDF文件。<br/><br/>\n"
-"        祝您有一个愉快的一天。<br/>\n"
-"        人力资源部门\n"
+"        亲爱的<t t-esc=\"object.employee_id.name\"></t>，新的工资单已提供给您。<br><br>\n"
+"        请在您的员工门户网站上查找 PDF 文件。\n"
+"        祝好<br>\n"
+"        人力资源团队\n"
 "    </td></tr>\n"
 "</tbody></table>\n"
 "            "
@@ -858,6 +865,7 @@ msgid "Config Settings"
 msgstr "配置设置"
 
 #. module: hr_payroll
+#: model:ir.actions.server,name:hr_payroll.action_hr_payroll_confirm_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.hr_payroll_index_form_view
 #: model_terms:ir.ui.view,arch_db:hr_payroll.view_hr_payslip_form
 msgid "Confirm"
@@ -975,11 +983,6 @@ msgstr "国家"
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__country_code
 msgid "Country Code"
 msgstr "国家代码"
-
-#. module: hr_payroll
-#: model:ir.actions.server,name:hr_payroll.action_hr_payroll_confirm_payroll
-msgid "Create Draft Entry"
-msgstr "创建草稿条目"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.res_config_settings_view_form
@@ -1600,8 +1603,8 @@ msgstr "生成的薪资单"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.hr_payroll_note_demo_content
-msgid "Give assurance card to new registered employees"
-msgstr "向新注册员工发放保证卡"
+msgid "Give insurance card to new registered employees"
+msgstr ""
 
 #. module: hr_payroll
 #. odoo-python
@@ -1975,11 +1978,6 @@ msgid "Made Payment Order ? "
 msgstr "建立付款单？ "
 
 #. module: hr_payroll
-#: model_terms:ir.ui.view,arch_db:hr_payroll.report_payslip
-msgid "Made by Odoo with ❤️"
-msgstr "由Odoo与❤️制作"
-
-#. module: hr_payroll
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__message_main_attachment_id
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__message_main_attachment_id
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_salary_attachment__message_main_attachment_id
@@ -2174,12 +2172,6 @@ msgid "New Payslip"
 msgstr "新的薪资单"
 
 #. module: hr_payroll
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__activity_calendar_event_id
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__activity_calendar_event_id
-msgid "Next Activity Calendar Event"
-msgstr "下一个活动日历事件"
-
-#. module: hr_payroll
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__activity_date_deadline
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__activity_date_deadline
 msgid "Next Activity Deadline"
@@ -2232,7 +2224,7 @@ msgstr "笔记"
 msgid ""
 "Note a description of your parameter, when it's used, how is it computed, "
 "what's the source, ..."
-msgstr ""
+msgstr "请注意参数描述、使用时间、计算方式和来源等......"
 
 #. module: hr_payroll
 #. odoo-python
@@ -2293,8 +2285,8 @@ msgstr "工作小时数被视为全职。"
 #: model:ir.model.fields,help:hr_payroll.field_hr_payslip__message_needaction_counter
 #: model:ir.model.fields,help:hr_payroll.field_hr_payslip_run__message_needaction_counter
 #: model:ir.model.fields,help:hr_payroll.field_hr_salary_attachment__message_needaction_counter
-msgid "Number of messages which requires an action"
-msgstr "需要采取动作消息数量"
+msgid "Number of messages requiring action"
+msgstr "需要采取行动的消息数量"
 
 #. module: hr_payroll
 #: model:ir.model.fields,help:hr_payroll.field_hr_payslip__message_has_error_counter
@@ -3196,7 +3188,7 @@ msgstr "单号规则"
 msgid ""
 "Set a specific department if you wish to select all the employees from this "
 "department (and subdepartments) at once."
-msgstr ""
+msgstr "如果希望选择该部门（以及子部门）的所有员工，应设置特定部门。"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.view_hr_payslip_by_employees
@@ -3205,7 +3197,7 @@ msgid ""
 "the year bonus). If you leave this field empty, a regular payslip will be "
 "generated for all the selected employees, based on their contracts "
 "configuration."
-msgstr ""
+msgstr "如果想获得其他工资单（例如，年终奖），应设置特定结构。如果将此字段留空，将根据所有选定员工的合同配置，为员工生成定期工资单。"
 
 #. module: hr_payroll
 #. odoo-javascript
@@ -3463,7 +3455,7 @@ msgstr "工作条目不会在工资单上给予雇员任何金钱。"
 msgid ""
 "There's no contract set on payslip %s for %s. Check that there is at least a"
 " contract set on the employee form."
-msgstr ""
+msgstr "工资单中没有%s为%s设置合同。检查员工表单中是否至少设置了一个合同。"
 
 #. module: hr_payroll
 #. odoo-python
@@ -3811,20 +3803,6 @@ msgid "We have to improve our Payroll flow with the new Odoo process"
 msgstr "我们必须通过新的Odoo流程改善我们的薪资流程"
 
 #. module: hr_payroll
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__website_message_ids
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__website_message_ids
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_salary_attachment__website_message_ids
-msgid "Website Messages"
-msgstr "网站消息"
-
-#. module: hr_payroll
-#: model:ir.model.fields,help:hr_payroll.field_hr_payslip__website_message_ids
-#: model:ir.model.fields,help:hr_payroll.field_hr_payslip_run__website_message_ids
-#: model:ir.model.fields,help:hr_payroll.field_hr_salary_attachment__website_message_ids
-msgid "Website communication history"
-msgstr "网上沟通记录"
-
-#. module: hr_payroll
 #: model:ir.model.fields.selection,name:hr_payroll.selection__hr_payroll_structure__schedule_pay__weekly
 #: model:ir.model.fields.selection,name:hr_payroll.selection__hr_payroll_structure_type__default_schedule_pay__weekly
 msgid "Weekly"
@@ -4033,6 +4011,15 @@ msgstr "您可以从员工资料访问工资单。"
 #, python-format
 msgid "You can't validate a cancelled payslip."
 msgstr "您无法验证已取消的工资单。"
+
+#. module: hr_payroll
+#. odoo-python
+#: code:addons/hr_payroll/models/hr_payslip_input_type.py:0
+#, python-format
+msgid ""
+"You cannot delete %s as it is used in another module but you can archive it "
+"instead."
+msgstr "由于%s在另一个模块中使用，因此无法删除，但可以将其存档。"
 
 #. module: hr_payroll
 #. odoo-python

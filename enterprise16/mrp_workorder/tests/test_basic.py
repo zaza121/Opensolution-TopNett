@@ -411,6 +411,8 @@ class TestWorkOrderProcessCommon(TestMrpCommon):
             'note': 'Installing VIM (pcs xi ipzth adi du ixbt)',
         })
 
+        self.env['stock.quant']._update_available_quantity(component, self.stock_location_14, 10)
+
         mo_form = Form(self.env['mrp.production'])
         mo_form.product_id = finished_product
         mo_form.bom_id = bom
@@ -974,6 +976,8 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
         laptop = self.laptop
         graphics_card = self.graphics_card
         unit = self.env.ref("uom.product_uom_unit")
+        stock_location = self.env.ref('stock.stock_location_stock')
+        self.env['stock.quant']._update_available_quantity(graphics_card, stock_location, 20)
 
         laptop.tracking = 'serial'
 
@@ -1096,15 +1100,28 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
                 'sequence': 2,
             })]
         })
+        drawer_drawer_lot = self.env['stock.lot'].create({
+            'product_id': drawer_drawer.id,
+            'name': 'dd0001',
+            'company_id': self.env.company.id,
+        })
+
+        drawer_case_lot = self.env['stock.lot'].create({
+            'product_id': drawer_case.id,
+            'name': 'dc0001',
+            'company_id': self.env.company.id,
+        })
         self.env['stock.quant'].create({
             'product_id': drawer_drawer.id,
             'inventory_quantity': 50.0,
-            'location_id': self.stock_location_14.id
+            'location_id': self.stock_location_14.id,
+            'lot_id': drawer_drawer_lot.id,
         }).action_apply_inventory()
         self.env['stock.quant'].create({
             'product_id': drawer_case.id,
             'inventory_quantity': 50.0,
-            'location_id': self.stock_location_14.id
+            'location_id': self.stock_location_14.id,
+            'lot_id': drawer_case_lot.id,
         }).action_apply_inventory()
 
         product = bom.product_tmpl_id.product_variant_id
@@ -1429,7 +1446,8 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
             - calendar wc1 :[mo1][mo4]
             - calendar wc2 :[mo2 ][mo5 ]
             - calendar wc3 :[mo3  ][mo6  ]"""
-        planned_date = datetime(2023, 5, 15, 9, 0)
+        self.full_availability()
+        planned_date = datetime.now() + timedelta(minutes=30)
         self.workcenter_1.alternative_workcenter_ids = self.wc_alt_1 | self.wc_alt_2
         workcenters = [self.wc_alt_2, self.wc_alt_1, self.workcenter_1]
         for i in range(3):
@@ -1472,10 +1490,11 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
         calendar after first mo : [   ][mo1]
         calendar after second mo: [mo2][mo1] """
 
+        self.full_availability()
         self.workcenter_1.alternative_workcenter_ids = self.wc_alt_1 | self.wc_alt_2
         self.env['mrp.workcenter'].search([]).resource_calendar_id.write({'tz': 'UTC'})  # compute all date in UTC
 
-        planned_date = datetime(2023, 5, 15, 14, 0)
+        planned_date = datetime.now() + timedelta(days=2)
         mo_form = Form(self.env['mrp.production'])
         mo_form.product_id = self.product_4
         mo_form.bom_id = self.planning_bom
@@ -1492,7 +1511,7 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
         self.assertAlmostEqual(wo1_stop, start + timedelta(minutes=85.58), delta=timedelta(seconds=10), msg="Wrong plannification")
 
         # second MO should be plan before as there is a free slot before
-        planned_date = datetime(2023, 5, 15, 9, 0)
+        planned_date = planned_date - timedelta(days=1)
         mo_form = Form(self.env['mrp.production'])
         mo_form.product_id = self.product_4
         mo_form.bom_id = self.planning_bom
@@ -1544,6 +1563,7 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
         the reservation slot in the calendar the be able to reserve the next
         production sooner """
         self.env['mrp.workcenter'].search([]).write({'tz': 'UTC'})  # compute all date in UTC
+        self.full_availability()
         mrp_workcenter_3 = self.env['mrp.workcenter'].create({
             'name': 'assembly line 1',
             'resource_calendar_id': self.env.ref('resource.resource_calendar_std').id,
@@ -1564,7 +1584,7 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
                 'time_cycle': 60,
             })]
         })
-        planned_date = datetime(2023, 5, 15, 9, 0)
+        planned_date = datetime.now() + timedelta(days=2)
         mo_form = Form(self.env['mrp.production'])
         mo_form.product_id = self.product_4
         mo_form.bom_id = self.planning_bom
@@ -1743,7 +1763,8 @@ class TestWorkOrderProcess(TestWorkOrderProcessCommon):
         """ Testing planning a workorder then cancel it and then plan it again.
         The planned date must be the same the first time and the second time the
         workorder is planned."""
-        planned_date = datetime(2023, 5, 15, 9, 0)
+        self.full_availability()
+        planned_date = datetime.now() + timedelta(days=2)
         mo_form = Form(self.env['mrp.production'])
         mo_form.product_id = self.product_4
         mo_form.bom_id = self.planning_bom

@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import timedelta
+from psycopg2 import IntegrityError, OperationalError
 
 from odoo.addons.iap.tools import iap_tools
 from odoo import api, fields, models, _lt, _
@@ -158,8 +159,11 @@ class HrApplicant(models.Model):
         if not new_stage.hired_stage:
             return res
 
-        self.extract_state = 'to_validate'
-        self.env.ref('hr_recruitment_extract.ir_cron_ocr_validate')._trigger()
+        applicants_to_validate = self.filtered(lambda app: app.extract_state == 'waiting_validation')
+        applicants_to_validate.extract_state = 'to_validate'
+
+        if applicants_to_validate:
+            self.env.ref('hr_recruitment_extract.ir_cron_ocr_validate')._trigger()
 
         return res
 
@@ -267,8 +271,15 @@ class HrApplicant(models.Model):
     @api.model
     def _cron_parse(self):
         for rec in self.search([('extract_state', '=', 'waiting_upload')]):
-            rec.retry_ocr()
-            rec.env.cr.commit()
+            try:
+                with self.env.cr.savepoint(flush=False):
+                    rec.with_company(rec.company_id).retry_ocr()
+                    # We handle the flush manually so that if an error occurs, e.g. a concurrent update error,
+                    # the savepoint will be rollbacked when exiting the context manager
+                    self.env.cr.flush()
+                self.env.cr.commit()
+            except (IntegrityError, OperationalError) as e:
+                _logger.error("Couldn't upload %s with id %d: %s", rec._name, rec.id, str(e))
 
     def retry_ocr(self):
         """Retry to contact iap to submit the first attachment in the chatter"""

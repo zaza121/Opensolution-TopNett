@@ -4,16 +4,18 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Braulio D. López Vázquez <bdl@odoo.com>, 2022
+# Braulio D. López Vázquez <bdl@odoo.com>, 2023
+# Fernanda Alvarez, 2023
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:29+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Braulio D. López Vázquez <bdl@odoo.com>, 2022\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -40,7 +42,7 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "    <h2>¡Felicidades!</h2>\n"
-"    Puede configurar su paquete salarial al hacer clic en el enlace a continuación.\n"
+"    Puede configurar su paquete salarial mediante el siguiente enlace.\n"
 "    <div style=\"padding: 16px 0px 16px 0px;\">\n"
 "        <a t-att-href=\"ctx.get('salary_package_url')\" target=\"_blank\" style=\"background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;\">Configure su paquete</a>\n"
 "    </div>\n"
@@ -55,12 +57,21 @@ msgstr "<i class=\"fa fa-check-circle-o mr8\"/>Felicidades"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
 msgid ""
+"<span attrs=\"{'invisible': [('contract_id', '!=', False)]}\">An offer "
+"template need to be selected to have an offer link.</span>"
+msgstr ""
+"<span attrs=\"{'invisible': [('contract_id', '!=', False)]}\">Debe "
+"seleccionar una plantilla de oferta para tener un enlace de oferta.</span>"
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
 "<span class=\"alert alert-warning\" role=\"alert\" colspan=\"2\" attrs=\"{'invisible':[('contract_id', '!=', False)]}\">\n"
 "                            Before accessing the simulation link, you first need to set up an offer template.\n"
 "                    </span>"
 msgstr ""
 "<span class=\"alert alert-warning\" role=\"alert\" colspan=\"2\" attrs=\"{'invisible':[('contract_id', '!=', False)]}\">\n"
-"                            Antes de acceder al enlace de simulación, primero debe configurar una plantilla de oferta.\n"
+"                            Antes de acceder al enlace de simulación debe configurar una plantilla de oferta.\n"
 "                    </span>"
 
 #. module: hr_contract_salary
@@ -230,7 +241,7 @@ msgstr "Aplica ahora"
 #: model:ir.actions.server,name:hr_contract_salary.ir_cron_clean_redundant_salary_data_ir_actions_server
 #: model:ir.cron,cron_name:hr_contract_salary.ir_cron_clean_redundant_salary_data
 msgid "Archive/Delete redundant generated salary data"
-msgstr "Archivar/eliminar datos de salario generados redundantes"
+msgstr "Archivar/eliminar datos redundantes de salario generados"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_resume_view_search
@@ -406,8 +417,8 @@ msgstr "Campo de contrato que se utiliza para plegar esta ventaja."
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_advantage__manual_res_field_id
 msgid "Contract field used to manually encode an advantage value."
 msgstr ""
-"Campo de contrato que se utiliza para codificar manualmente el valor de la "
-"ventaja."
+"Campo de contrato que se utiliza para codificar de manera manual el valor de"
+" la ventaja."
 
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_history
@@ -491,7 +502,7 @@ msgstr "Divisa"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package
 msgid "Customize your salary"
-msgstr "Personaliza tu salario"
+msgstr "Personalice su salario"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__display_type__date
@@ -511,15 +522,17 @@ msgstr "Días"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_res_config_settings__access_token_validity
 msgid "Default Access Token Validity Duration"
-msgstr "Duración predeterminada de validez de tokens de acceso"
+msgstr "Duración predeterminada de validez del token de acceso"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__default_contract_id
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__default_contract_id
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_job__default_contract_id
-msgid "Default contract used when making an offer to an applicant."
+msgid ""
+"Default contract used to generate an offer. If empty, advantages will be "
+"taken from current contract of the employee/nothing for an applicant."
 msgstr ""
-"Contrato predeterminado que se utiliza al hacer una oferta a un candidato."
+"Contrato predeterminado que se utiliza para generar una oferta. Si está "
+"vacío, las ventajas se tomarán del contrato actual del empleado o no se "
+"otorgará nada a un candidato."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__sign_template_id
@@ -595,7 +608,7 @@ msgstr "Documento"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_sign_document_wizard__sign_template_ids
 msgid "Documents to sign"
-msgstr "Documentos para firmar"
+msgstr "Documentos a firmar"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_sign_document_wizard__sign_template_ids
@@ -604,7 +617,7 @@ msgid ""
 "        Documents with 1 responsible will only have to be signed by the employee while documents with 2 different responsible will have to be signed by both the employee and the responsible.\n"
 "        "
 msgstr ""
-"Documentos para firmar. Solo se pueden seleccionar los documentos con 1 o 2 responsables diferentes.\n"
+"Documentos a firmar. Solo se pueden seleccionar los documentos con 1 o 2 responsables diferentes.\n"
 "        Los documentos con 1 responsable solo tendrán que ser firmados por el empleado, mientras que los documentos con 2 responsables diferentes tendrán que ser firmados tanto por el empleado como por el responsable.\n"
 "        "
 
@@ -770,18 +783,9 @@ msgid ""
 "HR Responsible %s should be a User of Sign and have a valid email address "
 "when New Contract Document Template is specified"
 msgstr ""
-"El usuario de RR. HH. %s debe ser usuario de Firma y tener una dirección de "
-"correo electrónico válida cuando se especifica la plantilla de documento de "
-"nuevo contrato"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
-msgid ""
-"He/She will review your contract.<br/> Feel free to contact him/her if you "
-"have further questions."
-msgstr ""
-"Él o ella revisarán su contrato.<br/> Es libre de contactarles si tiene "
-"alguna pregunta adicional."
+"El responsable de RR. HH. %s debe ser usuario de Firma electrónica y tener "
+"una dirección de correo electrónico válida cuando se especifica la plantilla"
+" de documento de nuevo contrato"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__helper
@@ -812,7 +816,7 @@ msgstr "Oculta información personal de los hijos si se selecciona."
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_advantage__hide_description
 msgid "Hide the description if the advantage is not taken."
-msgstr "Oculta la descripción si no se ha tomado la ventaja"
+msgstr "Oculta la descripción si no se ha tomado la ventaja."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_generate_simulation_link__id
@@ -840,7 +844,7 @@ msgstr "Imagen"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume__impacts_monthly_total
 msgid "Impacts Monthly Total"
-msgstr "Total de impactos mensual"
+msgstr "Impactos en el total mensual"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_advantage__impacts_net_salary
@@ -862,12 +866,12 @@ msgstr "Información"
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__display_type__integer
 msgid "Integer"
-msgstr "Integer"
+msgstr "Entero"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__is_required
 msgid "Is Required"
-msgstr "Es requerido"
+msgstr "Es necesario"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__is_origin_contract_template
@@ -889,7 +893,7 @@ msgstr "Puesto de trabajo"
 #: model:ir.model.fields,field_description:hr_contract_salary.field_generate_simulation_link__job_title
 #, python-format
 msgid "Job Title"
-msgstr "Título del trabajo"
+msgstr "Puesto de trabajo"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__dropdown_selection__lang
@@ -1074,8 +1078,8 @@ msgid ""
 "No HR responsible defined on the job position. Please contact an "
 "administrator."
 msgstr ""
-"No hay ningún responsable de RR. HH. definido para el puesto de trabajo. Por"
-" favor, contacte a un administrador."
+"No hay ningún responsable de RR. HH. definido para el puesto de trabajo, "
+"contacte a un administrador."
 
 #. module: hr_contract_salary
 #: model_terms:ir.actions.act_window,help:hr_contract_salary.action_hr_contract_templates
@@ -1087,7 +1091,7 @@ msgstr "No se encontró ninguna plantilla"
 #: code:addons/hr_contract_salary/models/hr_contract.py:0
 #, python-format
 msgid "No private address defined on the employee!"
-msgstr "¡No hay ninguna dirección privada definida del empleado!"
+msgstr "No hay ninguna dirección privada definida del empleado"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1097,8 +1101,8 @@ msgid ""
 "No signature template defined on the contract. Please contact the HR "
 "responsible."
 msgstr ""
-"No hay plantilla de firma definida en el contrato. Por favor, contacte al "
-"responsable de recursos humanos."
+"No hay plantilla de firma definida en el contrato, contacte al responsable "
+"de recursos humanos."
 
 #. module: hr_contract_salary
 #. odoo-javascript
@@ -1112,7 +1116,7 @@ msgstr "No es una dirección de correo electrónico válida"
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 #, python-format
 msgid "Not a valid input in integer field"
-msgstr "No es una entrada válida en el campo de integer"
+msgstr "No es una entrada válida en el campo de número entero"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__holidays
@@ -1128,6 +1132,15 @@ msgstr "Plantilla de oferta"
 #: model:ir.model.fields,field_description:hr_contract_salary.field_generate_simulation_link__url
 msgid "Offer link"
 msgstr "Enlace de oferta"
+
+#. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/wizard/generate_simulation_link.py:0
+#, python-format
+msgid "Offer link can not be send. The applicant needs to have a name."
+msgstr ""
+"No se puede enviar el enlace con la oferta, el candidato debe tener un "
+"nombre."
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1302,7 +1315,7 @@ msgstr "Modelo res"
 #: model:ir.actions.act_window,name:hr_contract_salary.hr_contract_salary_resume_action
 #: model:ir.ui.menu,name:hr_contract_salary.salary_package_resume
 msgid "Resume"
-msgstr "Reanudar"
+msgstr "Resumen"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_next_step_button
@@ -1349,7 +1362,7 @@ msgstr "Valor de información personal del paquete salarial"
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_salary_resume
 msgid "Salary Package Resume"
-msgstr "Resumen del paquete salarial"
+msgstr "Currículum del paquete salarial"
 
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_salary_resume_category
@@ -1553,6 +1566,15 @@ msgstr "El contrato del cual este contrato ha sido duplicado."
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
 msgid ""
+"The employee does not have a valid work email set. The Simulation Link won't"
+" be able to be completed."
+msgstr ""
+"El empleado no tiene un correo electrónico válido establecido y el enlace de"
+" simulación no se podrá completar."
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
 "The employee does not have a valid email set in the private information. The"
 " Simulation Link won't be able to be completed."
 msgstr ""
@@ -1582,7 +1604,7 @@ msgstr ""
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__signatures_count
 msgid "The number of signatures on the pdf contract with the most signatures."
-msgstr "El número de firmas en el contrato en pdf con más firmas"
+msgstr "El número de firmas en el contrato en PDF con más firmas."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_advantage__activity_type_id
@@ -1597,6 +1619,15 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_advantages
 msgid "There is no available option to customize your salary"
 msgstr "No hay opciones disponibles para personalizar su salario"
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
+msgid ""
+"They will review your contract.<br/> Feel free to contact them if you have "
+"any questions."
+msgstr ""
+"La persona revisará el contrato.<br/> Es libre de contactarle si tiene "
+"alguna pregunta."
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1624,7 +1655,7 @@ msgstr ""
 msgid ""
 "This link is invalid. Please contact the HR Responsible to get a new one..."
 msgstr ""
-"El enlace es inválido. Contacte al responsable de RR. HH. para recibir uno "
+"El enlace no es válido, contacte al responsable de RR. HH. para recibir uno "
 "nuevo..."
 
 #. module: hr_contract_salary
@@ -1735,7 +1766,7 @@ msgstr "Su información personal"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
 msgid "Your contract has been sent to:"
-msgstr "Su contrato se ha enviado a:"
+msgstr "Su contrato se envió a:"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_zip

@@ -25,7 +25,7 @@
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='late']" position='after'>
                 <separator/>
-                <filter name="bills_to_pay" string="Bills to Pay" domain="['&amp;', '&amp;', ('state', '=', 'posted'), ('payment_state', 'not in', ('paid', 'in_payment')), '|', ('invoice_date_due', '&lt;', time.strftime('%Y-%m-%d')), ('release_to_pay','=', 'yes')]"/>
+                <filter name="bills_to_pay" string="Bills to Pay" domain="['&amp;', '&amp;', ('state', '=', 'posted'), ('payment_state', 'in', ('not_paid', 'partial')), '|', ('invoice_date_due', '&lt;', time.strftime('%Y-%m-%d')), ('release_to_pay','=', 'yes')]"/>
                 <filter name="exception" string="Bills in Exception" domain="[('release_to_pay','=', 'exception')]"/>
                 <separator/>
             </xpath>

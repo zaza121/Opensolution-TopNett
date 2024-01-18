@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import Command
+from datetime import timedelta
+
+from odoo import Command, fields
 
 from odoo.addons.project.tests.test_project_sharing import TestProjectSharingCommon
 from odoo.addons.sale_timesheet_enterprise.models.sale import DEFAULT_INVOICED_TIMESHEET
@@ -66,6 +68,7 @@ class TestProjectSharing(TestProjectSharingCommon):
         common_timesheet_vals = {
             'project_id': project_shared.id,
             'task_id': task.id,
+            'date': fields.Date.today() - timedelta(days=1),
         }
         timesheets = self.env['account.analytic.line'] \
             .with_context({'tracking_disable': True}) \

@@ -345,6 +345,48 @@ class TestCaseSecurity(TransactionCase):
         self.assertEqual(len(available_documents), 1, "there should be 1 available document")
         self.assertEqual(available_documents.name, 'filec.gif', "the document C should be available")
 
+    def test_share_parent_folder_with_ids(self):
+        """
+        Tests the access rights of a share link when the parent folder is shared with ids.
+        """
+        TEXT = base64.b64encode(bytes("TEST", 'utf-8'))
+        folder_share_parent = self.env['documents.folder'].create({
+            'name': 'folder share',
+            'read_group_ids': [(6, 0, [self.ref('documents.group_documents_user')])]
+        })
+        folder_share_child_a = self.env['documents.folder'].create({
+            'name': 'folder share',
+            'parent_folder_id': folder_share_parent.id,
+            'read_group_ids': [(6, 0, [self.ref('documents.group_documents_user')])]
+        })
+        folder_share_child_b = self.env['documents.folder'].create({
+            'name': 'folder share',
+            'parent_folder_id': folder_share_parent.id,
+            'read_group_ids': [(6, 0, [self.ref('documents.group_documents_user')])]
+        })
+        document_a = self.env['documents.document'].create({
+            'datas': b"R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs=",
+            'owner_id': self.document_manager.id,
+            'name': 'filea.gif',
+            'mimetype': 'image/gif',
+            'folder_id': folder_share_child_a.id,
+        })
+        document_b = self.env['documents.document'].create({
+            'datas': TEXT,
+            'owner_id': self.document_manager.id,
+            'name': 'fileb.gif',
+            'mimetype': 'image/gif',
+            'folder_id': folder_share_child_b.id,
+        })
+        test_share = self.env['documents.share'].with_user(self.document_user).create({
+            'folder_id': folder_share_parent.id,
+            'type': 'ids',
+            'document_ids': [(6, 0, [document_a.id, document_b.id])]
+        })
+
+        available_documents = test_share._get_documents_and_check_access(test_share.access_token, operation='read')
+        self.assertEqual(len(available_documents), 2, "there should be 2 available documents")
+
     def test_folder_user_specific_write(self):
         """
         Tests that `user_specific_write` is disabled when `user_specific` is disabled

@@ -9,15 +9,16 @@
 # Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2022
 # Martin Trigaux, 2022
 # Kari Lindgren <kari.lindgren@emsystems.fi>, 2022
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:30+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:48+0000\n"
-"Last-Translator: Kari Lindgren <kari.lindgren@emsystems.fi>, 2022\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -29,7 +30,7 @@ msgstr ""
 #: code:addons/sale_temporal/models/product_template.py:0
 #, python-format
 msgid "%(amount)s (fixed)"
-msgstr ""
+msgstr "%(amount)s (korjattu)"
 
 #. module: sale_temporal
 #. odoo-python
@@ -37,7 +38,7 @@ msgstr ""
 #: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__active
@@ -47,7 +48,7 @@ msgstr "Aktiivinen"
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_template_form_view_pricing
 msgid "Add a price"
-msgstr ""
+msgstr "Lisää hinta"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__company_id
@@ -58,7 +59,7 @@ msgstr "Yritys"
 #: model_terms:ir.actions.act_window,help:sale_temporal.product_pricing_action
 #: model_terms:ir.actions.act_window,help:sale_temporal.sale_temporal_recurrence_action
 msgid "Create a new recurrence"
-msgstr ""
+msgstr "Luo uusi toistuvuus"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__create_uid
@@ -81,11 +82,12 @@ msgstr "Valuutta"
 #: model:ir.model.fields,field_description:sale_temporal.field_product_product__product_pricing_ids
 #: model:ir.model.fields,field_description:sale_temporal.field_product_template__product_pricing_ids
 msgid "Custom Pricings"
-msgstr ""
+msgstr "Mukautetut hinnat"
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Day"
 msgstr "Päivä"
@@ -112,17 +114,23 @@ msgid "Duration"
 msgstr "Kesto"
 
 #. module: sale_temporal
+#: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__duration_display
+msgid "Duration Display"
+msgstr "Keston näyttö"
+
+#. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_product__display_price
 #: model:ir.model.fields,help:sale_temporal.field_product_template__display_price
 msgid "First leasing pricing of the product"
-msgstr ""
+msgstr "Tuotteen ensimmäinen leasing-hinnoittelu"
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Hour"
-msgstr ""
+msgstr "Tunti"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__id
@@ -138,13 +146,13 @@ msgstr "Sisäinen muistiinpano"
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.sale_subscription_order_view_form
 msgid "Internal notes"
-msgstr ""
+msgstr "Sisäiset muistiinpanot"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_product__is_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_template__is_temporal
 msgid "Is Temporal"
-msgstr ""
+msgstr "On kausittainen"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing____last_update
@@ -168,7 +176,7 @@ msgstr "Viimeksi päivitetty"
 #: model:ir.model.fields,field_description:sale_temporal.field_product_product__display_price
 #: model:ir.model.fields,field_description:sale_temporal.field_product_template__display_price
 msgid "Leasing price"
-msgstr ""
+msgstr "Leasing-hinta"
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_sale_temporal_recurrence__duration
@@ -176,10 +184,13 @@ msgid ""
 "Minimum duration before this rule is applied. If set to 0, it represents a "
 "fixed temporal price."
 msgstr ""
+"Vähimmäiskesto ennen tämän säännön soveltamista. Jos se on 0, se edustaa "
+"kiinteää ajallista hintaa."
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Month"
 msgstr "Kuukausi"
@@ -215,7 +226,7 @@ msgstr "Jaksotus"
 #. module: sale_temporal
 #: model:ir.actions.act_window,name:sale_temporal.sale_temporal_recurrence_action
 msgid "Periods"
-msgstr ""
+msgstr "Jaksot"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__price
@@ -232,12 +243,12 @@ msgstr "Hinnasto"
 #: model:ir.actions.act_window,name:sale_temporal.product_pricing_action
 #: model_terms:ir.ui.view,arch_db:sale_temporal.sale_temporal_product_pricing_tree
 msgid "Prices"
-msgstr ""
+msgstr "Hinnat"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_pricing
 msgid "Pricing rule of temporal products"
-msgstr ""
+msgstr "Ajallisten tuotteiden hinnoittelusääntö"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_template
@@ -247,7 +258,7 @@ msgstr "Tuote"
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__product_template_id
 msgid "Product Templates"
-msgstr ""
+msgstr "Tuotemallit"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_product
@@ -272,17 +283,17 @@ msgstr "Toistuvuus"
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricelist__product_pricing_ids
 msgid "Recurring Price Rules"
-msgstr ""
+msgstr "Toistuvia hintoja koskevat säännöt"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
 msgid "Recurring Pricelist Rules"
-msgstr ""
+msgstr "Toistuvat hinnastosäännöt"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_sale_temporal_recurrence
 msgid "Sale temporal Recurrence"
-msgstr ""
+msgstr "Myynnin ajallinen toistuminen"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_sale_order
@@ -300,38 +311,45 @@ msgid ""
 "Select Variants of the Product for which this rule applies. Leave empty if "
 "this rule applies for any variant of this template."
 msgstr ""
+"Valitse sen tuotteen variantit, johon tätä sääntöä sovelletaan. Jätä "
+"tyhjäksi, jos sääntöä sovelletaan mihin tahansa tämän mallin varianttiin."
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_pricing__product_template_id
 msgid "Select products on which this pricing will be applied."
-msgstr ""
+msgstr "Valitse tuotteet, joihin tätä hinnoittelua sovelletaan."
+
+#. module: sale_temporal
+#: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__subscription_unit_display
+msgid "Subscription Unit Display"
+msgstr "Tilauksen yksikön näyttö"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_order_line__temporal_type
 msgid "Temporal Type"
-msgstr ""
+msgstr "Ajallinen tyyppi"
 
 #. module: sale_temporal
 #: model:ir.model.constraint,message:sale_temporal.constraint_sale_temporal_recurrence_temporal_recurrence_duration
 msgid "The pricing duration has to be greater or equal to 0."
-msgstr ""
+msgstr "Hinnoittelun keston on oltava suurempi tai yhtä suuri kuin 0."
 
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_template.py:0
 #, python-format
 msgid "The product (%s) has incompatible values: %s"
-msgstr ""
+msgstr "Tuotteella (%s) on yhteensopimattomia arvoja: %s"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_template_form_view_pricing
-msgid "Time based pricing"
-msgstr ""
+msgid "Time-based pricing"
+msgstr "Aikaperusteinen hinnoittelu"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
-msgid "Time based rules"
-msgstr ""
+msgid "Time-based rules"
+msgstr "Aikaan perustuvat säännöt"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__unit
@@ -346,6 +364,7 @@ msgstr "Variaatiot"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Week"
 msgstr "Viikko"
@@ -358,6 +377,7 @@ msgstr "Viikot"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Year"
 msgstr "Vuosi"
@@ -375,6 +395,8 @@ msgid ""
 "You can not have a time-based rule for products that are not recurring or "
 "rentable."
 msgstr ""
+"Aikaan perustuvaa sääntöä ei voi käyttää tuotteille, jotka eivät ole "
+"toistuvia tai vuokrattavia."
 
 #. module: sale_temporal
 #. odoo-python
@@ -384,6 +406,8 @@ msgid ""
 "You cannot have multiple pricing for the same variant, recurrence and "
 "pricelist"
 msgstr ""
+"Samalle variantille, toistuvuudelle ja hinnastolle ei voi olla useita "
+"hinnoitteluja"
 
 #. module: sale_temporal
 #. odoo-python
@@ -391,4 +415,53 @@ msgstr ""
 #: code:addons/sale_temporal/models/product_pricing.py:0
 #, python-format
 msgid "all variants"
-msgstr ""
+msgstr "kaikki variantit"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s months"
+msgstr "per %s kuukautta"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s weeks"
+msgstr "per %s viikkoa"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s years"
+msgstr "per %s vuotta"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per month"
+msgstr "kuukausittain"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per week"
+msgstr "viikottain"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per year"
+msgstr "vuodessa"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "This recurrence unit is not supported."
+msgstr "Tätä toistuvuusyksikköä ei tueta."

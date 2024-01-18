@@ -60,3 +60,29 @@ class SpreadsheetDashboardAccess(TransactionCase):
         dashboard.data = base64.b64encode(b"{ version: 2 }")
         self.assertFalse(revisions.exists())
         self.assertFalse(dashboard.spreadsheet_snapshot)
+
+
+    def test_dispatch_collaborative_sets_to_noupdate(self):
+        dashboard_group = self.env["spreadsheet.dashboard.group"].create({
+            "name": "Dashboard group"
+        })
+        dashboard = self.env["spreadsheet.dashboard"].create(
+            {
+                "name": "a dashboard",
+                "group_ids": [Command.set(self.group.ids)],
+                "dashboard_group_id": dashboard_group.id,
+            }
+        )
+        ir_model_data = self.env["ir.model.data"].create({
+            "name": "test_dashboard",
+            "model": "spreadsheet.dashboard",
+            "res_id": dashboard.id,
+            "noupdate": False,
+        })
+        dashboard.dispatch_spreadsheet_message({
+            "type": "REMOTE_REVISION",
+            "serverRevisionId": "rev-1-id",
+            "nextRevisionId": "rev-2-id",
+            "commands": [],
+        })
+        self.assertTrue(ir_model_data.noupdate)

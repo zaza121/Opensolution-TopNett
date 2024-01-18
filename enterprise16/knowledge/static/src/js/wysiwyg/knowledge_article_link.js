@@ -32,7 +32,25 @@ const KnowledgeArticleLinkModal = Dialog.extend({
     start: function () {
         return this._super.apply(this, arguments).then(() => {
             this.initSelect2();
+            // see "focus" method of select2 lib for details about setTimeout
+            setTimeout(() => {
+                this.getInput().select2('open');
+                $('input.select2-input').focus();
+            }, 0);
         });
+    },
+
+    /**
+     * Dirty hack to de-activate the "focustrap" from Bootstrap.
+     * Indeed, it prevents typing into our "select2" element.
+     * TODO knowledge: remove this and refactor in master to avoid using legacy modals.
+     *
+     */
+    on_attach_callback: function () {
+        const bootstrapModal = Modal.getInstance(this.$modal[0]);
+        if (bootstrapModal) {
+            bootstrapModal._focustrap.deactivate();
+        }
     },
 
     /**
@@ -55,17 +73,23 @@ const KnowledgeArticleLinkModal = Dialog.extend({
                 data: term => {
                     return { term };
                 },
+                quietMillis: 500,
                 /**
                  * @param {Object} params - parameters
                  */
                 transport: async params => {
                     const { term } = params.data;
+                    let domain = [['user_has_access', "=", true]];
+                    if (term) {
+                        domain.push(['name', '=ilike', `%${term}%`]);
+                    }
                     const results = await this._rpc({
                         model: 'knowledge.article',
                         method: 'search_read',
                         kwargs: {
                             fields: ['id', 'display_name', 'root_article_id'],
-                            domain: [['name', '=ilike', `%${term}%`], ['user_has_access', "=", true]],
+                            domain: domain,
+                            limit: 50,
                         },
                     });
                     params.success({ results });

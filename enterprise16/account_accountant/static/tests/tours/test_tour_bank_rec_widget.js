@@ -164,6 +164,7 @@ tour.register('account_accountant_bank_rec_widget',
         },
         {
             content: "The 'line3' is the next not already reconciled line",
+            extra_trigger: "div[name='lines_widget'] td[field='name']:contains('line3')",
             trigger: "div[name='lines_widget'] td[field='name']:contains('line3')",
             run: function() {},
         },

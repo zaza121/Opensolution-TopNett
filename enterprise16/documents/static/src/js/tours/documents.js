@@ -16,7 +16,7 @@ tour.register('documents_tour', {
     content: Markup(_t("Want to become a <b>paperless company</b>? Let's discover Odoo Documents.")),
     position: 'bottom',
 }, {
-    trigger: 'img[src="https://img.youtube.com/vi/Ayab6wZ_U1A/0.jpg"]',
+    trigger: 'body:not(:has(.o_AttachmentViewer)) img[src="https://img.youtube.com/vi/Ayab6wZ_U1A/0.jpg"]',
     content: Markup(_t("Click on a thumbnail to <b>preview the document</b>.")),
     position: 'bottom',
     run: function (actions) {
@@ -33,12 +33,11 @@ tour.register('documents_tour', {
     },
 }, {
     trigger: '.o_kanban_record:contains(mail.png)',
-    extra_trigger: '.o_documents_kanban',
+    extra_trigger: 'body:not(:has(.o_AttachmentViewer)) .o_documents_kanban',
     content: Markup(_t("Click on a card to <b>select the document</b>.")),
     position: 'bottom',
 }, { // equivalent to '.o_inspector_rule:contains('Send to Legal') .o_inspector_trigger_rule' but language agnostic.
     trigger: '.o_inspector_rule[data-id="3"] .o_inspector_trigger_rule',
-    extra_trigger: '.o_documents_image_background',
     content: Markup(_t("Let's tag this mail as legal<br/> <i>Tips: actions can be tailored to your process, according to the workspace.</i>")),
     position: 'bottom',
 }, { // the nth(0) ensures that the filter of the preceding step has been applied.

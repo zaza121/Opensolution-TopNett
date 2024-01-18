@@ -99,13 +99,11 @@ class Employee(models.Model):
 
         uom = str(self.env.company.timesheet_encode_uom_id.name).lower()
 
-        employees = self.env['hr.employee'].with_context(active_test=False).search([
-            ('id', 'in', [data['id'] for data in employees_grid_data]),
-            ('company_id', 'in', self.env.companies.ids),
-        ])
+        employee_ids = [employee_data['id'] for employee_data in employees_grid_data if 'id' in employee_data]
+        employees = self.env['hr.employee'].browse(employee_ids)
         hours_per_day_per_employee = {}
 
-        employees_work_days_data, _dummy = employees.resource_id.sudo()._get_valid_work_intervals(start_datetime, end_datetime)
+        employees_work_days_data, _dummy = employees.sudo().resource_id._get_valid_work_intervals(start_datetime, end_datetime)
 
         for employee in employees:
             units_to_work = sum_intervals(employees_work_days_data[employee.resource_id.id])
@@ -119,7 +117,7 @@ class Employee(models.Model):
             result[employee.id] = {'units_to_work': units_to_work, 'uom': uom, 'worked_hours': 0.0}
 
         query = self._get_timesheets_and_working_hours_query()
-        self.env.cr.execute(query, (tuple(employees.ids), date_start, date_stop))
+        self.env.cr.execute(query, (tuple(employee_ids), date_start, date_stop))
 
         for data_row in self.env.cr.dictfetchall():
 

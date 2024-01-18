@@ -69,6 +69,8 @@ export class FsmProductQuantity extends FloatField {
         if (ev.key === 'Enter') {
             ev.target.dispatchEvent(new Event('change'));
             ev.target.dispatchEvent(new Event('blur'));
+        } else if (["ArrowDown", "ArrowUp"].includes(ev.key)) {
+            ev.preventDefault();
         }
     }
 }

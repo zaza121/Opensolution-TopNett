@@ -51,11 +51,6 @@ class res_company(models.Model):
             if record.rule_type in new_rule_type.keys():
                 record.intercompany_transaction_message = record._intercompany_transaction_message_so_and_po(record.rule_type, record.auto_validation, record.warehouse_id)
 
-    @api.model
-    def _find_company_from_partner(self, partner_id):
-        company = self.sudo().search([('partner_id', '=', partner_id)], limit=1)
-        return company or False
-
     @api.onchange('rule_type')
     def onchange_rule_type(self):
         if self.rule_type not in new_rule_type.keys():

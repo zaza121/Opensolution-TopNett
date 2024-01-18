@@ -168,10 +168,10 @@
                                             <field name="expression_ids">
                                                 <record id="account_financial_report_bs_prev_years_earnings_balance_domain" model="account.report.expression">
                                                     <field name="label">balance_domain</field>
-                                                    <field name="engine">domain</field>
-                                                    <field name="formula" eval="['|', ('account_id.code', '=like', '4%'), '|', ('account_id.code', '=like', '5%'), '|', ('account_id.code', '=like', '6%'), '|', ('account_id.code', '=like', '7%'), '|', ('account_id.code', '=like', '8%'), '&amp;', ('account_id.code', '=like', '9%'), ('account_id.code', 'not like', '9999%')]"/>
+                                                    <field name="engine">account_codes</field>
+                                                    <field name="formula">-4 -5 -6 -7 -8 -9\(9999)</field>
                                                     <field name="date_scope">from_beginning</field>
-                                                    <field name="subformula">-sum</field>
+                                                    <field name="subformula" eval="False"/>
                                                 </record>
                                                 <record id="account_financial_report_bs_prev_years_earnings_balance_aggregate" model="account.report.expression">
                                                     <field name="label">balance_aggregate</field>

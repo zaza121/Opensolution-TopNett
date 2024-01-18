@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 PURCHASE_CODE = '0'
 SALE_CODE = '2'
 CREDIT_NOTE_PURCHASE_CODE = '1'
-CREDIT_NOTE_SALE_CODE = '4'
+CREDIT_NOTE_SALE_CODE = '3'
 
 class WinbooksImportWizard(models.TransientModel):
     _name = "account.winbooks.import.wizard"
@@ -318,6 +318,10 @@ class WinbooksImportWizard(models.TransientModel):
                     'code': rec.get('DBKID'),
                     'type': journal_type,
                 }
+                if data['type'] == 'sale':
+                    data['default_account_id'] = self.env['ir.property']._get('property_account_income_categ_id', 'product.category').id
+                if data['type'] == 'purchase':
+                    data['default_account_id'] = self.env['ir.property']._get('property_account_expense_categ_id', 'product.category').id
                 journal = AccountJournal.create(data)
             journal_data[rec.get('DBKID')] = journal.id
         return journal_data
@@ -457,12 +461,20 @@ class WinbooksImportWizard(models.TransientModel):
                         tax_line = self.env['account.tax'].browse(vatcode_data.get(counterpart['VATCODE']))
                     except StopIteration:
                         pass  # We didn't find a tax line that is counterpart with same amount
+                is_vat_account = (
+                    self.env.company.country_id.code == 'BE' and rec.get('ACCOUNTGL')[:3] in ('411', '451')
+                    or self.env.company.country_id.code == 'LU' and rec.get('ACCOUNTGL')[:4] in ('4614', '4216')
+                )
+                is_vat = (
+                    rec.get('DOCORDER') == 'VAT'
+                    or move_data_dict['move_type'] == 'entry' and is_vat_account
+                )
                 repartition_line = is_refund and tax_line.refund_repartition_line_ids or tax_line.invoice_repartition_line_ids
-                repartition_type = 'tax' if rec.get('DOCORDER') == 'VAT' else 'base'
+                repartition_type = 'tax' if is_vat else 'base'
                 line_data[2].update({
-                    'tax_ids': tax_line and rec.get('DOCORDER') != 'VAT' and [(4, tax_line.id)] or [],
+                    'tax_ids': tax_line and not is_vat and [(4, tax_line.id)] or [],
                     'tax_tag_ids': [(6, 0, tax_line.get_tax_tags(is_refund, repartition_type).ids)],
-                    'tax_repartition_line_id': rec.get('DOCORDER') == 'VAT' and repartition_line.filtered(lambda x: x.repartition_type == repartition_type and x.account_id.id == line_data[2]['account_id']).id or False,
+                    'tax_repartition_line_id': is_vat and repartition_line.filtered(lambda x: x.repartition_type == repartition_type and x.account_id.id == line_data[2]['account_id']).id or False,
                 })
             move_line_data_list = [line for line in move_line_data_list if line[2]['account_id'] or line[2]['balance']]  # Remove empty lines
 
@@ -489,6 +501,22 @@ class WinbooksImportWizard(models.TransientModel):
                     'date_maturity': rec.get('DUEDATE', False),
                     'name': _('Counterpart (generated at import from Winbooks)'),
                     'balance': -move_amount_total,
+                    'amount_currency': -move_amount_total,
+                    'price_unit': abs(move_amount_total),
+                }
+                move_line_data_list.append((0, 0, line_data))
+
+            if (
+                move_data_dict['move_type'] != 'entry'
+                and len(move_line_data_list) == 1
+                and move_line_data_list[0][2]['display_type'] == 'payment_term'
+                and move_line_data_list[0][2]['balance'] == 0
+            ):
+                # add a line so that the payment terms are not deleted during sync
+                line_data = {
+                    'account_id': journal_id.default_account_id.id,
+                    'name': _('Counterpart (generated at import from Winbooks)'),
+                    'balance': 0,
                 }
                 move_line_data_list.append((0, 0, line_data))
 
@@ -503,7 +531,7 @@ class WinbooksImportWizard(models.TransientModel):
                 _logger.info("Advancement: %s", len(move_data_list))
 
         _logger.info("Creating moves")
-        move_ids = self.env['account.move'].create(move_data_list)
+        move_ids = self.env['account.move'].with_context(skip_invoice_sync=True).create(move_data_list)
         move_ids._post()
         _logger.info("Creating attachments")
         for move, pdf_files in zip(move_ids, pdf_file_list):
@@ -574,25 +602,29 @@ class WinbooksImportWizard(models.TransientModel):
             analytic_account_data[rec.get('NUMBER')] = analytic_account.id
         return analytic_account_data
 
-    def _import_analytic_account_line(self, dbf_records, analytic_account_data, account_data):
+    def _import_analytic_account_line(self, dbf_records, analytic_account_data, account_data, param_data):
         """Import the analytic lines from the *_ant*.dbf files.
         """
         _logger.info("Import Analytic Account Lines")
         analytic_line_data_list = []
+        analytic_list = None
         for rec in dbf_records:
+            if not analytic_list:
+                # In this winbooks file, there is one column for each analytic plan, named 'ZONANA' + [number of the plan].
+                # These columns contain the analytic account number associated to that plan.
+                # We thus need to create an analytic line for each of these accounts.
+                analytic_list = [k for k in rec.keys() if 'ZONANA' in k]
             data = {
                 'date': rec.get('DATE', False),
                 'name': rec.get('COMMENT'),
-                'amount': abs(rec.get('AMOUNTEUR')),
-                'account_id': analytic_account_data.get(rec.get('ZONANA1')),
+                'amount': -rec.get('AMOUNTEUR'),
                 'general_account_id': account_data.get(rec.get('ACCOUNTGL'))
             }
-            if data.get('account_id'):
-                analytic_line_data_list.append(data)
-            if rec.get('ZONANA2'):
-                new_analytic_line = data.copy()
-                new_analytic_line['account_id'] = analytic_account_data.get(rec.get('ZONANA2'))
-                analytic_line_data_list.append(new_analytic_line)
+            for analytic in analytic_list:
+                if rec.get(analytic):
+                    new_analytic_line = data.copy()
+                    new_analytic_line['account_id'] = analytic_account_data.get(rec.get(analytic))
+                    analytic_line_data_list.append(new_analytic_line)
         self.env['account.analytic.line'].create(analytic_line_data_list)
 
     def _import_vat(self, dbf_records, account_central):
@@ -778,7 +810,7 @@ class WinbooksImportWizard(models.TransientModel):
                 analytic_account_data = self._import_analytic_account(anf_recs)
 
                 ant_recs = get_dbfrecords(lambda file: file.lower().endswith("_ant.dbf"))
-                self._import_analytic_account_line(ant_recs, analytic_account_data, account_data)
+                self._import_analytic_account_line(ant_recs, analytic_account_data, account_data, param_data)
 
                 self._post_import(account_deprecated_ids)
                 _logger.info("Completed")

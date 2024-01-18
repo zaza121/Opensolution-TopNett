@@ -9,7 +9,7 @@ class HolidaysRequest(models.Model):
         res = super(HolidaysRequest, self).action_validate()
         for leave in self:
             if leave.employee_id.company_id.country_id.code == "BE" and \
-                    leave.holiday_status_id.work_entry_type_id.code in self._get_drs_work_entry_type_codes():
+                    leave.sudo().holiday_status_id.work_entry_type_id.code in self._get_drs_work_entry_type_codes():
                 drs_link = "https://www.socialsecurity.be/site_fr/employer/applics/drs/index.htm"
                 drs_link = '<a href="%s" target="_blank">%s</a>' % (drs_link, drs_link)
                 leave.activity_schedule(

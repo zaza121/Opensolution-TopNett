@@ -29,7 +29,7 @@ favoriteMenuRegistry.add(
             // only support act_window with an id for now, but act_window
             // object could potentially be used too (rework backend API to insert
             // views in articles)
-            return env.config.actionId && !env.searchModel._context.knowledge_embedded_view_framework &&
+            return env.config.actionId && !env.searchModel.context.knowledge_embedded_view_framework &&
                 supportedEmbeddedViews.has(env.config.viewType);
         },
     },

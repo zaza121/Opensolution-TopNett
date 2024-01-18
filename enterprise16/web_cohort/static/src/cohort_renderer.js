@@ -20,6 +20,10 @@ export class CohortRenderer extends Component {
     formatPercentage(value) {
         return formatPercentage(value, { digits: [false, 1] });
     }
+
+    getCellTitle(period, measure, count) {
+        return `${this.env._t("Period")}: ${period}\n${measure}: ${count}`;
+    }
 }
 
 CohortRenderer.template = "web_cohort.CohortRenderer";

@@ -149,20 +149,20 @@ result = rules.NET > categories.NET * 0.10''',
         self.ensure_one()
         return 'x_l10n_%s_%s' % (
             self.struct_id.country_id.code.lower() if self.struct_id.country_id.code else 'xx',
-            self.code.lower().replace('.', '_'),
+            self.code.lower().replace('.', '_').replace('-', '_').replace(' ', '_'),
         )
 
     def _generate_payroll_report_fields(self):
         fields_vals_list = []
         for rule in self:
             field_name = rule._get_report_field_name()
-            model = self.env.ref('hr_payroll.model_hr_payroll_report')
+            model = self.env.ref('hr_payroll.model_hr_payroll_report').sudo().read(['id', 'name'])[0]
             if rule.appears_on_payroll_report and field_name not in self.env['hr.payroll.report']:
                 fields_vals_list.append({
                     'name': field_name,
-                    'model': model.name,
-                    'model_id': model.id,
-                    'field_description': rule.name,
+                    'model': model['name'],
+                    'model_id': model['id'],
+                    'field_description': '%s: %s' % (rule.struct_id.country_id.code or 'XX', rule.name),
                     'ttype': 'float',
                 })
         if fields_vals_list:
@@ -178,13 +178,13 @@ result = rules.NET > categories.NET * 0.10''',
         # Avoid to unlink a field if another rule request it (example: ONSSEMPLOYER)
         field_names = [field_name for field_name in field_names if field_name not in all_remaining_field_names]
         model = self.env.ref('hr_payroll.model_hr_payroll_report')
-        fields_to_unlink = self.env['ir.model.fields'].search([
+        fields_to_unlink = self.env['ir.model.fields'].sudo().search([
             ('name', 'in', field_names),
             ('model_id', '=', model.id),
             ('ttype', '=', 'float'),
         ])
         if fields_to_unlink:
-            fields_to_unlink.sudo().unlink()
+            fields_to_unlink.unlink()
             self.env['hr.payroll.report'].init()
 
     @api.model_create_multi

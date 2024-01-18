@@ -73,8 +73,8 @@ class AccountDebitNote(models.TransientModel):
             # this is needed to reverse a credit note: we must include the same items we have in the credit note
             # if we make this with traditional "with_context(internal_type='debit_note').copy(default=default_values)
             # the values will appear negative in the debit note
-            default_values['line_ids'] = [[5, 0]]
-            for line in move.line_ids.filtered(lambda x: x.display_type not in ('line_note', 'line_section')):
+            default_values['line_ids'] = [[5, 0, 0]]
+            for line in move.line_ids.filtered(lambda x: x.display_type in ('product', 'tax', 'payment_term')):
                 default_values['line_ids'].append([0, 0, {
                     'product_id': line.product_id.id,
                     'account_id': line.account_id.id,
@@ -85,9 +85,11 @@ class AccountDebitNote(models.TransientModel):
                     'tax_repartition_line_id': self._get_repartition_line(line).id,
                     'tax_ids': [[6, 0, line.tax_ids.ids]],
                     'tax_tag_ids': self._get_opposite_tax_tag(line),
+                    'discount': line.discount,
+                    'display_type': line.display_type,
                 }, ])
         elif self.l10n_cl_edi_reference_doc_code == '2':
-            default_values['line_ids'] = [[5, 0], [0, 0, {
+            default_values['line_ids'] = [[5, 0, 0], [0, 0, {
                 'account_id': move.journal_id.default_account_id.id,
                 'name': _('Where it says: %s should say: %s') % (
                     self._context.get('default_l10n_cl_original_text'),

@@ -581,11 +581,12 @@ var sale_subscription_dashboard_detailed = sale_subscription_dashboard_abstract.
                     stat_type: this.selected_stat,
                     start_date: dateToServer(this.start_date, 'date'),
                     end_date: dateToServer(this.end_date, 'date'),
+                    points_limit: 2,
                     filters: this.filters,
                     context: session.user_context,
                 },
             }, {shadow: true});
-        this.value = data;
+        this.value = data[data.length-1][1];
     },
 
     update_cp: function () {

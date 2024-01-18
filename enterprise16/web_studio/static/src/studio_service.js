@@ -2,6 +2,7 @@
 import { registry } from "@web/core/registry";
 import { delay } from "web.concurrency";
 import legacyBus from "web_studio.bus";
+import { _t } from "@web/core/l10n/translation";
 import { resetViewCompilerCache } from "@web/views/view_compiler";
 
 import { EventBus } from "@odoo/owl";
@@ -34,8 +35,8 @@ export const SUPPORTED_VIEW_TYPES = [
 ];
 
 export const studioService = {
-    dependencies: ["action", "cookie", "color_scheme", "home_menu", "router", "user"],
-    async start(env, { user, cookie, color_scheme }) {
+    dependencies: ["action", "cookie", "color_scheme", "home_menu", "router", "user", "menu", "notification"],
+    async start(env, { user, cookie, color_scheme, menu, notification }) {
         function _getCurrentAction() {
             const currentController = env.services.action.currentController;
             return currentController ? currentController.action : null;
@@ -79,6 +80,25 @@ export const studioService = {
 
         const bus = new EventBus();
         let inStudio = false;
+
+        const menuSelectMenu = menu.selectMenu;
+        menu.selectMenu = async (argMenu) => {
+            if (!inStudio) {
+                return menuSelectMenu.call(menu, argMenu)
+            } else {
+                try {
+                    argMenu = typeof argMenu === "number" ? menu.getMenu(argMenu) : argMenu;
+                    await open(MODES.EDITOR, argMenu.actionID);
+                    menu.setCurrentMenu(argMenu);
+                } catch (e) {
+                    if (e instanceof NotEditableActionError) {
+                        notification.add(_t("This action is not editable by Studio"), { type: "danger" });
+                        return;
+                    }
+                    throw e;
+                }
+            }
+        }
 
         const state = {
             studioMode: null,
@@ -145,9 +165,7 @@ export const studioService = {
                         viewType = currentController.view.type;
                         controllerState = Object.assign({}, currentController.getLocalState());
                         const { resIds } = currentController.getGlobalState() || {};
-                        if (resIds) {
-                            controllerState.resIds = resIds;
-                        }
+                        controllerState.resIds = resIds || [controllerState.resId];
                     }
                 }
                 if (!_isStudioEditable(action)) {
@@ -231,7 +249,20 @@ export const studioService = {
         async function reload(params = {}) {
             resetViewCompilerCache();
             env.bus.trigger("CLEAR-CACHES");
-            const action = await env.services.action.loadAction(state.editedAction.id);
+            const actionContext = state.editedAction.context;
+            let additionalContext;
+            if (actionContext.active_id) {
+                additionalContext = { active_id: actionContext.active_id };
+            }
+            if (actionContext.active_ids) {
+                additionalContext = Object.assign(additionalContext || {}, {
+                    active_ids: actionContext.active_ids,
+                });
+            }
+            const action = await env.services.action.loadAction(
+                state.editedAction.id,
+                additionalContext
+            );
             setParams({ action, ...params });
         }
 
@@ -283,6 +314,9 @@ export const studioService = {
                 state.x2mEditorPath = [];
             }
             if ("action" in params) {
+                if ((state.editedAction && state.editedAction.id) !== params.action.id) {
+                    state.editedControllerState = null;
+                }
                 state.editedAction = params.action || null;
             }
             if ("editorTab" in params) {

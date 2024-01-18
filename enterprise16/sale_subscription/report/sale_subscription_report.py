@@ -1,5 +1,8 @@
-from odoo import tools
-from odoo import api, fields, models
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+
+from odoo import fields, models
 
 
 class sale_subscription_report(models.Model):
@@ -41,116 +44,132 @@ class sale_subscription_report(models.Model):
     stage_id = fields.Many2one('sale.order.stage', string='Stage', readonly=True)
 
     def _select(self):
-        select_str = """
-             SELECT min(l.id) as id,
-                    sub.name as name,
-                    l.product_id as product_id,
-                    l.product_uom as product_uom,
-                    sub.analytic_account_id as analytic_account_id,
-                    sum(
-                        coalesce(
-                         CASE WHEN t.recurring_invoice THEN l.price_subtotal ELSE 0 END
-                          / nullif(rc.recurring_subtotal, 0), 0
-                        )
-                        * sub.recurring_monthly
-                    ) as recurring_monthly,
-                    sum(
-                        coalesce(
-                         CASE WHEN t.recurring_invoice THEN l.price_subtotal ELSE 0 END
-                          / nullif(rc.recurring_subtotal, 0), 0
-                        )
-                        * sub.recurring_monthly * 12
-                    ) as recurring_yearly,
-                    sum(CASE WHEN t.recurring_invoice THEN l.price_subtotal ELSE 0 END) as recurring_total,
-                    sum(l.product_uom_qty) as quantity,
-                    sub.date_order as date_order,
-                    sub.end_date as end_date,
-                    sub.partner_id as partner_id,
-                    sub.user_id as user_id,
-                    sub.team_id,
-                    sub.company_id as company_id,
-                    sub.to_renew,
-                    sub.stage_category,
-                    sub.health,
-                    sub.stage_id,
-                    sub.sale_order_template_id as template_id,
-                    t.categ_id as categ_id,
-                    sub.pricelist_id as pricelist_id,
-                    p.product_tmpl_id,
-                    partner.country_id as country_id,
-                    partner.commercial_partner_id as commercial_partner_id,
-                    partner.industry_id as industry_id,
-                    sub.close_reason_id as close_reason_id
+        return """
+            MIN(l.id) AS id,
+            sub.name AS name,
+            l.product_id AS product_id,
+            l.product_uom AS product_uom,
+            sub.analytic_account_id AS analytic_account_id,
+            SUM(
+                COALESCE(t.recurring_invoice, false)::INT
+                * COALESCE(l.price_subtotal / NULLIF(rc.recurring_subtotal, 0), 0)
+                * sub.recurring_monthly
+                / COALESCE(NULLIF(sub.currency_rate, 0), 1)
+                * COALESCE(NULLIF(currency_table.rate, 0), 1)
+            ) AS recurring_monthly,
+            SUM(
+                COALESCE(t.recurring_invoice, false)::INT
+                * COALESCE(l.price_subtotal / NULLIF(rc.recurring_subtotal, 0), 0)
+                * sub.recurring_monthly * 12
+                / COALESCE(NULLIF(sub.currency_rate, 0), 1)
+                * COALESCE(NULLIF(currency_table.rate, 0), 1)
+            ) AS recurring_yearly,
+            SUM (
+                COALESCE(t.recurring_invoice, false)::INT
+                * l.price_subtotal
+                / COALESCE(NULLIF(sub.currency_rate, 0), 1)
+                * COALESCE(NULLIF(currency_table.rate, 0), 1)
+            ) AS recurring_total,
+            SUM(l.product_uom_qty) AS quantity,
+            sub.date_order AS date_order,
+            sub.end_date AS end_date,
+            sub.partner_id AS partner_id,
+            sub.user_id AS user_id,
+            sub.team_id,
+            sub.company_id AS company_id,
+            sub.to_renew,
+            sub.stage_category,
+            sub.health,
+            sub.stage_id,
+            sub.sale_order_template_id AS template_id,
+            t.categ_id AS categ_id,
+            sub.pricelist_id AS pricelist_id,
+            p.product_tmpl_id,
+            partner.country_id AS country_id,
+            partner.commercial_partner_id AS commercial_partner_id,
+            partner.industry_id AS industry_id,
+            sub.close_reason_id AS close_reason_id
         """
-        return select_str
 
     def _from(self):
-        from_str = """
-                sale_order_line l
-                      join sale_order sub on (l.order_id=sub.id)
-                      join sale_order_stage stage on sub.stage_id = stage.id
-                      left outer join account_analytic_account a on sub.id=a.id
-                      join res_partner partner on sub.partner_id = partner.id
-                        left join product_product p on (l.product_id=p.id)
-                            left join product_template t on (p.product_tmpl_id=t.id)
-                    left join uom_uom u on (u.id=l.product_uom)
-                    LEFT JOIN ( 
-                        SELECT 
-                            sub.id AS id,
-                            SUM(l.price_subtotal) AS recurring_subtotal
-                        FROM 
-                                 sale_order_line l
-                            JOIN sale_order sub ON (l.order_id=sub.id)
-                            LEFT JOIN product_product p ON (l.product_id=p.id)
-                            LEFT JOIN product_template t ON (p.product_tmpl_id=t.id)
-                        WHERE 
-                                sub.is_subscription
-                            AND t.recurring_invoice
-                        GROUP BY
-                            sub.id
-                    ) rc ON rc.id = sub.id
-        """
-        return from_str
+        return """
+                    sale_order_line l
+            JOIN    sale_order sub ON (l.order_id=sub.id)
+            JOIN    sale_order_stage stage ON sub.stage_id = stage.id
+            JOIN    res_partner partner ON sub.partner_id = partner.id
+            LEFT JOIN product_product p ON (l.product_id=p.id)
+            LEFT JOIN product_template t ON (p.product_tmpl_id=t.id)
+            LEFT JOIN uom_uom u ON (u.id=l.product_uom)
+            LEFT OUTER JOIN account_analytic_account a ON sub.id=a.id
+            LEFT JOIN ( 
+                SELECT 
+                    sub.id AS id,
+                    SUM(l.price_subtotal) AS recurring_subtotal
+                FROM 
+                            sale_order_line l
+                    JOIN    sale_order sub ON (l.order_id=sub.id)
+                    LEFT JOIN product_product p ON (l.product_id=p.id)
+                    LEFT JOIN product_template t ON (p.product_tmpl_id=t.id)
+                WHERE 
+                    sub.is_subscription
+                AND t.recurring_invoice
+                GROUP BY
+                    sub.id
+            ) rc ON rc.id = sub.id
+            JOIN {currency_table} ON currency_table.company_id = sub.company_id
+        """.format(
+            currency_table=self.env['res.currency']._get_query_currency_table(
+                {
+                    'multi_company': True,
+                    'date': {'date_to': fields.Date.today()}
+                }),
+        )
 
     def _where(self):
         return """
-            WHERE sub.is_subscription
+            sub.is_subscription
+            AND sub.recurring_live
         """
 
     def _group_by(self):
-        group_by_str = """
-            GROUP BY l.product_id,
-                    l.product_uom,
-                    t.categ_id,
-                    sub.analytic_account_id,
-                    sub.recurring_monthly,
-                    sub.amount_untaxed,
-                    sub.date_order,
-                    sub.end_date,
-                    sub.partner_id,
-                    sub.user_id,
-                    sub.team_id,
-                    sub.company_id,
-                    sub.to_renew,
-                    sub.stage_category,
-                    sub.health,
-                    sub.stage_id,
-                    sub.name,
-                    sub.sale_order_template_id,
-                    sub.pricelist_id,
-                    p.product_tmpl_id,
-                    partner.country_id,
-                    partner.commercial_partner_id,
-                    partner.industry_id,
-                    sub.close_reason_id
+        return """
+            l.product_id,
+            l.product_uom,
+            t.categ_id,
+            sub.analytic_account_id,
+            sub.recurring_monthly,
+            sub.amount_untaxed,
+            sub.date_order,
+            sub.end_date,
+            sub.partner_id,
+            sub.user_id,
+            sub.team_id,
+            sub.company_id,
+            sub.to_renew,
+            sub.stage_category,
+            sub.health,
+            sub.stage_id,
+            sub.name,
+            sub.sale_order_template_id,
+            sub.pricelist_id,
+            p.product_tmpl_id,
+            partner.country_id,
+            partner.commercial_partner_id,
+            partner.industry_id,
+            sub.close_reason_id
         """
-        return group_by_str
+
+    @property
+    def _table_query(self):
+        return self._query()
+
+    def _query(self):
+        return """
+            SELECT %s
+              FROM %s
+             WHERE %s
+          GROUP BY %s
+        """ % (self._select(), self._from(), self._where(), self._group_by())
 
     def init(self):
-        tools.drop_view_if_exists(self.env.cr, self._table)
-        self.env.cr.execute("""CREATE or REPLACE VIEW %s as (
-            %s
-            FROM ( %s )
-            %s
-            %s
-            )""" % (self._table, self._select(), self._from(), self._where(), self._group_by()))
+        self.env.cr.execute(f'DROP VIEW IF EXISTS {self._table}')

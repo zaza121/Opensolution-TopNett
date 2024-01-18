@@ -4,7 +4,8 @@ import VariantMixin from 'sale.VariantMixin';
 import { RentingMixin } from '@website_sale_renting/js/renting_mixin';
 
 VariantMixin._isDurationWithHours = RentingMixin._isDurationWithHours;
-VariantMixin._getRentingDates = RentingMixin._getRentingDates;
+VariantMixin._getRentingDates = RentingMixin._getRentingDates; // Needed for _getSerializedRentingDates
+VariantMixin._getSerializedRentingDates = RentingMixin._getSerializedRentingDates;
 
 const oldGetOptionalCombinationInfoParam = VariantMixin._getOptionalCombinationInfoParam;
 /**
@@ -17,7 +18,7 @@ VariantMixin._getOptionalCombinationInfoParam = function ($product) {
     if (!this.isWebsite) {
         return result;
     }
-    Object.assign(result, this._getRentingDates());
+    Object.assign(result, this._getSerializedRentingDates($product));
 
     return result;
 };

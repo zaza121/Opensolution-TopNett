@@ -6,18 +6,19 @@
 # Jan Horzinka <jan.horzinka@centrum.cz>, 2022
 # Rastislav Brencic <rastislav.brencic@azet.sk>, 2022
 # karolína schusterová <karolina.schusterova@vdp.sk>, 2022
+# Jiří Podhorecký, 2022
 # Martin Trigaux, 2022
-# trendspotter <jirka.p@volny.cz>, 2022
 # Jaroslav Helemik Nemec <nemec@helemik.cz>, 2022
+# Jakub Smolka, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-23 08:24+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:47+0000\n"
-"Last-Translator: Jaroslav Helemik Nemec <nemec@helemik.cz>, 2022\n"
-"Language-Team: Czech (https://www.transifex.com/odoo/teams/41243/cs/)\n"
+"Last-Translator: Jakub Smolka, 2023\n"
+"Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,6 +26,7 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
 
 #. module: partner_commission
+#. odoo-python
 #: code:addons/partner_commission/models/account_move.py:0
 #, python-format
 msgid ""
@@ -33,6 +35,7 @@ msgid ""
 msgstr ""
 
 #. module: partner_commission
+#. odoo-python
 #: code:addons/partner_commission/models/account_move.py:0
 #, python-format
 msgid " (%d month(s))"
@@ -74,7 +77,6 @@ msgstr ""
 
 #. module: partner_commission
 #: model:ir.model.fields.selection,name:partner_commission.selection__purchase_order__purchase_type__commission
-#: model:product.product,name:partner_commission.product_commission
 #: model:product.template,name:partner_commission.product_commission_product_template
 msgid "Commission"
 msgstr "Komise"
@@ -97,17 +99,17 @@ msgstr ""
 #: model:ir.actions.act_window,name:partner_commission.action_commission_plans
 #: model:ir.ui.menu,name:partner_commission.menu_commission_plans
 msgid "Commission Plans"
-msgstr ""
+msgstr "Schémata provizí"
 
 #. module: partner_commission
 #: model:ir.model,name:partner_commission.model_commission_plan
 msgid "Commission plan"
-msgstr ""
+msgstr "Komisní plán"
 
 #. module: partner_commission
 #: model:ir.model,name:partner_commission.model_commission_rule
 msgid "Commission rules management."
-msgstr ""
+msgstr "Správa komisních pravidel."
 
 #. module: partner_commission
 #: model:ir.model,name:partner_commission.model_res_company
@@ -258,7 +260,6 @@ msgstr "Pouze vlastní dokumenty"
 #. module: partner_commission
 #: model:ir.actions.server,name:partner_commission.cron_confirm_purchase_orders_ir_actions_server
 #: model:ir.cron,cron_name:partner_commission.cron_confirm_purchase_orders
-#: model:ir.cron,name:partner_commission.cron_confirm_purchase_orders
 msgid "Partner Commission: confirm purchase orders"
 msgstr ""
 
@@ -288,6 +289,7 @@ msgid "Product"
 msgstr "Produkt"
 
 #. module: partner_commission
+#. odoo-python
 #: code:addons/partner_commission/models/commission_plan.py:0
 #, python-format
 msgid "Product %s does not belong to category %s"
@@ -382,11 +384,20 @@ msgstr ""
 #. module: partner_commission
 #: model:ir.model,name:partner_commission.model_sale_subscription_report
 msgid "Subscription Analysis"
-msgstr ""
+msgstr "Analýza předplatných"
 
 #. module: partner_commission
 #: model:ir.model.fields,help:partner_commission.field_sale_order__commission_plan_id
 msgid "Takes precedence over the Referrer's commission plan."
+msgstr ""
+
+#. module: partner_commission
+#. odoo-python
+#: code:addons/partner_commission/models/account_move.py:0
+#, python-format
+msgid ""
+"The commission partner order %s must be checked manually (especially refund "
+"lines which can be duplicated)."
 msgstr ""
 
 #. module: partner_commission
@@ -402,12 +413,6 @@ msgid ""
 "The required minimum amount total needed to automatically confirm purchase "
 "orders"
 msgstr ""
-
-#. module: partner_commission
-#: model:product.product,uom_name:partner_commission.product_commission
-#: model:product.template,uom_name:partner_commission.product_commission_product_template
-msgid "Units"
-msgstr "Jednotky"
 
 #. module: partner_commission
 #: model:ir.model.fields.selection,name:partner_commission.selection__res_company__commission_automatic_po_frequency__weekly

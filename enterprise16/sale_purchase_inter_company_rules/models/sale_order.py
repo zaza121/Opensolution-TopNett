@@ -36,7 +36,7 @@ class sale_order(models.Model):
             # find user for creating and validating SO/PO from company
             intercompany_uid = company.intercompany_user_id and company.intercompany_user_id.id or False
             if not intercompany_uid:
-                raise UserError(_('Provide one user for intercompany relation for % ') % company.name)
+                raise UserError(_('Provide one user for intercompany relation for %(name)s '), name=company.name)
             # check intercompany user access rights
             if not self.env['purchase.order'].with_user(intercompany_uid).check_access_rights('create', raise_exception=False):
                 raise UserError(_("Inter company user of company %s doesn't have enough access rights", company.name))

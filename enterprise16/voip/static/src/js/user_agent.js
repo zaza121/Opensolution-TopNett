@@ -204,6 +204,7 @@ const UserAgent = Class.extend(mixins.EventDispatcherMixin, ServicesMixin, {
      * @private
      */
     _answerCall() {
+        this.getParent()._hasIncomingCall = false;
         const inviteSession = this._currentInviteSession;
 
         if (this.voip.mode === 'demo') {
@@ -298,7 +299,18 @@ const UserAgent = Class.extend(mixins.EventDispatcherMixin, ServicesMixin, {
             this.voip.triggerError(_t("Your credentials are not correctly set. Please contact your administrator."));
             return false;
         }
-        return new window.SIP.UserAgent(this._getUaConfig());
+        try {
+            return new window.SIP.UserAgent(this._getUaConfig());
+        } catch (error) {
+            console.error(error);
+            this.voip.triggerError(
+                sprintf(
+                    _t("An error occurred during the instantiation of the User Agent:</br></br> %(error message)s"),
+                    { "error message": error.message }
+                )
+            );
+            return null;
+        }
     },
     /**
      * @private

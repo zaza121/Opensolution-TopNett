@@ -4,16 +4,16 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022
+# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-10 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022\n"
-"Language-Team: Ukrainian (https://www.transifex.com/odoo/teams/41243/uk/)\n"
+"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023\n"
+"Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -29,20 +29,6 @@ msgstr "(якщо застосовно)"
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "(optional)"
 msgstr "(необов'язково)"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-". As part of your rights, you are entitled to a refund from your bank under "
-"the terms and conditions of your agreement with your bank. Your rights are "
-"explained in a statement that you can obtain from your bank. A refund must "
-"be claimed within 8 weeks starting from the date on which your account was "
-"debited."
-msgstr ""
-". Як частина ваших прав, ви маєте право на відшкодування з вашого банку на "
-"умовах, укладених з вашим банком. Ваші права пояснюються у виписці, яку ви "
-"можете отримати у своєму банку. Потрібно вимагати повернення коштів протягом"
-" 8 тижнів, починаючи з дня списання з вашого рахунку."
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -123,6 +109,7 @@ msgid "<strong>Zip: </strong>"
 msgstr "<strong>Індекс: </strong>"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid "A debtor account is required to validate a SEPA Direct Debit mandate."
@@ -175,11 +162,26 @@ msgid "Activity Type Icon"
 msgstr "Іконка типу дії"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #, python-format
 msgid "All the payments in the batch must have the same SDD scheme."
 msgstr "Усі групові платежі повинні мати одну схему SDD."
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
+msgid ""
+"As part of your rights, you are entitled to a refund from your bank under "
+"the terms and conditions of your agreement with your bank. Your rights are "
+"explained in a statement that you can obtain from your bank. A refund must "
+"be claimed within 8 weeks starting from the date on which your account was "
+"debited."
+msgstr ""
+"Як частина ваших прав, ви маєте право на відшкодування з вашого банку на "
+"умовах, укладених з вашим банком. Ваші права пояснюються у виписці, яку ви "
+"можете отримати у своєму банку. Потрібно вимагати повернення коштів протягом"
+" 8 тижнів, починаючи з дня списання з вашого рахунку."
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__message_attachment_count
@@ -471,6 +473,7 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Якщо позначено, деякі повідомлення мають помилку доставки."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/res_company.py:0
 #, python-format
 msgid "Invalid creditor identifier. Make sure you made no typo."
@@ -478,6 +481,7 @@ msgstr ""
 "Недійсний ідентифікатор кредитора. Переконайтеся, що ви не зробили помилки."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/res_company.py:0
 #, python-format
 msgid "Invalid creditor identifier. Wrong format."
@@ -572,7 +576,6 @@ msgstr ""
 #. module: account_sepa_direct_debit
 #: model:ir.actions.server,name:account_sepa_direct_debit.sdd_mandate_state_cron_ir_actions_server
 #: model:ir.cron,cron_name:account_sepa_direct_debit.sdd_mandate_state_cron
-#: model:ir.cron,name:account_sepa_direct_debit.sdd_mandate_state_cron
 msgid "Mandate state updater"
 msgstr "Оновлений стан державного мандату"
 
@@ -646,8 +649,8 @@ msgstr "Кількість рахунків-фактур, сплачених з�
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__message_needaction_counter
-msgid "Number of messages which requires an action"
-msgstr "Кількість повідомлень, які потебують дії"
+msgid "Number of messages requiring action"
+msgstr "Кількість повідомлень, які вимагають дії"
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__message_has_error_counter
@@ -686,6 +689,7 @@ msgid "One-off Mandate"
 msgstr "Одноразовий мандат"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid ""
@@ -696,6 +700,7 @@ msgstr ""
 "Будь ласка, виберіть журнал, пов'язаний з ним."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid ""
@@ -721,6 +726,7 @@ msgid "Originating SEPA mandate"
 msgstr "Оригінальний мандат SEPA"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid "Paid Invoices"
@@ -758,6 +764,7 @@ msgid "Payments generated thanks to this mandate."
 msgstr "Платежі, отримані завдяки цьому мандату."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid "Payments to Collect"
@@ -851,10 +858,16 @@ msgid "SDD creditor identifier"
 msgstr "Ідентифікатор кредитора SDD "
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #, python-format
 msgid "SDD scheme is set on the customer mandate."
 msgstr "Схема SDD втсановлена на манадаті клієнта."
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
+msgid "SEPA Business-to-Business Direct Debit Mandate"
+msgstr "SEPA Business-to-Business Direct Debit Mandate"
 
 #. module: account_sepa_direct_debit
 #: model:account.payment.method,name:account_sepa_direct_debit.payment_method_sdd
@@ -873,6 +886,7 @@ msgid ""
 msgstr "Ідентифікатор кредитора прямого дебету SEPA компанії, наданий банком."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid ""
@@ -909,6 +923,7 @@ msgid "Signature"
 msgstr "Підпис"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #, python-format
 msgid ""
@@ -962,6 +977,7 @@ msgstr ""
 "Деякі банки/бізнеси можуть не приймати B2B SDD."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_payment.py:0
 #, python-format
 msgid ""
@@ -972,12 +988,14 @@ msgstr ""
 "скасований і більше не може бути використаний."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/res_company.py:0
 #, python-format
 msgid "The creditor identifier exceeds the maximum length of 35 characters."
 msgstr "Ідентифікатор кредитора перевищує максимальну довжину у 35 символів."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid ""
@@ -988,6 +1006,7 @@ msgstr ""
 "символів, що накладаються регулюванням SEPA"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
 msgid ""
@@ -1007,6 +1026,7 @@ msgstr ""
 " не вказана, вам доведеться зв’язатися з нами, щоб припинити її використання."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_payment.py:0
 #, python-format
 msgid ""
@@ -1044,6 +1064,20 @@ msgstr ""
 "                         надісланий в інформаційних цілях."
 
 #. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
+msgid ""
+"This mandate is only intended for business-to-business transactions. You are"
+" not entitled to a refund from your bank after your account has been "
+"debited, but you are entitled to request your bank not to debit your account"
+" up until the day on which the payment is due."
+msgstr ""
+"Цей мандат призначений лише для операцій між компаніями. Ви не маєте права "
+"на відшкодування від свого банку після списання коштів з вашого рахунку, але"
+" ви маєте право попросити свій банк не списувати кошти з вашого рахунку до "
+"дня, коли платіж має бути здійснено."
+
+#. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #, python-format
 msgid ""
@@ -1065,6 +1099,7 @@ msgstr ""
 "\"активного\" в \"закритий\" після його першого використання в оплаті.\n"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_payment.py:0
 #, python-format
 msgid ""
@@ -1075,6 +1110,7 @@ msgstr ""
 "компанії, ніж кредитор даного файлу."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_payment.py:0
 #, python-format
 msgid ""
@@ -1085,6 +1121,7 @@ msgstr ""
 "іншого способу оплати, ніж прямий дебет SEPA."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_payment.py:0
 #: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
 #, python-format
@@ -1098,6 +1135,7 @@ msgid "Type of the exception activity on record."
 msgstr "Тип дії виключення на записі."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_invoice.py:0
 #, python-format
 msgid ""
@@ -1130,6 +1168,7 @@ msgid "Website communication history"
 msgstr "Історія бесіди на сайті"
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/res_partner_bank.py:0
 #, python-format
 msgid ""
@@ -1140,6 +1179,7 @@ msgstr ""
 "дебетом SEPA."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #, python-format
 msgid ""
@@ -1150,6 +1190,7 @@ msgstr ""
 "отримання раніше."
 
 #. module: account_sepa_direct_debit
+#. odoo-python
 #: code:addons/account_sepa_direct_debit/models/account_batch_payment.py:0
 #, python-format
 msgid ""

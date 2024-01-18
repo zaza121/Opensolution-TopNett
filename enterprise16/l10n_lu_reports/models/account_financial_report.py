@@ -62,7 +62,7 @@ class LuxembourgishFinancialReportCustomHandler(models.AbstractModel):
         return True
 
     def _validate_xml_content(self, content):
-        self.env['ir.attachment'].l10n_lu_reports_validate_xml_from_attachment(content, 'xsd_lu_eCDF.xsd')
+        self.env['ir.attachment'].l10n_lu_reports_validate_xml_from_attachment(content, 'ecdf')
         return True
 
     def get_financial_reports(self):
@@ -227,7 +227,6 @@ class LuxembourgishFinancialReportCustomHandler(models.AbstractModel):
         """ Creates a new export wizard for this report."""
         new_context = self.env.context.copy()
         new_context['report_generation_options'] = options
-        new_context['report_generation_options']['report_id'] = options['report_id']
         return {
             'type': 'ir.actions.act_window',
             'name': _('Export'),

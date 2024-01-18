@@ -26,6 +26,7 @@
                 <field name="account_depreciation_expense_id" string="Expense Account"/>
                 <field name="method_number" string="Number of Recognitions"/>
                 <field name="method_period" string="Period length"/>
+                <field name="company_id" invisible="1"/>
                 <field name="state" invisible="1"/>
             </tree>
         </field>
@@ -86,8 +87,8 @@
             <xpath expr="//sheet/group/group/field[@name='account_depreciation_expense_id']" position="attributes">
                 <attribute name="string">Expense Account</attribute>
                 <attribute name="help">Account used to recognize the expense</attribute>
-                <attribute name="domain">[('account_type', '=', 'expense')]</attribute>
-                <attribute name="context">{'default_account_type': 'expense', 'account_type_domain': [('account_type', '=', 'expense')]}</attribute>
+                <attribute name="domain">[('account_type', 'in', ('expense', 'expense_direct_cost'))]</attribute>
+                <attribute name="context">{'default_account_type': 'expense', 'account_type_domain': [('account_type', 'in', ('expense', 'expense_direct_cost'))]}</attribute>
             </xpath>
             <xpath expr="//sheet/group/group/field[@name='account_depreciation_id']" position="attributes">
                 <attribute name="string">Deferred Expense Account</attribute>
@@ -98,8 +99,8 @@
             <xpath expr="//notebook/page/group/group//field[@name='account_depreciation_expense_id']" position="attributes">
                 <attribute name="string">Expense Account</attribute>
                 <attribute name="help">Account used to recognize the expense</attribute>
-                <attribute name="domain">[('account_type', '=', 'expense')]</attribute>
-                <attribute name="context">{'default_account_type': 'expense', 'account_type_domain': [('account_type', '=', 'expense')]}</attribute>
+                <attribute name="domain">[('account_type', 'in', ('expense', 'expense_direct_cost'))]</attribute>
+                <attribute name="context">{'default_account_type': 'expense', 'account_type_domain': [('account_type', 'in', ('expense', 'expense_direct_cost'))]}</attribute>
             </xpath>
             <xpath expr="//notebook/page/group/group//field[@name='account_depreciation_id']" position="attributes">
                 <attribute name="string">Deferred Expense Account</attribute>
@@ -113,7 +114,6 @@
             <field name="model_id" position="attributes">
                 <attribute name="string">Deferred Expense Model</attribute>
                 <attribute name="domain">[('state', '=', 'model'), ('account_asset_id.account_type', '=?', account_type), ('asset_type', '=', 'expense')]</attribute>
-                <attribute name="context">{'default_asset_type': 'expense'}</attribute>
             </field>
             <xpath expr="//page[@name='depreciation_board']" position="attributes">
                 <attribute name="string">Expense Board</attribute>

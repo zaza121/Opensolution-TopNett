@@ -1,13 +1,13 @@
 /** @odoo-module **/
 
-import { useService, useAutofocus } from "@web/core/utils/hooks";
-import { session } from '@web/session';
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
-import { HtmlField } from "@web_editor/js/backend/html_field";
-import { useModel } from "@web/views/model";
+import { useAutofocus, useBus, useService } from "@web/core/utils/hooks";
+import { session } from '@web/session';
 import { RelationalModel } from "@web/views/relational_model";
+import { useSetupAction } from "@web/webclient/actions/action_hook";
+import { HtmlField } from "@web_editor/js/backend/html_field";
 
-const { Component, markup, onWillRender, onWillUnmount, useState, useEffect, useExternalListener, useSubEnv } = owl;
+const { Component, markup, onWillRender, onWillStart, useState, useEffect, useSubEnv } = owl;
 
 const NOTE_FIELDS = {
     id: {
@@ -102,14 +102,12 @@ export class PayrollDashboardTodo extends Component {
             isEditingNoteName: false,
         });
         this.autofocusInput = useAutofocus();
-        onWillUnmount(() => {
-            if (this.state.mode === 'edit') {
-                this.saveNote()
-            }
-        });
-        useExternalListener(window, 'beforeunload', (e) => {
-            if (this.state.mode === 'edit') {
-                this.saveNote();
+        useSetupAction({
+            beforeLeave: () => this.saveNote(),
+            beforeUnload: () => {
+                if (this.record && this.record.isDirty) {
+                    return this.record.urgentSave();
+                }
             }
         });
         onWillRender(() => {
@@ -128,18 +126,32 @@ export class PayrollDashboardTodo extends Component {
             }
         }, () => [this.autofocusInput.el]);
 
-        this.model = useModel(RelationalModel, {
+        const modelParams = {
             resModel: "note.note",
             limit: 80,
             fields: NOTE_FIELDS,
             activeFields: NOTE_FIELDS,
             viewMode: "list",
             rootType: "list",
-            defaultOrder: {
-                name: "id",
-                asc: false,
-            },
-        });
+        };
+        const modelServices = Object.fromEntries(
+            RelationalModel.services.map((servName) => {
+                return [servName, useService(servName)];
+            })
+        );
+
+        this.model = new RelationalModel(this.env, modelParams, modelServices);
+        useBus(
+            this.model,
+            "update",
+            () => this.render(true)
+        );
+
+        onWillStart(() => this.model.load({
+            domain: this.props.domain,
+            orderBy: this.props.orderBy,
+        }));
+
         useSubEnv({ model: this.model });
     }
 
@@ -161,7 +173,7 @@ export class PayrollDashboardTodo extends Component {
      * @returns { Number } id of the session user
      */
     get userId() {
-        return session.user_id[0];
+        return session.uid;
     }
 
     /**
@@ -293,8 +305,8 @@ export class PayrollDashboardTodo extends Component {
      * Save the current note, has to be trigger before switching note.
      */
     async saveNote() {
-        if (this.record.isDirty) {
-            await this.record.save();
+        if (this.record && this.record.isDirty) {
+            return this.record.save();
         }
     }
 
@@ -313,6 +325,7 @@ export class PayrollDashboardTodo extends Component {
             value: record.data.memo == "false" && markup("") || record.data.memo,
             isCollaborative: true,
             wysiwygOptions: {},
+            setDirty: () => {},
         };
     }
 }

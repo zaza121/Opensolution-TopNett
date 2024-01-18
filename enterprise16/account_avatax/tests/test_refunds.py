@@ -32,7 +32,7 @@ class TestAccountAvalaraRefunds(TestAccountAvataxCommon):
                 ]
             })
             cls.invoice.button_update_avatax()
-        cls.invoice_captured_arguments = capture.val['json']
+        cls.invoice_captured_arguments = capture.val['json']['createTransactionModel']
         with cls._capture_request(return_value={'lines': [], 'summary': []}) as capture:
             cls.invoice.action_post()
 
@@ -49,11 +49,11 @@ class TestAccountAvalaraRefunds(TestAccountAvataxCommon):
             reversal = move_reversal.reverse_moves()
             reverse_move = cls.env['account.move'].browse(reversal['res_id'])
             reverse_move.button_update_avatax()
-        cls.refund_captured_arguments = capture.val['json']
+        cls.refund_captured_arguments = capture.val['json']['createTransactionModel']
 
         with cls._capture_request(return_value={'lines': [], 'summary': []}) as capture:
             reverse_move.action_post()
-        cls.refund_commit_captured_arguments = capture.val['json']
+        cls.refund_commit_captured_arguments = capture.val['json']['createTransactionModel']
         return res
 
     def test_post_tax_credit_memento(self):

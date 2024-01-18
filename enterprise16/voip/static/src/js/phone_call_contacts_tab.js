@@ -19,6 +19,11 @@ const PhoneCallContactsTab = PhoneCallTab.extend({
         this._super(...arguments);
         this._limit = 13;
         this._searchDomain = undefined;
+        /**
+         * Stores the currently pending RPC (if any).
+         * Useful to abort the RPC if the search terms change.
+         */
+        this._pendingRpc = null;
     },
     /**
      * @override
@@ -31,6 +36,15 @@ const PhoneCallContactsTab = PhoneCallTab.extend({
     // Public
     //--------------------------------------------------------------------------
 
+    /**
+     * @override
+     */
+    _getSelectedPhoneCall() {
+        if (!this._selectedPhoneCallId) {
+            return undefined;
+        }
+        return this._phoneCalls.find((call) => call.partnerId === this._phoneCallDetails.partnerId);
+    },
     /**
      * @override
      * @return {Promise}
@@ -86,7 +100,7 @@ const PhoneCallContactsTab = PhoneCallTab.extend({
      */
     async searchPhoneCall(search) {
         if (search) {
-            var number = cleanNumber(search);
+            const number = cleanNumber(search);
             if (number.length > 2) {
                 this._searchDomain = [
                     '|', '|', '|',
@@ -104,7 +118,13 @@ const PhoneCallContactsTab = PhoneCallTab.extend({
             }
             this._offset = 0;
             this._isLazyLoadFinished = false;
-            const contactsData = await this._rpc({
+            if (this._pendingRpc) {
+                this._pendingRpc.abort();
+            }
+            const [voipIcon] = this.getParent().$('.o_dial_header_icon');
+            voipIcon.classList.remove('oi', 'oi-voip');
+            voipIcon.classList.add('fa', 'fa-spin', 'fa-circle-o-notch');
+            this._pendingRpc = this._rpc({
                 domain: ['|', ['phone', '!=', false], ['mobile', '!=', false]].concat(this._searchDomain),
                 fields: [
                     'email',
@@ -118,11 +138,25 @@ const PhoneCallContactsTab = PhoneCallTab.extend({
                 method: 'search_read',
                 model: 'res.partner',
                 offset: this._offset,
-            });
-            return this._parseContactsData(contactsData);
+            }, { shadow: true });
+            try {
+                const contactsData = await this._pendingRpc;
+                this._parseContactsData(contactsData);
+                this._pendingRpc = null;
+                voipIcon.classList.remove('fa', 'fa-spin', 'fa-circle-o-notch');
+                voipIcon.classList.add('oi', 'oi-voip');
+            } catch (error) {
+                if (error.event && error.event.type === 'abort') {
+                    error.event.preventDefault();
+                } else {
+                    this._pendingRpc = null;
+                    voipIcon.classList.remove('fa', 'fa-spin', 'fa-circle-o-notch');
+                    voipIcon.classList.add('oi', 'oi-voip');
+                }
+            }
         } else {
             this._searchDomain = false;
-            await this.refreshPhonecallsStatus();
+            this.refreshPhonecallsStatus();
         }
     },
 

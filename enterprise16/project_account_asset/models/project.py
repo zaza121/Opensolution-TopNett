@@ -14,7 +14,7 @@ class Project(models.Model):
             self.assets_count = 0
             return
         query = self.env['account.asset']._search([])
-        query.add_where('account_asset.analytic_distribution ?| array[%s]', [str(account_id) for account_id in self.analytic_account_id.ids])
+        query.add_where('account_asset.analytic_distribution ?| %s', [[str(account_id) for account_id in self.analytic_account_id.ids]])
         query.order = None
         query_string, query_param = query.select(
             'jsonb_object_keys(analytic_distribution) as account_id',
@@ -24,7 +24,7 @@ class Project(models.Model):
         self._cr.execute(query_string, query_param)
         data = {int(record.get('account_id')): record.get('asset_count') for record in self._cr.dictfetchall()}
         for project in self:
-            project.assets_count = data.get(self.analytic_account_id.id, 0)
+            project.assets_count = data.get(project.analytic_account_id.id, 0)
 
     # -------------------------------------
     # Actions

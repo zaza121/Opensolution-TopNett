@@ -33,15 +33,15 @@ class ProjectTaskConvertWizard(models.TransientModel):
             [self._get_ticket_values(task) for task in tasks_to_convert]
         )
 
-        subtype_id = self.env['ir.model.data']._xmlid_to_res_id('helpdesk.mt_ticket_new')
         for task, ticket in zip(tasks_to_convert, created_tickets):
             task.active = False
 
-            task.sudo().message_post(body=_("Task converted into ticket %s", f"<a href='#' data-oe-model='helpdesk.ticket' data-oe-id='{ticket.id}'>{ticket.name}</a>"))
-            ticket.sudo().message_post(
-                body=_("Ticket created from task %s", f"<a href='#' data-oe-model='project.task' data-oe-id='{task.id}'>{task.name}</a>"),
-                is_internal=True,
-                subtype_id=subtype_id,
+            task_sudo, ticket_sudo = task.sudo(), ticket.sudo()
+            task_sudo.message_post(body=_("Task converted into ticket %s", ticket_sudo._get_html_link()))
+            ticket_sudo.message_post_with_view(
+                'mail.message_origin_link',
+                values={'self': ticket_sudo, 'origin': task_sudo},
+                subtype_id=self.env['ir.model.data']._xmlid_to_res_id('mail.mt_note'),
             )
 
         if len(created_tickets) == 1:

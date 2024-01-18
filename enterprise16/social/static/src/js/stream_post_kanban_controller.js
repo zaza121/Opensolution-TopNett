@@ -20,6 +20,7 @@ export class StreamPostKanbanController extends KanbanController {
         this.notification = useService('notification');
         this.state = useState({
             refreshRequired: false,
+            disableSyncButton: false,
         });
         this.user = useService('user');
         useSubEnv({
@@ -41,12 +42,15 @@ export class StreamPostKanbanController extends KanbanController {
     }
 
     async _onRefreshStats() {
-        this.model._refreshStreams().then((result) => {
-            this.state.refreshRequired = result;
-        });
-        this.model._refreshAccountsStats().then((result) => {
-            this.accounts = result;
-        });
+        this.state.disableSyncButton = true;
+        Promise.all([
+            this.model._refreshStreams().then((result) => {
+                this.state.refreshRequired = result;
+            }),
+            this.model._refreshAccountsStats().then((result) => {
+                this.accounts = result;
+            }),
+        ]).then(() => this.state.disableSyncButton = false);
     }
 
     _refreshView() {

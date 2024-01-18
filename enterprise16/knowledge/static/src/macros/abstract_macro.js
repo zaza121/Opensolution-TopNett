@@ -131,12 +131,19 @@ export class AbstractMacro {
         };
     }
     /**
-     * Handle the case where an item is hidden in a tab of the form view notebook
+     * Handle the case where an item is hidden in a tab of the form view
+     * notebook. Only pages with the "name" attribute set can be navigated to.
+     * Other pages are ignored (and the fields they contain are too).
+     * @see FormControllerPatch
      */
     searchInXmlDocNotebookTab(targetSelector) {
-        const page = this.targetXmlDoc.querySelector(targetSelector).closest('page');
-        const pageString = page.getAttribute('string');
-        const pageEl = this.getFirstVisibleElement('.o_notebook .nav-link:not(.active)', (el) => el.textContent.includes(pageString));
+        const searchElement = this.targetXmlDoc.querySelector(targetSelector);
+        const page = searchElement ? searchElement.closest('page') : undefined;
+        const pageName = page ? page.getAttribute('name') : undefined;
+        if (!pageName) {
+            return;
+        }
+        const pageEl = this.getFirstVisibleElement(`.o_notebook .nav-link[name=${pageName}]:not(.active)`);
         if (pageEl) {
             pageEl.click();
         }

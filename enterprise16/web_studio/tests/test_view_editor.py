@@ -488,6 +488,39 @@ class TestEditView(TestStudioController):
             for modifier, value in expected_modifiers.items():
                 self.assertEqual(modifiers.get(modifier), value)
 
+    def test_get_view_t_groups(self):
+        """Tests the behavior of <t groups="..."></t> blocks with Studio."""
+        for view_type, arch, expected_modifiers in [
+            # The user has the group of the `<t>` node, the `<t>` node **must remain**, and be visible.
+            ('form', """
+                <form>
+                    <t groups="base.group_user">
+                        <field name="name"/>
+                    </t>
+                </form>
+            """, {}),
+            # The user doesn't have the group of the `<t>` node, the `<t>` node **must remain**, and be invisible.
+            ('form', """
+                <form>
+                    <t groups="base.group_no_one">
+                        <field name="name"/>
+                    </t>
+                </form>
+            """, {'invisible': True}),
+        ]:
+            view = self.env['ir.ui.view'].create({
+                'name': 'foo',
+                'type': view_type,
+                'model': 'res.partner',
+                'arch': arch,
+            })
+            arch = self.env['res.partner'].with_context(studio=True).get_view(view.id)['arch']
+            tree = etree.fromstring(arch)
+            self.assertTrue(tree.xpath('//t'))
+            modifiers = json.loads(tree.xpath('//t')[0].get('modifiers', '{}'))
+            for modifier, value in expected_modifiers.items():
+                self.assertEqual(modifiers.get(modifier), value)
+
     def test_open_users_form_with_studio(self):
         """Tests the res.users form view can be loaded with Studio.
 

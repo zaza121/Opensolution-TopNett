@@ -48,7 +48,7 @@ class SocialStreamPostFacebook(models.Model):
     # ========================================================
 
     def _facebook_comment_delete(self, comment_id):
-        requests.delete(url_join(self.env['social.media']._FACEBOOK_ENDPOINT, "/v10.0/%s" % comment_id),
+        requests.delete(url_join(self.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, comment_id),
             data={'access_token': self.stream_id.account_id.facebook_access_token},
             timeout=5
         )
@@ -58,7 +58,7 @@ class SocialStreamPostFacebook(models.Model):
     def _facebook_comment_fetch(self, next_records_token=False, count=20):
         self.ensure_one()
 
-        comments_endpoint_url = url_join(self.env['social.media']._FACEBOOK_ENDPOINT, "/v10.0/%s/comments" % (self.facebook_post_id))
+        comments_endpoint_url = url_join(self.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, "%s/comments" % self.facebook_post_id)
         params = {
             'fields': self.FACEBOOK_COMMENT_FIELDS,
             'access_token': self.stream_id.account_id.facebook_access_token,
@@ -73,7 +73,7 @@ class SocialStreamPostFacebook(models.Model):
         result_json = result.json()
 
         if not result.ok:
-            _logger.error("An error occurred while fetching the comment: %s" % result.text)
+            _logger.warning("An error occurred while fetching the comment: %s", result.text)
 
             error_message = _('An error occurred.')
 
@@ -139,7 +139,7 @@ class SocialStreamPostFacebook(models.Model):
 
     def _facebook_like(self, object_id, like):
         params = {'access_token': self.stream_id.account_id.facebook_access_token}
-        comments_like_endpoint_url = url_join(self.env['social.media']._FACEBOOK_ENDPOINT, "/v10.0/%s/likes" % (object_id))
+        comments_like_endpoint_url = url_join(self.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, "%s/likes" % (object_id))
         if like:
             requests.post(comments_like_endpoint_url, data=params, timeout=5)
         else:

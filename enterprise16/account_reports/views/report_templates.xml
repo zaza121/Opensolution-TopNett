@@ -30,41 +30,25 @@
     </template>
 
     <template id="filter_info_template">
-        <div class="row print_only" style='margin-top: 20px; margin-bottom: 10px;'>
-            <div class="col-4">
+        <div class="row">
+            <div class="row-options">
                 <t t-if="options.get('date') and options['date'].get('string')"><t t-out="options['date']['string']"/></t>
-                <t t-if="not options.get('multi_company')">
-                    <br/><t t-out="report_company_name"/>
-                </t>
-                <t t-if="options.get('multi_company')">
-                    <br/>Companies:
-                    <t t-set="company_value">All</t>
-                    <t t-foreach="options['multi_company']" t-as="c">
-                        <t t-set="company_value" t-value="''"/>
-                        <t t-out="c.get('name')"/>
-                    </t>
-                    <t t-out="company_value"/>
-                </t>
-            </div>
-            <div class="col-4">
                 <div class="col-12" name="filter_info_template_journals">
                     <t t-if="options.get('journals')">
                         Journals:
-                        <t t-set="journal_value">All</t>
-                        <t t-foreach="options['journals']" t-as="j">
-                            <t t-if="j.get('selected') == True">
-                                <t t-set="journal_value" t-value="''"/>
-                                <t t-out="j.get('code')"/>
-                            </t>
+                        <t t-set="journal_value" t-value="[journal.get('title') for journal in options['journals'] if journal.get('selected')]"/>
+                        <t t-if="len(journal_value) == 0">All</t>
+                        <t t-else="">
+                            <t t-out="', '.join(journal_value)"/>
                         </t>
-                        <t t-out="journal_value"/>
                     </t>
                 </div>
                 <div class="col-12">
                     <t t-if="options.get('analytic_accounts') != None">
-                        Analytic Accounts:
+                        Analytic Filter:
                         <t t-set="analytic_account_value">All</t>
                         <t t-foreach="options['selected_analytic_account_names']" t-as="analytic_account_name">
+                            <t t-if="not analytic_account_name_first">, </t>
                             <t t-set="analytic_account_value" t-value="''"/>
                             <t t-out="analytic_account_name"/>
                         </t>
@@ -76,6 +60,7 @@
                         Analytic Accounts:
                         <t t-set="analytic_account_groupby_value">All</t>
                         <t t-foreach="options['selected_analytic_account_groupby_names']" t-as="analytic_account_groupby_name">
+                            <t t-if="not analytic_account_groupby_name_first">, </t>
                             <t t-set="analytic_account_groupby_value" t-value="''"/>
                             <t t-out="analytic_account_groupby_name"/>
                         </t>
@@ -87,6 +72,7 @@
                         Analytic Plans:
                         <t t-set="analytic_plan_groupby_value">All</t>
                         <t t-foreach="options['selected_analytic_plan_groupby_names']" t-as="analytic_plan_groupby_name">
+                            <t t-if="not analytic_plan_groupby_name_first">, </t>
                             <t t-set="analytic_plan_groupby_value" t-value="''"/>
                             <t t-out="analytic_plan_groupby_name"/>
                         </t>
@@ -98,6 +84,7 @@
                         Partners:
                         <t t-set="res_partner_value">All</t>
                         <t t-foreach="options['selected_partner_ids']" t-as="partner_name">
+                            <t t-if="not partner_name_first">, </t>
                             <t t-set="res_partner_value" t-value="''"/>
                             <t t-out="partner_name"/>
                         </t>
@@ -109,6 +96,7 @@
                         Partner Categories:
                         <t t-set="res_partner_category_value">All</t>
                         <t t-foreach="options['selected_partner_categories']" t-as="partner_category_name">
+                            <t t-if="not partner_category_name_first">, </t>
                             <t t-set="res_partner_category_value" t-value="''"/>
                             <t t-out="partner_category_name"/>
                         </t>
@@ -116,15 +104,8 @@
                     </t>
                 </div>
                 <div class="col-12">
-                    <t t-if="options.get('ir_filters') != None">
-                        Filter:
-                        <t t-set="selected_filter_name">None</t>
-                        <t t-foreach="options['ir_filters']" t-as="current_filter">
-                            <t t-if="current_filter['selected']">
-                                <t t-set="selected_filter_name" t-value="current_filter['name']"/>
-                            </t>
-                        </t>
-                        <t t-out="selected_filter_name"/>
+                    <t t-if="options.get('available_horizontal_groups') != []">
+                        <t t-call="account_reports.template_horizontal_group_display"/>
                     </t>
                 </div>
                 <div class="col-12">
@@ -136,6 +117,11 @@
                 <div class='col-12'>
                     <t t-if="options.get('company_currency')">
                         Company Currency: <t t-out="options['company_currency']['currency_name']"/>
+                    </t>
+                </div>
+                <div class="col-12" name="pdf_options_header">
+                    <t t-if="not options.get('closing_entry')">
+                        <t t-call="account_reports.filter_extra_options_template"/>
                     </t>
                 </div>
             </div>
@@ -192,13 +178,9 @@
         <t t-foreach="lines" t-as="line">
             <t t-set="trclass" t-value="'o_account_reports_default_style'"/>
             <t t-set="domainClass" t-value="'o_account_reports_domain_line_2 account_report_line_name'"/>
-            <t t-if="not line.get('caret_options')">
-                <t t-if="line.get('level') != None">
-                    <t t-set="trclass" t-value="'o_account_searchable_line o_account_reports_level'+str(line['level'])"/>
-                </t>
-            </t>
-            <t t-if="line.get('caret_options')">
-                <t t-if="line.get('level')">
+            <t t-if="line.get('level') != None">
+                <t t-set="trclass" t-value="'o_account_searchable_line o_account_reports_level'+str(line['level'])"/>
+                <t t-if="line.get('caret_options')">
                     <t t-set="domainClass" t-value="'o_account_reports_domain_line_' + str(line['level']) + ' account_report_line_name'"/>
                 </t>
             </t>
@@ -297,7 +279,7 @@
                     <t t-call="account_reports.cell_template_growth_comparison"/>
                 </td>
 
-                <td t-if="options['show_debug_column']" style="width: 1%; text-align: right;">
+                <td t-if="options['show_debug_column']" style="width: 1%;" class="text-end">
                     <t t-call="account_reports.cell_template_debug_column"/>
                 </td>
             </tr>
@@ -314,19 +296,19 @@
                         t-foreach="[{'style': 'width: 100%;', 'colspan': 1}]
                                    + header_level * column_headers_render_data['level_repetitions'][header_level_index]"
                         t-as="header">
-
+                        <t t-set="header_name" t-value="header.get('name')"/>
                         <th t-att-class="o_account_report_column_header"
                             t-att-colspan="header.get('colspan', column_headers_render_data['level_colspan'][header_level_index])"
                             t-att-style="header.get('style', 'text-align: center;')">
-                            <t t-out="header.get('name')"/>
+                            <t t-out="header_name"/>
                         </th>
                     </t>
 
-                    <th t-if="options.get('show_growth_comparison')" class="o_account_report_column_header" colspan="1" style="text-align: center">
+                    <th t-if="options.get('show_growth_comparison') and headers_val_first" class="o_account_report_column_header" colspan="1" style="text-align: center">
                         <span class="fa fa-percent"/>
                     </th>
 
-                    <th t-if="options['show_debug_column']" class="o_account_report_column_header" colspan="1" style="text-align: center">
+                    <th t-if="options['show_debug_column'] and headers_val_first" class="o_account_report_column_header" colspan="1" style="text-align: center">
                         <span class="fa fa-bug"/>
                     </th>
                 </tr>
@@ -367,12 +349,43 @@
                 <div class="alert alert-info text-center mb-0 no_print" t-if="report.filter_show_draft and not options.get('all_entries') and options.get('unposted_in_period')">
                     <span>There are <a action="open_unposted_moves">unposted Journal Entries</a> prior or included in this period</span>
                 </div>
+                <div class="alert alert-warning text-center mb-0 no_print" t-if="options.get('contains_archived_tag')">
+                    <span>Some journal items appear to point to obsolete report lines. <a action="action_open_amls_with_archived_tags">Check them</a> and correct their tax tags if necessary.</span>
+                </div>
             </div>
             <div class="o_account_reports_page o_account_reports_no_print">
-
-                <div class="o_account_reports_header">
-                    <div class="print_only"><h2><t t-out="report_title"></t></h2></div>
-                    <t t-call="account_reports.filter_info_template"/>
+                <div class="o_account_reports_header print_only">
+                    <div>
+                        <h2>
+                            <strong>
+                                <t t-if="report.filter_show_draft and options['all_entries']">[Draft]</t>
+                                <t t-out="report_title"/>
+                            </strong>
+                        </h2>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">
+                            <t t-if="not options.get('multi_company')">
+                                <br/><t t-out="report_company_name"/>
+                            </t>
+                            <t t-else="">
+                                <br/>Companies:
+                                <t t-set="company_value">All</t>
+                                <t t-foreach="options['multi_company']" t-as="c">
+                                    <t t-set="company_value" t-value="''"/>
+                                    <t t-out="c.get('name')"/>
+                                </t>
+                                <t t-out="company_value"/>
+                            </t>
+                            <address class="mb-0" t-field="env.company.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                            <t t-if="env.company.vat">
+                                VAT: <t t-out="env.company.vat"/>
+                            </t>
+                        </div>
+                        <div class="col-4">
+                            <t t-call="account_reports.filter_info_template"/>
+                        </div>
+                    </div>
                 </div>
                 <div class="o_account_reports_summary"/>
                 <div class="table-responsive">
@@ -411,6 +424,17 @@
         </span>
     </template>
 
+    <template id="template_horizontal_group_display">
+        Horizontal Group:
+        <t t-set="filter_name">None</t>
+        <t t-foreach="options['available_horizontal_groups']" t-as="horizontal_group">
+            <t t-if="horizontal_group['id'] == options['selected_horizontal_group_id']">
+                <t t-set="filter_name" t-value="horizontal_group['name']"/>
+            </t>
+        </t>
+        <t t-out="filter_name"/>
+    </template>
+
     <template id="main_template_with_filter_input_accounts" inherit_id="account_reports.main_template"  primary="True">
         <xpath expr="//div[hasclass('print_only')]" position="after">
             <div class="o_reports_filter_input_wrapper no_print">
@@ -440,7 +464,7 @@
 
     <template id="search_template_date_filter">
         <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
-            <span class="fa fa-calendar" title="Dates" role="img" aria-label="Dates"/>
+            <span class="fa fa-fw fa-calendar" title="Dates" role="img" aria-label="Dates"/>
             <t t-if="options['date'].get('string') and options['date'].get('filter') != 'custom'"><t t-out="options['date']['string']"/></t>
             <t t-if="options['date'].get('filter') == 'custom'">
                 <t t-if="options['date']['mode'] == 'single'">Date: <span class="js_format_date"><t t-out="options['date']['date_to']"/></span></t>
@@ -538,21 +562,25 @@
         </div>
     </template>
 
+    <template id="filter_extra_options_template">
+        <span class="fa fa-filter"/> Options:
+        <t t-if="report.filter_show_draft" groups="account.group_account_readonly">
+            <t t-if="options['all_entries']">With Draft Entries</t>
+            <t t-else="">Posted Entries Only</t>
+        </t>
+        <t t-if="report.filter_unreconciled">
+            <t t-if="report.filter_show_draft and options['unreconciled']">, </t>
+            <t t-if="options['unreconciled']">Only Show Unreconciled Entries</t>
+        </t>
+        <t t-if="options.get('include_analytic_without_aml') == True">
+            <t t-if="report.filter_show_draft and options['include_analytic_without_aml']">,</t>
+            Including Analytic Simulations
+        </t>
+    </template>
+
     <template id="search_template_extra_options">
         <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
-            <span class="fa fa-filter"/> Options:
-            <t t-if="report.filter_show_draft" groups="account.group_account_readonly">
-                <t t-if="options['all_entries']">With Draft Entries</t>
-                <t t-if="not options['all_entries']">Posted Entries Only</t>
-            </t>
-            <t t-if="report.filter_unreconciled">
-                <t t-if="report.filter_show_draft and options['unreconciled']">, </t>
-                <t t-if="options['unreconciled']">Only Show Unreconciled Entries</t>
-            </t>
-            <t t-if="options.get('include_analytic_without_aml') == True">
-                <t t-if="report.filter_show_draft and options['include_analytic_without_aml']">,</t>
-                Including Analytic Simulations
-            </t>
+            <t t-call="account_reports.filter_extra_options_template"/>
         </button>
         <div class="dropdown-menu o_filter_menu" role="menu">
             <a role="menuitem" class="dropdown-item js_account_report_bool_filter" t-if="report.filter_show_draft" title="Include unposted entries" data-filter="all_entries" groups="account.group_account_readonly">Include Unposted Entries</a>
@@ -602,8 +630,6 @@
         <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
             <span class="fa fa-user"/>
             Account:
-            <t t-set="names_selected" t-value="[options['account_type'][n]['name'] for n in range(len(options['account_type'])) if options['account_type'][n]['selected']]"/>
-            <t t-set="num_selected" t-value="len(names_selected)"/>
             <t t-out="options['account_display_name']"/>
         </button>
         <div class="dropdown-menu o_filter_menu" role="menu">
@@ -637,14 +663,7 @@
     <template id="search_template_horizontal_groups">
         <button type="button" class="o-no-caret btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
             <span class="fa fa-filter"/>
-            Horizontal Group:
-            <t t-set="filter_name">None</t>
-            <t t-foreach="options['available_horizontal_groups']" t-as="horizontal_group">
-                <t t-if="horizontal_group['id'] == options['selected_horizontal_group_id']">
-                    <t t-set="filter_name" t-value="horizontal_group['name']"/>
-                </t>
-            </t>
-            <t t-out="filter_name"/>
+            <t t-call="account_reports.template_horizontal_group_display"/>
         </button>
         <div class="dropdown-menu o_filter_menu" role="menu">
             <a title="None"
@@ -786,8 +805,8 @@
                 <span>Please note that the report may include some rounding differences towards the bookings.</span>
             </div>
 
-            <div class="alert alert-info text-center mb-0 no_print" t-if="not report._is_generic_report(options) and options.get('available_tax_unit') and options['tax_unit'] == 'company_only'">
-                <span>This company is part of a tax unit. You're currently not viewing the whole unit; to change that, tick the "aggregate" option of "tax unit" menu.</span>
+            <div class="alert alert-info text-center mb-0 no_print" t-if="report.root_report_id and options.get('available_tax_units') and options['tax_unit'] == 'company_only'">
+                <span>This company is part of a tax unit. You're currently not viewing the whole unit. To change that, use the Tax Unit filter.</span>
             </div>
         </xpath>
     </template>

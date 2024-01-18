@@ -15,6 +15,7 @@
                 <field name="state" invisible="1"/>
                 <field name="asset_type" invisible="1"/>
                 <field name="total_depreciation_entries_count" invisible="1"/>
+                <field name="parent_id" invisible="1"/>
                 <header>
                     <button name="validate" states="draft" string="Confirm" type="object" class="oe_highlight"/>
                     <button type="object" name="compute_depreciation_board" string="Compute Depreciation" states="draft"/>
@@ -34,6 +35,7 @@
                         <button class="oe_stat_button" name="open_increase"  type="object" icon="fa-chevron-circle-up" attrs="{'invisible': [('gross_increase_count', '=', 0)]}">
                             <field string="Gross Increase" name="gross_increase_count" widget="statinfo" />
                         </button>
+                        <button class="oe_stat_button" string="Parent Asset" name="open_parent_id" type="object" icon="fa-bars" attrs="{'invisible': [('parent_id', '=', False)]}"/>
                     </div>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
                     <div class="oe_title">
@@ -64,6 +66,7 @@
                                     'asset_current'))]"
                                 context="{
                                     'default_account_type': 'asset_fixed',
+                                    'hide_model_on_account': state == 'model' and not active_id,
                                     'account_type_domain': [('account_type', 'in', (
                                         'asset_fixed',
                                         'asset_non_current'))]}"
@@ -77,6 +80,7 @@
                                     'asset_current'))]"
                                 context="{
                                     'default_account_type': 'asset_non_current',
+                                    'hide_model_on_account': state == 'model' and not active_id,
                                     'account_type_domain': [('account_type', 'in', (
                                         'asset_fixed',
                                         'asset_non_current'))]}"
@@ -89,6 +93,7 @@
                                 context="{
                                     'default_account_type': 'expense_depreciation',
                                     'default_tax_ids': [],
+                                    'hide_model_on_account': state == 'model' and not active_id,
                                     'account_type_domain': [('account_type', 'in', (
                                         'expense_depreciation',
                                         'expense'))]}"
@@ -104,7 +109,17 @@
                                     <field name="original_value" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible': [('state', '=', 'model')], 'readonly': [('state','!=','draft')]}"/>
                                     <field name="gross_increase_value" widget="monetary" attrs="{'invisible': ['|', ('state', '=', 'model'), ('gross_increase_value', '=', 0)]}" options="{'currency_field': 'currency_id'}"/>
                                     <field name="acquisition_date" attrs="{'invisible': [('state', '=', 'model')], 'readonly': ['|', ('state','!=','draft'), ('original_move_line_ids', '!=', [])], 'readonly': [('state', '!=', 'draft')]}"/>
-                                    <field name="model_id" string="Asset Model" domain="[('state', '=', 'model'), ('asset_type', '=', asset_type)]"/>
+                                    <field  name="model_id"
+                                            string="Asset Model"
+                                            domain="[('state', '=', 'model'), ('asset_type', '=', asset_type)]"
+                                            options="{'no_quick_create': True}"
+                                            context="{
+                                                'default_state': 'model',
+                                                'default_asset_type': asset_type,
+                                                'default_account_asset_id': account_asset_id,
+                                                'default_account_depreciation_id': account_depreciation_id,
+                                                'default_account_depreciation_expense_id': account_depreciation_expense_id
+                                            }"/>
                                 </group>
                                 <group string="Current Values" attrs="{'invisible': [('state', '=', 'model')]}" name="current_values">
                                     <field name="salvage_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
@@ -139,10 +154,10 @@
                                             'asset_current'))]"
                                         context="{
                                             'default_account_type': 'asset_fixed',
+                                            'hide_model_on_account': state == 'model' and not active_id,
                                             'account_type_domain': [('account_type', 'in', (
                                                 'asset_fixed',
                                                 'asset_non_current'))]}"
-                                        groups="base.group_no_one"
                                         attrs="{'invisible': ['|', ('display_account_asset_id', '=', False), ('asset_type', '!=', 'purchase')]}"/>
                                     <field
                                         name="account_depreciation_id"
@@ -152,6 +167,7 @@
                                             'asset_current'))]"
                                         context="{
                                             'default_account_type': 'asset_non_current',
+                                            'hide_model_on_account': state == 'model' and not active_id,
                                             'account_type_domain': [('account_type', 'in', (
                                                 'asset_fixed',
                                                 'asset_non_current'))]}"
@@ -163,13 +179,15 @@
                                             'expense'))]"
                                         context="{
                                             'default_account_type': 'expense_depreciation',
+                                            'hide_model_on_account': state == 'model' and not active_id,
                                             'account_type_domain': [('account_type', 'in', (
                                                 'expense_depreciation',
                                                 'expense'))]}"
                                         required="1"/>
                                     <field name="journal_id" required="1"/>
                                     <field name="analytic_distribution" groups="analytic.group_analytic_accounting" widget="analytic_distribution"
-                                           options="{'account_field': 'account_depreciation_expense_id', 'business_domain': 'general'}"/>
+                                           options="{'account_field': 'account_depreciation_expense_id', 'business_domain': 'general'}"
+                                           readonly="0"/>
                                 </group>
                                 <group string="Value at Import" groups="base.group_no_one" attrs="{'invisible': [('state', '=', 'model')]}">
                                     <field name="already_depreciated_amount_import" string="Depreciated Amount"/>
@@ -199,7 +217,8 @@
                                     ('parent_state', '=', 'posted'),
                                     ('company_id', '=', company_id),
                                     ('account_id.account_type', 'in', ('asset_fixed', 'asset_non_current', 'asset_current')),
-                                    ('move_id.move_type', 'in', ('in_invoice', 'in_refund')),
+                                    ('move_id.move_type', 'in', ('in_invoice', 'in_refund', 'in_receipt', 'entry')),
+                                    ('move_id.asset_id', '=', False),
                                 ]"
                                 class="original_move_line_ids_field"
                                 context="{'disable_preview': 1, 'tree_view_ref': 'account_asset.view_move_line_tree_asset'}">
@@ -300,6 +319,7 @@
                 <field name="account_depreciation_expense_id" optional="hide"/>
                 <field name="currency_id" groups="base.group_multi_currency" optional="hide"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="company_id" groups="!base.group_multi_company" invisible="1"/>
                 <field name="state"/>
                 <field name="activity_exception_decoration" widget="activity_exception"/>
             </tree>
@@ -317,6 +337,7 @@
                 <field name="method"/>
                 <field name="method_number" string="Number of Depreciations"/>
                 <field name="method_period" string="Period length"/>
+                <field name="company_id" invisible="1"/>
                 <field name="state" invisible="1"/>
             </tree>
         </field>

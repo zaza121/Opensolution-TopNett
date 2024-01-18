@@ -10,11 +10,6 @@
                     <field name="job_title" />
                     <field name="employee_job_id" />
                     <field name="display_warning_message" invisible="1"/>
-                </group>
-                <div class="alert alert-warning" role="alert" attrs="{'invisible':[('display_warning_message', '=', False)]}">
-                    This job position does not have any contract template related and the advantages will be related to the current employee contract instead of the new job position.
-                </div>
-                <group>
                     <field name="department_id" />
                     <field name="contract_start_date"/>
                     <field name="company_id" invisible="1" />
@@ -24,29 +19,26 @@
                     <field name="applicant_id" invisible="1"/>
                     <field name="currency_id" invisible="1"/>
                     <label for="final_yearly_costs"/>
-                    <div class="o_row">
+                    <div class="o_row o_hr_narrow_field-11">
                         <field name="final_yearly_costs" nolabel="1"/>
                         <span> /year</span>
                     </div>
-                </group>
-                <group>
                     <field name="email_to" invisible="True"/>
-                    <field name="url" widget="CopyClipboardURL"
-                            attrs="{'invisible':[('contract_id', '=', False)]}"/>
-                    <span  class="alert alert-warning"
-                            role="alert" colspan="2"
-                            attrs="{'invisible':[('contract_id', '!=', False)]}">
-                            Before accessing the simulation link, you first need to set up an offer template.
-                    </span>
-                </group>
-                <div class="alert alert-danger text-center"
+                    <label for="url"/>
+                    <div class="o_row">
+                        <field name="url" nolabel="1" widget="CopyClipboardURL" attrs="{'invisible': ['|', ('contract_id', '=', False), ('display_warning_message', '=', True)]}"/>
+                        <span class="text-muted fst-italic" attrs="{'invisible': [('contract_id', '!=', False)]}">An offer template need to be selected to have an offer link.</span>
+                        <span class="text-muted fst-italic" attrs="{'invisible': [('display_warning_message', '=', False)]}">An applicant name needs to be set to have an offer link.</span>
+                    </div>
+                    <div class="alert alert-danger text-center"
                         role="alert" colspan="2"
-                        attrs="{'invisible':[('email_to', '!=', False)]}">
-                        The employee does not have a valid email set in the private information. The Simulation Link won't be able to be completed.
-                </div>
+                        attrs="{'invisible':['|', ('email_to', '!=', False), ('applicant_id', '!=', False)]}">
+                        The employee does not have a valid work email set. The Simulation Link won't be able to be completed.
+                    </div>
+                </group>
                 <footer>
-                    <button name="send_offer" type="object" string="Send" class="oe_highlight" data-hotkey="q"/>
-                    <button string="Cancel" class="btn btn-secondary" special="cancel" data-hotkey="z"/>
+                    <button name="send_offer" type="object" string="Generate" class="oe_highlight" data-hotkey="q" attrs="{'invisible':[('email_to', '=', False), ('applicant_id', '=', False)]}"/>
+                    <button string="Discard" class="btn btn-secondary" special="cancel" data-hotkey="z"/>
                 </footer>
             </form>
         </field>
@@ -58,7 +50,7 @@
         <field name="res_model">generate.simulation.link</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="generate_simulation_link_view_form"/>
-        <field name="context">{'active_id' : active_id, 'active_model': 'hr.contract'}</field>
+        <field name="context">{'active_id' : active_id, 'active_model': 'hr.contract', 'dialog_size':'medium'}</field>
         <field name="target">new</field>
     </record>
 
@@ -68,7 +60,7 @@
         <field name="res_model">generate.simulation.link</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="generate_simulation_link_view_form"/>
-        <field name="context">{'active_id' : active_id, 'active_model': 'hr.applicant'}</field>
+        <field name="context">{'active_id' : active_id, 'active_model': 'hr.applicant', 'dialog_size':'medium'}</field>
         <field name="target">new</field>
     </record>
 

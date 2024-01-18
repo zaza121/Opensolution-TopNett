@@ -96,20 +96,15 @@ class AccountJournal(models.Model):
             It returns the content of the XML file.
         """
         pain_version = self.sepa_pain_version
+        if payments and pain_version == 'pain.001.001.09' and 'sepa_uetr' not in payments[0]:
+            raise UserError(_("Please install SEPA pain.001.001.09 module to generate XML files in the new format."))
         Document = self._get_document(pain_version)
         CstmrCdtTrfInitn = etree.SubElement(Document, "CstmrCdtTrfInitn")
 
         # Create the GrpHdr XML block
         GrpHdr = etree.SubElement(CstmrCdtTrfInitn, "GrpHdr")
         MsgId = etree.SubElement(GrpHdr, "MsgId")
-        val_MsgId = str(int(time.time() * 100))[-10:]
-        if self.company_id.sepa_initiating_party_name:
-            company_name = self.company_id.sepa_initiating_party_name[:15]
-        else:
-            company_name = self.company_id.name[:15]
-        val_MsgId = sanitize_communication(company_name) + val_MsgId
-        val_MsgId = str(random.random()) + val_MsgId
-        val_MsgId = val_MsgId[-30:]
+        val_MsgId = str(time.time())
         MsgId.text = val_MsgId
         CreDtTm = etree.SubElement(GrpHdr, "CreDtTm")
         CreDtTm.text = time.strftime("%Y-%m-%dT%H:%M:%S")
@@ -150,7 +145,11 @@ class AccountJournal(models.Model):
                 PmtInf.append(PmtTpInf)
 
             ReqdExctnDt = etree.SubElement(PmtInf, "ReqdExctnDt")
-            ReqdExctnDt.text = fields.Date.to_string(payment_date)
+            if pain_version == "pain.001.001.09":
+                Dt = etree.SubElement(ReqdExctnDt, "Dt")
+                Dt.text = fields.Date.to_string(payment_date)
+            else:
+                ReqdExctnDt.text = fields.Date.to_string(payment_date)
             PmtInf.append(self._get_Dbtr(pain_version, sct_generic))
             PmtInf.append(self._get_DbtrAcct())
             DbtrAgt = etree.SubElement(PmtInf, "DbtrAgt")
@@ -159,8 +158,9 @@ class AccountJournal(models.Model):
             bic_code = self._get_cleaned_bic_code(bank_account)
             if pain_version in ['pain.001.001.03.se', 'pain.001.001.03.ch.02'] and not bic_code:
                 raise UserError(_("Bank account %s 's bank does not have any BIC number associated. Please define one.") % bank_account.sanitized_acc_number)
+            bic_tag = pain_version == "pain.001.001.09" and "BICFI" or "BIC"
             if bic_code:
-                BIC = etree.SubElement(FinInstnId, "BIC")
+                BIC = etree.SubElement(FinInstnId, bic_tag)
                 BIC.text = bic_code
             else:
                 Othr = etree.SubElement(FinInstnId, "Othr")
@@ -269,7 +269,7 @@ class AccountJournal(models.Model):
     def _get_PmtTpInf(self, sct_generic=False, local_instrument=None):
         PmtTpInf = etree.Element("PmtTpInf")
 
-        if not sct_generic:
+        if not sct_generic and self.sepa_pain_version != 'pain.001.001.03.ch.02':
             SvcLvl = etree.SubElement(PmtTpInf, "SvcLvl")
             Cd = etree.SubElement(SvcLvl, "Cd")
             Cd.text = 'SEPA'
@@ -301,23 +301,44 @@ class AccountJournal(models.Model):
         if not partner_id.country_id.code:
             raise ValidationError(_('Partner %s has no country code defined.', partner_id.name))
         PstlAdr = etree.Element("PstlAdr")
+        address_fields = []
+        if partner_id.street:
+            partner_text = sanitize_communication(partner_id.street[:70])
+            address_fields.append(('StrtNm', partner_text))
+        if partner_id.zip:
+            partner_zip = sanitize_communication(partner_id.zip)
+            address_fields.append(('PstCd', partner_zip))
+        if partner_id.city:
+            partner_city = sanitize_communication(partner_id.city)
+            address_fields.append(('TwnNm', partner_city))
+
+        if self.sepa_pain_version == "pain.001.001.09":
+            for address_field in address_fields:
+                partner_element = etree.SubElement(PstlAdr, address_field[0])
+                partner_element.text = address_field[1]
+
         Ctry = etree.SubElement(PstlAdr, "Ctry")
         Ctry.text = partner_id.country_id.code
-        if partner_id.street:
-            AdrLine = etree.SubElement(PstlAdr, "AdrLine")
-            AdrLine.text = sanitize_communication(partner_id.street[:70])
-        if partner_id.zip and partner_id.city:
-            AdrLine = etree.SubElement(PstlAdr, "AdrLine")
-            AdrLine.text = sanitize_communication((partner_id.zip + " " + partner_id.city)[:70])
+        if self.sepa_pain_version != "pain.001.001.09":
+            # Some banks seem allergic to having the zip in a separate tag, so we do as before
+            if partner_id.street:
+                AdrLine = etree.SubElement(PstlAdr, "AdrLine")
+                AdrLine.text = sanitize_communication(partner_id.street[:70])
+            if partner_id.zip and partner_id.city:
+                AdrLine = etree.SubElement(PstlAdr, "AdrLine")
+                AdrLine.text = sanitize_communication((partner_id.zip + " " + partner_id.city)[:70])
+
         return PstlAdr
 
     def _skip_CdtrAgt(self, partner_bank, pain_version, local_instrument):
         return (
             self.env.context.get('skip_bic', False)
-            # Creditor Agent can be omitted with IBAN and QR-IBAN accounts
-            or pain_version == 'pain.001.001.03.ch.02'
-            and (self._is_qr_iban({'partner_bank_id' : partner_bank.id, 'journal_id' : self.id})
-                 or local_instrument == 'CH01')
+            or not partner_bank.bank_id.bic
+            or (
+                # Creditor Agent can be omitted with IBAN and QR-IBAN accounts
+                pain_version == 'pain.001.001.03.ch.02'
+                and (self._is_qr_iban({'partner_bank_id' : partner_bank.id, 'journal_id' : self.id}) or local_instrument == 'CH01')
+            )
         )
 
     def _get_CdtTrfTxInf(self, PmtInfId, payment, sct_generic, pain_version, local_instrument=None):
@@ -339,7 +360,7 @@ class AccountJournal(models.Model):
             raise ValidationError(_(
                 "The amount of the payment '%(payment)s' is too high. The maximum permitted is %(limit)s.",
                 payment=payment['name'],
-                limit=str(9) * (max_digits - 3) + ".99",
+                limit=str(9) * (max_digits - 2) + ".99",
             ))
         InstdAmt = etree.SubElement(Amt, "InstdAmt", Ccy=val_Ccy)
         InstdAmt.text = val_InstdAmt
@@ -493,7 +514,10 @@ class AccountJournal(models.Model):
         """
         if not bank_account.bank_bic:
             return
-        if not re.match('[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}', bank_account.bank_bic):
+        regex = '[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'
+        if self.sepa_pain_version == 'pain.001.001.09':
+            regex = '[A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}'
+        if not re.match(regex, bank_account.bank_bic):
             raise UserError(_("The BIC code '%s' associated to the bank '%s' of bank account '%s' "
                               "of partner '%s' does not respect the required convention.\n"
                               "It must contain 8 or 11 characters and match the following structure:\n"

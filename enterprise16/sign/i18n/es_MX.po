@@ -5,16 +5,20 @@
 # Translators:
 # Martin Trigaux, 2022
 # Braulio D. López Vázquez <bdl@odoo.com>, 2022
-# Lucia Pacheco <lpo@odoo.com>, 2022
+# Lucia Pacheco, 2022
+# Aimée Mendoza Sánchez, 2023
+# Iran Villalobos López, 2023
+# Wil Odoo, 2023
+# Fernanda Alvarez, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:27+0000\n"
+"POT-Creation-Date: 2023-04-14 06:16+0000\n"
 "PO-Revision-Date: 2022-09-22 05:49+0000\n"
-"Last-Translator: Lucia Pacheco <lpo@odoo.com>, 2022\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Fernanda Alvarez, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -1615,8 +1619,7 @@ msgstr ""
 #: model:ir.model.fields,help:sign.field_sign_request__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
 msgstr ""
-"Si se encuentra seleccionado, algunos mensajes presentan un error de "
-"entrega."
+"Si se encuentra seleccionado, algunos mensajes presentan un error de envío."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_not_enough_credits
@@ -2066,6 +2069,13 @@ msgid "Next signatory is \"%s\""
 msgstr "El siguiente signatario es \"%s\""
 
 #. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+#, python-format
+msgid "No attachment was provided"
+msgstr "No se proporcionó ningún archivo adjunto"
+
+#. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_request_action
 msgid "No document yet"
 msgstr "Todavía no hay documentos."
@@ -2132,7 +2142,7 @@ msgstr "Número de errores"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_request__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Número de mensajes que requieren una acción"
 
 #. module: sign
@@ -2842,6 +2852,8 @@ msgstr "Hash del signatario:"
 
 #. module: sign
 #. odoo-javascript
+#. odoo-python
+#: code:addons/sign/models/sign_request.py:0
 #: code:addons/sign/static/src/js/tours/sign.js:0
 #: code:addons/sign/static/src/xml/sign_backend.xml:0
 #: code:addons/sign/static/src/xml/sign_common.xml:0
@@ -3245,7 +3257,7 @@ msgstr "Propiedades de la plantilla"
 #. module: sign
 #: model:ir.actions.server,name:sign.sign_template_tour_trigger_action
 msgid "Template Sample Contract.pdf trigger"
-msgstr ""
+msgstr "Activador de la plantilla de muestra de contacto.pdf "
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__template_tags
@@ -3488,6 +3500,8 @@ msgstr "La plantilla ya no existe."
 msgid ""
 "The template has more pages than the current file, it can't be applied."
 msgstr ""
+"La plantila tiene más páginas que el documento actual y no puede ser "
+"aplicada."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -3504,9 +3518,28 @@ msgstr ""
 "kg."
 
 #. module: sign
+#: code:addons/sign/wizard/sign_duplicate_template_with_pdf.py:0
+#, python-format
+msgid "The uploaded file is not a valid PDF. Please upload a valid PDF file."
+msgstr "El archivo PDF que subió no es válido, suba otro PDF."
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
 msgid "There are no signatures request."
 msgstr "No hay solicitud de firmas."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request.py:0
+#, python-format
+msgid ""
+"There was an issue downloading your document. Please contact an "
+"administrator."
+msgstr ""
+"Ocurrió un error al descargar su documento, póngase en contacto con un "
+"administrador."
 
 #. module: sign
 #. odoo-javascript
@@ -3671,6 +3704,17 @@ msgid "Unable to send the SMS, please contact the sender of the document."
 msgstr ""
 "No se puede enviar el SMS, póngase en contacto con el remitente del "
 "documento."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/controllers/main.py:0
+#, python-format
+msgid ""
+"Unable to sign the document due to missing required data. Please contact an "
+"administrator."
+msgstr ""
+"No es posible firmar el documento, hacen falta datos necesarios. Póngase en "
+"contacto con un administrador."
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_role__auth_method__sms
@@ -3954,6 +3998,17 @@ msgstr ""
 #, python-format
 msgid "You cannot reassign this signatory"
 msgstr "No puede cambiar de signatario"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+#, python-format
+msgid ""
+"You cannot share this document by link, because it has fields to be filled "
+"by different roles. Use Send button instead."
+msgstr ""
+"No puede compartir este documento mediante un enlace, ya que tiene campos "
+"que deben llenarse por distintos roles, utilice el botón Enviar."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_iap_credits_banner

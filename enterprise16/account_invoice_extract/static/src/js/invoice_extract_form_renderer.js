@@ -251,7 +251,11 @@ export class InvoiceExtractFormRenderer extends AccountMoveFormRenderer {
                     changes = { partner_id: [newFieldValue] };
                 }
                 else {
-                    this.openCreatePartnerDialog({default_name: boxText});
+                    const context = {'default_name': boxText};
+                    if (this.selectedBoxes['VAT_Number']) {
+                        context['default_vat'] = this.selectedBoxes['VAT_Number'].text;
+                    }
+                    this.openCreatePartnerDialog(context);
                     return;
                 }
                 break;
@@ -260,7 +264,11 @@ export class InvoiceExtractFormRenderer extends AccountMoveFormRenderer {
                     changes = { partner_id: [newFieldValue] };
                 }
                 else {
-                    this.openCreatePartnerDialog({default_vat: boxText});
+                    const context = {'default_vat': boxText};
+                    if (this.selectedBoxes['supplier']) {
+                        context['default_name'] = this.selectedBoxes['supplier'].text;
+                    }
+                    this.openCreatePartnerDialog(context);
                     return;
                 }
                 break;

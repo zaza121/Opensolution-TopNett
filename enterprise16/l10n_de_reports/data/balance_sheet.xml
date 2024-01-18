@@ -568,7 +568,7 @@
                     <record id="skr_liabilities_total_balance" model="account.report.expression">
                         <field name="label">balance</field>
                         <field name="engine">aggregation</field>
-                        <field name="formula">SKR_BS_LIABILITIES_A.balance + SKR_BS_LIABILITIES_B.balance + SKR_BS_LIABILITIES_C.balance + SKR_BS_LIABILITIES_D.balance + SKR_BS_LIABILITIES_E.balance + SKR_BS_LIABILITIES_F.balance</field>
+                        <field name="formula">SKR_BS_LIABILITIES_A.balance + SKR_BS_LIABILITIES_2023_B.balance + SKR_BS_LIABILITIES_2023_C.balance + SKR_BS_LIABILITIES_2023_D.balance + SKR_BS_LIABILITIES_2023_E.balance</field>
                         <field name="date_scope">normal</field>
                     </record>
                 </field>
@@ -721,40 +721,84 @@
                             </record>
                         </field>
                     </record>
-                    <record id="skr_bs_liabilities_b" model="account.report.line">
-                        <field name="name">B. Sonderposten mit Rücklageanteil</field>
-                        <field name="code">SKR_BS_LIABILITIES_B</field>
-                        <field name="groupby">account_id</field>
-                        <field name="foldable" eval="True"/>
+                    <record id="skr_bs_liabilities_2023_b" model="account.report.line">
+                        <field name="name">B. Rückstellungen</field>
+                        <field name="code">SKR_BS_LIABILITIES_2023_B</field>
                         <field name="expression_ids">
-                            <record id="skr_bs_liabilities_b_balance" model="account.report.expression">
-                                <field name="label">balance</field>
-                                <field name="engine">domain</field>
-                                <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_B')])]"/>
-                                <field name="date_scope">normal</field>
-                                <field name="subformula">-sum</field>
-                            </record>
-                        </field>
-                    </record>
-                    <record id="skr_bs_liabilities_c" model="account.report.line">
-                        <field name="name">C. Rückstellungen</field>
-                        <field name="code">SKR_BS_LIABILITIES_C</field>
-                        <field name="expression_ids">
-                            <record id="skr_bs_liabilities_c_balance" model="account.report.expression">
+                            <record id="skr_bs_liabilities_2023_b_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">SKR_BS_LIABILITIES_C1.balance + SKR_BS_LIABILITIES_C2.balance + SKR_BS_LIABILITIES_C3.balance</field>
+                                <field name="formula">SKR_BS_LIABILITIES_2023_B1.balance + SKR_BS_LIABILITIES_2023_B2.balance + SKR_BS_LIABILITIES_2023_B3.balance</field>
                                 <field name="date_scope">normal</field>
                             </record>
                         </field>
                         <field name="children_ids">
-                            <record id="skr_bs_liabilities_c_1" model="account.report.line">
+                            <record id="skr_bs_liabilities_2023_b_1" model="account.report.line">
                                 <field name="name">1. Rückstellungen für Pensionen und ähnliche Verpflichtungen</field>
-                                <field name="code">SKR_BS_LIABILITIES_C1</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_B1</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_c_1_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_b_1_balance" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_B_1')])]"/>
+                                        <field name="date_scope">normal</field>
+                                        <field name="subformula">-sum</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="skr_bs_liabilities_2023_b_2" model="account.report.line">
+                                <field name="name">2. Steuerrückstellungen</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_B2</field>
+                                <field name="groupby">account_id</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="skr_bs_liabilities_2023_b_2_balance" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_B_2')])]"/>
+                                        <field name="date_scope">normal</field>
+                                        <field name="subformula">-sum</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="skr_bs_liabilities_2023_b_3" model="account.report.line">
+                                <field name="name">3. Sonstige Rückstellungen</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_B3</field>
+                                <field name="groupby">account_id</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="skr_bs_liabilities_2023_b_3_balance" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_B_3')])]"/>
+                                        <field name="date_scope">normal</field>
+                                        <field name="subformula">-sum</field>
+                                    </record>
+                                </field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="skr_bs_liabilities_2023_c" model="account.report.line">
+                        <field name="name">C. Verbindlichkeiten</field>
+                        <field name="code">SKR_BS_LIABILITIES_2023_C</field>
+                        <field name="expression_ids">
+                            <record id="skr_bs_liabilities_2023_c_balance" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">SKR_BS_LIABILITIES_2023_C1.balance + SKR_BS_LIABILITIES_2023_C2.balance + SKR_BS_LIABILITIES_2023_C3.balance + SKR_BS_LIABILITIES_2023_C4.balance + SKR_BS_LIABILITIES_2023_C5.balance + SKR_BS_LIABILITIES_2023_C6.balance + SKR_BS_LIABILITIES_2023_C7.balance + SKR_BS_LIABILITIES_2023_C8.balance</field>
+                                <field name="date_scope">normal</field>
+                            </record>
+                        </field>
+                        <field name="children_ids">
+                            <record id="skr_bs_liabilities_2023_c_1" model="account.report.line">
+                                <field name="name">1. Anleihen, davon konvertibeln</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C1</field>
+                                <field name="groupby">account_id</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="skr_bs_liabilities_2023_c_1_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
                                         <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_1')])]"/>
@@ -763,13 +807,13 @@
                                     </record>
                                 </field>
                             </record>
-                            <record id="skr_bs_liabilities_c_2" model="account.report.line">
-                                <field name="name">2. Steuerrückstellungen</field>
-                                <field name="code">SKR_BS_LIABILITIES_C2</field>
+                            <record id="skr_bs_liabilities_2023_c_2" model="account.report.line">
+                                <field name="name">2. Verbindlichkeiten gegenüber Kreditinstituten</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C2</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_c_2_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_2_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
                                         <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_2')])]"/>
@@ -778,13 +822,13 @@
                                     </record>
                                 </field>
                             </record>
-                            <record id="skr_bs_liabilities_c_3" model="account.report.line">
-                                <field name="name">3. Sonstige Rückstellungen</field>
-                                <field name="code">SKR_BS_LIABILITIES_C3</field>
+                            <record id="skr_bs_liabilities_2023_c_3" model="account.report.line">
+                                <field name="name">3. Erhaltene Anzahlungen auf Bestellungen</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C3</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_c_3_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_3_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
                                         <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_3')])]"/>
@@ -793,135 +837,76 @@
                                     </record>
                                 </field>
                             </record>
-                        </field>
-                    </record>
-                    <record id="skr_bs_liabilities_d" model="account.report.line">
-                        <field name="name">D. Verbindlichkeiten</field>
-                        <field name="code">SKR_BS_LIABILITIES_D</field>
-                        <field name="expression_ids">
-                            <record id="skr_bs_liabilities_d_balance" model="account.report.expression">
-                                <field name="label">balance</field>
-                                <field name="engine">aggregation</field>
-                                <field name="formula">SKR_BS_LIABILITIES_D1.balance + SKR_BS_LIABILITIES_D2.balance + SKR_BS_LIABILITIES_D3.balance + SKR_BS_LIABILITIES_D4.balance + SKR_BS_LIABILITIES_D5.balance + SKR_BS_LIABILITIES_D6.balance + SKR_BS_LIABILITIES_D7.balance + SKR_BS_LIABILITIES_D8.balance</field>
-                                <field name="date_scope">normal</field>
-                            </record>
-                        </field>
-                        <field name="children_ids">
-                            <record id="skr_bs_liabilities_d_1" model="account.report.line">
-                                <field name="name">1. Anleihen, davon konvertibeln</field>
-                                <field name="code">SKR_BS_LIABILITIES_D1</field>
-                                <field name="groupby">account_id</field>
-                                <field name="foldable" eval="True"/>
-                                <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_1_balance" model="account.report.expression">
-                                        <field name="label">balance</field>
-                                        <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_1')])]"/>
-                                        <field name="date_scope">normal</field>
-                                        <field name="subformula">-sum</field>
-                                    </record>
-                                </field>
-                            </record>
-                            <record id="skr_bs_liabilities_d_2" model="account.report.line">
-                                <field name="name">2. Verbindlichkeiten gegenüber Kreditinstituten</field>
-                                <field name="code">SKR_BS_LIABILITIES_D2</field>
-                                <field name="groupby">account_id</field>
-                                <field name="foldable" eval="True"/>
-                                <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_2_balance" model="account.report.expression">
-                                        <field name="label">balance</field>
-                                        <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_2')])]"/>
-                                        <field name="date_scope">normal</field>
-                                        <field name="subformula">-sum</field>
-                                    </record>
-                                </field>
-                            </record>
-                            <record id="skr_bs_liabilities_d_3" model="account.report.line">
-                                <field name="name">3. Erhaltene Anzahlungen auf Bestellungen</field>
-                                <field name="code">SKR_BS_LIABILITIES_D3</field>
-                                <field name="groupby">account_id</field>
-                                <field name="foldable" eval="True"/>
-                                <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_3_balance" model="account.report.expression">
-                                        <field name="label">balance</field>
-                                        <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_3')])]"/>
-                                        <field name="date_scope">normal</field>
-                                        <field name="subformula">-sum</field>
-                                    </record>
-                                </field>
-                            </record>
-                            <record id="skr_bs_liabilities_d_4" model="account.report.line">
+                            <record id="skr_bs_liabilities_2023_c_4" model="account.report.line">
                                 <field name="name">4. Verbindlichkeiten aus Lieferungen und Leistungen</field>
-                                <field name="code">SKR_BS_LIABILITIES_D4</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C4</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_4_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_4_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_4')])]"/>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_4')])]"/>
                                         <field name="date_scope">normal</field>
                                         <field name="subformula">-sum</field>
                                     </record>
                                 </field>
                             </record>
-                            <record id="skr_bs_liabilities_d_5" model="account.report.line">
+                            <record id="skr_bs_liabilities_2023_c_5" model="account.report.line">
                                 <field name="name">5. Verbindlichkeiten aus der Annahme gezogener Wechsel und der Ausstellung eigener Wechsel</field>
-                                <field name="code">SKR_BS_LIABILITIES_D5</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C5</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_5_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_5_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_5')])]"/>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_5')])]"/>
                                         <field name="date_scope">normal</field>
                                         <field name="subformula">-sum</field>
                                     </record>
                                 </field>
                             </record>
-                            <record id="skr_bs_liabilities_d_6" model="account.report.line">
+                            <record id="skr_bs_liabilities_2023_c_6" model="account.report.line">
                                 <field name="name">6. Verbindlichkeiten gegenüber verbundenen Unternehmen</field>
-                                <field name="code">SKR_BS_LIABILITIES_D6</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C6</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_6_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_6_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_6')])]"/>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_6')])]"/>
                                         <field name="date_scope">normal</field>
                                         <field name="subformula">-sum</field>
                                     </record>
                                 </field>
                             </record>
-                            <record id="skr_bs_liabilities_d_7" model="account.report.line">
+                            <record id="skr_bs_liabilities_2023_c_7" model="account.report.line">
                                 <field name="name">7. Verbindlichkeiten gegenüber Unternehmen, mit denen ein Beteiligungsverhältnis besteht</field>
-                                <field name="code">SKR_BS_LIABILITIES_D7</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C7</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_7_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_7_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_7')])]"/>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_7')])]"/>
                                         <field name="date_scope">normal</field>
                                         <field name="subformula">-sum</field>
                                     </record>
                                 </field>
                             </record>
-                            <record id="skr_bs_liabilities_d_8" model="account.report.line">
+                            <record id="skr_bs_liabilities_2023_c_8" model="account.report.line">
                                 <field name="name">8. Sonstige Verbindlichkeiten, davon aus Steuern, davon im Rahmen der sozialen Sicherheit</field>
-                                <field name="code">SKR_BS_LIABILITIES_D8</field>
+                                <field name="code">SKR_BS_LIABILITIES_2023_C8</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="expression_ids">
-                                    <record id="skr_bs_liabilities_d_8_balance" model="account.report.expression">
+                                    <record id="skr_bs_liabilities_2023_c_8_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D_8')])]"/>
+                                        <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_C_8')])]"/>
                                         <field name="date_scope">normal</field>
                                         <field name="subformula">-sum</field>
                                     </record>
@@ -929,31 +914,31 @@
                             </record>
                         </field>
                     </record>
-                    <record id="skr_bs_liabilities_e" model="account.report.line">
-                        <field name="name">E. Rechnungsabgrenzungsposten</field>
-                        <field name="code">SKR_BS_LIABILITIES_E</field>
+                    <record id="skr_bs_liabilities_2023_d" model="account.report.line">
+                        <field name="name">D. Rechnungsabgrenzungsposten</field>
+                        <field name="code">SKR_BS_LIABILITIES_2023_D</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
                         <field name="expression_ids">
-                            <record id="skr_bs_liabilities_e_balance" model="account.report.expression">
+                            <record id="skr_bs_liabilities_2023_d_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">domain</field>
-                                <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_E')])]"/>
+                                <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_D')])]"/>
                                 <field name="date_scope">normal</field>
                                 <field name="subformula">-sum</field>
                             </record>
                         </field>
                     </record>
-                    <record id="skr_bs_liabilities_f" model="account.report.line">
-                        <field name="name">F. Passive latente Steuern</field>
-                        <field name="code">SKR_BS_LIABILITIES_F</field>
+                    <record id="skr_bs_liabilities_2023_e" model="account.report.line">
+                        <field name="name">E. Passive latente Steuern</field>
+                        <field name="code">SKR_BS_LIABILITIES_2023_E</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
                         <field name="expression_ids">
-                            <record id="skr_bs_liabilities_f_balance" model="account.report.expression">
+                            <record id="skr_bs_liabilities_2023_e_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">domain</field>
-                                <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_F')])]"/>
+                                <field name="formula" eval="[('account_id.tag_ids', 'in', [ref('l10n_de.tag_de_liabilities_bs_E')])]"/>
                                 <field name="date_scope">normal</field>
                                 <field name="subformula">-sum</field>
                             </record>

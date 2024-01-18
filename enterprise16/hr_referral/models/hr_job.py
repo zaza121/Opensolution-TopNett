@@ -24,7 +24,8 @@ class Job(models.Model):
         if self.env.user.utm_source_id:
             grouped_data = self.env['link.tracker']._read_group([
                 ('source_id', '=', self.env.user.utm_source_id.id),
-                ('campaign_id', 'in', self.mapped('utm_campaign_id').ids)
+                ('campaign_id', 'in', self.mapped('utm_campaign_id').ids),
+                ('medium_id', '!=', False),
                 ], ['count', 'campaign_id', 'medium_id'], ['campaign_id', 'medium_id'], lazy=False)
         else:
             grouped_data = {}

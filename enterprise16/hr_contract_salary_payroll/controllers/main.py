@@ -14,6 +14,7 @@ class HrContractSalary(main.HrContractSalary):
     def _get_new_contract_values(self, contract, employee, advantages):
         contract_vals = super()._get_new_contract_values(contract, employee, advantages)
         contract_vals['work_entry_source'] = contract.work_entry_source
+        contract_vals['standard_calendar_id'] = contract.standard_calendar_id.id
         if contract.wage_type == 'hourly':
             contract_vals['hourly_wage'] = contract.hourly_wage
         return contract_vals
@@ -60,7 +61,9 @@ class HrContractSalary(main.HrContractSalary):
             line.name,
             abs(round(line.total, 2)),
             line.code,
-            'no_sign' if line.code in ['BASIC', 'SALARY', 'GROSS', 'NET'] else float_compare(line.total, 0, precision_digits=2)
+            'no_sign' if line.code in ['BASIC', 'SALARY', 'GROSS', 'NET'] else float_compare(line.total, 0, precision_digits=2),
+            new_contract.company_id.currency_id.position,
+            new_contract.company_id.currency_id.symbol
         ) for line in payslip.line_ids.filtered(lambda l: l.appears_on_payslip)]
         # Allowed company ids might not be filled or request.env.user.company_ids might be wrong
         # since we are in route context, force the company to make sure we load everything
@@ -90,7 +93,7 @@ class HrContractSalary(main.HrContractSalary):
             resume_explanation = False
             if resume_line.code == 'GROSS' and new_contract.wage_type == 'hourly':
                 resume_explanation = _('This is the gross calculated for the current month with a total of %s hours.', work_days_data.get('hours', 0))
-            result['resume_lines_mapped'][resume_line.category_id.name][resume_line.code] = (resume_line.name, value, new_contract.company_id.currency_id.symbol, resume_explanation)
+            result['resume_lines_mapped'][resume_line.category_id.name][resume_line.code] = (resume_line.name, value, new_contract.company_id.currency_id.symbol, resume_explanation, new_contract.company_id.currency_id.position)
             if resume_line.impacts_monthly_total:
                 monthly_total += value / 12.0 if resume_line.category_id.periodicity == 'yearly' else value
 

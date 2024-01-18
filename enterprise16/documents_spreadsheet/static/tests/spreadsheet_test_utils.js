@@ -116,3 +116,14 @@ export async function createSpreadsheetTemplate(params = {}) {
     }
     return createSpreadsheetAction("action_open_template", params);
 }
+
+/**
+ * Mock the action service of the env, and add the mockDoAction function to it.
+ */
+export function mockActionService(env, mockDoAction) {
+    patchWithCleanup(env.services.action, {
+        doAction(action) {
+            mockDoAction(action);
+        },
+    });
+}

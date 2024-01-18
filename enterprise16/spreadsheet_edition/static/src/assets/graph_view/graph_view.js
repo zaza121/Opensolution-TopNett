@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { registry } from "@web/core/registry";
 import { GraphController } from "@web/views/graph/graph_controller";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
@@ -17,7 +18,11 @@ export const patchGraphSpreadsheet = {
         this.router = useService("router");
         this.menu = useService("menu");
         onWillStart(async () => {
-            this.canInsertChart = await this.userService.hasGroup("base.group_system");
+            const insertionGroups = registry.category("spreadsheet_view_insertion_groups").getAll();
+            const userGroups = await Promise.all(
+                insertionGroups.map((group) => this.userService.hasGroup(group))
+            );
+            this.canInsertChart = userGroups.some((group) => group);
         });
     },
 
@@ -34,7 +39,12 @@ export const patchGraphSpreadsheet = {
                 metaData: this.model.metaData,
                 searchParams: {
                     ...this.model.searchParams,
-                    context: omit(this.model.searchParams.context, ...Object.keys(this.userService.context)),
+                    context: omit(
+                        this.model.searchParams.context,
+                        ...Object.keys(this.userService.context),
+                        "graph_measure",
+                        "graph_order"
+                    ),
                 },
                 menuXMLId,
             },

@@ -5,7 +5,7 @@
 # Translators:
 # marcescu, 2022
 # Arnau Ros, 2022
-# Josep Anton Belchi, 2022
+# jabelchi, 2022
 # ericrolo, 2022
 # Mohamed Sallam, 2022
 # Marc Tormo i Bochaca <mtbochaca@gmail.com>, 2022
@@ -17,16 +17,17 @@
 # RGB Consulting <odoo@rgbconsulting.com>, 2022
 # Óscar Fonseca <tecnico@extreme-micro.com>, 2022
 # Ivan Espinola, 2022
-# Farouk Jabiri, 2022
+# jabiri7, 2022
+# martioodo hola, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-04 09:41+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Farouk Jabiri, 2022\n"
-"Language-Team: Catalan (https://www.transifex.com/odoo/teams/41243/ca/)\n"
+"Last-Translator: martioodo hola, 2023\n"
+"Language-Team: Catalan (https://app.transifex.com/odoo/teams/41243/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -39,6 +40,15 @@ msgid "- Feedback requested by -"
 msgstr "- Comentari sol·licitat per -"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.survey,description:hr_appraisal_survey.appraisal_360_feedback_template
+msgid ""
+"360 Degree Feedback is a system or process in which managers will ask feedback from the people who work around the employee.\n"
+"            This typically includes the employee's manager, peers, and direct reports."
+msgstr ""
+"La Retroalimentació de 360 Graus és un sistema o procés en el qual els gerents demanaran comentaris a les persones que treballen al voltant de l'empleat.\n"
+"             Això normalment inclou el gestor de l'empleat, companys i informes directes."
+
+#. module: hr_appraisal_survey
 #: model:survey.survey,title:hr_appraisal_survey.appraisal_360_feedback_template
 msgid "360 Feedback"
 msgstr "360 Comentaris"
@@ -49,13 +59,13 @@ msgid ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
 "                        Dear <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t>,\n"
-"                        <br/><br/>\n"
+"                        <br><br>\n"
 "                        An appraisal feedback was requested about <t t-out=\"object.appraisal_id.employee_id.name or 'this'\">this</t>.\n"
-"                        <br/>\n"
+"                        <br>\n"
 "                        Please take time to fill the survey.\n"
-"                        <br/><br/>\n"
+"                        <br><br>\n"
 "                        Thank you!\n"
-"                        <br/><br/>\n"
+"                        <br><br>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px;\">\n"
 "                                <a t-att-href=\"ctx.get('url')\" style=\"background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
@@ -82,149 +92,11 @@ msgid ""
 "                </div>\n"
 "            "
 msgstr ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                        Benvolguts <t t-out=\"object.partnerid.name or ''\">Brandon Freeman</t>,\n"
-"                        <br/><br/>\n"
-"                        Es va demanar una opinió d'avaluació sobre <t t-out=\"object.appraisalid.employeeid.name or 'this'\">aquest</t>.\n"
-"                        <br/>\n"
-"                        Preneu-vos temps per omplir l'enquesta.\n"
-"                        <br/><br/>\n"
-"                        Gràcies!\n"
-"                        <br/><br/>\n"
-"                        <t t-if=\"ctx.get('recipientusers')\">\n"
-"                            <p style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\"background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
-"                                    Visualitza l'avaluació\n"
-"                                </a>\n"
-"                            </p>\n"
-"                        </t>\n"
-"                        <t t-if=\"ctx.get('userbody')\">\n"
-"                            <div style=\"background-color:#F8F8F8;\">\n"
-"                                <t t-out=\"ctx.get('userbody')\">Avaluació anual.</t>\n"
-"                            </div>\n"
-"                        </t>\n"
-"                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.getstarturl()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
-"                                <t t-if=\"object.surveyid.certification\">\n"
-"                                    Inicia la certificació\n"
-"                                </t>\n"
-"                                <t t-else=\"\">\n"
-"                                    Inicia l'enquesta\n"
-"                                </t>\n"
-"                            </a>\n"
-"                        </div>\n"
-"                    </p>\n"
-"                </div>"
-
-#. module: hr_appraisal_survey
-#: model:survey.question,description:hr_appraisal_survey.appraisal_1
-msgid ""
-"<h2>Overall Purpose Of Employee Appraisal</h2>\n"
-"            <ul>\n"
-"                <li>To initiate a clear and open communication of performance expectations</li>\n"
-"                <li>To assist employees in their professional growth, through the identification of strengths and opportunities for development</li>\n"
-"            </ul>\n"
-"\n"
-"            <h2>At the outset of the appraisal time period</h2>\n"
-"            <ul>\n"
-"                <li>It is the joint responsibility of the employee and the supervisor (appraiser) to establish a feasible work plan for the coming year, including major employee responsibilities and corresponding benchmarks against which results will be evaluated.</li>\n"
-"                <li>Critical or key elements of performance and professional development needs (if any), should also be noted at this time</li>\n"
-"            </ul>\n"
-"\n"
-"            <h2>At the conclusion of the appraisal time period</h2>\n"
-"            <ul>\n"
-"                <li>The employee will be responsible for completing a draft of the Appraisal Form as a tool for self-appraisal and a starting point for the supervisor’s evaluation. The employee can add examples of achievements for each criterion. Once the form had been filled, the employee send it to their supervisor.</li>\n"
-"                <li>It is the primary responsibility of the supervisor to gather the necessary input from the appropriate sources of feedback (internal and/or external customers, peers).</li>\n"
-"                <li>The supervisor synthesizes and integrates all input into the completed appraisal. The motivation of the evaluation is explained in the ad hoc fields.</li>\n"
-"                <li>The employee may choose to offer comments or explanation regarding the completed review.</li>\n"
-"            </ul>\n"
-"        "
-msgstr ""
-"<h2>General Purpose of Employee Appraisal</h2>\n"
-"            <ul>\n"
-"                <li>Per iniciar una comunicació clara i oberta de les expectatives de rendiment</li>\n"
-"                <li>Per ajudar els empleats en el seu creixement professional, mitjançant la identificació de fortaleses i oportunitats de desenvolupament</li>\n"
-"            </ul>\n"
-"\n"
-"            <h2>A l'inici del període d'avaluació</h2>\n"
-"            <ul>\n"
-"                <li>és responsabilitat conjunta de l'empleat i el supervisor (avaluador) establir un pla de treball factible per a l'any vinent, incloses les principals responsabilitats dels empleats i els corresponents punts de referència amb els quals s'avaluaran els resultats.</li>\n"
-"                <li>Elements crítics o clau de rendiment i necessitats de desenvolupament professional (si n'hi ha), també s'ha d'observar en aquest moment</li>\n"
-"            </ul>\n"
-"\n"
-"            <h2>Al final del període d'avaluació</h2>\n"
-"            <ul>\n"
-"                <li>L'empleat serà responsable de completar un esborrany del formulari d'avaluació com a eina per a l'autoavaluació i un punt de partida per a l'avaluació del supervisor. L'empleat pot afegir exemples d'assoliments per a cada criteri. Un cop emplenat el formulari, l'empleat l'envia al seu supervisor.</li>\n"
-"                <li>és la responsabilitat principal del supervisor reunir l'entrada necessària de les fonts apropiades de retroalimentació (clients interns i/o externs, companys).</li>\n"
-"                <li>El supervisor sintetitza i integra totes les entrades en l'avaluació completa. La motivació de l'avaluació s'explica en els camps ad hoc.</li>\n"
-"                <li>L'empleat pot optar per oferir comentaris o explicacions sobre la revisió completada.</li>\n"
-"            </ul>"
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_button_form_view
 msgid "<i class=\"fa fa-fw fa-arrow-right\"/>Edit Survey"
 msgstr "<i class=\"fa fa-fw fa-arrow-right\"/>Modifica l'enquesta"
-
-#. module: hr_appraisal_survey
-#: model:survey.question,description:hr_appraisal_survey.appraisal_2
-#: model:survey.question,description:hr_appraisal_survey.appraisal_360_1
-#: model:survey.question,description:hr_appraisal_survey.appraisal_360_4
-#: model:survey.question,description:hr_appraisal_survey.appraisal_360_9
-#: model:survey.survey,description:hr_appraisal_survey.opinion_form
-msgid "<p> </p>"
-msgstr "<p> </p>"
-
-#. module: hr_appraisal_survey
-#: model:survey.survey,description:hr_appraisal_survey.appraisal_360_feedback_template
-msgid ""
-"<p>360 Degree Feedback is a system or process in which managers will ask feedback from the people who work around the employee.\n"
-"            This typically includes the employee's manager, peers, and direct reports.</p>\n"
-"        "
-msgstr ""
-"La retroalimentació de 360 graus <p>és un sistema o procés en el qual els gerents demanaran comentaris a les persones que treballen al voltant de l'empleat.\n"
-"            Això normalment inclou el gestor de l'empleat, companys i informes directes.</p>"
-
-#. module: hr_appraisal_survey
-#: model:survey.question,description:hr_appraisal_survey.appraisal_4
-msgid ""
-"<p>Identify professional, performance, or project objectives you recommend "
-"for employee’s continued career development over the coming year.</p>"
-msgstr ""
-"<p>Identifica els objectius professionals, de rendiment o de projecte que "
-"recomaneu per al desenvolupament continuat de la carrera dels empleats "
-"durant l'any següent.</p>"
-
-#. module: hr_appraisal_survey
-#: model:survey.question,description:hr_appraisal_survey.appraisal_3
-msgid ""
-"<p>The appraiser should rate the employee’s major work accomplishments and performance according to the metric provided below:</p>\n"
-"            <ol>\n"
-"                <li> Significantly exceeds standards and expectations required of the position</li>\n"
-"                <li> Exceeds standards and expectations</li>\n"
-"                <li> Meet standards and expectations</li>\n"
-"                <li> Did not meet standards and expectations</li>\n"
-"                <li> Significantly below standards and expectations</li>\n"
-"            </ol>\n"
-"        "
-msgstr ""
-"<p>L'avaluador hauria de valorar els principals èxits i rendiments de la feina de l'empleat d'acord amb la mètrica proporcionada a continuació:</p>\n"
-"            <ol>\n"
-"                <li> supera significativament els estàndards i expectatives requerits de la posició</li>\n"
-"                <li> Excedeix els estàndards i les expectatives</li>\n"
-"                <li> estàndards i expectatives dels fulls</li>\n"
-"                <li> no compleix els estàndards i les expectatives</li>\n"
-"                <li> significativament per sota dels estàndards i expectatives</li>\n"
-"            </ol>"
-
-#. module: hr_appraisal_survey
-#: model:survey.survey,description:hr_appraisal_survey.appraisal_feedback_template
-msgid ""
-"<p>This survey allows you to give a feedback about your collaboration with an employee. Filling it helps us improving the appraisal process.</p>\n"
-"        "
-msgstr ""
-"<p>Aquesta enquesta us permet donar comentaris sobre la vostra col·laboració"
-" amb un empleat. Omplir-ho ens ajuda a millorar el procés d'avaluació.</p>"
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
@@ -297,6 +169,7 @@ msgid "Almost always"
 msgstr "Gairebé sempre"
 
 #. module: hr_appraisal_survey
+#. odoo-python
 #: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
 #, python-format
 msgid ""
@@ -378,6 +251,16 @@ msgstr "Demana comentaris per avaluar"
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__employee_feedback_ids
 msgid "Asked Feedback"
 msgstr "Comentaris preguntats"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid "At the conclusion of the appraisal time period"
+msgstr "A la conclusió del període de temps d'avaluació"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid "At the outset of the appraisal time period"
+msgstr "A l'inici del període de temps d'avaluació"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__attachment_ids
@@ -478,6 +361,16 @@ msgid "Creativity and forward looking aptitude"
 msgstr "Actitud de creativitat i visió de futur"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"Critical or key elements of performance and professional development needs "
+"(if any), should also be noted at this time"
+msgstr ""
+"També s'han de tenir en compte els elements crítics o clau de les "
+"necessitats de rendiment i desenvolupament professional (si n'hi ha), en "
+"aquest moment"
+
+#. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_8
 msgid "Customer commitment"
 msgstr "Compromís amb el client"
@@ -507,6 +400,11 @@ msgstr ""
 #: model:ir.model,name:hr_appraisal_survey.model_hr_department
 msgid "Department"
 msgstr "Departament"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_3
+msgid "Did not meet standards and expectations"
+msgstr "No s'han complert els estàndards i les expectatives"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__display_name
@@ -549,6 +447,12 @@ msgid "Enthusiasm & implication toward projects/assignments"
 msgstr "Entusiasme i implicació als projectes/assignacions"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_3
+msgid "Exceeds standards and expectations"
+msgstr "Excedeix els estàndards i les expectatives"
+
+#. module: hr_appraisal_survey
+#. odoo-python
 #: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
 #, python-format
 msgid "Fill the feedback form on survey"
@@ -585,6 +489,16 @@ msgid "ID"
 msgstr "ID"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_4
+msgid ""
+"Identify professional, performance, or project objectives you recommend for "
+"employee’s continued career development over the coming year."
+msgstr ""
+"Identifiqueu els objectius professionals, de rendiment o de projecte que "
+"recomaneu per al desenvolupament continuat de la carrera dels empleats "
+"durant l'any següent."
+
+#. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_5
 msgid "Initiative and self autonomy"
 msgstr "Iniciativa i autonomia"
@@ -593,6 +507,30 @@ msgstr "Iniciativa i autonomia"
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__is_mail_template_editor
 msgid "Is Editor"
 msgstr "És Editor"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"It is the joint responsibility of the employee and the supervisor "
+"(appraiser) to establish a feasible work plan for the coming year, including"
+" major employee responsibilities and corresponding benchmarks against which "
+"results will be evaluated."
+msgstr ""
+"És responsabilitat conjunta de l'empleat i del supervisor (avaluador) "
+"establir un pla de treball viable per a l'any vinent, incloses les "
+"principals responsabilitats dels empleats i els corresponents criteris de "
+"referència amb els quals s'avaluaran els resultats."
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"It is the primary responsibility of the supervisor to gather the necessary "
+"input from the appropriate sources of feedback (internal and/or external "
+"customers, peers)."
+msgstr ""
+"És la responsabilitat principal del supervisor reunir l'entrada necessària "
+"de les fonts apropiades de retroalimentació (clients interns i/o externs, "
+"parells)."
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__lang
@@ -640,6 +578,12 @@ msgid "Mail Template"
 msgstr "Plantilla de correu"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_3
+msgid "Meet standards and expectations"
+msgstr "Connexions i expectatives"
+
+#. module: hr_appraisal_survey
+#. odoo-python
 #: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
 #, python-format
 msgid "Missing email"
@@ -682,6 +626,11 @@ msgstr ""
 "correu electrònic. Si no està establerta, s' usarà la versió anglesa. Això "
 "normalment hauria de ser una expressió de substitució que proveeix el "
 "llenguatge apropiat, p. ex. {{ object.partner_id.lang }}."
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid "Overall Purpose Of Employee Appraisal"
+msgstr "Compromís general de l'avaluació del treballador"
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_4_2
@@ -778,6 +727,19 @@ msgid "Show good judgment in decision making"
 msgstr "Mostra un bon criteri en la presa de decisions"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_3
+msgid "Significantly below standards and expectations"
+msgstr "Significativament per sota dels estàndards i les expectatives"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_3
+msgid ""
+"Significantly exceeds standards and expectations required of the position"
+msgstr ""
+"Excedeix significativament els estàndards i expectatives requerides de la "
+"posició"
+
+#. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.x_360_5_3
 msgid "Sometimes"
 msgstr "De vegades"
@@ -806,6 +768,7 @@ msgid "Survey"
 msgstr "Enquesta"
 
 #. module: hr_appraisal_survey
+#. odoo-python
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
 #: code:addons/hr_appraisal_survey/models/survey.py:0
@@ -854,6 +817,50 @@ msgid "Technical skills regarding to the job requirements"
 msgstr "Habilitats tècniques relatives als requisits de treball"
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_3
+msgid ""
+"The appraiser should rate the employee’s major work accomplishments and "
+"performance according to the metric provided below:"
+msgstr ""
+"L'avaluador hauria de valorar els èxits i el rendiment de la feina més "
+"important de l'empleat segons la mètrica proporcionada a continuació:"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"The employee may choose to offer comments or explanation regarding the "
+"completed review."
+msgstr ""
+"L'empleat pot optar per oferir comentaris o explicacions sobre la revisió "
+"completada."
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"The employee will be responsible for completing a draft of the Appraisal "
+"Form as a tool for self-appraisal and a starting point for the supervisor’s "
+"evaluation. The employee can add examples of achievements for each "
+"criterion. Once the form had been filled, the employee send it to their "
+"supervisor."
+msgstr ""
+"L'empleat serà responsable de completar un esborrany del formulari "
+"d'avaluació com a eina d'autoavaluació i un punt de partida per a "
+"l'avaluació del supervisor. L'empleat pot afegir exemples d'assoliments per "
+"a cada criteri. Un cop emplenat el formulari, l'empleat l'envia al seu "
+"supervisor."
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"The supervisor synthesizes and integrates all input into the completed "
+"appraisal. The motivation of the evaluation is explained in the ad hoc "
+"fields."
+msgstr ""
+"El supervisor sintetitza i integra totes les entrades en l'avaluació "
+"completa. La motivació de l'avaluació s'explica en els àmbits ad hoc."
+
+#. module: hr_appraisal_survey
+#. odoo-python
 #: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
 #, python-format
 msgid ""
@@ -881,11 +888,36 @@ msgid "This is a Test Survey."
 msgstr "Aquesta és una enquesta de proves."
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.survey,description:hr_appraisal_survey.appraisal_feedback_template
+msgid ""
+"This survey allows you to give a feedback about your collaboration with an "
+"employee. Filling it helps us improving the appraisal process."
+msgstr ""
+"Aquesta enquesta us permet donar comentaris sobre la vostra col·laboració "
+"amb un empleat. Omplir-ho ens ajuda a millorar el procés d'avaluació."
+
+#. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_15
 msgid "Time management: projects/tasks are completed on time"
 msgstr "Gestió del temps: els projectes/tasques es completen en temps."
 
 #. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid ""
+"To assist employees in their professional growth, through the identification"
+" of strengths and opportunities for development"
+msgstr ""
+"Ajudar els empleats en el seu creixement professional, mitjançant la "
+"identificació de fortaleses i oportunitats de desenvolupament"
+
+#. module: hr_appraisal_survey
+#: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
+msgid "To initiate a clear and open communication of performance expectations"
+msgstr ""
+"Iniciar una comunicació clara i oberta de les expectatives de rendiment"
+
+#. module: hr_appraisal_survey
+#. odoo-python
 #: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
 #, python-format
 msgid "Unable to post message, please configure the sender's email address."

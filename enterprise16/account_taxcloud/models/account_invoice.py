@@ -169,7 +169,7 @@ class AccountMove(models.Model):
                     )
                 else:
                     request.set_invoice_items_detail(invoice)
-                    origin_invoice = self.reversed_entry_id
+                    origin_invoice = invoice.reversed_entry_id
                     if origin_invoice:
                         request.client.service.Returned(
                             request.api_login_id,

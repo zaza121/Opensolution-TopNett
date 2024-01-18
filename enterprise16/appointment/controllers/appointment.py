@@ -5,6 +5,8 @@ import pytz
 import re
 import uuid
 
+from pytz.exceptions import UnknownTimeZoneError
+
 from babel.dates import format_datetime, format_date, format_time
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
@@ -84,8 +86,8 @@ class AppointmentController(http.Controller):
     # Tools / Data preparation
     # ------------------------------------------------------------
 
-    @staticmethod
-    def _fetch_available_appointments(appointment_types, staff_users, invite_token, search=None):
+    @classmethod
+    def _fetch_available_appointments(cls, appointment_types, staff_users, invite_token, search=None):
         """Fetch the available appointment types
 
         :param recordset appointment_types: Record set of appointment types for
@@ -95,9 +97,9 @@ class AppointmentController(http.Controller):
         :param str invite_token: token of the appointment invite
         :param str search: search bar value used to compute the search domain
         """
-        return AppointmentController._fetch_and_check_private_appointment_types(
+        return cls._fetch_and_check_private_appointment_types(
             appointment_types, staff_users, invite_token,
-            domain=AppointmentController._appointments_base_domain(
+            domain=cls._appointments_base_domain(
                 appointment_types, search, invite_token
             )
         )
@@ -120,15 +122,15 @@ class AppointmentController(http.Controller):
             'filter_staff_user_ids': kwargs.get('filter_staff_user_ids'),
         }
 
-    @staticmethod
-    def _appointments_base_domain(filter_appointment_type_ids, search=False, invite_token=False):
+    @classmethod
+    def _appointments_base_domain(cls, filter_appointment_type_ids, search=False, invite_token=False):
         domain = [('category', '=', 'website')]
 
         if filter_appointment_type_ids:
             domain = expression.AND([domain, [('id', 'in', json.loads(filter_appointment_type_ids))]])
 
         if not invite_token:
-            country = AppointmentController._get_customer_country()
+            country = cls._get_customer_country()
             if country:
                 country_domain = ['|', ('country_ids', '=', False), ('country_ids', 'in', [country.id])]
                 domain = expression.AND([domain, country_domain])
@@ -211,7 +213,10 @@ class AppointmentController(http.Controller):
             'timezone': request.session['timezone'],  # bw compatibility
         }, **page_values
         )
-        return request.render("appointment.appointment_info", render_params)
+        # Do not let the browser store the page, this ensures correct timezone and params management in case
+        # the user goes back and forth to this endpoint using browser controls (or mouse back button)
+        # this is especially necessary as we alter the request.session parameters.
+        return request.render("appointment.appointment_info", render_params, headers={'Cache-Control': 'no-store'})
 
     def _prepare_appointment_type_page_values(self, appointment_type, staff_user_id=False, **kwargs):
         """ Computes all values needed to choose between / common to all appointment_type page templates.
@@ -221,7 +226,8 @@ class AppointmentController(http.Controller):
             - filter_appointment_type_ids, filter_staff_user_ids and invite_token parameters.
             - user_default: the first of possible staff users. It will be selected by default (in the user select dropdown)
             if no user_selected. Otherwise, the latter will be preselected instead. It is only set if there is at least one
-            possible user and if the choice is activated in appointment_type.
+            possible user and the choice is activated in appointment_type, or used for having the user name in title if there
+            is a single possible user, for random selection.
             - user_selected: the user corresponding to staff_user_id in the url and to the selected one. It can be selected
             upstream, from the operator_select screen (see WebsiteAppointment controller), or coming back from an error.
             It is only set if among the possible users.
@@ -237,6 +243,8 @@ class AppointmentController(http.Controller):
         if appointment_type.assign_method == 'chosen' and users_possible:
             if staff_user_id and staff_user_id in users_possible.ids:
                 user_selected = next(user for user in users_possible if user.id == staff_user_id)
+            user_default = users_possible[0]
+        elif appointment_type.assign_method == 'random' and len(users_possible) == 1:
             user_default = users_possible[0]
 
         return {
@@ -368,6 +376,10 @@ class AppointmentController(http.Controller):
         )
         if not appointment_type:
             raise NotFound()
+
+        if not self._check_appointment_is_valid_slot(appointment_type, staff_user_id, date_time, duration, **kwargs):
+            raise NotFound()
+
         partner = self._get_customer_partner()
         partner_data = partner.read(fields=['name', 'mobile', 'email'])[0] if partner else {}
         date_time_object = datetime.strptime(date_time, dtf)
@@ -393,6 +405,46 @@ class AppointmentController(http.Controller):
             'timezone': request.session.get('timezone') or appointment_type.appointment_tz,  # bw compatibility
             'users_possible': self._get_possible_staff_users(appointment_type, json.loads(kwargs.get('filter_staff_user_ids') or '[]')),
         })
+
+    def _check_appointment_is_valid_slot(self, appointment_type, staff_user_id, start_dt, duration, **kwargs):
+        """
+        Given slot parameters check it is still valid, based on staff_user
+        availability, slot boundaries, ...
+        :param record appointment_type: an appointment.type record under which
+          the appointment is about to be taken;
+        :param str(int) staff_user_id: staff_user linked to the appointment slot;
+        :param datetime start_dt: appointment slot starting datetime that will be
+          localized in customer timezone;
+        :param str(float) duration: the duration of the appointment;
+        """
+        if not appointment_type or not staff_user_id or not start_dt or not duration:
+            return False
+
+        try:
+            duration = float(duration)
+        except ValueError:
+            # Value Error: the duration is not a valid float
+            return False
+
+        try:
+            staff_user = request.env['res.users'].sudo().search([('id', '=', int(staff_user_id))])
+        except ValueError:
+            # ValueError: the staff_user_id might not be a valid integer
+            return False
+
+        try:
+            session_tz = request.session.get('timezone', appointment_type.appointment_tz)
+            tz_info = pytz.timezone(session_tz)
+            start_dt_utc = tz_info.localize(fields.Datetime.from_string(start_dt)).astimezone(pytz.utc)
+        except (ValueError, UnknownTimeZoneError):
+            # ValueError: the datetime may be ill-formatted
+            return False
+
+        # we shouldn't be able to book an appointment in the past
+        if start_dt_utc < datetime.today().astimezone(pytz.utc):
+            return False
+
+        return appointment_type._check_appointment_is_valid_slot(staff_user, session_tz, start_dt_utc, duration)
 
     @http.route(['/appointment/<int:appointment_type_id>/submit'],
                 type='http', auth="public", website=True, methods=["POST"])
@@ -440,7 +492,7 @@ class AppointmentController(http.Controller):
         else:
             Partner = Partner.create({
                 'name': name,
-                'mobile': Partner._phone_format(phone, country=AppointmentController._get_customer_country()),
+                'mobile': Partner._phone_format(phone, country=self._get_customer_country()),
                 'email': email,
                 'lang': request.lang.code,
             })

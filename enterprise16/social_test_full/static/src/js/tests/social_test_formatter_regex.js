@@ -56,7 +56,7 @@ QUnit.module('Social Formatter Regex', {}, () => {
             _getMediaType() { return 'linkedin' },
         });
 
-        const testMessage = 'Hello, check this out: https://www.odoo.com #crazydeals #odoo';
+        const testMessage = 'Hello, check this out: https://www.odoo.com {hashtag|#|crazydeals} #odoo';
         const finalMessage = SocialPostFormatterMixin._formatPost(testMessage);
 
         assert.equal(finalMessage, [

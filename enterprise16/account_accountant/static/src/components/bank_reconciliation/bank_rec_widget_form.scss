@@ -3,11 +3,10 @@
     flex-flow: row nowrap;
     margin-bottom: 5px;
     margin-top: -$o-sheet-vpadding;
-    margin-left: -16px;
-    margin-right: -16px;
-    height: $o-statbutton-height;
     white-space: nowrap;
     border-bottom: 1px solid $border-color;
+    height: fit-content;
+    min-height: $o-statbutton-height;
 
     .o_bank_rec_stats_buttons_aside_left{
         flex-grow: 0;
@@ -37,7 +36,7 @@
 
             .o_bank_rec_reco_models_widget_div{
                 display: flex;
-                flex-flow: row nowrap;
+                flex-wrap: wrap;
                 height: 100%;
                 width: 100%;
                 flex: 1 0;
@@ -45,7 +44,6 @@
 
                 .recon_model_button {
                     flex: 0 1 auto;
-                    max-width: 15%;
                 }
             }
             .bank_rec_reco_model_dropdown {
@@ -84,6 +82,19 @@
 
 .o_bank_rec_expanded_line{
     border-bottom: transparent;
+    td {
+        padding-bottom: 0;
+    }
+}
+
+.o_bank_rec_second_line {
+    td {
+        padding-top: 0;
+        padding-bottom: 1rem;
+    }
+    .o_form_uri {
+        cursor: pointer;
+    }
 }
 
 .o_bank_rec_widget_form_suggest_button{
@@ -94,6 +105,33 @@
     text-transform: none !important;
 }
 
-.o_bank_rec_widget_lines_widget_label {
-    max-width: 320px;
+.o_bank_rec_right_div {
+    .o_content{
+        .o_form_nosheet{
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+
+            .o_inner_group {
+                padding: 0 50px;
+            }
+
+            .bank_rec_widget_form_discuss_anchor{
+                padding: 0 20px;
+            }
+
+            table tr td:first-child, table th:first-child {
+              padding-left: 10px;
+            }
+
+            .o_list_table {
+                th {
+                    border-left: none !important;
+                }
+            }
+        }
+
+        .o_notebook {
+            --notebook-margin-x: 0 !important;
+        }
+    }
 }

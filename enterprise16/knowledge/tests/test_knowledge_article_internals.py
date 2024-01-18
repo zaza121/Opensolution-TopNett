@@ -20,12 +20,23 @@ class TestKnowledgeArticleFields(KnowledgeCommonWData):
         playground_articles = (self.article_workspace + self.workspace_children).with_env(self.env)
         self.assertEqual(playground_articles.mapped('is_user_favorite'), [False, False, False])
 
-        playground_articles[0].write({'favorite_ids': [(0, 0, {'user_id': self.env.uid})]})
+        first_playground_article = playground_articles[0]
+        self.assertFalse(first_playground_article.is_user_favorite)
+
+        # write False a second time does not inverse again
+        first_playground_article.write({'is_user_favorite': False})
+        self.assertFalse(first_playground_article.is_user_favorite)
+
+        first_playground_article.write({'favorite_ids': [(0, 0, {'user_id': self.env.uid})]})
         self.assertEqual(playground_articles.mapped('is_user_favorite'), [True, False, False])
         self.assertEqual(playground_articles.mapped('user_favorite_sequence'), [1, -1, -1])
         favorites = self.env['knowledge.article.favorite'].sudo().search([('user_id', '=', self.env.uid)])
-        self.assertEqual(favorites.article_id, playground_articles[0])
+        self.assertEqual(favorites.article_id, first_playground_article)
         self.assertEqual(favorites.sequence, 1)
+
+        # write True a second time does not inverse again
+        first_playground_article.write({'is_user_favorite': True})
+        self.assertTrue(first_playground_article.is_user_favorite)
 
         playground_articles[1].action_toggle_favorite()
         self.assertEqual(playground_articles.mapped('is_user_favorite'), [True, True, False])
@@ -96,6 +107,89 @@ class TestKnowledgeArticleFields(KnowledgeCommonWData):
                 article.with_user(self.user_employee2).flush_model()
             self.assertEqual(article.last_edition_uid, self.user_employee2)
             self.assertEqual(article.last_edition_date, _reference_dt + timedelta(days=1))
+
+
+@tagged('knowledge_internals')
+class TestKnowledgeArticleInternals(KnowledgeCommonWData):
+    """ Testing model/ORM overrides """
+
+    def test_name_get(self):
+        """ Test our custom name_get / name_search / name_create. """
+
+        KnowledgeArticle = self.env['knowledge.article']
+        icon_placeholder = KnowledgeArticle._get_no_icon_placeholder()
+
+        KnowledgeArticle.search([]).unlink()  # remove other articles to ease testing
+        [article_no_icon, article_icon] = KnowledgeArticle.create([{
+            'name': 'Article Without Icon',
+        }, {
+            'icon': '🚀',
+            'name': 'Article With Icon'
+        }])
+
+        self.assertEqual(
+            article_no_icon.display_name,
+            '%s Article Without Icon' % icon_placeholder
+        )
+
+        self.assertEqual(
+            article_icon.display_name,
+            '🚀 Article With Icon'
+        )
+
+        # test the 'ilike' operator
+        for search_input, expected_articles in zip(
+            ['Article With',
+             '🚀 Article With',
+             '%s Article With' % icon_placeholder,
+             '⭐ Test'],
+            [article_icon + article_no_icon,
+             article_icon,
+             article_no_icon,
+             KnowledgeArticle]
+        ):
+            self.assertEqual(
+                KnowledgeArticle.name_search(name=search_input, operator='ilike'),
+                expected_articles.name_get(),
+                "Not matching for input '%s'" % search_input,
+            )
+
+        # test the '=' operator
+        for search_input, expected_articles in zip(
+            ['Article Without Icon',
+             '%s Article Without Icon' % icon_placeholder,
+             'Article With Icon',
+             '🚀 Article With Icon',
+             '🚀 Article With',
+             '⭐ Test'],
+            [article_no_icon,
+             article_no_icon,
+             article_icon,
+             article_icon,
+             KnowledgeArticle,
+             KnowledgeArticle]
+        ):
+            self.assertEqual(
+                KnowledgeArticle.name_search(name=search_input, operator='='),
+                expected_articles.name_get(),
+                "Not matching for input '%s'" % search_input,
+            )
+
+        # now test the name_create custom implementation
+        for create_input, (expected_name, expected_icon) in zip(
+            ['a',
+             'Article Without Icon',
+             '%s Article With Icon' % icon_placeholder,
+             '🚀 Article With Icon'],
+            [('a', False),
+             ('Article Without Icon', False),
+             ('Article With Icon', icon_placeholder),
+             ('Article With Icon', '🚀')]
+        ):
+            # result of name_create is a name_get
+            new_article = KnowledgeArticle.browse(KnowledgeArticle.name_create(create_input)[0])
+            self.assertEqual(new_article.name, expected_name)
+            self.assertEqual(new_article.icon, expected_icon)
 
 
 @tagged('knowledge_internals')

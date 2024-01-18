@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
 from odoo import fields
-from odoo.tests import tagged
+from odoo.tests import Form, tagged
 from odoo.addons.website.tools import MockRequest
 from odoo.addons.website_sale_renting.tests.common import TestWebsiteSaleRentingCommon
 
@@ -102,7 +102,7 @@ class TestWebsiteSaleStockRenting(TestWebsiteSaleRentingCommon):
     def test_sol_pickup(self):
         self.so.action_confirm()
         pickup_action = self.so.open_pickup()
-        wizard = self.env['rental.order.wizard'].with_context(pickup_action['context']).create({})
+        wizard = Form(self.env['rental.order.wizard'].with_context(pickup_action['context'])).save()
         with freeze_time(self.sol.start_date):
             wizard.apply()
         from_date = self.now
@@ -124,11 +124,11 @@ class TestWebsiteSaleStockRenting(TestWebsiteSaleRentingCommon):
     def test_sol_return(self):
         self.so.action_confirm()
         pickup_action = self.so.open_pickup()
-        wizard = self.env['rental.order.wizard'].with_context(pickup_action['context']).create({})
+        wizard = Form(self.env['rental.order.wizard'].with_context(pickup_action['context'])).save()
         with freeze_time(self.sol.start_date):
             wizard.apply()
         return_action = self.so.open_return()
-        wizard = self.env['rental.order.wizard'].with_context(return_action['context']).create({})
+        wizard = Form(self.env['rental.order.wizard'].with_context(return_action['context'])).save()
         with freeze_time(self.sol.return_date):
             wizard.apply()
         from_date = self.now
@@ -185,7 +185,7 @@ class TestWebsiteSaleStockRenting(TestWebsiteSaleRentingCommon):
     def test_multiple_sol_with_first_one_picked_up(self):
         self.so.action_confirm()
         pickup_action = self.so.open_pickup()
-        wizard = self.env['rental.order.wizard'].with_context(pickup_action['context']).create({})
+        wizard = Form(self.env['rental.order.wizard'].with_context(pickup_action['context'])).save()
         with freeze_time(self.sol.start_date):
             wizard.apply()
         so2 = self.env['sale.order'].create({
@@ -243,3 +243,72 @@ class TestWebsiteSaleStockRenting(TestWebsiteSaleRentingCommon):
             )
             self.assertTrue(values.get('warning', False))
             self.assertEqual(values.get('quantity'), 0)
+
+    def test_stock_availability_for_pickedup_products_not_yet_returned(self):
+        self.so.action_confirm()
+        pickup_action = self.so.open_pickup()
+        wizard = Form(self.env['rental.order.wizard'].with_context(pickup_action['context'])).save()
+        with freeze_time(self.sol.start_date):
+            wizard.apply()
+        so = self.env['sale.order'].create({
+            'partner_id': self.partner.id,
+            'company_id': self.company.id,
+            'warehouse_id': self.wh.id,
+        })
+
+        vals = [
+            {'days': -1, 'available': 2, 'warning': True},
+            {'days': 1, 'available': 5, 'warning': False},
+        ]
+
+        with MockRequest(self.env, website=self.current_website, sale_order_id=so.id):
+            website_so = self.current_website.sale_get_order()
+            for val in vals:
+                from_date = self.sol.return_date + relativedelta(days=val['days'])
+                to_date = self.sol.return_date + relativedelta(days=2)
+                cart_qty, free_qty = website_so._get_cart_and_free_qty(
+                    product=self.computer, start_date=from_date, end_date=to_date
+                )
+                self.assertEqual(cart_qty, 0, "Cart is empty")
+                self.assertEqual(free_qty, val['available'])
+                values = website_so._cart_update(
+                    product_id=self.computer.id, add_qty=5, start_date=from_date, end_date=to_date
+                )
+                self.assertEqual(values.get('quantity'), val['available'])
+                if val['warning']:
+                    self.assertTrue(values.get('warning', False))
+                else:
+                    self.assertFalse(values.get('warning', False))
+                # empty cart
+                values = website_so._cart_update(product_id=self.computer.id, add_qty=-10)
+
+    def test_show_rental_product_that_will_be_available_in_future(self):
+        """
+        When you filter rental products on the /shop with the datepicker,
+        you should be able to see rental products that would be available in the future,
+        even if today the quantity on hand is 0 because it is being rented
+        """
+        self.sol.product_uom_qty = 5
+        self.so.action_confirm()
+        pickup_action = self.so.open_pickup()
+        wizard = Form(self.env['rental.order.wizard'].with_context(pickup_action['context'])).save()
+        with freeze_time(self.sol.start_date):
+            wizard.apply()
+        self.assertTrue(self.sol.product_template_id.qty_in_rent > 0, "We are renting the product")
+        self.assertEqual(
+            self.sol.product_template_id.qty_available,
+            0,
+            "We don't have any on hand quantity of the product, because it is rented"
+        )
+        # we are looking for a product in a period after it should be returned
+        from_date = self.sol.return_date + relativedelta(days=1)
+        to_date = self.sol.return_date + relativedelta(days=2)
+        filtered_products = self.sol.product_template_id.sudo()._filter_on_available_rental_products(
+            from_date,
+            to_date,
+            self.wh.id
+        )
+        self.assertTrue(
+            len(filtered_products) > 0,
+            "We expected to have some quantity on hand in a future period, when the rented product is returned"
+        )

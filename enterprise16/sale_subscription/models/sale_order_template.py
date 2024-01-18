@@ -28,7 +28,9 @@ class SaleOrderTemplate(models.Model):
     color = fields.Integer()
     auto_close_limit = fields.Integer(
         string="Automatic Closing", default=15,
-        help="If the chosen payment method has failed to renew the subscription after this time, "
+        help="Unpaid subscription after the due date majored by this number of days will be automatically closed by "
+             "the subscriptions expiration scheduled action. \n"
+             "If the chosen payment method has failed to renew the subscription after this time, "
              "the subscription is automatically closed.")
     good_health_domain = fields.Char(string='Good Health', default='[]',
                                      help="Domain used to change subscription's Kanban state with a 'Good' rating")

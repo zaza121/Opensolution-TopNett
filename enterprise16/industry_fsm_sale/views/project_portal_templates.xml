@@ -9,7 +9,8 @@
         <t t-set="is_any_total_discount_line" t-value="False"/>
         <t t-foreach="order.order_line" t-as="line">
             <t t-set="is_task" t-value="line == doc.sale_line_id"/>
-            <t t-if="is_task">
+            <t t-set="use_qty_delivered" t-value="is_task and line.product_id.service_policy != 'ordered_prepaid'"/>
+            <t t-if="use_qty_delivered">
                 <t t-set="final_subtotal" t-value="final_subtotal + line.delivered_price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
                 <t t-set="final_subtotal" t-value="final_subtotal + line.delivered_price_total" groups="account.group_show_line_subtotals_tax_included"/>
                 <t t-set="final_total" t-value="final_total + line.delivered_price_total"/>
@@ -49,14 +50,15 @@
 
                         <t t-foreach="order.order_line" t-as="line">
                             <t t-set="is_task" t-value="line == doc.sale_line_id"/>
-                            <t t-if="is_task">
+                            <t t-set="use_qty_delivered" t-value="is_task and line.product_id.service_policy != 'ordered_prepaid'"/>
+                            <t t-if="use_qty_delivered">
                                 <t t-set="is_total_discount" t-value="line.discount and line.price_unit != 0 and line.delivered_price_total == 0"/>
                             </t>
                             <t t-else="">
                                 <t t-set="is_total_discount" t-value="line.discount and line.price_unit != 0 and line.price_total == 0"/>
                             </t>
-                            <t t-if="(is_task and line.delivered_price_total > 0) or (not is_task and line.price_total > 0) or is_total_discount">
-                                <t t-if="is_task">
+                            <t t-if="(is_task and line.delivered_price_total > 0) or ((not use_qty_delivered and line.price_total > 0)) or (not is_task and line.price_total > 0) or is_total_discount">
+                                <t t-if="use_qty_delivered">
                                     <t t-set="current_subtotal" t-value="current_subtotal + line.delivered_price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
                                     <t t-set="current_subtotal" t-value="current_subtotal + line.delivered_price_total" groups="account.group_show_line_subtotals_tax_included"/>
                                 </t>
@@ -69,12 +71,12 @@
                                     <t t-if="not line.display_type and not line.is_downpayment">
                                         <td><span t-field="line.name"/></td>
                                         <td class="text-end">
-                                            <span t-if="is_task" t-field="line.qty_delivered"/>
+                                            <span t-if="use_qty_delivered" t-field="line.qty_delivered"/>
                                             <span t-else="" t-field="line.product_uom_qty"/>
                                             <span t-field="line.product_uom" groups="uom.group_uom"/>
                                         </td>
                                         <td class="text-end">
-                                            <span t-if="(is_task and line.delivered_price_total != 0) or (not is_task and line.price_total != 0) or is_total_discount" t-field="line.price_unit"/>
+                                            <span t-if="(is_task and line.delivered_price_total != 0) or (not use_qty_delivered and line.price_total != 0) or (not is_task and line.price_total != 0) or is_total_discount" t-field="line.price_unit"/>
                                         </td>
                                         <td t-if="final_tax" class="text-end">
                                             <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.tax_id))"/>
@@ -83,7 +85,7 @@
                                             <span t-field="line.discount"/>
                                         </td>
                                         <td class="text-end o_price_total">
-                                            <t t-if="is_task">
+                                            <t t-if="use_qty_delivered">
                                                 <span t-if="line.delivered_price_subtotal != 0 or is_total_discount" t-field="line.delivered_price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
                                                 <span t-if="line.delivered_price_total != 0 or is_total_discount" t-field="line.delivered_price_total" groups="account.group_show_line_subtotals_tax_included"/>
                                             </t>

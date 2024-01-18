@@ -87,14 +87,83 @@ class TestL10nMXTrialBalanceReport(TestAccountReportsCommon):
         """
         expected_coa_xml = b"""<?xml version='1.0' encoding='utf-8'?>
         <catalogocuentas:Catalogo xmlns:catalogocuentas="http://www.sat.gob.mx/esquemas/ContabilidadE/1_3/CatalogoCuentas" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/esquemas/ContabilidadE/1_3/CatalogoCuentas http://www.sat.gob.mx/esquemas/ContabilidadE/1_3/CatalogoCuentas/CatalogoCuentas_1_3.xsd" Version="1.3" RFC="EKU9003173C9" Mes="01" Anio="2021">
+            <catalogocuentas:Ctas CodAgrup="101" NumCta="101" Desc="Caja" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="101.01" NumCta="101.01" Desc="Caja y efectivo" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="102" NumCta="102" Desc="Bancos" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="102.01" NumCta="102.01" Desc="Bancos nacionales" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="102.02" NumCta="102.02" Desc="Bancos extranjeros" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="105" NumCta="105" Desc="Clientes" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="105.01" NumCta="105.01" Desc="Clientes nacionales" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="107" NumCta="107" Desc="Deudores diversos" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="107.05" NumCta="107.05" Desc="Otros deudores diversos" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="108" NumCta="108" Desc="Estimaci&#243;n de cuentas incobrables" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="108.01" NumCta="108.01" Desc="Estimaci&#243;n de cuentas incobrables nacional" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="108.02" NumCta="108.02" Desc="Estimaci&#243;n de cuentas incobrables extranjero" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115" NumCta="115" Desc="Inventario" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115.01" NumCta="115.01" Desc="Inventario" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115.02" NumCta="115.02" Desc="Materia prima y materiales" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115.03" NumCta="115.03" Desc="Producci&#243;n en proceso" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115.04" NumCta="115.04" Desc="Productos terminados" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115.05" NumCta="115.05" Desc="Mercanc&#237;as en tr&#225;nsito" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="115.06" NumCta="115.06" Desc="Mercanc&#237;as en poder de terceros" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="118" NumCta="118" Desc="Impuestos acreditables pagados" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="118.01" NumCta="118.01" Desc="IVA acreditable pagado" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="118.03" NumCta="118.03" Desc="IEPS acreditable pagado" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="119" NumCta="119" Desc="Impuestos acreditables por pagar" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="119.01" NumCta="119.01" Desc="IVA pendiente de pago" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="119.03" NumCta="119.03" Desc="IEPS pendiente de pago" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="120" NumCta="120" Desc="Anticipo a proveedores" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="120.01" NumCta="120.01" Desc="Anticipo a proveedores nacional" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="120.02" NumCta="120.02" Desc="Anticipo a proveedores extranjero" Nivel="2" Natur="D"/>
             <catalogocuentas:Ctas CodAgrup="201" NumCta="201" Desc="Proveedores" Nivel="1" Natur="A"/>
             <catalogocuentas:Ctas CodAgrup="201.01" NumCta="201.01" Desc="Proveedores nacionales" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="205" NumCta="205" Desc="Acreedores diversos a corto plazo" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="205.06" NumCta="205.06" Desc="Otros acreedores diversos a corto plazo" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="206" NumCta="206" Desc="Anticipo de cliente" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="206.01" NumCta="206.01" Desc="Anticipo de cliente nacional" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="206.02" NumCta="206.02" Desc="Anticipo de cliente extranjero" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="206.05" NumCta="206.05" Desc="Otros anticipos de clientes" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="208" NumCta="208" Desc="Impuestos trasladados cobrados" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="208.01" NumCta="208.01" Desc="IVA trasladado cobrado" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="208.02" NumCta="208.02" Desc="IEPS trasladado cobrado" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="209" NumCta="209" Desc="Impuestos trasladados no cobrados" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="209.01" NumCta="209.01" Desc="IVA trasladado no cobrado" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="209.02" NumCta="209.02" Desc="IEPS trasladado no cobrado" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="216" NumCta="216" Desc="Impuestos retenidos" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="216.03" NumCta="216.03" Desc="Impuestos retenidos de ISR por arrendamiento" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="216.04" NumCta="216.04" Desc="Impuestos retenidos de ISR por servicios profesionales" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="216.10" NumCta="216.10" Desc="Impuestos retenidos de IVA" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="302" NumCta="302" Desc="Patrimonio" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="302.01" NumCta="302.01" Desc="Patrimonio" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="304" NumCta="304" Desc="Resultado de ejercicios anteriores" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="304.01" NumCta="304.01" Desc="Utilidad de ejercicios anteriores" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="305" NumCta="305" Desc="Resultado del ejercicio" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="305.01" NumCta="305.01" Desc="Utilidad del ejercicio" Nivel="2" Natur="A"/>
             <catalogocuentas:Ctas CodAgrup="401" NumCta="401" Desc="Ingresos" Nivel="1" Natur="A"/>
             <catalogocuentas:Ctas CodAgrup="401.01" NumCta="401.01" Desc="Ventas y/o servicios gravados a la tasa general" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="501" NumCta="501" Desc="Costo de venta y/o servicio" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="501.01" NumCta="501.01" Desc="Costo de venta" Nivel="2" Natur="D"/>
             <catalogocuentas:Ctas CodAgrup="601" NumCta="601" Desc="Gastos generales" Nivel="1" Natur="D"/>
             <catalogocuentas:Ctas CodAgrup="601.84" NumCta="601.84" Desc="Otros gastos generales" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="701" NumCta="701" Desc="Gastos financieros" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="701.01" NumCta="701.01" Desc="P&#233;rdida cambiaria" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="702" NumCta="702" Desc="Productos financieros" Nivel="1" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="702.01" NumCta="702.01" Desc="Utilidad cambiaria" Nivel="2" Natur="A"/>
+            <catalogocuentas:Ctas CodAgrup="811" NumCta="811" Desc="Utilidad o p&#233;rdida fiscal en venta y/o baja de activo fijo" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="811.01" NumCta="811.01" Desc="Utilidad o p&#233;rdida fiscal en venta y/o baja de activo fijo" Nivel="2" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="899" NumCta="899" Desc="Otras cuentas de orden" Nivel="1" Natur="D"/>
+            <catalogocuentas:Ctas CodAgrup="899.01" NumCta="899.01" Desc="Otras cuentas de orden" Nivel="2" Natur="D"/>
         </catalogocuentas:Catalogo>
         """
+
+        # Add missing tags to Outstanding Receipts, Outstanding Payments, Liquidity Transfer accounts
+        accounts = self.env['account.account'].search([
+            ('company_id', '=', self.env.company.id),
+            ('account_type', '!=', 'equity_unaffected'),
+            ('group_id', '!=', False),
+            ('tag_ids', '=', False)
+        ])
+        accounts.write({'tag_ids': [Command.link(self.env.ref('l10n_mx.tag_credit_balance_account').id)]})
 
         options = self._generate_options(self.report, '2021-01-01', '2021-12-31')
         coa_report = self.env[self.report.custom_handler_model_name].with_context(skip_xsd=True).action_l10n_mx_generate_coa_sat_xml(options)['file_content']
@@ -142,6 +211,20 @@ class TestL10nMXTrialBalanceReport(TestAccountReportsCommon):
     def test_generate_coa_xml_with_too_much_tag(self):
         """This test verifies that all accounts present in the trial balance have exactly one Debit or Credit balance account tag"""
         self.company_data['default_account_payable'].tag_ids = self.env.ref('l10n_mx.tag_debit_balance_account') + self.env.ref('l10n_mx.tag_credit_balance_account')
+        options = self._generate_options(self.report, '2021-01-01', '2021-12-31')
+        with self.assertRaises(RedirectWarning):
+            self.env[self.report.custom_handler_model_name].action_l10n_mx_generate_coa_sat_xml(options)
+
+    def test_generate_coa_xml_with_too_much_tag_in_group(self):
+        """This test verifies that all accounts present in the same group have exactly one Debit or Credit balance account tag"""
+        self.company_data['default_account_receivable'].tag_ids = self.env.ref('l10n_mx.tag_credit_balance_account')
+        options = self._generate_options(self.report, '2021-01-01', '2021-12-31')
+        with self.assertRaises(RedirectWarning):
+            self.env[self.report.custom_handler_model_name].action_l10n_mx_generate_coa_sat_xml(options)
+
+    def test_generate_coa_xml_with_too_much_tag_in_parent(self):
+        """This test verifies that all account groups in the same parent have the same account tag"""
+        self.company_data['default_account_tax_purchase'].tag_ids = self.env.ref('l10n_mx.tag_credit_balance_account')
         options = self._generate_options(self.report, '2021-01-01', '2021-12-31')
         with self.assertRaises(RedirectWarning):
             self.env[self.report.custom_handler_model_name].action_l10n_mx_generate_coa_sat_xml(options)

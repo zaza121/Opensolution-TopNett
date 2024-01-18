@@ -40,17 +40,6 @@ var GridController = AbstractController.extend({
         this.displayEmpty = params.displayEmpty;
         this.mutex = new concurrency.Mutex();
     },
-    /**
-     * @override
-     * Close the dialog if it is open.
-     */
-    on_detach_callback() {
-        if (this.closeDialog) {
-            this.closeDialog();
-            this.closeDialog = undefined;
-        }
-        return this._super.apply(this, arguments);
-    },
 
     //--------------------------------------------------------------------------
     // Public
@@ -150,7 +139,7 @@ var GridController = AbstractController.extend({
      */
     _addLine() {
         const options = this._getFormDialogOptions()
-        this.closeDialog = Component.env.services.dialog.add(FormViewDialog, options);
+        Component.env.services.dialog.add(FormViewDialog, options);
     },
     /**
      * @private

@@ -18,7 +18,8 @@ class Partner(models.Model):
         all_events = self.env['calendar.event'].search(
             ['&',
              ('partner_ids', 'in', self.ids),
-             '&',
+             '&', '&',
+             ('show_as', '=', 'busy'),
              ('stop', '>', datetime.combine(date_start, time.min)),
              ('start', '<', datetime.combine(date_end, time.max)),
             ],

@@ -148,7 +148,7 @@ export class MapRenderer extends Component {
                     (record) => {
                         return record.id === markerInfo.record.id;
                     }
-                );
+                ) + 1;
             }
 
             // Icon creation
@@ -217,10 +217,11 @@ export class MapRenderer extends Component {
     createMarkerPopup(markerInfo, latLongOffset = 0) {
         const popupFields = this.getMarkerPopupFields(markerInfo);
         const partner = markerInfo.record.partner;
+        const encodedAddress = encodeURIComponent(partner.contact_address_complete);
         const popupHtml = renderToString("web_map.markerPopup", {
             fields: popupFields,
             hasFormView: this.props.model.metaData.hasFormView,
-            url: `https://www.google.com/maps/dir/?api=1&destination=${partner.partner_latitude},${partner.partner_longitude}`,
+            url: `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`,
         });
 
         const popup = L.popup({ offset: [0, -30] })

@@ -245,5 +245,54 @@ QUnit.module(
                 assert.verifySteps(["spreadsheet_cloned", "action_open_spreadsheet"]);
             }
         );
+
+        QUnit.test(
+            "download spreadsheet document while selecting requested document",
+            async function (assert) {
+                assert.expect(1);
+                const pyEnv = await startServer();
+                const documentsFolderId1 = pyEnv["documents.folder"].create({
+                    display_name: "Workspace1",
+                    has_write_access: true,
+                });
+                pyEnv["documents.document"].create([
+                    {
+                        name: "My spreadsheet",
+                        raw: "{}",
+                        is_favorited: false,
+                        folder_id: documentsFolderId1,
+                        handler: "spreadsheet",
+                    },
+                    {
+                        name: "Request",
+                        folder_id: documentsFolderId1,
+                        type: "empty",
+                    },
+                ]);
+                await createDocumentsView({
+                    type: "kanban",
+                    resModel: "documents.document",
+                    arch: `
+                <kanban js_class="documents_kanban"><templates><t t-name="kanban-box">
+                    <div>
+                        <i class="fa fa-circle-thin o_record_selector"/>
+                        <field name="name"/>
+                        <field name="handler"/>
+                    </div>
+                </t></templates></kanban>`,
+                    serverData: { models: pyEnv.getData(), views: {} },
+                });
+
+                await click(target, ".o_kanban_record:nth-of-type(1) .o_record_selector");
+                await click(target, ".o_kanban_record:nth-of-type(2) .o_record_selector");
+                await click(target, "button.o_inspector_download");
+
+                assert.strictEqual(
+                    target.querySelector(".o_notification_manager .o_notification_content")
+                        .textContent,
+                    "Spreadsheets mass download not yet supported.\n Download spreadsheets individually instead."
+                );
+            }
+        );
     }
 );

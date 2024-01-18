@@ -56,7 +56,7 @@ class AccountMove(models.Model):
             # should be able to select it
             record.l10n_es_reports_mod347_available = record.company_id.country_id.code == "ES"
 
-    @api.depends('partner_id.country_id')
+    @api.depends('partner_id.country_id', 'commercial_partner_id.is_company')
     def _compute_l10n_es_reports_mod349_available(self):
         # Mod 349 is required for all EU operations with companies, except Spain
         mod349_countries = self.env.ref('base.europe').country_ids.filtered_domain([('code', '!=', 'ES')])

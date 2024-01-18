@@ -64,6 +64,10 @@
         <field name="name">Subscriptions Analysis</field>
         <field name="res_model">sale.subscription.report</field>
         <field name="view_mode">pivot,graph,cohort</field>
+        <field name="context">{
+            'search_default_recurring': 1,
+            'search_default_non_recurring': 0,
+        }</field>
     </record>
 
     <record id="sale_subscription_report_search" model="ir.ui.view">
@@ -78,6 +82,9 @@
                 <field name="product_id"/>
                 <field name="partner_id" operator="child_of"/>
                 <filter name="my_subscriptions" string="My Subscriptions" domain="[('user_id','=',uid)]"/>
+                <separator/>
+                <filter string="Recurring" name="recurring" domain="[('product_tmpl_id.recurring_invoice', '=', True)]"/>
+                <filter string="Non-recurring" name="non_recurring" domain="[('product_tmpl_id.recurring_invoice', '!=', True)]"/>
                 <separator/>
                 <filter name="open" string="Running" domain="[('stage_category', '=', 'progress')]" help="Running Subscriptions"/>
                 <filter name="pending" string="To Renew" domain="[('to_renew', '=', True)]" help="Pending subscriptions"/>
@@ -100,6 +107,33 @@
                 </group>
             </search>
         </field>
+    </record>
+
+    <record id="view_order_product_search_inherit" model="ir.ui.view">
+        <field name="name">sale.report.search</field>
+        <field name="model">sale.report</field>
+        <field name="inherit_id" ref="sale.view_order_product_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='Sales']" position='after'>
+                <separator/>
+                <filter string="Recurring" name="recurring" domain="[('product_tmpl_id.recurring_invoice', '=', True)]"/>
+                <filter string="Non-recurring" name="non_recurring" domain="[('product_tmpl_id.recurring_invoice', '!=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sale.action_order_report_all" model="ir.actions.act_window">
+        <field name="name">Sales Analysis</field>
+        <field name="res_model">sale.report</field>
+        <field name="context">{
+            'search_default_Sales': 1,
+            'group_by_no_leaf': 1,
+            'group_by': [],
+            'search_default_filter_order_date': 1,
+            'search_default_recurring': 0,
+            'search_default_non_recurring': 1,
+        }</field>
+        <field name="domain">[('state', '!=', 'cancel')]</field>
     </record>
 
     <menuitem id="menu_sale_subscription_report" name="Reporting" parent="menu_sale_subscription_root" sequence="5"/>

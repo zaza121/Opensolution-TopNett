@@ -341,7 +341,7 @@ class FedexRequest():
         commodity.QuantityUnits = 'EA'
         customs_value = self.factory.Money()
         customs_value.Currency = commodity_currency
-        customs_value.Amount = delivery_commodity.qty * delivery_commodity.monetary_value
+        customs_value.Amount = delivery_commodity.monetary_value
         commodity.CustomsValue = customs_value
 
         commodity.HarmonizedCode = delivery_commodity.product_id.hs_code.replace(".", "") if delivery_commodity.product_id.hs_code else ''

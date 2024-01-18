@@ -47,12 +47,17 @@
                 <div class="oe_title">
                     <label for="employee_id"/>
                     <h1>
-                        <field name="employee_id" domain="[('id', 'in', employee_autocomplete_ids)]" attrs="{'readonly': ['|', ('state', '!=', 'new'), '&amp;', ('is_implicit_manager', '=', False), ('is_appraisal_manager', '=', False)]}" placeholder="e.g. John Doe"/>
+                        <field name="employee_id" domain="[('id', 'in', employee_autocomplete_ids)]"
+                            options="{'relation': 'hr.employee.public'}"
+                            widget="many2one_avatar_employee"
+                            attrs="{'readonly': ['|', ('state', '!=', 'new'), '&amp;', ('is_implicit_manager', '=', False), ('is_appraisal_manager', '=', False)]}"
+                            placeholder="e.g. John Doe"/>
                     </h1>
                 </div>
                 <group>
                     <group>
-                        <field name="manager_ids" widget="many2many_tags" options="{'color_field': 'color'}" required="1" attrs="{
+                        <field name="manager_ids" widget="many2many_avatar_employee"
+                            options="{'color_field': 'color', 'relation': 'hr.employee.public'}" required="1" attrs="{
                             'readonly': &quot;[
                             '|',
                             ('state', '=', ('done')),
@@ -60,7 +65,7 @@
                             ('state', '=', ('pending')),
                             '&amp;',
                             ('manager_user_ids', 'not in', uid), ('is_appraisal_manager', '=', False)]&quot;}"/>
-                        <field name="date_close" attrs="{'readonly':[('state','in', ('pending','done'))]}"/>
+                        <field name="date_close" attrs="{'readonly':[('state','in', ['done','cancel'])]}"/>
                     </group>
                     <group>
                         <field name="department_id"/>
@@ -337,7 +342,7 @@
         <field name="name">hr.appraisal.calendar</field>
         <field name="model">hr.appraisal</field>
         <field name="arch" type="xml">
-            <calendar date_start="date_close" date_stop="date_close" mode="month" color="employee_id">
+            <calendar date_start="date_close" date_stop="date_close" mode="month" color="employee_id" quick_add="False">
                 <field name="display_name"/>
                 <field name="employee_id" filters="1" invisible="1"/>
             </calendar>

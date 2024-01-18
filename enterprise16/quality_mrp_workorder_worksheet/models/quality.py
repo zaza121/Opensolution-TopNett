@@ -11,7 +11,7 @@ class QualityCheck(models.Model):
     def action_worksheet_check(self):
         self.ensure_one()
         action = super().action_worksheet_check()
-        if self.workorder_id:
+        if self.workorder_id and not self.env.context.get('from_worksheet'):
             return self._next()
         return action
 

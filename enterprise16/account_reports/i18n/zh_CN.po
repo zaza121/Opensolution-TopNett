@@ -4,18 +4,20 @@
 # 
 # Translators:
 # keecome <7017511@qq.com>, 2022
-# Martin Trigaux, 2022
 # 稀饭~~ <wangwhai@qq.com>, 2022
-# Jeffery CHEN Fan <jeffery9@gmail.com>, 2022
+# Martin Trigaux, 2023
+# Jeffery CHEN <jeffery9@gmail.com>, 2023
+# Emily Jia <eji@odoo.com>, 2023
+# Chloe Wang, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Jeffery CHEN Fan <jeffery9@gmail.com>, 2022\n"
-"Language-Team: Chinese (China) (https://www.transifex.com/odoo/teams/41243/zh_CN/)\n"
+"Last-Translator: Chloe Wang, 2023\n"
+"Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -49,7 +51,7 @@ msgid ""
 "%s for Transactions(+) imported from your online bank account (dated today) "
 "that are not yet reconciled in Odoo (Waiting the final reconciliation "
 "allowing finding the right account)"
-msgstr "%s 表示从您的线上银行帐户（日期为今天日期）导入的交易（日期为 Odoo）（等待最终调节，从而允许查找正确的帐户）"
+msgstr "%s 表示从您的线上银行帐户（日期为今天日期）导入的交易（日期为 Odoo）（等待最终对账，从而允许查找正确的帐户）"
 
 #. module: account_reports
 #. odoo-python
@@ -60,7 +62,14 @@ msgid ""
 "that are not yet reconciled in Odoo (Waiting the final reconciliation "
 "allowing finding the right account)"
 msgstr ""
-"%s 表示从您的线上银行帐户（日期为今天）导入的交易（日期为今天），这些交易尚未在 Odoo 中调节（等待最终调节，从而允许查找正确的帐户）"
+"%s 表示从您的线上银行帐户（日期为今天）导入的交易（日期为今天），这些交易尚未在 Odoo 中对账（等待最终对账，从而允许查找正确的帐户）"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "%s is not a numeric value"
+msgstr "%s不是数值"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
@@ -88,7 +97,7 @@ msgstr "“打开总帐”插入符号选项仅适用于针对帐户的表单报
 msgid ""
 "'View Bank Statement' caret option is only available for report lines "
 "targeting bank statements."
-msgstr ""
+msgstr "“查看银行对账单”插入符号选项仅适用于针对银行对账单的报表行。"
 
 #. module: account_reports
 #. odoo-python
@@ -96,6 +105,13 @@ msgstr ""
 #, python-format
 msgid "'external' engine does not support groupby, limit nor offset."
 msgstr "“外部”引擎不支持分组、限制或抵消。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "(%s lines)"
+msgstr "（%s行）"
 
 #. module: account_reports
 #. odoo-python
@@ -110,6 +126,13 @@ msgstr "(+) 未完成收据"
 #, python-format
 msgid "(-) Outstanding Payments"
 msgstr "(-)未完成付款"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "(1 line)"
+msgstr "（1行）"
 
 #. module: account_reports
 #. odoo-python
@@ -214,11 +237,6 @@ msgstr ""
 "            日记账:"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
-msgid "<span class=\"fa fa-calendar\" title=\"Dates\" role=\"img\" aria-label=\"Dates\"/>"
-msgstr "<span class=\"fa fa-calendar\" title=\"Dates\" role=\"img\" aria-label=\"Dates\"/>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 msgid ""
 "<span class=\"fa fa-circle color-green trust-partner\" role=\"img\" aria-"
@@ -320,6 +338,15 @@ msgid "<span class=\"fa fa-folder-open\"/> Partners"
 msgstr "<span class=\"fa fa-folder-open\"/> 业务伙伴"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
+msgid ""
+"<span class=\"fa fa-fw fa-calendar\" title=\"Dates\" role=\"img\" aria-"
+"label=\"Dates\"/>"
+msgstr ""
+"<span class=\"fa fa-fw fa-calendar\" title=\"Dates\" role=\"img\" aria-"
+"label=\"Dates\"/>"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_tax_unit
 msgid ""
 "<span class=\"fa fa-home\"/>\n"
@@ -379,13 +406,6 @@ msgstr ""
 "label=\"Search\" title=\"Search\"/></span>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
-msgid ""
-"<span>Intrastat taxes are applied on unexpected journal entries "
-"(international or between non intrastat countries).</span>"
-msgstr "<span>内部统计税适用于意外的日记帐分录（国际或非内部统计国家/地区之间）。</span>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.template_tax_report
 msgid ""
 "<span>Please note that the report may include some rounding differences "
@@ -393,17 +413,11 @@ msgid ""
 msgstr "<span>请注意，报告中可能包含一些对预订的舍入差异。</span>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
-msgid "<span>Some partners are missing a VAT number.</span>"
-msgstr "<span>一些合作伙伴缺少一个增值税号码。</span>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.template_tax_report
 msgid ""
 "<span>This company is part of a tax unit. You're currently not viewing the "
-"whole unit; to change that, tick the \"aggregate\" option of \"tax unit\" "
-"menu.</span>"
-msgstr "<span>这个公司是一个税务组织的一部分。你目前没有看到整个单位；要改变这一点，请勾选 \"税务组织 \"菜单的 \"总数 \"选项。</span>"
+"whole unit. To change that, use the Tax Unit filter.</span>"
+msgstr ""
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.multicurrency_report_main_template
@@ -619,7 +633,7 @@ msgstr "到期的应付"
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_payable_report_handler
 msgid "Aged Payable Custom Handler"
-msgstr ""
+msgstr "到期的应付款自定义处理程序"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -637,7 +651,7 @@ msgstr "到期的应收"
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_receivable_report_handler
 msgid "Aged Receivable Custom Handler"
-msgstr ""
+msgstr "到期的应收款自定义处理程序"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -821,11 +835,6 @@ msgstr "按操作速率平衡"
 #: model:account.report.column,name:account_reports.multicurrency_revaluation_report_balance_currency
 msgid "Balance in Foreign Currency"
 msgstr "外币余额"
-
-#. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
-msgid "Balance in GL"
-msgstr "以 GL 表示余额"
 
 #. module: account_reports
 #. odoo-python
@@ -1058,6 +1067,11 @@ msgstr "现金结余"
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 msgid "Change expected payment date"
 msgstr "变更预计支付日期"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "Check them"
+msgstr "检查一下"
 
 #. module: account_reports
 #. odoo-python
@@ -1394,6 +1408,20 @@ msgid "EC Sales Report Custom Handler"
 msgstr "EC 销售报告自定义处理程序"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "EC tax on non EC countries"
+msgstr "非欧洲共同体（EC）国家的欧洲共同体税项"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "EC tax on same country"
+msgstr "相同国家的欧洲共同体（EC）税项"
+
+#. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_equity0
 msgid "EQUITY"
 msgstr "权益"
@@ -1450,6 +1478,13 @@ msgstr "上季度的期末"
 #, python-format
 msgid "Ending Balance :"
 msgstr "期末余额 ："
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "Entries with partners with no VAT"
+msgstr "无增值税合作伙伴的分录"
 
 #. module: account_reports
 #. odoo-python
@@ -1706,6 +1741,13 @@ msgstr "通用税务报表自定义处理程序（税务 -> 帐户）"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_journal_report.py:0
+#, python-format
+msgid "Go to report configuration"
+msgstr "前往报表配置"
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_sales_report.py:0
 #, python-format
 msgid "Goods"
@@ -1866,14 +1908,14 @@ msgstr "包括分析模拟"
 #: code:addons/account_reports/models/account_bank_reconciliation_report.py:0
 #, python-format
 msgid "Including Unreconciled Bank Statement Payments"
-msgstr "包括未调节银行调节单付款"
+msgstr "包括未对账银行对账单付款"
 
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_bank_reconciliation_report.py:0
 #, python-format
 msgid "Including Unreconciled Bank Statement Receipts"
-msgstr "包括未调节的银行调节单收据"
+msgstr "包括未对账的银行对账单收据"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_income0
@@ -1936,6 +1978,33 @@ msgstr "期初余额"
 #, python-format
 msgid "Insert foot note here"
 msgstr "插入脚注"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "Intra-community taxes are applied on"
+msgstr "社区内税项用于"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid domain formula in expression %r of line %r: %s"
+msgstr "第 %r 行表达式 %r 中的域公式无效：%s"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid method %r"
+msgstr "无效方法 %r"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid subformula in expression %r of line %r: %s"
+msgstr "第 %r 行表达式 %r 中的子公式无效：%s"
 
 #. module: account_reports
 #. odoo-python
@@ -2007,6 +2076,13 @@ msgid "Journal Report Custom Handler"
 msgstr "日记报告自定义处理程序"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#, python-format
+msgid "Journal items with archived tax tags"
+msgstr "具有存档税项标签的日记帐项目"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.filter_info_template
 msgid "Journals:"
 msgstr "日记账："
@@ -2057,6 +2133,11 @@ msgstr "上月"
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
 msgid "Last Quarter"
 msgstr "上季度"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Last Statement balance + Transactions since statement"
+msgstr "上次对账单余额 + 对账单后的交易"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_cell_template_link_last_statement
@@ -2357,7 +2438,7 @@ msgstr "仅允许计费管理员更改锁定日期！"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options
 msgid "Only Show Unreconciled Entries"
-msgstr "只显示未调节的项"
+msgstr "只显示未对账的项"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
@@ -2628,7 +2709,7 @@ msgstr "应收"
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 #: model_terms:ir.ui.view,arch_db:account_reports.line_template_partner_ledger_report
 msgid "Reconcile"
-msgstr "调节"
+msgstr "对账"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -2714,6 +2795,11 @@ msgid "Rules"
 msgstr "规则"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Running Balance"
+msgstr "未结余额"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_comparison
 msgid "Same Period Last Year"
 msgstr "同上年期间"
@@ -2784,6 +2870,11 @@ msgstr "显示付款行"
 #: model_terms:ir.ui.view,arch_db:account_reports.view_move_form_vat_return
 msgid "Some controls failed."
 msgstr "某些控件失败。"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "Some journal items appear to point to obsolete report lines."
+msgstr "部分日记账项目似乎指向过时的报告行。"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options_journal_audit_report
@@ -2982,10 +3073,37 @@ msgstr "文本"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_journal_report.py:0
+#, python-format
+msgid ""
+"The 'load more limit' setting of this report is too low to display all the "
+"lines of the entry you're trying to show."
+msgstr "该报告的\"加载更多限制\"设置过低，无法显示条目所有行数。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid ""
+"The Accounts Coverage Report is only available for the Profit and Loss and "
+"Balance Sheet reports."
+msgstr ""
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_bank_reconciliation_report.py:0
 #, python-format
 msgid "The Book balance in Odoo dated today"
 msgstr "Odoo的书余额日期为今天"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid ""
+"The company's chart of account does not match the report's chart of "
+"accounts."
+msgstr ""
 
 #. module: account_reports
 #. odoo-python
@@ -3028,7 +3146,7 @@ msgstr "一个税务组织的主要公司必须是它的一部分。"
 #, python-format
 msgid ""
 "The selected report line does not target a Journal Entry or a Journal Item."
-msgstr ""
+msgstr "所选报表行不针对会计凭证或分录。"
 
 #. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_res_company__account_tax_unit_ids
@@ -3084,6 +3202,13 @@ msgstr "此科目在报表的某一行中报告，但在会计科目表中不存
 #, python-format
 msgid "This account is reported in multiple lines of the report"
 msgstr "此帐户在报告的多行中报告"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "This account is reported multiple times on the same line of the report"
+msgstr "该科目在报告的同一行多次报告"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
@@ -3146,7 +3271,7 @@ msgstr "已输入 Odoo 但尚未对帐的交易记录（由结算单/账单或�
 msgid ""
 "Transactions(+) that were entered into Odoo, but not yet reconciled "
 "(Payments triggered by invoices/refunds or manually)"
-msgstr "已输入Odoo的交易(+)，但尚未核对(由结算单/退款或手动触发的付款)"
+msgstr "已输入Odoo的交易(+)，但尚未对账(由结算单/退款或手动触发的付款)"
 
 #. module: account_reports
 #. odoo-python
@@ -3155,7 +3280,7 @@ msgstr "已输入Odoo的交易(+)，但尚未核对(由结算单/退款或手动
 msgid ""
 "Transactions(-) that were entered into Odoo, but not yet reconciled "
 "(Payments triggered by bills/credit notes or manually)"
-msgstr "已输入Odoo但尚未核对的交易(-) (由账单/信用证或手动触发的付款)"
+msgstr "已输入Odoo但尚未对账的交易(-) (由账单/信用证或手动触发的付款)"
 
 #. module: account_reports
 #: model:account.report,name:account_reports.trial_balance_report
@@ -3178,6 +3303,7 @@ msgstr "三角形"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid ""
@@ -3272,7 +3398,7 @@ msgstr "未实现货币收益/损失"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options
 msgid "Unreconciled"
-msgstr "未调节"
+msgstr "未对账"
 
 #. module: account_reports
 #: model:account.report.column,name:account_reports.account_financial_report_ec_sales_vat
@@ -3372,6 +3498,13 @@ msgstr "要展开的合作伙伴分类帐行的 ID 错误： %s"
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Wrong format for if_other_expr_above/if_other_expr_below formula: %s"
+msgstr "if_other_expr_above/if_other_expr_below公式格式错误：%s"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "XLSX"
@@ -3386,11 +3519,40 @@ msgstr "您使用的是自定义汇率。"
 #. odoo-python
 #: code:addons/account_reports/models/account_move.py:0
 #, python-format
+msgid "You can't open a tax report from a move without a VAT closing date."
+msgstr "在没有增值税截止日期的情况下，您无法从分录开启税务报告。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_move.py:0
+#, python-format
 msgid ""
 "You cannot reset this closing entry to draft, as it would delete carryover "
 "values impacting the tax report of a locked period. To do this, you first "
 "need to modify you tax return lock date."
-msgstr ""
+msgstr "您不能将此条目重置为草稿，因为将会删除影响锁定期间纳税报告的结转值。应首先修改报税锁定日期。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_multicurrency_revaluation_report.py:0
+#, python-format
+msgid "You need to activate more than one currency to access this report."
+msgstr "您需要激活一种以上货币才能访问该报告。"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "[Draft]"
+msgstr "[草稿]"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "addressed to"
+msgstr "收件人"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "and correct their tax tags if necessary."
+msgstr "如有需要，应更改其税项标签。"
 
 #. module: account_reports
 #: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__year
@@ -3434,6 +3596,11 @@ msgid "in the next period."
 msgstr "在下一个时期。"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "invoices"
+msgstr "发票"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_main_template
 msgid "journal items"
 msgstr "日记帐项目"
@@ -3456,6 +3623,11 @@ msgid "name of the model of the report"
 msgstr "报告模块的名称"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "partners"
+msgstr "合作伙伴"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.main_template
 msgid "prior or included in this period"
 msgstr "在此期间之前或包括在内"
@@ -3474,6 +3646,11 @@ msgstr "半年一次"
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_main_template
 msgid "statements"
 msgstr "语句"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "that are not established abroad."
+msgstr "未在国外成立。"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
@@ -3498,6 +3675,11 @@ msgid "which doesn't result from a bank statement nor payments."
 msgstr "这不是银行对账单或付款的结果。"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "who are not established in any of the EC countries."
+msgstr "未在任何欧洲共同体（EC）国家成立。"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/xml/account_report_template.xml:0
 #, python-format
@@ -3510,6 +3692,11 @@ msgstr "将被结转到"
 #, python-format
 msgid "will be carried over to this line in the next period."
 msgstr "将在下一个期间结转到此行。"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "without a valid intra-community VAT number."
+msgstr "没有有效的社区内增值税号码。"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.multicurrency_report_line_template

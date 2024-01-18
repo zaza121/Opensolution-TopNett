@@ -49,6 +49,27 @@ class AppointmentUITest(AppointmentUICommon):
         self.assertTrue(all(slot.slot_type == 'recurring' for slot in appointment_type.slot_ids), "All slots are 'recurring'")
 
     @users('apt_manager')
+    def test_route_apt_type_search_create_anytime_with_context(self):
+        self.authenticate(self.env.user.login, self.env.user.login)
+        request = self.url_open(
+            "/appointment/appointment_type/search_create_anytime",
+            data=json.dumps({
+                'params': {
+                    'context': {
+                        'default_assign_method': 'random',
+                    },
+                }
+            }),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        result = request.get('result', dict())
+        self.assertTrue(result.get('appointment_type_id'), 'The request returns the id of the custom appointment type')
+
+        appointment_type = self.env['appointment.type'].browse(result['appointment_type_id'])
+        # All default context fields should be ignored because of clean_context()
+        self.assertEqual(appointment_type.assign_method, 'chosen')
+
+    @users('apt_manager')
     def test_route_apt_type_create_custom(self):
         self.authenticate(self.env.user.login, self.env.user.login)
 
@@ -87,6 +108,38 @@ class AppointmentUITest(AppointmentUICommon):
                 else:
                     self.assertEqual(slot.start_datetime, datetime.now() + timedelta(hours=1))
                     self.assertEqual(slot.end_datetime, datetime.now() + timedelta(hours=2))
+
+    @users('apt_manager')
+    def test_route_create_custom_with_context(self):
+        self.authenticate(self.env.user.login, self.env.user.login)
+        now = datetime.now()
+        unique_slots = [{
+            'start': (now + timedelta(hours=1)).replace(microsecond=0).isoformat(' '),
+            'end': (now + timedelta(hours=2)).replace(microsecond=0).isoformat(' '),
+            'allday': False,
+        }, {
+            'start': (now + timedelta(days=2)).replace(microsecond=0).isoformat(' '),
+            'end': (now + timedelta(days=3)).replace(microsecond=0).isoformat(' '),
+            'allday': True,
+        }]
+        request = self.url_open(
+            "/appointment/appointment_type/create_custom",
+            data=json.dumps({
+                'params': {
+                    'slots': unique_slots,
+                    'context': {
+                        'default_assign_method': 'random',
+                    },
+                }
+            }),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        result = request.get('result', dict())
+        self.assertTrue(result.get('appointment_type_id'), 'The request returns the id of the custom appointment type')
+
+        appointment_type = self.env['appointment.type'].browse(result['appointment_type_id'])
+        # The default context fields should be ignored as the fields are not whitelisted
+        self.assertEqual(appointment_type.assign_method, 'chosen')
 
     def test_share_appointment_type(self):
         self._create_invite_test_data()

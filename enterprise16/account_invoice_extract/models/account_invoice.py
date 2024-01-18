@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from psycopg2 import IntegrityError, OperationalError
+
 from odoo import api, fields, models, _, _lt, Command
 from odoo.addons.iap.tools import iap_tools
 from odoo.exceptions import AccessError, UserError
@@ -8,6 +10,7 @@ from odoo.tools.misc import clean_context
 import logging
 import re
 import json
+from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -84,6 +87,7 @@ class AccountMove(models.Model):
         return (
             self.state == 'draft'
             and self.message_main_attachment_id
+            and self.is_invoice()
             and not self._check_digitalization_mode(self.company_id, self.move_type, 'no_send')
         )
 
@@ -143,7 +147,7 @@ class AccountMove(models.Model):
         try:
             self._check_status(force_write=True)
         except Exception as e:
-            _logger.error("Error while reloading AI data on account.move %d: %s", self.id, e)
+            _logger.warning("Error while reloading AI data on account.move %d: %s", self.id, e)
             raise AccessError(_lt("Couldn't reload AI data."))
 
     def _domain_company(self):
@@ -221,8 +225,15 @@ class AccountMove(models.Model):
     @api.model
     def _cron_parse(self):
         for rec in self.search([('extract_state', '=', 'waiting_upload')]):
-            rec.retry_ocr()
-            rec.env.cr.commit()
+            try:
+                with self.env.cr.savepoint(flush=False):
+                    rec.with_company(rec.company_id).retry_ocr()
+                    # We handle the flush manually so that if an error occurs, e.g. a concurrent update error,
+                    # the savepoint will be rollbacked when exiting the context manager
+                    self.env.cr.flush()
+                self.env.cr.commit()
+            except (IntegrityError, OperationalError) as e:
+                _logger.error("Couldn't upload %s with id %d: %s", rec._name, rec.id, str(e))
 
     def get_user_infos(self):
         user_infos = {
@@ -425,8 +436,14 @@ class AccountMove(models.Model):
         # OVERRIDE
         # On the validation of an invoice, send the different corrected fields to iap to improve the ocr algorithm.
         posted = super()._post(soft)
-        self.extract_state = 'to_validate'
-        self.env.ref('account_invoice_extract.ir_cron_ocr_validate')._trigger()
+
+        moves_to_validate = posted.filtered(lambda m: m.extract_state == 'waiting_validation')
+        moves_to_validate.extract_state = 'to_validate'
+
+        if moves_to_validate:
+            ocr_trigger_datetime = fields.Datetime.now() + relativedelta(minutes=self.env.context.get('ocr_trigger_delta', 0))
+            self.env.ref('account_invoice_extract.ir_cron_ocr_validate')._trigger(at=ocr_trigger_datetime)
+
         return posted
 
     def get_boxes(self):
@@ -670,7 +687,7 @@ class AccountMove(models.Model):
         self.ensure_one()
 
         invoice_lines = ocr_results['invoice_lines'] if 'invoice_lines' in ocr_results else []
-        subtotal_ocr = ocr_results['subtotal']['selected_value']['content'] if 'subtotal' in ocr_results else ""
+        subtotal_ocr = ocr_results['subtotal']['selected_value']['content'] if 'subtotal' in ocr_results else 0.0
         supplier_ocr = ocr_results['supplier']['selected_value']['content'] if 'supplier' in ocr_results else ""
         date_ocr = ocr_results['date']['selected_value']['content'] if 'date' in ocr_results else ""
 
@@ -786,6 +803,11 @@ class AccountMove(models.Model):
                 if 'full_text_annotation' in ocr_results:
                     self.message_main_attachment_id.index_content = ocr_results['full_text_annotation']
 
+                if ocr_results.get('type') == 'refund' and self.move_type in ('in_invoice', 'out_invoice'):
+                    # We only switch from an invoice to a credit note, not the other way around.
+                    # We assume that if the user has specifically created a credit note, it is indeed a credit note.
+                    self.action_switch_invoice_into_refund_credit_note()
+
                 self._save_form(ocr_results, force_write=force_write)
 
                 if not self.extract_word_ids:  # We don't want to recreate the boxes when the user clicks on "Reload AI data"
@@ -823,7 +845,7 @@ class AccountMove(models.Model):
     def _save_form(self, ocr_results, force_write=False):
         date_ocr = ocr_results['date']['selected_value']['content'] if 'date' in ocr_results else ""
         due_date_ocr = ocr_results['due_date']['selected_value']['content'] if 'due_date' in ocr_results else ""
-        total_ocr = ocr_results['total']['selected_value']['content'] if 'total' in ocr_results else ""
+        total_ocr = ocr_results['total']['selected_value']['content'] if 'total' in ocr_results else 0.0
         invoice_id_ocr = ocr_results['invoice_id']['selected_value']['content'] if 'invoice_id' in ocr_results else ""
         currency_ocr = ocr_results['currency']['selected_value']['content'] if 'currency' in ocr_results else ""
         payment_ref_ocr = ocr_results['payment_ref']['selected_value']['content'] if 'payment_ref' in ocr_results else ""
@@ -858,44 +880,48 @@ class AccountMove(models.Model):
 
             if qr_bill_ocr:
                 qr_content_list = qr_bill_ocr.splitlines()
-
+                # Supplier and client sections have an offset of 16
+                index_offset = 16 if self.is_sale_document() else 0
                 if not move_form.partner_id:
+                    partner_name = qr_content_list[5 + index_offset]
                     move_form.partner_id = self.env["res.partner"].with_context(clean_context(self.env.context)).create({
-                        'name': qr_content_list[5],
+                        'name': partner_name,
                         'is_company': True,
                     })
 
                 partner = move_form.partner_id
-                supplier_address_type = qr_content_list[4]
-                if supplier_address_type == 'S':
+                address_type = qr_content_list[4 + index_offset]
+                if address_type == 'S':
                     if not partner.street:
-                        street = qr_content_list[6]
-                        house_nb = qr_content_list[7]
+                        street = qr_content_list[6 + index_offset]
+                        house_nb = qr_content_list[7 + index_offset]
                         partner.street = " ".join((street, house_nb))
 
                     if not partner.zip:
-                        partner.zip = qr_content_list[8]
+                        partner.zip = qr_content_list[8 + index_offset]
 
                     if not partner.city:
-                        partner.city = qr_content_list[9]
-                elif supplier_address_type == 'K':
-                    if not partner.street:
-                        partner.street = qr_content_list[6]
-                        partner.street2 = qr_content_list[7]
+                        partner.city = qr_content_list[9 + index_offset]
 
-                supplier_country_code = qr_content_list[10]
-                if not partner.country_id and supplier_country_code:
-                    country = self.env['res.country'].search([('code', '=', supplier_country_code)])
+                elif address_type == 'K':
+                    if not partner.street:
+                        partner.street = qr_content_list[6 + index_offset]
+                        partner.street2 = qr_content_list[7 + index_offset]
+
+                country_code = qr_content_list[10 + index_offset]
+                if not partner.country_id and country_code:
+                    country = self.env['res.country'].search([('code', '=', country_code)])
                     partner.country_id = country and country.id
 
-                iban = qr_content_list[3]
-                if iban and not self.env['res.partner.bank'].search([('acc_number', '=ilike', iban)]):
-                    self.env['res.partner.bank'].create({
-                        'acc_number': iban,
-                        'company_id': move_form.company_id.id,
-                        'currency_id': move_form.currency_id.id,
-                        'partner_id': partner.id,
-                    })
+                if self.is_purchase_document():
+                    iban = qr_content_list[3]
+                    if iban and not self.env['res.partner.bank'].search([('acc_number', '=ilike', iban)]):
+                        move_form.partner_bank_id = self.with_context(clean_context(self.env.context)).env['res.partner.bank'].create({
+                            'acc_number': iban,
+                            'company_id': move_form.company_id.id,
+                            'currency_id': move_form.currency_id.id,
+                            'partner_id': partner.id,
+                        })
 
             due_date_move_form = move_form.invoice_date_due  # remember the due_date, as it could be modified by the onchange() of invoice_date
             context_create_date = fields.Date.context_today(self, self.create_date)
@@ -911,20 +937,19 @@ class AccountMove(models.Model):
             if self.is_purchase_document() and (not move_form.ref or force_write):
                 move_form.ref = invoice_id_ocr
 
-            if self.is_sale_document():
-                with mute_logger('odoo.tests.common.onchange'):
-                    move_form.name = invoice_id_ocr
-
-            if currency_ocr and (move_form.currency_id == move_form.company_currency_id or force_write):
-                currency = self._get_currency(currency_ocr, move_form.partner_id)
-                if currency:
-                    move_form.currency_id = currency
+            if self.is_sale_document() and self.quick_edit_mode:
+                move_form.name = invoice_id_ocr
 
             if payment_ref_ocr and (not move_form.payment_reference or force_write):
                 move_form.payment_reference = payment_ref_ocr
 
             add_lines = not move_form.invoice_line_ids or force_write
             if add_lines:
+                if currency_ocr and (move_form.currency_id == move_form.company_currency_id or force_write):
+                    currency = self._get_currency(currency_ocr, move_form.partner_id)
+                    if currency:
+                        move_form.currency_id = currency
+
                 if force_write:
                     move_form.invoice_line_ids = [Command.clear()]
                 vals_invoice_lines = self._get_invoice_lines(ocr_results)

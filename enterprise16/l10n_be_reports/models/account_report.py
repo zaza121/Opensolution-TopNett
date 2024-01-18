@@ -13,6 +13,22 @@ from odoo.exceptions import RedirectWarning, UserError
 def _raw_phonenumber(phonenumber):
     return re.sub("[^+0-9]", "", phonenumber)[:20]
 
+def _split_vat_number_and_country_code(vat_number):
+    """
+    Even with base_vat, the vat number doesn't necessarily starts
+    with the country code
+    We should make sure the vat is set with the country code
+    to avoid submitting a declaration with a wrong vat number
+    """
+    vat_number = vat_number.replace(' ', '').upper()
+    try:
+        int(vat_number[:2])
+        country_code = None
+    except ValueError:
+        country_code = vat_number[:2]
+        vat_number = vat_number[2:]
+
+    return vat_number, country_code
 
 def _get_xml_export_representative_node(report):
     """ The <Representative> node is common to XML exports made for VAT Listing, VAT Intra,
@@ -24,7 +40,7 @@ def _get_xml_export_representative_node(report):
     """
     representative = report.env.company.account_representative_id
     if representative:
-        vat_no, country_from_vat = report.env[report.custom_handler_model_name]._split_vat_number_and_country_code(representative.vat or "")
+        vat_no, country_from_vat = _split_vat_number_and_country_code(representative.vat or "")
         country = report.env['res.country'].search([('code', '=', country_from_vat)], limit=1)
         phone = representative.phone or representative.mobile or ''
         node_values = {
@@ -255,16 +271,10 @@ class BelgianTaxReportCustomHandler(models.AbstractModel):
         with the country code
         We should make sure the vat is set with the country code
         to avoid submitting this declaration with a wrong vat number
-        """
-        vat_number = vat_number.replace(' ', '').upper()
-        try:
-            int(vat_number[:2])
-            country_code = None
-        except ValueError:
-            country_code = vat_number[:2]
-            vat_number = vat_number[2:]
 
-        return vat_number, country_code
+        DEPRECATED: will be removed in master (and replaced by a direct call to the global function _split_vat_number_and_country_code)
+        """
+        return _split_vat_number_and_country_code(vat_number)
 
     def _dynamic_check_lines(self, options, all_column_groups_expression_totals):
         def _evaluate_check(check_func):
@@ -365,5 +375,11 @@ class BelgianTaxReportCustomHandler(models.AbstractModel):
             # Modify the options to add a key indicating the check failed. Thanks to this small hack, we can display a banner
             # in the XML wizard and on the tax closing entry without needing to recompute the whole report; just using the options.
             options['tax_report_control_error'] = True
+
+        if _evaluate_check(lambda expr_totals: not any(
+            [expr_totals[expr_map[grid]]['value'] for grid in ('c44', 'c46L', 'c46T', 'c48s44', 'c48s46L', 'c48s46T')]
+        )):
+            # remind user to submit EC Sales Report if any ec sales related taxes
+            options['be_tax_report_ec_sales_reminder'] = True
 
         return failed_control_lines

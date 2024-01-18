@@ -29,6 +29,11 @@ class MrpWorkorder(models.Model):
             for dummy, times in loss_type_times.items():
                 duration += self._intervals_duration([(t.date_start, t.date_end or now, t) for t in times])
             wo.duration = duration
+            wo.duration_unit = round(wo.duration / max(wo.qty_produced, 1), 2)
+            if wo.duration_expected:
+                wo.duration_percent = max(-2147483648, min(2147483647, 100 * (wo.duration_expected - wo.duration) / wo.duration_expected))
+            else:
+                wo.duration_percent = 0
         return super(MrpWorkorder, self.env['mrp.workorder'].browse(wo_ids_without_employees))._compute_duration()
 
     @api.depends('employee_ids')
@@ -46,10 +51,10 @@ class MrpWorkorder(models.Model):
 
     def start_employee(self, employee_id):
         self.ensure_one()
-        if employee_id in self.employee_ids.ids and any(not t.date_end for t in self.time_ids if t.employee_id.id == employee_id):
+        if not self.allow_employee or employee_id in self.employee_ids.ids and any(not t.date_end for t in self.time_ids if t.employee_id.id == employee_id):
             return
         self.employee_ids = [Command.link(employee_id)]
-        time_data = self._prepare_timeline_vals(self.duration, datetime.now())
+        time_data = self._prepare_timeline_vals(self.duration, fields.Datetime.now())
         time_data['employee_id'] = employee_id
         self.env['mrp.workcenter.productivity'].create(time_data)
 
@@ -124,6 +129,12 @@ class MrpWorkorder(models.Model):
     def get_working_duration(self):
         self.ensure_one()
         if self.workcenter_id.allow_employee:
-            now = datetime.now()
+            now = fields.Datetime.now()
             return self._intervals_duration([(t.date_start, now, t) for t in self.time_ids if not t.date_end])
         return super().get_working_duration()
+
+    def _cal_cost(self, times=None):
+        res = super()._cal_cost(times=times)
+        times = times or self.time_ids
+        res += sum(times.mapped('total_cost'))
+        return res

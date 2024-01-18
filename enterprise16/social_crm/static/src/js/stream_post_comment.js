@@ -12,8 +12,8 @@ patch(StreamPostComment.prototype, 'stream_post_comment_crm', {
         this.actionService = useService("action");
     },
 
-    get isManageable() {
-        return super.isManageable || this.isConvertibleToLead();
+    isManageable() {
+        return this._super() || this.isConvertibleToLead();
     },
 
     isConvertibleToLead() {
@@ -34,7 +34,7 @@ patch(StreamPostComment.prototype, 'stream_post_comment_crm', {
                 default_post_content: this._formatPost(this.comment.message),
                 // expected datetime format by the server
                 // as social comments are not stored as records, we need to do some manual formatting
-                default_post_datetime: moment(this.comment.created_time).format('YYYY-MM-DD HH:mm:ss'),
+                default_post_datetime: moment(this.comment.created_time).locale('en').format('YYYY-MM-DD HH:mm:ss'),
                 default_post_link: this.originalPost.post_link.raw_value
             }
         });

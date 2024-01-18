@@ -3,18 +3,23 @@
 # 	* account_reports
 # 
 # Translators:
-# Braulio D. López Vázquez <bdl@odoo.com>, 2022
-# Lucia Pacheco <lpo@odoo.com>, 2022
-# Martin Trigaux, 2022
+# Martin Trigaux, 2023
+# Braulio D. López Vázquez <bdl@odoo.com>, 2023
+# Aimée Mendoza Sánchez, 2023
+# Lucia Pacheco, 2023
+# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2023
+# Iran Villalobos López, 2023
+# Alfonso González, 2023
+# Fernanda Alvarez, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Fernanda Alvarez, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -67,6 +72,13 @@ msgstr ""
 "conciliación final que permita encontrar la cuenta correcta)"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "%s is not a numeric value"
+msgstr "%s no es un valor numérico"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_cell_template_unexplained_difference
 #: model_terms:ir.ui.view,arch_db:account_reports.line_template_general_ledger_report
@@ -95,6 +107,8 @@ msgid ""
 "'View Bank Statement' caret option is only available for report lines "
 "targeting bank statements."
 msgstr ""
+"La opción \"Ver estado de cuenta bancario\" solo está disponible en las "
+"líneas de reporte que tienen como objetivo los estados de cuenta bancarios."
 
 #. module: account_reports
 #. odoo-python
@@ -103,6 +117,13 @@ msgstr ""
 msgid "'external' engine does not support groupby, limit nor offset."
 msgstr ""
 "el motor 'externo' no es compatible con agrupar por, límite ni intervalo."
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "(%s lines)"
+msgstr "(%s líneas)"
 
 #. module: account_reports
 #. odoo-python
@@ -117,6 +138,13 @@ msgstr "(+) Recibos pendientes"
 #, python-format
 msgid "(-) Outstanding Payments"
 msgstr "(-) Pagos pendientes"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "(1 line)"
+msgstr "(1 línea)"
 
 #. module: account_reports
 #. odoo-python
@@ -221,11 +249,6 @@ msgstr ""
 "            Diarios:"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
-msgid "<span class=\"fa fa-calendar\" title=\"Dates\" role=\"img\" aria-label=\"Dates\"/>"
-msgstr "<span class=\"fa fa-calendar\" title=\"Fechas\" role=\"img\" aria-label=\"Fechas\"/>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 msgid ""
 "<span class=\"fa fa-circle color-green trust-partner\" role=\"img\" aria-"
@@ -320,17 +343,26 @@ msgstr "<span class=\"fa fa-filter\"/> Opciones:"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_analytic
 msgid "<span class=\"fa fa-folder-open\"/> Analytic Filter"
-msgstr ""
+msgstr "<span class=\"fa fa-folder-open\"/> Filtro analítico"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_analytic
 msgid "<span class=\"fa fa-folder-open\"/> Analytic Group By"
-msgstr ""
+msgstr "<span class=\"fa fa-folder-open\"/> Grupo analítico por"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_partner
 msgid "<span class=\"fa fa-folder-open\"/> Partners"
 msgstr "<span class=\"fa fa-folder-open\"/> Partners"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
+msgid ""
+"<span class=\"fa fa-fw fa-calendar\" title=\"Dates\" role=\"img\" aria-"
+"label=\"Dates\"/>"
+msgstr ""
+"<span class=\"fa fa-fw fa-calendar\" title=\"Fechas\" role=\"img\" aria-"
+"label=\"Fechas\"/>"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_tax_unit
@@ -393,15 +425,6 @@ msgstr ""
 "label=\"Buscar\" title=\"Buscar\"/></span>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
-msgid ""
-"<span>Intrastat taxes are applied on unexpected journal entries "
-"(international or between non intrastat countries).</span>"
-msgstr ""
-"<span>Los impuestos intraestatales se aplican a los asientos inesperados "
-"(intraestatales o entre países no intraestatales).</span>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.template_tax_report
 msgid ""
 "<span>Please note that the report may include some rounding differences "
@@ -411,20 +434,14 @@ msgstr ""
 "a comparación de los libros.</span>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
-msgid "<span>Some partners are missing a VAT number.</span>"
-msgstr "<span>A algunos partners les falta el RFC.</span>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.template_tax_report
 msgid ""
 "<span>This company is part of a tax unit. You're currently not viewing the "
-"whole unit; to change that, tick the \"aggregate\" option of \"tax unit\" "
-"menu.</span>"
+"whole unit. To change that, use the Tax Unit filter.</span>"
 msgstr ""
 "<span>Esta empresa forma parte de una unidad tributaria. Actualmente no está"
-" viendo toda la unidad; para cambiarlo, marque la opción \"agregar\" del "
-"menú \"unidad tributaria\".</span>"
+" viendo la unidad completa. Para cambiar eso, utilice el filtro de Unidad "
+"Tributaria.</span>"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.multicurrency_report_main_template
@@ -517,7 +534,7 @@ msgstr "Diario de revalorización de cuenta"
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_res_company__account_representative_id
 msgid "Accounting Firm"
-msgstr "Firma de contabilidad"
+msgstr "Despacho de contabilidad"
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_report
@@ -547,7 +564,7 @@ msgstr "Cuentas"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_form
 msgid "Accounts Coverage Report"
-msgstr ""
+msgstr "Reporte de cobertura de cuentas"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.multicurrency_revaluation_to_adjust
@@ -559,7 +576,7 @@ msgstr "Cuentas por ajustar"
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "Accounts coverage"
-msgstr ""
+msgstr "Cobertura de cuentas"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_mail_activity_type__category
@@ -646,7 +663,7 @@ msgstr "Cuenta antigua por pagar"
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_payable_report_handler
 msgid "Aged Payable Custom Handler"
-msgstr ""
+msgstr "Gestor personalizado de cuentas vencidas"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -664,7 +681,7 @@ msgstr "Cuenta antigua por cobrar"
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_receivable_report_handler
 msgid "Aged Receivable Custom Handler"
-msgstr ""
+msgstr "Gestor personalizado de cuentas por cobrar vencidas"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -741,7 +758,7 @@ msgstr "Cuentas analíticas:"
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report__filter_analytic_groupby
 msgid "Analytic Group By"
-msgstr ""
+msgstr "Grupo analítico por"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.filter_info_template
@@ -754,6 +771,8 @@ msgid ""
 "Analytic filters will include analytic items without accounting "
 "correspondence"
 msgstr ""
+"Los filtros analíticos incluirán elementos analíticos sin correspondencia "
+"contable"
 
 #. module: account_reports
 #. odoo-javascript
@@ -832,7 +851,7 @@ msgstr "Balance"
 #: model:ir.actions.client,name:account_reports.action_account_report_bs
 #: model:ir.ui.menu,name:account_reports.menu_action_account_report_balance_sheet
 msgid "Balance Sheet"
-msgstr "Hoja de balance"
+msgstr "Balance General "
 
 #. module: account_reports
 #: model:account.report.column,name:account_reports.multicurrency_revaluation_report_balance_current
@@ -848,11 +867,6 @@ msgstr "Balance sobre la tasa de la operación "
 #: model:account.report.column,name:account_reports.multicurrency_revaluation_report_balance_currency
 msgid "Balance in Foreign Currency"
 msgstr "Balance en divisa extranjera"
-
-#. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
-msgid "Balance in GL"
-msgstr "Balance en el libro mayor"
 
 #. module: account_reports
 #. odoo-python
@@ -1024,7 +1038,7 @@ msgstr "Flujos de efectivo de actividades financieras"
 #: code:addons/account_reports/models/account_cash_flow_report.py:0
 #, python-format
 msgid "Cash flows from investing & extraordinary activities"
-msgstr "Flujos de efectivo de inversiones y actividades extraordinarias"
+msgstr "Flujos de efectivo de actividades de inversión y extraordinarias"
 
 #. module: account_reports
 #. odoo-python
@@ -1091,6 +1105,11 @@ msgstr "Superávit de efectivo"
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 msgid "Change expected payment date"
 msgstr "Cambiar la fecha de pago esperada"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "Check them"
+msgstr "Compruébelos"
 
 #. module: account_reports
 #. odoo-python
@@ -1291,17 +1310,17 @@ msgstr "Pasivos circulantes"
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_current_year_earnings_line_2
 msgid "Current Year Allocated Earnings"
-msgstr "Ganancias asignadas del año actual"
+msgstr "Ingresos corrientes asignados"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_current_year_earnings_line_1
 msgid "Current Year Earnings"
-msgstr "Ganancias del año actual"
+msgstr "Ingresos corrientes"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_current_year_earnings0
 msgid "Current Year Unallocated Earnings"
-msgstr "Ganancias sin asignar del año actual"
+msgstr "Ingresos corrientes sin asignar"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_ca_to_l0
@@ -1430,6 +1449,22 @@ msgid "EC Sales Report Custom Handler"
 msgstr "Gestor personalizado de los reportes de ventas de la Comisión Europea"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "EC tax on non EC countries"
+msgstr ""
+"Impuestos de la comunidad europea (EC por sus siglas en inglés) a terceros "
+"países"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "EC tax on same country"
+msgstr "Impuestos de la comunidad europea en el mismo país"
+
+#. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_equity0
 msgid "EQUITY"
 msgstr "CAPITAL"
@@ -1491,6 +1526,13 @@ msgstr "Fin del último trimestre"
 #, python-format
 msgid "Ending Balance :"
 msgstr "Balance final:"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "Entries with partners with no VAT"
+msgstr "Asientos con partners a los que no aplica IVA"
 
 #. module: account_reports
 #. odoo-python
@@ -1758,6 +1800,13 @@ msgstr ""
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_journal_report.py:0
+#, python-format
+msgid "Go to report configuration"
+msgstr "Vaya a la configuración del reporte"
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_sales_report.py:0
 #, python-format
 msgid "Goods"
@@ -1884,7 +1933,7 @@ msgstr "Incluir"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options
 msgid "Include Analytic Simulations"
-msgstr ""
+msgstr "Incluir simulaciones analíticas"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options_journal_audit_report
@@ -1911,7 +1960,7 @@ msgstr "Incluir asientos sin publicar"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options
 msgid "Including Analytic Simulations"
-msgstr ""
+msgstr "Simulaciones analíticas incluidas"
 
 #. module: account_reports
 #. odoo-python
@@ -1994,6 +2043,33 @@ msgid "Insert foot note here"
 msgstr "Insertar pie de página aquí"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "Intra-community taxes are applied on"
+msgstr "Los impuestos intracomunitarios se aplican en"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid domain formula in expression %r of line %r: %s"
+msgstr "Fórmula de dominio no válida en la expresión %r de la línea %r: %s"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid method %r"
+msgstr "Modelo no válido %r"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid subformula in expression %r of line %r: %s"
+msgstr "Sub-fórmula no válida en la expresión %r de la línea %r: %s"
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
@@ -2040,7 +2116,7 @@ msgstr "Apunte de diario"
 #: code:addons/account_reports/models/account_trial_balance_report.py:0
 #, python-format
 msgid "Journal Items"
-msgstr "Apuntes de diario"
+msgstr "Apuntes contables "
 
 #. module: account_reports
 #. odoo-python
@@ -2061,6 +2137,13 @@ msgstr "Reporte de diario"
 #: model:ir.model,name:account_reports.model_account_journal_report_handler
 msgid "Journal Report Custom Handler"
 msgstr "Gestor personalizado de reportes de diario"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#, python-format
+msgid "Journal items with archived tax tags"
+msgstr "Asientos contables con etiquetas de impuestos guardadas"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.filter_info_template
@@ -2113,6 +2196,12 @@ msgstr "El mes pasado"
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
 msgid "Last Quarter"
 msgstr "Trimestre anterior"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Last Statement balance + Transactions since statement"
+msgstr ""
+"Saldo del último estado de cuenta + Transacciones desde el estado de cuenta"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_cell_template_link_last_statement
@@ -2649,7 +2738,7 @@ msgstr ""
 #: model:ir.actions.client,name:account_reports.action_account_report_pl
 #: model:ir.ui.menu,name:account_reports.menu_action_account_report_profit_and_loss
 msgid "Profit and Loss"
-msgstr "Ganancias y pérdidas"
+msgstr "Estado de resultados"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_profitability0
@@ -2734,7 +2823,7 @@ msgstr "Nombre del reporte"
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "Report lines mentioning the account code"
-msgstr ""
+msgstr "Líneas del reporte que mencionan el código de cuenta"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
@@ -2749,7 +2838,7 @@ msgstr "Reportes"
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_retained_earnings0
 msgid "Retained Earnings"
-msgstr "Ganancias retenidas"
+msgstr "Beneficios no distribuidos"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_return_investment0
@@ -2777,6 +2866,11 @@ msgstr "Reporte raíz"
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group__rule_ids
 msgid "Rules"
 msgstr "Reglas"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Running Balance"
+msgstr "Balance en ejecución"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_comparison
@@ -2851,6 +2945,12 @@ msgid "Some controls failed."
 msgstr "Fallaron algunos controles."
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "Some journal items appear to point to obsolete report lines."
+msgstr ""
+"Algunos asientos contables parecen indicar líneas obsoletas en los reportes"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options_journal_audit_report
 msgid "Sort By Date"
 msgstr "Ordenar por fecha"
@@ -2876,7 +2976,7 @@ msgid ""
 "Specify an Accounting Firm that will act as a representative when exporting "
 "reports."
 msgstr ""
-"Indique una empresa de contabilidad que actuará como representante al "
+"Establezca un despacho de contabilidad que actuará como representante al "
 "exportar los reportes."
 
 #. module: account_reports
@@ -3047,6 +3147,28 @@ msgstr "Texto"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_journal_report.py:0
+#, python-format
+msgid ""
+"The 'load more limit' setting of this report is too low to display all the "
+"lines of the entry you're trying to show."
+msgstr ""
+"El ajuste \"cargar más límite\" de este reporte es muy bajo para mostrar "
+"todas las líneas del asiento que quiere mostrar."
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid ""
+"The Accounts Coverage Report is only available for the Profit and Loss and "
+"Balance Sheet reports."
+msgstr ""
+"El reporte de cobertura de cuentas solo está disponible para los reportes de"
+" estado de resultados y balance general."
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_bank_reconciliation_report.py:0
 #, python-format
 msgid "The Book balance in Odoo dated today"
@@ -3056,8 +3178,19 @@ msgstr "El balance en Odoo con fecha de hoy"
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
-msgid "The company's country does not match the report's country."
+msgid ""
+"The company's chart of account does not match the report's chart of "
+"accounts."
 msgstr ""
+"El plan de cuentas de la empresa no coincide con el plan de cuentas del "
+"reporte."
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "The company's country does not match the report's country."
+msgstr "El país de la empresa no coincide con el país del reporte."
 
 #. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_account_tax_unit__country_id
@@ -3101,6 +3234,8 @@ msgstr ""
 msgid ""
 "The selected report line does not target a Journal Entry or a Journal Item."
 msgstr ""
+"La línea de reporte seleccionada no está dirigida a un asiento o apunte "
+"contable."
 
 #. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_res_company__account_tax_unit_ids
@@ -3140,6 +3275,8 @@ msgid ""
 "This account exists in the Chart of Accounts but is not mentioned in any "
 "line of the report"
 msgstr ""
+"Esta cuenta existe en el plan de cuentas pero no se menciona en ninguna "
+"línea del reporte"
 
 #. module: account_reports
 #. odoo-python
@@ -3149,13 +3286,22 @@ msgid ""
 "This account is reported in a line of the report but does not exist in the "
 "Chart of Accounts"
 msgstr ""
+"Esta cuenta se reporta en una línea del reporte pero no existe en el plan de"
+" cuentas"
 
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "This account is reported in multiple lines of the report"
-msgstr ""
+msgstr "Esta cuenta se reporta en varias líneas del reporte"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "This account is reported multiple times on the same line of the report"
+msgstr "Esta cuenta se reporta varias veces en la misma línea del reporte"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
@@ -3242,7 +3388,7 @@ msgstr ""
 #: model:ir.actions.client,name:account_reports.action_account_report_coa
 #: model:ir.ui.menu,name:account_reports.menu_action_account_report_coa
 msgid "Trial Balance"
-msgstr "Balance de prueba"
+msgstr "Balanza de comprobación "
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_trial_balance_report_handler
@@ -3258,6 +3404,7 @@ msgstr "Triangular"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid ""
@@ -3464,6 +3611,14 @@ msgstr "ID incorrecto para expandir la línea del libro mayor del partner: %s"
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Wrong format for if_other_expr_above/if_other_expr_below formula: %s"
+msgstr ""
+"Formato incorrecto para fórmula if_other_expr_above/if_other_expr_below: %s"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "XLSX"
@@ -3478,11 +3633,46 @@ msgstr "Está utilizando tasas de cambio personalizadas."
 #. odoo-python
 #: code:addons/account_reports/models/account_move.py:0
 #, python-format
+msgid "You can't open a tax report from a move without a VAT closing date."
+msgstr ""
+"No puede abrir un reporte de impuestos de un movimiento sin una fecha de "
+"cierre del IVA."
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_move.py:0
+#, python-format
 msgid ""
 "You cannot reset this closing entry to draft, as it would delete carryover "
 "values impacting the tax report of a locked period. To do this, you first "
 "need to modify you tax return lock date."
 msgstr ""
+"No puede restablecer este cierre de impuestos a borrador, ya que eliminaría "
+"valores de arrastre, los cuales afectan al informe fiscal de un periodo "
+"bloqueado. Para ello, primero debe modificar la fecha de bloqueo de su "
+"devolución de impuestos."
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_multicurrency_revaluation_report.py:0
+#, python-format
+msgid "You need to activate more than one currency to access this report."
+msgstr "Debe activar más de una moneda para acceder a este reporte."
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "[Draft]"
+msgstr "[Borrador]"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "addressed to"
+msgstr "dirigido a"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "and correct their tax tags if necessary."
+msgstr "y corregir sus etiquetas fiscales si es necesario"
 
 #. module: account_reports
 #: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__year
@@ -3526,9 +3716,14 @@ msgid "in the next period."
 msgstr "En el siguiente periodo."
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "invoices"
+msgstr "facturas"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_main_template
 msgid "journal items"
-msgstr "apuntes de diario"
+msgstr "apuntes contables"
 
 #. module: account_reports
 #: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__monthly
@@ -3546,6 +3741,11 @@ msgstr "n/a"
 #: model:ir.model.fields,help:account_reports.field_account_report_manager__report_name
 msgid "name of the model of the report"
 msgstr "nombre del modelo del reporte"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "partners"
+msgstr "partners"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.main_template
@@ -3566,6 +3766,11 @@ msgstr "semestralmente"
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_main_template
 msgid "statements"
 msgstr "estados de cuenta"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "that are not established abroad."
+msgstr "que no están establecidos en el extranjero"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
@@ -3591,6 +3796,12 @@ msgstr ""
 "que no se genera como resultado de un estado de cuenta bancario o de un pago"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "who are not established in any of the EC countries."
+msgstr ""
+"que no están establecidos en ninguno de los países de la comunidad europea."
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/xml/account_report_template.xml:0
 #, python-format
@@ -3603,6 +3814,11 @@ msgstr "se trasladarán a"
 #, python-format
 msgid "will be carried over to this line in the next period."
 msgstr "se trasladarán a esta línea en el siguiente periodo."
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "without a valid intra-community VAT number."
+msgstr "sin un número de IVA intracomunitario válido."
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.multicurrency_report_line_template

@@ -20,28 +20,33 @@ More info:
 Legal
 -----
 **The use of pos_blackbox_be sources is only certified on odoo.com SaaS platform
-for version 13.0.** Contact Odoo SA before installing pos_blackbox_be module.
+for version 16.0.** Contact Odoo SA before installing pos_blackbox_be module.
 
 An obfuscated and certified version of the pos_blackbox_be may be provided on
 requests for on-premise installations.
 No modified version is certified and supported by Odoo SA.
     """,
-    'depends': ['pos_restaurant_iot', 'l10n_be', 'web_enterprise'],
+    'depends': ['pos_restaurant_iot', 'l10n_be', 'web_enterprise', 'pos_hr', 'pos_daily_sales_reports'],
     'data': [
-        'security/pos_blackbox_be_security.xml',
+        'data/pos_blackbox_be_data.xml',
         'security/ir.model.access.csv',
+        'views/hr_employee_views.xml',
         'views/pos_blackbox_be_views.xml',
-        'data/pos_blackbox_be_data.xml'
+        'views/pos_daily_reports.xml',
+        'views/pos_order_views.xml',
+        'views/pro_forma_views.xml',
+        'views/res_config_settings_views.xml',
+        'views/res_users_views.xml'
     ],
     'demo': [
         'data/pos_blackbox_be_demo.xml',
     ],
-    'installable': False,
-    'license': 'OEEL-1',
     'assets': {
         'point_of_sale.assets': [
             'pos_blackbox_be/static/src/js/**/*',
             'pos_blackbox_be/static/src/xml/**/*',
         ],
-    }
+    },
+    'installable': True,
+    'license': 'OEEL-1',
 }

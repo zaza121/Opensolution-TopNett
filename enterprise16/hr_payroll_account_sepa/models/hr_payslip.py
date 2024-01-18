@@ -10,7 +10,7 @@ from odoo.exceptions import UserError
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
-    sepa_export_date = fields.Date(string='Generation Date', help="Creation date of the payment file.")
+    sepa_export_date = fields.Date(string='Generation Date')
     sepa_export = fields.Binary(string='SEPA File', help="Export file related to this payslip")
     sepa_export_filename = fields.Char(string='File Name', help="Name of the export file generated for this payslip", store=True)
 
@@ -24,6 +24,22 @@ class HrPayslip(models.Model):
             'view_id' : 'hr_payslip_sepa_xml_form',
             'views': [(False, 'form')],
             'target': 'new',
+        }
+
+    def _get_payments_vals(self, journal_id):
+        self.ensure_one()
+
+        return {
+            'id' : self.id,
+            'name': self.number,
+            'payment_date' : fields.Date.today(),
+            'amount' : self.net_wage,
+            'journal_id' : journal_id.id,
+            'currency_id' : journal_id.currency_id.id,
+            'payment_type' : 'outbound',
+            'ref' : self.number,
+            'partner_id' : self.employee_id.address_home_id.id,
+            'partner_bank_id': self.employee_id.bank_account_id.id,
         }
 
     def _create_xml_file(self, journal_id, file_name=None):
@@ -43,18 +59,7 @@ class HrPayslip(models.Model):
         payments_data = []
         sct_generic = (journal_id.currency_id or journal_id.company_id.currency_id).name != 'EUR'
         for slip in self:
-            payments_data.append({
-                'id' : slip.id,
-                'name': slip.number,
-                'payment_date' : fields.Date.today(),
-                'amount' : slip.net_wage,
-                'journal_id' : journal_id.id,
-                'currency_id' : journal_id.currency_id.id,
-                'payment_type' : 'outbound',
-                'ref' : slip.number,
-                'partner_id' : slip.employee_id.address_home_id.id,
-                'partner_bank_id': slip.employee_id.bank_account_id.id,
-            })
+            payments_data.append(slip._get_payments_vals(journal_id))
             if not sct_generic and (not slip.employee_id.bank_account_id.bank_bic or not slip.employee_id.bank_account_id.acc_type == 'iban'):
                 sct_generic = True
 

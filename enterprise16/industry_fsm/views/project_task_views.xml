@@ -50,12 +50,15 @@
                     attrs="{'invisible': ['|', '&amp;', ('partner_id', '=', False), ('is_fsm', '=', False), '|', ('allow_worksheets', '=', False), ('comment', '!=', False)]}">
                 </button>
                 <button
-                    string="Worksheet Complete"
                     class="oe_stat_button oe_worksheet_completed text-success"
                     name="action_fsm_worksheet"
                     icon="fa-check" type="object"
                     groups="project.group_project_user"
                     attrs="{'invisible': ['|', '|', ('partner_id', '=', False), ('allow_worksheets', '=', False), ('comment', '=', False)]}">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Worksheet</span>
+                            <span class="o_stat_text">Complete</span>
+                        </div>
                 </button>
             </xpath>
             <!-- FIXME: refactor this as in project_sharing_views.xml -->
@@ -80,7 +83,7 @@
                     name="action_preview_worksheet"
                     icon="fa-globe" type="object"
                     groups="project.group_project_user"
-                    attrs="{'invisible': [('worksheet_signature', '=', False)]}">
+                    attrs="{'invisible': ['|', ('allow_worksheets', '=', False), ('worksheet_signature', '=', False)]}">
                 </button>
             </xpath>
             <field name="is_fsm" string="is FSM ?" invisible="1"/>

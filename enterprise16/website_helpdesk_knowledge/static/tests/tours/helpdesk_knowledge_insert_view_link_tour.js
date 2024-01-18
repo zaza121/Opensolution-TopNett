@@ -23,7 +23,7 @@ tour.register('helpdesk_insert_kanban_view_link_in_knowledge', {
 }, { // insert a view link in an article
     trigger: '.o_favorite_menu .dropdown-item:contains("Insert link in article")',
 }, { // create a new article
-    trigger: '.modal-footer button:contains("Create")',
+    trigger: '.modal-footer button:contains("New")',
     run: 'click',
 }, { // wait for Knowledge to open
     trigger: '.o_knowledge_form_view',

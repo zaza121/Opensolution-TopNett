@@ -21,6 +21,7 @@ class SpreadsheetDashboard(models.Model):
             "name": document.name,
             "dashboard_group_id": dashboard_group_id,
             "spreadsheet_snapshot": document.spreadsheet_snapshot,
+            "data": document.datas,
         })
         revisions_data = []
         for revision_id in document.spreadsheet_revision_ids:

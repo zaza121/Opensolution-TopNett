@@ -3,18 +3,19 @@
 # 	* partner_commission
 # 
 # Translators:
-# Lucia Pacheco <lpo@odoo.com>, 2022
 # Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2022
 # Martin Trigaux, 2022
+# Lucia Pacheco, 2023
+# Alfonso González, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-23 08:24+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:47+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Alfonso González, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -22,6 +23,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 #. module: partner_commission
+#. odoo-python
 #: code:addons/partner_commission/models/account_move.py:0
 #, python-format
 msgid ""
@@ -32,6 +34,7 @@ msgstr ""
 "%s: de %s para %s"
 
 #. module: partner_commission
+#. odoo-python
 #: code:addons/partner_commission/models/account_move.py:0
 #, python-format
 msgid " (%d month(s))"
@@ -77,7 +80,6 @@ msgstr "Limitado"
 
 #. module: partner_commission
 #: model:ir.model.fields.selection,name:partner_commission.selection__purchase_order__purchase_type__commission
-#: model:product.product,name:partner_commission.product_commission
 #: model:product.template,name:partner_commission.product_commission_product_template
 msgid "Commission"
 msgstr "Comisión"
@@ -163,7 +165,7 @@ msgstr "Nombre en pantalla"
 #. module: partner_commission
 #: model:ir.model.fields,field_description:partner_commission.field_sale_order__commission_plan_frozen
 msgid "Freeze Plan"
-msgstr "Plan de congelación"
+msgstr "Congelar plan"
 
 #. module: partner_commission
 #: model_terms:ir.ui.view,arch_db:partner_commission.res_config_settings_view_form
@@ -267,7 +269,6 @@ msgstr "Solamente documentos propios"
 #. module: partner_commission
 #: model:ir.actions.server,name:partner_commission.cron_confirm_purchase_orders_ir_actions_server
 #: model:ir.cron,cron_name:partner_commission.cron_confirm_purchase_orders
-#: model:ir.cron,name:partner_commission.cron_confirm_purchase_orders
 msgid "Partner Commission: confirm purchase orders"
 msgstr "Comisión de contacto: confirmar órdenes de compra"
 
@@ -297,6 +298,7 @@ msgid "Product"
 msgstr "Producto"
 
 #. module: partner_commission
+#. odoo-python
 #: code:addons/partner_commission/models/commission_plan.py:0
 #, python-format
 msgid "Product %s does not belong to category %s"
@@ -399,6 +401,17 @@ msgid "Takes precedence over the Referrer's commission plan."
 msgstr "Toma precedencia sobre el plan de comisión del recomendante."
 
 #. module: partner_commission
+#. odoo-python
+#: code:addons/partner_commission/models/account_move.py:0
+#, python-format
+msgid ""
+"The commission partner order %s must be checked manually (especially refund "
+"lines which can be duplicated)."
+msgstr ""
+"La comisión del socio %s debe ser revisada manualmente (especialmente las "
+"líneas del reembolso que pueden estar duplicadas)."
+
+#. module: partner_commission
 #: model:ir.model.fields,help:partner_commission.field_res_partner_grade__default_commission_plan_id
 msgid ""
 "The default commission plan used for this grade. Can be overwritten on the "
@@ -415,12 +428,6 @@ msgid ""
 msgstr ""
 "La cantidad mínima requerida para confirmar órdenes de compra "
 "automáticamente"
-
-#. module: partner_commission
-#: model:product.product,uom_name:partner_commission.product_commission
-#: model:product.template,uom_name:partner_commission.product_commission_product_template
-msgid "Units"
-msgstr "Unidades"
 
 #. module: partner_commission
 #: model:ir.model.fields.selection,name:partner_commission.selection__res_company__commission_automatic_po_frequency__weekly

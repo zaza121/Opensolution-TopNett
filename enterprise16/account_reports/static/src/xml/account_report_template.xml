@@ -114,7 +114,7 @@
                 <tr t-if="allow_carryover_audit">
                     <td/>
                     <td>
-                        <button t-att-data-expression-id="expression_id" class="btn btn-sm btn-secondary js_view_carryover_lines">View Carryover Lines</button>
+                        <button t-att-data-expression-id="expression_id" t-att-data-column-group-key="column_group_key" class="btn btn-sm btn-secondary js_view_carryover_lines">View Carryover Lines</button>
                     </td>
                 </tr>
             </t>
@@ -124,10 +124,10 @@
     </t>
 
     <t t-name="accountReports.EditColumnTemplate">
-        <div>
+        <div class="d-flex align-items-center">
             <input id="account_reports_manual_value_input" class="account_reports_popup_no_hide"/>
             <button
-                class="account_reports_submit_manual_value btn btn-primary btn-sm"
+                class="account_reports_submit_manual_value btn btn-primary btn-sm ms-3"
                 t-att-data-column-group-key="column_group_key"
                 t-att-data-target-expression-id="target_expression_id"
                 t-att-data-rounding="rounding">Post</button>

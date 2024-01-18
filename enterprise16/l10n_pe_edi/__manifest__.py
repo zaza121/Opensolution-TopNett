@@ -52,7 +52,6 @@ We support sending and cancelling of customer invoices.
         'views/report_invoice.xml',
         'views/account_menuitem.xml',
         'views/product_views.xml',
-        'data/ir_cron.xml',
         'data/account_edi_data.xml',
     ],
     'demo': [
@@ -62,6 +61,5 @@ We support sending and cancelling of customer invoices.
     'external_dependencies': {
         'python': ['pyOpenSSL']
     },
-    'post_init_hook': 'post_init_hook',
     'installable': True,
 }

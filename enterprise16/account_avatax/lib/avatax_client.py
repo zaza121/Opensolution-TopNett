@@ -41,7 +41,8 @@ class AvataxClient:
                                                      environment]):
             raise ValueError('Input(s) must be string or none type object')
         self.base_url = 'https://sandbox-rest.avatax.com'
-        if environment and environment.lower() == 'production':
+        self.is_production = environment and environment.lower() == 'production'
+        if self.is_production:
             self.base_url = 'https://rest.avatax.com'
         self.auth = None
         self.app_name = app_name
@@ -83,7 +84,11 @@ class AvataxClient:
         return response
 
     def create_transaction(self, model, include=None):
-        return self.request('POST', 'transactions/create', params=include, json=model)
+        endpoint = 'create'
+        if not self.is_production:
+            endpoint = 'createoradjust'
+            model = {'createTransactionModel': model}
+        return self.request('POST', 'transactions/{}'.format(endpoint), params=include, json=model)
 
     def commit_transaction(self, companyCode, transactionCode, model, include=None):
         return self.request('POST', 'companies/{}/transactions/{}/commit'.format(companyCode, transactionCode),

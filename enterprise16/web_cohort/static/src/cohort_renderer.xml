@@ -57,7 +57,7 @@
                                     <t t-set="count" t-value="mode === 'churn' ? (col.churn_value === '-' ? '' : col.churn_value) : (col.value === '-' ? '' : col.value)" />
                                     <t t-set="measure" t-value="model.metaData.measures[model.metaData.measure].string" />
                                     <div class="o_cohort_highlight m-1 rounded p-1"
-                                        t-attf-title="Periode: {{col.period}}&#10;{{measure}}: {{count}}"
+                                        t-att-title="getCellTitle(col.period, measure, count)"
                                         t-attf-style="background-color: rgba(0, 160, 157, {{col.percentage/100.0}}); color: {{col.percentage gt 50 and '#FFFFFF' or 'inherit'}}"
                                         t-att-class="{o_cohort_value: col.value !== '-'}"
                                     >

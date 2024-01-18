@@ -6,6 +6,14 @@ import { attr, one } from "@mail/model/model_field";
 
 registerModel({
     name: "Document",
+    recordMethods: {
+        /**
+         * Send the attachment for the browser to download.
+         */
+        download() {
+            this.attachment.download();
+        },
+    },
     fields: {
         attachment: one("Attachment", {
             compute() {
@@ -99,10 +107,9 @@ registerModel({
                 if (!this.url) {
                     return false;
                 }
-                const youtubeUrlMatch = this.url.match(
+                return Boolean(this.url.match(
                     "youtu(?:.be|be.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]{11})"
-                );
-                return youtubeUrlMatch.length > 1;
+                ));
             },
         }),
         isVideo: attr({

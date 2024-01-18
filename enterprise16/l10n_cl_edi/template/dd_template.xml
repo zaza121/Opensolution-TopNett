@@ -9,7 +9,7 @@
                 <FE t-esc="move.invoice_date"/>
                 <RR t-esc="'55555555-5' if move.partner_id._l10n_cl_is_foreign() else format_vat(move.commercial_partner_id.vat)"/>
                 <RSR t-esc="format_length(move.commercial_partner_id.name, 40)"/>
-                <MNT t-esc="float_repr(move.currency_id.round(move.amount_total), 0) if not move.l10n_latam_document_type_id._is_doc_type_export() else float_repr(move.currency_id.round(move.amount_total), 2)"/>
+                <MNT t-esc="float_repr(amounts['total_amount'], 0) if not move.l10n_latam_document_type_id._is_doc_type_export() else float_repr(amounts['total_amount'], 2)"/>
             <t t-if="move.invoice_line_ids">
                 <t t-set="line" t-value="move.invoice_line_ids[0]"/>
                 <IT1 t-esc="format_length(line.product_id.name or line.name, 40)"/>

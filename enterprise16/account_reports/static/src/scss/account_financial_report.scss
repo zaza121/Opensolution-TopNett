@@ -33,6 +33,9 @@
     }
 }
 
+$indent-size: 10px;
+$indent-size-md: 3px;
+
 // The selector is to target financial reports without targeting follow ups
 // reports_body are not a direct child of o_content on follow ups but it is for financial reports
 .o_content > .o_account_reports_body {
@@ -60,6 +63,13 @@
         margin: 24px 12px 48px;
         padding: 24px;
         max-width: calc(100% - 12px); // Prevents the sheet to take horizontal space that is not available
+        width: calc(100% - 12px);
+        @media (max-width: map-get($grid-breakpoints,"md")) {
+            margin: 0;
+            padding: 0 4px;
+            max-width: 100%;
+            width: 100%;
+        }
 
         .table-responsive {
             min-height: 470px;
@@ -106,6 +116,20 @@
     .o_account_reports_table {
         margin-bottom: 24px;
 
+        > tbody > tr:hover {
+            background-color: var(--AccountFinancial-background-hover, #F0F0F0);
+            td {
+                background-color: unset !important;
+            }
+
+        }
+
+        tr.o_account_reports_ja_subtable{
+            &:hover {
+                background-color: unset !important;
+            }
+        }
+
         th.o_account_report_column_header {
             &.sortable span {
                 cursor: pointer;
@@ -139,6 +163,10 @@
             }
         }
         thead {
+            th {
+                background-color: var(--AccountFinancial-subtable-color, #f6f7fa);
+            }
+
             tr:first-child {
                 border-bottom: 1px solid $o-gray-300;
             }
@@ -245,7 +273,10 @@
         width: 100%;
 
         .number {
+            /*rtl:ignore*/
             text-align: right;
+            /*rtl:ignore*/
+            direction: ltr;
         }
         .text {
             text-align: left;
@@ -265,6 +296,8 @@
                 border-collapse: separate;
                 padding-right: 8px;
                 padding-left: 8px;
+                font-size: 13px;
+                text-align: center;
             }
             th:first-child {
                 border: none;
@@ -301,13 +334,15 @@
         padding-left: 8px;
         padding-right: 8px;
     }
-    table > tbody > tr >  td{
-        vertical-align: top;
+    &.o_account_reports_no_print {
+        table > tbody > tr >  td{
+            vertical-align: top;
 
-        &.number {
-            font-family: 'Courier New', monospace;
-            font-feature-settings: 'tnum';
-            font-weight: bold;
+            &.number {
+                font-family: 'Courier New', monospace;
+                font-feature-settings: 'tnum';
+                font-weight: bold;
+            }
         }
     }
     .o_account_reports_summary {
@@ -362,7 +397,10 @@
     }
     @for $i from 3 through 19 {
         .o_account_reports_domain_line_#{$i} {
-            margin-left: ($i * 10px) + 10;
+            margin-left: ($i * $indent-size) + $indent-size;
+            @media (max-width: map-get($grid-breakpoints,"md")) {
+                margin-left: ($i * $indent-size-md) + $indent-size-md;
+            }
         }
     }
     tr.o_account_reports_domain_total {
@@ -420,14 +458,20 @@
         line-height: 1.8;
 
         > td.o_account_report_line_indent > span:last-child {
-            margin-left: ($indent + 1) * 10px;
+            margin-left: ($indent + 1) * $indent-size;
+            @media (max-width: map-get($grid-breakpoints,"md")) {
+                margin-left: ($indent + 1) * $indent-size-md;
+            }
         }
         &.total {
             font-weight: bold !important;
             color: var(--AccountFinancial-text-color, #212121) !important;
 
             > td > span:last-child {
-                margin-left: $indent * 10px;
+                margin-left: $indent * $indent-size;
+                @media (max-width: map-get($grid-breakpoints,"md")) {
+                    margin-left: $indent * $indent-size-md;
+                }
             }
         }
     }
@@ -492,13 +536,7 @@
     .o_account_reports_history {
         min-width: 300px;
     }
-    .o_account_coa_column_contrast td:nth-child(4n-1),
-    .o_account_coa_column_contrast td:nth-child(4n-2),
-    td.o_account_coa_column_contrast:nth-child(4n-1),
-    td.o_account_coa_column_contrast:nth-child(4n-2) {
-        background-color: var(--AccountFinancial-background-contrast, #FAFAFA);
-        background-clip: padding-box;
-    }
+
     .table-hover tbody {
         tr:not(.o_account_reports_level0):hover > td {
             background-clip: padding-box;
@@ -532,7 +570,55 @@
     }
 
     .o_account_reports_ja_header_line {
-        background-color: var(--AccountFinancial-background-color, #F6F6F6);
+        background-color: var(--AccountFinancial-border-color, #E0E2E6);
+        span {
+            font-weight: bold;
+        }
+    }
+
+    .o_account_reports_ja_move_line {
+        background-color: var(--AccountFinancial-background-contrast, #f6f7fa);
+    }
+
+    .o_account_reports_prefix_group{
+        td {
+            font-weight: bold !important;
+        }
+    }
+}
+
+.o_account_reports_page.o_account_trial_balance_report .o_account_reports_table {
+
+    .o_account_reports_header_hierarchy {
+
+        tr:first-child th:not(:first-child) {
+            border: 1px solid var(--AccountFinancial-border-accent-color, black);
+        }
+
+        .o_account_report_column_header{
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+    }
+
+    .o_account_coa_column_contrast{
+        font-weight: normal !important;
+    }
+
+    .o_account_coa_column_contrast td:nth-child(4n-1),
+    .o_account_coa_column_contrast td:nth-child(4n-2),
+    .o_account_coa_column_contrast_hierarchy td:nth-child(4n-1),
+    .o_account_coa_column_contrast_hierarchy td:nth-child(4n-2),
+    td.o_account_coa_column_contrast:nth-child(4n-1),
+    td.o_account_coa_column_contrast:nth-child(4n-2)
+    td.o_account_coa_column_contrast_hierarchy:nth-child(4n-1),
+    td.o_account_coa_column_contrast_hierarchy:nth-child(4n-2),
+    .total td:nth-child(4n-1),
+    .total td:nth-child(4n-2),
+    td.total:nth-child(4n-1),
+    td.total:nth-child(4n-2){
+        background-color: var(--AccountFinancial-background-contrast, #FAFAFA);
+        background-clip: padding-box;
     }
 }
 

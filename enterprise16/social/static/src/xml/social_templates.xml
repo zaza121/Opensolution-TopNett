@@ -19,7 +19,8 @@
                    comments="comments"
                    mediaSpecificProps="mediaSpecificProps"
                    originalPost="originalPost"
-                   preventAddComment.bind="preventAddComment"/>
+                   preventAddComment.bind="preventAddComment"
+                   error="props.error"/>
             </div>
             <a t-if="state.showLoadMoreComments" class="o_social_load_more_comments text-center p3-bg-white"
                href="#" t-on-click="loadMoreComments">
@@ -173,7 +174,8 @@
         </t>
         <t t-else="">
             <div class="o_social_no_comment_message text-black-50 text-center">
-                No comments yet.
+                <t t-if="props.error" t-out="props.error"/>
+                <t t-else="">No comments yet.</t>
             </div>
         </t>
     </div>
@@ -227,7 +229,7 @@
                                 <div class="o_social_comment_text text-break"
                                 t-att-data-original-message="originalMessage"
                                 t-out="formatComment(comment.message)"/>
-                                <div t-if="isManageable" class="o_social_icon_dropdown o_social_manage_comment dropdown">
+                                <div t-if="isManageable()" class="o_social_icon_dropdown o_social_manage_comment dropdown">
                                     <button t-attf-class="btn dropdown-toggle {{ bubble_design ? 'bg-200 px-3 rounded-pill border-0' : '' }}"
                                         type="button" t-attf-id="post_actions_{{ comment.id }}"
                                         data-bs-toggle="dropdown"
@@ -407,8 +409,8 @@
             <button  t-if="hasAccounts" type="button" class="btn btn-primary o_stream_post_kanban_new_post me-1" t-on-click.prevent="_onNewPost">
                 New Post
             </button>
-            <button type="button" class="btn btn-secondary o_stream_post_kanban_refresh_now" t-on-click.prevent="_onRefreshStats">
-                <span>Synchronize</span><i class="fa fa-circle-o-notch fa-spin d-none"/>
+            <button t-if="hasAccounts" type="button" class="btn btn-secondary o_stream_post_kanban_refresh_now" t-att-disabled="state.disableSyncButton" t-on-click.prevent="_onRefreshStats">
+                <span>Synchronize</span><i t-if="state.disableSyncButton" class="fa fa-circle-o-notch fa-spin"/>
             </button>
         </div>
     </div>
@@ -431,7 +433,7 @@
     </t>
 
     <t t-name="social.NewContentRefreshBanner" owl="1">
-        <a class="o_social_stream_post_kanban_new_content alert alert-info mb-0 text-center border-bottom"
+        <a class="o_social_stream_post_kanban_new_content alert alert-info mb-0 text-center border-bottom py-2"
            t-att-class="{'d-none': !props.refreshRequired}" href="#" t-on-click="props.onClickRefresh">
             New content available
             <i class="fa fa-refresh ms-2 me-1"/>

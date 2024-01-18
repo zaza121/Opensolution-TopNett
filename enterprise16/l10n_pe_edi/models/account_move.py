@@ -113,8 +113,7 @@ class AccountMove(models.Model):
     def _compute_l10n_pe_edi_is_required(self):
         for move in self:
             move.l10n_pe_edi_is_required = move.country_code == 'PE' \
-                and move.is_sale_document() and move.journal_id.l10n_latam_use_documents \
-                and not move.l10n_pe_edi_cancel_cdr_number
+                and move.is_sale_document() and move.journal_id.l10n_latam_use_documents
 
     @api.depends('move_type', 'company_id')
     def _compute_l10n_pe_edi_operation_type(self):
@@ -166,7 +165,7 @@ class AccountMove(models.Model):
 
     def _l10n_pe_edi_get_spot(self):
         max_percent = max(self.invoice_line_ids.mapped('product_id.l10n_pe_withhold_percentage'), default=0)
-        if not max_percent or not self.l10n_pe_edi_operation_type in ['1001', '1002', '1003', '1004']:
+        if not max_percent or not self.l10n_pe_edi_operation_type in ['1001', '1002', '1003', '1004'] or self.move_type == 'out_refund':
             return {}
         line = self.invoice_line_ids.filtered(lambda r: r.product_id.l10n_pe_withhold_percentage == max_percent)[0]
         national_bank = self.env.ref('l10n_pe_edi.peruvian_national_bank', raise_if_not_found=False)
@@ -185,7 +184,7 @@ class AccountMove(models.Model):
             'spot_amount': float_round(self.amount_total * (max_percent/100.0), precision_rounding=2),
             'Amount': float_repr(float_round(self.amount_total_signed * (max_percent/100.0), precision_rounding=2), precision_digits=2),
             'PaymentPercent': max_percent,
-            'spot_message': "Operación sujeta al sistema de Pago de Obligaciones Tributarias-SPOT, Banco de la Nacion %% %s Cod Serv. %s" % (
+            'spot_message': "Operación sujeta al sistema de Pago de Obligaciones Tributarias-SPOT, Banco de la Nacion %s%% Cod Serv. %s" % (
                 line.product_id.l10n_pe_withhold_percentage, line.product_id.l10n_pe_withhold_code) if self.amount_total_signed >= 700.0 else False
         }
 

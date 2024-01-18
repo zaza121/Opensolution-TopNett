@@ -122,7 +122,7 @@ class AustralianReportCustomHandler(models.AbstractModel):
             SELECT
                 %s AS column_group_key,
                 payee.id as id,
-                payee.vat as vat,
+                payee.vat as abn,
                 payee.name as name,
                 payee.name as commercial_partner_name,
                 payee.street as street,

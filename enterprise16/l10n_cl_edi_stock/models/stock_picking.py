@@ -42,8 +42,9 @@ class Picking(models.Model):
 
     # Technical field making it possible to have a draft status for entering
     # the starting number for the guia in this company
-    l10n_cl_draft_status = fields.Boolean()
-
+    l10n_cl_draft_status = fields.Boolean(copy=False)
+    # delivery guide is not mandatory for return case
+    l10n_cl_is_return = fields.Boolean(compute="_compute_l10n_cl_is_return")
     # Common fields that will go into l10n_cl.edi.util in master (check copy=False as this flag was not in edi util):
     l10n_latam_document_type_id = fields.Many2one('l10n_latam.document.type', string='Document Type',
                                                   readonly=True, copy=False)
@@ -122,6 +123,7 @@ class Picking(models.Model):
         if not self.l10n_latam_document_number:
             self.l10n_latam_document_number = self._get_next_document_number()
         self.l10n_cl_dte_status = 'not_sent'
+        msg_demo = _(' in DEMO mode.') if self.company_id.l10n_cl_dte_service_provider == 'SIIDEMO' else '.'
         self._l10n_cl_create_dte()
         dte_signed, file_name = self._l10n_cl_get_dte_envelope()
         attachment = self.env['ir.attachment'].create({
@@ -132,8 +134,19 @@ class Picking(models.Model):
             'type': 'binary',
         })
         self.l10n_cl_sii_send_file = attachment.id
-        self.message_post(body=_('DTE has been created'), attachment_ids=attachment.ids)
+        self.message_post(body=_('DTE has been created%s', msg_demo), attachment_ids=attachment.ids)
         return self.print_delivery_guide_pdf()
+
+    def _compute_l10n_cl_is_return(self):
+        for picking in self:
+            if picking.country_code == 'CL':
+                picking.l10n_cl_is_return = any(m.origin_returned_move_id for m in picking.move_ids_without_package)
+            else:
+                picking.l10n_cl_is_return = False
+
+    def _get_effective_date(self):
+        self.ensure_one()
+        return fields.Date.context_today(self, self.date_done if self.date_done else self.scheduled_date)
 
     def print_delivery_guide_pdf(self):
         return self.env.ref('l10n_cl_edi_stock.action_delivery_guide_report_pdf').report_action(self)
@@ -512,6 +525,11 @@ class Picking(models.Model):
         if self.l10n_cl_dte_status != "not_sent":
             return None
         digital_signature = self.company_id._get_digital_signature(user_id=self.env.user.id)
+        if self.company_id.l10n_cl_dte_service_provider == 'SIIDEMO':
+            self.message_post(body=_('This DTE has been generated in DEMO Mode. It is considered as accepted and '
+                                     'it won\'t be sent to SII.'))
+            self.l10n_cl_dte_status = 'accepted'
+            return None
         response = self._send_xml_to_sii(
             self.company_id.l10n_cl_dte_service_provider,
             self.company_id.website,

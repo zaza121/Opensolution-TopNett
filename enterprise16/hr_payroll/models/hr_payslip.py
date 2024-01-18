@@ -5,7 +5,7 @@ import base64
 import logging
 import random
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
@@ -141,7 +141,7 @@ class HrPayslip(models.Model):
     def _compute_date_to(self):
         next_month = relativedelta(months=+1, day=1, days=-1)
         for payslip in self:
-            payslip.date_to = payslip.date_from + next_month
+            payslip.date_to = payslip.date_from and payslip.date_from + next_month
 
     @api.depends('company_id', 'employee_id', 'date_from', 'date_to')
     def _compute_contract_domain_ids(self):
@@ -163,7 +163,7 @@ class HrPayslip(models.Model):
             if not slip.employee_id or not slip.employee_id.salary_attachment_ids or not slip.struct_id:
                 lines_to_remove = slip.input_line_ids.filtered(lambda x: x.input_type_id.id in attachment_type_ids)
                 slip.update({'input_line_ids': [Command.unlink(line.id) for line in lines_to_remove]})
-            if slip.employee_id.salary_attachment_ids:
+            if slip.employee_id.salary_attachment_ids and slip.date_to:
                 lines_to_remove = slip.input_line_ids.filtered(lambda x: x.input_type_id.id in attachment_type_ids)
                 input_line_vals = [Command.unlink(line.id) for line in lines_to_remove]
 
@@ -184,7 +184,7 @@ class HrPayslip(models.Model):
                     input_type_id = attachment_types[deduction_type].id
                     input_line_vals.append(Command.create({
                         'name': name,
-                        'amount': amount,
+                        'amount': amount if not slip.credit_note else -amount,
                         'input_type_id': input_type_id,
                     }))
                 slip.update({'input_line_ids': input_line_vals})
@@ -196,7 +196,7 @@ class HrPayslip(models.Model):
             if not slip.input_line_ids and not slip.salary_attachment_ids:
                 continue
             attachments = self.env['hr.salary.attachment']
-            if slip.employee_id and slip.input_line_ids:
+            if slip.employee_id and slip.input_line_ids and slip.date_to:
                 input_line_type_ids = slip.input_line_ids.mapped('input_type_id.id')
                 deduction_types = [f for f in attachment_types if attachment_types[f].id in input_line_type_ids]
                 attachments = slip.employee_id.salary_attachment_ids.filtered(
@@ -343,7 +343,10 @@ class HrPayslip(models.Model):
                     salary_lines = slip.line_ids.filtered(lambda r: r.code in input_lines.mapped('code'))
                     if not attachments or not salary_lines:
                         continue
-                    attachments.record_payment(abs(salary_lines.total))
+                    if slip.credit_note:
+                        attachments.record_payment(-abs(salary_lines.total))
+                    else:
+                        attachments.record_payment(abs(salary_lines.total))
         return res
 
     def action_payslip_draft(self):
@@ -366,7 +369,7 @@ class HrPayslip(models.Model):
         template = self.env.ref('hr_payroll.mail_template_new_payslip', raise_if_not_found=False)
         for report, payslips in mapped_reports.items():
             for payslip in payslips:
-                pdf_content, dummy = self.env['ir.actions.report'].sudo()._render_qweb_pdf(report, payslip.id)
+                pdf_content, dummy = self.env['ir.actions.report'].sudo().with_context(lang=payslip.employee_id.address_home_id.lang)._render_qweb_pdf(report, payslip.id)
                 if report.print_report_name:
                     pdf_name = safe_eval(report.print_report_name, {'object': payslip})
                 else:
@@ -431,7 +434,7 @@ class HrPayslip(models.Model):
 
     def action_open_work_entries(self):
         self.ensure_one()
-        return self.employee_id.action_open_work_entries()
+        return self.employee_id.action_open_work_entries(initial_date=self.date_from)
 
     def action_open_salary_attachments(self):
         self.ensure_one()
@@ -532,7 +535,7 @@ class HrPayslip(models.Model):
         self.ensure_one()
         res = []
         hours_per_day = self._get_worked_day_lines_hours_per_day()
-        work_hours = self.contract_id._get_work_hours(self.date_from, self.date_to, domain=domain)
+        work_hours = self.contract_id.get_work_hours(self.date_from, self.date_to, domain=domain)
         work_hours_ordered = sorted(work_hours.items(), key=lambda x: x[1])
         biggest_work = work_hours_ordered[-1][0] if work_hours_ordered else 0
         add_days_rounding = 0
@@ -596,13 +599,20 @@ class HrPayslip(models.Model):
         return {
             'float_round': float_round,
             'float_compare': float_compare,
+            'relativedelta': relativedelta,
         }
 
     def _get_localdict(self):
         self.ensure_one()
         worked_days_dict = {line.code: line for line in self.worked_days_line_ids if line.code}
-        inputs_dict = {line.code: line for line in self.input_line_ids if line.code}
+        # Check for multiple inputs of the same type and keep a copy of
+        # them because otherwise they are lost when building the dict
+        input_list = [line.code for line in self.input_line_ids if line.code]
+        cnt = Counter(input_list)
+        multi_input_lines = [k for k, v in cnt.items() if v > 1]
+        same_type_input_lines = {line_code: [line for line in self.input_line_ids if line.code == line_code] for line_code in multi_input_lines}
 
+        inputs_dict = {line.code: line for line in self.input_line_ids if line.code}
         employee = self.employee_id
         contract = self.contract_id
 
@@ -616,10 +626,35 @@ class HrPayslip(models.Model):
                 'inputs': InputLine(employee.id, inputs_dict, self.env),
                 'employee': employee,
                 'contract': contract,
-                'result_rules': ResultRules(employee.id, {}, self.env)
+                'result_rules': ResultRules(employee.id, {}, self.env),
+                'same_type_input_lines': same_type_input_lines
             }
         }
         return localdict
+
+    def _get_rule_name(self, localdict, rule, employee_lang):
+        if localdict['result_name']:
+            rule_name = localdict['result_name']
+        elif rule.code in ['BASIC', 'GROSS', 'NET', 'DEDUCTION',
+                           'REIMBURSEMENT']:  # Generated by default_get (no xmlid)
+            if rule.code == 'BASIC':  # Note: Crappy way to code this, but _(foo) is forbidden. Make a method in master to be overridden, using the structure code
+                if rule.name == "Double Holiday Pay":
+                    rule_name = _("Double Holiday Pay")
+                if rule.struct_id.name == "CP200: Employees 13th Month":
+                    rule_name = _("Prorated end-of-year bonus")
+                else:
+                    rule_name = _('Basic Salary')
+            elif rule.code == "GROSS":
+                rule_name = _('Gross')
+            elif rule.code == "DEDUCTION":
+                rule_name = _('Deduction')
+            elif rule.code == "REIMBURSEMENT":
+                rule_name = _('Reimbursement')
+            elif rule.code == 'NET':
+                rule_name = _('Net Salary')
+        else:
+            rule_name = rule.with_context(lang=employee_lang).name
+        return rule_name
 
     def _get_payslip_lines(self):
         line_vals = []
@@ -647,54 +682,57 @@ class HrPayslip(models.Model):
                     'result_name': False
                 })
                 if rule._satisfy_condition(localdict):
-                    amount, qty, rate = rule._compute_rule(localdict)
-                    #check if there is already a rule computed with that code
-                    previous_amount = rule.code in localdict and localdict[rule.code] or 0.0
-                    #set/overwrite the amount computed for this rule in the localdict
-                    tot_rule = amount * qty * rate / 100.0
-                    localdict[rule.code] = tot_rule
-                    result_rules_dict[rule.code] = {'total': tot_rule, 'amount': amount, 'quantity': qty}
-                    rules_dict[rule.code] = rule
-                    # sum the amount for its salary category
-                    localdict = rule.category_id._sum_salary_rule_category(localdict, tot_rule - previous_amount)
                     # Retrieve the line name in the employee's lang
                     employee_lang = payslip.employee_id.sudo().address_home_id.lang
                     # This actually has an impact, don't remove this line
                     context = {'lang': employee_lang}
-                    if localdict['result_name']:
-                        rule_name = localdict['result_name']
-                    elif rule.code in ['BASIC', 'GROSS', 'NET', 'DEDUCTION', 'REIMBURSEMENT']:  # Generated by default_get (no xmlid)
-                        if rule.code == 'BASIC':  # Note: Crappy way to code this, but _(foo) is forbidden. Make a method in master to be overridden, using the structure code
-                            if rule.name == "Double Holiday Pay":
-                                rule_name = _("Double Holiday Pay")
-                            if rule.struct_id.name == "CP200: Employees 13th Month":
-                                rule_name = _("Prorated end-of-year bonus")
-                            else:
-                                rule_name = _('Basic Salary')
-                        elif rule.code == "GROSS":
-                            rule_name = _('Gross')
-                        elif rule.code == "DEDUCTION":
-                            rule_name = _('Deduction')
-                        elif rule.code == "REIMBURSEMENT":
-                            rule_name = _('Reimbursement')
-                        elif rule.code == 'NET':
-                            rule_name = _('Net Salary')
+                    if rule.code in localdict['same_type_input_lines']:
+                        for multi_line_rule in localdict['same_type_input_lines'][rule.code]:
+                            localdict['inputs'].dict[rule.code] = multi_line_rule
+                            amount, qty, rate = rule._compute_rule(localdict)
+                            tot_rule = amount * qty * rate / 100.0
+                            localdict = rule.category_id._sum_salary_rule_category(localdict,
+                                                                                   tot_rule)
+                            rule_name = payslip._get_rule_name(localdict, rule, employee_lang)
+                            line_vals.append({
+                                'sequence': rule.sequence,
+                                'code': rule.code,
+                                'name':  rule_name,
+                                'note': html2plaintext(rule.note) if not is_html_empty(rule.note) else '',
+                                'salary_rule_id': rule.id,
+                                'contract_id': localdict['contract'].id,
+                                'employee_id': localdict['employee'].id,
+                                'amount': amount,
+                                'quantity': qty,
+                                'rate': rate,
+                                'slip_id': payslip.id,
+                            })
                     else:
-                        rule_name = rule.with_context(lang=employee_lang).name
-                    # create/overwrite the rule in the temporary results
-                    result[rule.code] = {
-                        'sequence': rule.sequence,
-                        'code': rule.code,
-                        'name': rule_name,
-                        'note': html2plaintext(rule.note) if not is_html_empty(rule.note) else '',
-                        'salary_rule_id': rule.id,
-                        'contract_id': localdict['contract'].id,
-                        'employee_id': localdict['employee'].id,
-                        'amount': amount,
-                        'quantity': qty,
-                        'rate': rate,
-                        'slip_id': payslip.id,
-                    }
+                        amount, qty, rate = rule._compute_rule(localdict)
+                        #check if there is already a rule computed with that code
+                        previous_amount = rule.code in localdict and localdict[rule.code] or 0.0
+                        #set/overwrite the amount computed for this rule in the localdict
+                        tot_rule = amount * qty * rate / 100.0
+                        localdict[rule.code] = tot_rule
+                        result_rules_dict[rule.code] = {'total': tot_rule, 'amount': amount, 'quantity': qty}
+                        rules_dict[rule.code] = rule
+                        # sum the amount for its salary category
+                        localdict = rule.category_id._sum_salary_rule_category(localdict, tot_rule - previous_amount)
+                        rule_name = payslip._get_rule_name(localdict, rule, employee_lang)
+                        # create/overwrite the rule in the temporary results
+                        result[rule.code] = {
+                            'sequence': rule.sequence,
+                            'code': rule.code,
+                            'name': rule_name,
+                            'note': html2plaintext(rule.note) if not is_html_empty(rule.note) else '',
+                            'salary_rule_id': rule.id,
+                            'contract_id': localdict['contract'].id,
+                            'employee_id': localdict['employee'].id,
+                            'amount': amount,
+                            'quantity': qty,
+                            'rate': rate,
+                            'slip_id': payslip.id,
+                        }
             line_vals += list(result.values())
         return line_vals
 
@@ -751,12 +789,16 @@ class HrPayslip(models.Model):
         if not self or self.env.context.get('salary_simulation'):
             return
         valid_slips = self.filtered(lambda p: p.employee_id and p.date_from and p.date_to and p.contract_id and p.struct_id)
+        if not valid_slips:
+            return
         # Make sure to reset invalid payslip's worked days line
         self.update({'worked_days_line_ids': [(5, 0, 0)]})
+        if not valid_slips:
+            return
         # Ensure work entries are generated for all contracts
         generate_from = min(p.date_from for p in self)
         current_month_end = date_utils.end_of(fields.Date.today(), 'month')
-        generate_to = max(min(fields.Date.to_date(p.date_to), current_month_end) for p in self)
+        generate_to = max(min(fields.Date.to_date(p.date_to), current_month_end) for p in valid_slips)
         self.mapped('contract_id')._generate_work_entries(generate_from, generate_to)
 
         for slip in valid_slips:

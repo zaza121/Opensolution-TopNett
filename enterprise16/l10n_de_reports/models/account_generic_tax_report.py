@@ -1,5 +1,10 @@
-from odoo import models, fields, _
+from odoo import api, models, _
+from odoo.exceptions import RedirectWarning
 from odoo.tools import float_repr
+
+import stdnum.de.stnr
+import stdnum.exceptions
+
 from lxml import etree
 from datetime import date, datetime
 
@@ -25,7 +30,35 @@ class GermanTaxReportCustomHandler(models.AbstractModel):
             }
         )
 
+    @api.model
+    def _redirect_to_misconfigured_company_number(self, message):
+        """ Raises a RedirectWarning informing the user his company is missing configuration, redirecting him to the
+         tree view of res.company
+        """
+        action = self.env.ref('base.action_res_company_form')
+
+        raise RedirectWarning(
+            message,
+            action.id,
+            _("Configure your company"),
+        )
+
     def export_tax_report_to_xml(self, options):
+
+        if self.env.company.l10n_de_stnr:
+            try:
+                steuer_nummer = stdnum.de.stnr.to_country_number(self.env.company.l10n_de_stnr, self.env.company.state_id.with_context(lang='de_DE').name)
+            except stdnum.exceptions.InvalidComponent:
+                self._redirect_to_misconfigured_company_number(_("Your company's SteuerNummer is not compatible with your state"))
+            except stdnum.exceptions.InvalidFormat:
+                if stdnum.de.stnr.is_valid(self.env.company.l10n_de_stnr, self.env.company.state_id.with_context(lang='de_DE').name):
+                    # the SteuerNummer is already in the right format, and so, can't be converted
+                    steuer_nummer = self.env.company.l10n_de_stnr
+                else:
+                    self._redirect_to_misconfigured_company_number(_("Your company's SteuerNummer is not valid"))
+        else:
+            self._redirect_to_misconfigured_company_number(_("Your company's SteuerNummer field should be filled"))
+
         report = self.env['account.report'].browse(options['report_id'])
         template_context = {}
         options = report._get_options(options)
@@ -48,10 +81,11 @@ class GermanTaxReportCustomHandler(models.AbstractModel):
         tree = etree.fromstring(doc, parser)
 
         taxes = tree.xpath('//Umsatzsteuervoranmeldung')[0]
+        tax_number = tree.xpath('//Umsatzsteuervoranmeldung/Steuernummer')[0]
+        tax_number.text = steuer_nummer
+
         # Add the values dynamically. We do it here because the tag is generated from the code and
         # Qweb doesn't allow dynamically generated tags.
-        elem = etree.SubElement(taxes, "Kz09")
-        elem.text = "0.00" #please keep "0.00" until Odoo has "Kz09"
 
         report_lines = report._get_lines(options)
         colname_to_idx = {col['expression_label']: idx for idx, col in enumerate(options.get('columns', []))}
@@ -62,21 +96,27 @@ class GermanTaxReportCustomHandler(models.AbstractModel):
 
         for line in report_lines:
             line_code = codes_context[line['columns'][colname_to_idx['balance']]['report_line_id']]
-            if line_code and line_code.startswith('DE') and not line_code.endswith('BASE'):
-                line_code = line_code.split('_')[1]
-                #all "Kz" may be supplied as negative, except "Kz39"
-                line_value = line['columns'][colname_to_idx['balance']]['no_format']
-                if line_value and (line_code != "39" or line_value > 0):
-                    elem = etree.SubElement(taxes, "Kz" + line_code)
-                    #only "kz09" and "kz83" can be supplied with decimals
-                    if line_code in {"09", "83"}:
-                        elem.text = float_repr(line_value, self.env.company.currency_id.decimal_places)
-                    else:
-                        elem.text = float_repr(int(line_value), 0)
-                #"Kz09" and "kz83" must be supplied with 0.00 if they don't have balance
-                elif line_code in {"09", "83"}:
-                    elem = etree.SubElement(taxes, "Kz" + line_code)
-                    elem.text = "0.00"
+            if not (line_code and line_code.startswith('DE') and not line_code.endswith('TAX')):
+                continue
+            line_code = line_code.split('_')[1]
+            # all "Kz" may be supplied as negative, except "Kz37", "Kz39", "Kz50"
+            line_value = line['columns'][colname_to_idx['balance']]['no_format']
+            if line_value and (line_code not in ("37", "39", "50") or line_value > 0):
+                elem = etree.SubElement(taxes, "Kz" + line_code)
+                # These can not be supplied with decimals
+                if line_code in ("21", "35", "41", "42", "43", "44", "45", "46", "48", "49", "50", "60", "73",
+                                 "76", "77", "81", "84", "86", "87", "89", "91", "93", "90", "94", "95"):
+                    elem.text = float_repr(int(line_value), 0)
+                elif line_code in ("66", "61", "62", "67", "63", "59", "64",):
+                    # These are taxes that are on the wrong sign on the report compared to what should be exported
+                    elem.text = float_repr(- line_value, 2).replace('.', ',')
+                else:
+                    elem.text = float_repr(line_value, 2).replace('.', ',')
+
+            # "kz83" must be supplied with 0.00 if it doesn't have balance
+            elif line_code == "83":
+                elem = etree.SubElement(taxes, "Kz" + line_code)
+                elem.text = "0,00"
 
         return {
             'file_name': report.get_default_report_filename('xml'),

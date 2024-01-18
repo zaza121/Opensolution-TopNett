@@ -33,7 +33,7 @@ tour.register('rental_tour', {
     content: _t("Save the product."),
     position: 'bottom',
 }, {
-    trigger: ".nav-item a.nav-link:contains(Time based pricing)",
+    trigger: ".nav-item a.nav-link:contains(Time-based pricing)",
     content: _t("The rental configuration is available here."),
     position: 'top',
 }, {

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from odoo.addons.mrp_account.tests.test_mrp_account import TestMrpAccount
 from odoo.tests.common import Form
+from odoo import Command
 from freezegun import freeze_time
 
 
@@ -207,3 +208,56 @@ class TestReportsCommon(TestMrpAccount):
         self.assertEqual(report['unit_component_cost'], 150)
         self.assertEqual(report['unit_operation_cost'], 40)
         self.assertEqual(report['unit_duration'], 30)
+
+    def test_multiple_users_operation(self):
+        """ Check what happens on the report when two users log on the same operation simultaneously.
+        """
+        self.env.user.groups_id += self.env.ref('mrp.group_mrp_routings')
+        user_1 = self.env['res.users'].create({
+            'name': 'Lonie',
+            'login': 'lonie',
+            'email': 'lonie@user.com',
+            'groups_id': [Command.set([self.env.ref('mrp.group_mrp_user').id])],
+        })
+        user_2 = self.env['res.users'].create({
+            'name': 'Doppleganger',
+            'login': 'dopple',
+            'email': 'dopple@user.com',
+            'groups_id': [Command.set([self.env.ref('mrp.group_mrp_user').id])],
+        })
+
+        production_form = Form(self.env['mrp.production'])
+        production_form.product_id = self.product_4
+        production = production_form.save()
+        with Form(production) as mo_form:
+            with mo_form.workorder_ids.new() as wo:
+                wo.name = 'Do important stuff'
+                wo.workcenter_id = self.workcenter_2
+        production.action_confirm()
+
+        # Have both users working simultaneously on the same operation
+        self.env['mrp.workcenter.productivity'].create({
+            'workcenter_id': self.workcenter_2.id,
+            'date_start': datetime.now() - timedelta(minutes=30),
+            'date_end': datetime.now(),
+            'loss_id': self.env.ref('mrp.block_reason7').id,
+            'workorder_id': production.workorder_ids[0].id,
+            'user_id': user_1.id,
+        })
+        self.env['mrp.workcenter.productivity'].create({
+            'workcenter_id': self.workcenter_2.id,
+            'date_start': datetime.now() - timedelta(minutes=20),
+            'date_end': datetime.now() - timedelta(minutes=5),
+            'loss_id': self.env.ref('mrp.block_reason7').id,
+            'workorder_id': production.workorder_ids[0].id,
+            'user_id': user_2.id,
+        })
+        production.button_mark_done()
+        # Need to flush to have the duration correctly set on the workorders for the report.
+        self.env.flush_all()
+
+        cost_analysis = self.env['report.mrp_account_enterprise.mrp_cost_structure'].get_lines(production)[0]
+        workcenter_times = list(filter(lambda op: op[0] == self.workcenter_2.name and op[2] == production.workorder_ids[0].name, cost_analysis['operations']))
+
+        self.assertEqual(len(workcenter_times), 1, "There should be only a single line for the workcenter cost")
+        self.assertEqual(workcenter_times[0][3], production.workorder_ids[0].duration / 60, "Duration should be the total duration of this operation.")

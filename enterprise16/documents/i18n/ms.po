@@ -4,16 +4,16 @@
 # 
 # Translators:
 # Niyas Raphy, 2022
-# Mehjabin Farsana, 2022
+# Mehjabin Farsana, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:27+0000\n"
+"POT-Creation-Date: 2023-04-14 06:16+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Mehjabin Farsana, 2022\n"
-"Language-Team: Malay (https://www.transifex.com/odoo/teams/41243/ms/)\n"
+"Last-Translator: Mehjabin Farsana, 2023\n"
+"Language-Team: Malay (https://app.transifex.com/odoo/teams/41243/ms/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,6 +25,11 @@ msgstr ""
 #: code:addons/documents/static/src/views/inspector/documents_inspector.js:0
 #, python-format
 msgid " + Add a tag"
+msgstr ""
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.share_page
+msgid "#{document_is_url and 'Link to ' or 'Download '}#{document.name}"
 msgstr ""
 
 #. module: documents
@@ -63,12 +68,12 @@ msgstr ""
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_finance_fiscal_year_2017
-msgid "2021"
+msgid "2022"
 msgstr ""
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_finance_fiscal_year_2018
-msgid "2022"
+msgid "2023"
 msgstr ""
 
 #. module: documents
@@ -262,7 +267,7 @@ msgid ""
 "                                                    </a>\n"
 "                                                </div>\n"
 "                                            </center><br/>\n"
-"                                            Please provide us with the missing document before the link expires (planned on <t t-out=\"object.date_deadline or ''\">2021-05-17</t>).\n"
+"                                            Please provide us with the missing document<t t-if=\"object.date_deadline\"> before the link expires (planned on <t t-out=\"object.date_deadline\">2021-05-17</t>)</t>.\n"
 "                                            <t t-if=\"user and user.signature\">\n"
 "                                                <br/>\n"
 "                                                <t t-out=\"user.signature or ''\">--<br/>Mitchell Admin</t>\n"
@@ -417,7 +422,7 @@ msgstr "Aktiviti"
 #: model_terms:ir.ui.view,arch_db:documents.share_view_form
 #: model_terms:ir.ui.view,arch_db:documents.share_view_form_popup
 msgid "Activity"
-msgstr ""
+msgstr "Aktiviti"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__activity_exception_decoration
@@ -490,7 +495,7 @@ msgstr ""
 #. module: documents
 #: model:res.groups,name:documents.group_documents_manager
 msgid "Administrator"
-msgstr ""
+msgstr "Pentadbir"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_marketing_assets_ads
@@ -578,7 +583,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #, python-format
 msgid "Archive"
-msgstr ""
+msgstr "Arkib"
 
 #. module: documents
 #. odoo-javascript
@@ -799,13 +804,13 @@ msgstr "Kenalan"
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.workflow_rule_form_view
 msgid "Contains"
-msgstr ""
+msgstr "Mengandungi"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_finance_documents_Contracts
 #: model:documents.tag,name:documents.documents_internal_template_contracts
 msgid "Contracts"
-msgstr ""
+msgstr "Kontrak"
 
 #. module: documents
 #. odoo-javascript
@@ -867,7 +872,7 @@ msgstr "Dicipta pada"
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
 msgid "Creation Date"
-msgstr ""
+msgstr "Tarikh Penciptaan"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_workflow_rule__condition_type__criteria
@@ -884,7 +889,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:documents.selection__documents_share__activity_date_deadline_range_type__days
 #: model:ir.model.fields.selection,name:documents.selection__documents_workflow_rule__activity_date_deadline_range_type__days
 msgid "Days"
-msgstr ""
+msgstr "Hari"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_share__alias_defaults
@@ -1162,12 +1167,12 @@ msgstr ""
 #. module: documents
 #: model:documents.tag,name:documents.documents_finance_documents_expense
 msgid "Expense"
-msgstr ""
+msgstr "Perbelanjaan"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_share__state__expired
 msgid "Expired"
-msgstr ""
+msgstr "Tamat tempoh"
 
 #. module: documents
 #: model:ir.model.constraint,message:documents.constraint_documents_facet_name_unique
@@ -1300,7 +1305,7 @@ msgstr "Mempunyai Mesej"
 #: model:ir.model.fields,field_description:documents.field_documents_document__previous_attachment_ids
 #, python-format
 msgid "History"
-msgstr ""
+msgstr "Sejarah"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__id
@@ -1417,7 +1422,7 @@ msgstr ""
 #. module: documents
 #: model:documents.facet,name:documents.documents_internal_knowledge
 msgid "Knowledge"
-msgstr ""
+msgstr "Pengetahuan"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document____last_update
@@ -1514,7 +1519,10 @@ msgid "Limit Write Groups to the documents of which they are owner."
 msgstr ""
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/inspector/documents_inspector.xml:0
 #: model_terms:ir.ui.view,arch_db:documents.documents_link_to_record_form_view
+#, python-format
 msgid "Link"
 msgstr ""
 
@@ -1561,7 +1569,7 @@ msgstr ""
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_page_layout
 msgid "Login"
-msgstr ""
+msgstr "Log masuk"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_page_layout
@@ -1773,7 +1781,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__activity_note
 #: model:ir.model.fields,field_description:documents.field_documents_share__activity_note
 msgid "Note"
-msgstr ""
+msgstr "Nota"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__message_needaction_counter
@@ -1867,7 +1875,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:documents.field_documents_workflow_rule__criteria_owner_id
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
 msgid "Owner"
-msgstr ""
+msgstr "Pemilik"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.share_page
@@ -2134,7 +2142,7 @@ msgstr "Urutan"
 
 #. module: documents
 #: model:documents.workflow.rule,name:documents.documents_rule_finance_2018contracts
-msgid "Set As 2022 Contracts"
+msgid "Set As 2023 Contracts"
 msgstr ""
 
 #. module: documents
@@ -2171,7 +2179,7 @@ msgstr "Tetapan"
 #: model_terms:ir.ui.view,arch_db:documents.share_view_form_popup
 #, python-format
 msgid "Share"
-msgstr ""
+msgstr "Kongsi"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_folder__share_link_ids
@@ -2258,7 +2266,7 @@ msgstr ""
 #: code:addons/documents/static/src/views/inspector/documents_inspector.xml:0
 #, python-format
 msgid "Size"
-msgstr ""
+msgstr "Saiz"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_workflow_rule__link_model
@@ -2362,7 +2370,7 @@ msgstr "Tag"
 #. module: documents
 #: model:documents.facet,name:documents.documents_internal_template
 msgid "Templates"
-msgstr ""
+msgstr "Templat"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_internal_template_text
@@ -2475,7 +2483,7 @@ msgstr "Untuk mengesahkan"
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
 msgid "Today Activities"
-msgstr ""
+msgstr "Aktiviti Hari Ini"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_facet__tooltip

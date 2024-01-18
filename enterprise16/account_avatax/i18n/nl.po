@@ -4,8 +4,8 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2022
-# Jolien De Paepe, 2022
+# Jolien De Paepe, 2023
+# Erwin van der Ploeg <erwin@odooexperts.nl>, 2023
 # 
 msgid ""
 msgstr ""
@@ -13,8 +13,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-20 09:48+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Jolien De Paepe, 2022\n"
-"Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
+"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2023\n"
+"Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -26,6 +26,13 @@ msgstr ""
 #, python-format
 msgid "%(response)s"
 msgstr "%(response)s"
+
+#. module: account_avatax
+#. odoo-python
+#: code:addons/account_avatax/models/account_avatax.py:0
+#, python-format
+msgid "- %s (ID: %s) on %s"
+msgstr "- %s (ID: %s) van %s"
 
 #. module: account_avatax
 #: model_terms:ir.ui.view,arch_db:account_avatax.res_config_settings_view_form
@@ -94,7 +101,7 @@ msgstr "API ID"
 #. module: account_avatax
 #: model_terms:ir.ui.view,arch_db:account_avatax.res_config_settings_view_form
 msgid "API KEY"
-msgstr "API sleutel"
+msgstr "API KEY"
 
 #. module: account_avatax
 #: model:ir.model.fields,help:account_avatax.field_account_fiscal_position__avatax_invoice_account_id
@@ -213,7 +220,7 @@ msgstr "Avatar Factuuraccount"
 #. module: account_avatax
 #: model:ir.model,name:account_avatax.model_avatax_exemption
 msgid "Avatax Partner Exemption Codes"
-msgstr "Vrijstellingscodes voor Avatars-partners"
+msgstr "Vrijstellingscodes voor Avatars-relaties"
 
 #. module: account_avatax
 #: model:ir.model,name:account_avatax.model_product_avatax_category
@@ -318,16 +325,7 @@ msgstr "Gemaakt op"
 #: model:ir.model.fields,help:account_avatax.field_res_partner__avalara_partner_code
 #: model:ir.model.fields,help:account_avatax.field_res_users__avalara_partner_code
 msgid "Customer Code set in Avalara for this partner."
-msgstr "Klantcode ingesteld in Avalara voor deze partner."
-
-#. module: account_avatax
-#: code:addons/account_avatax/models/account_avatax.py:0
-#, python-format
-msgid ""
-"Customers are required to have a zip, state and country when using Avatax."
-msgstr ""
-"Klanten moeten een postcode, staat en land hebben bij het gebruik van "
-"Avatar."
+msgstr "Klantcode ingesteld in Avalara voor deze relatie."
 
 #. module: account_avatax
 #: model:ir.model.fields,field_description:account_avatax.field_avatax_exemption__description
@@ -455,7 +453,7 @@ msgstr ""
 #: code:addons/account_avatax/wizard/avatax_validate_address.py:0
 #, python-format
 msgid "Odoo could not validate the address of %(partner)s with Avalara."
-msgstr "Odoo kon het adres van %(partner)s niet valideren met Avalara."
+msgstr "Odoo kon het adres van %(relatie)s niet valideren met Avalara."
 
 #. module: account_avatax
 #: code:addons/account_avatax/models/account_avatax.py:0
@@ -475,7 +473,7 @@ msgstr "Origineel adres"
 #. module: account_avatax
 #: model:ir.model.fields,field_description:account_avatax.field_avatax_validate_address__partner_id
 msgid "Partner"
-msgstr "Partner"
+msgstr "Relatie"
 
 #. module: account_avatax
 #: code:addons/account_avatax/models/account_avatax.py:0
@@ -576,6 +574,17 @@ msgstr ""
 "Zie https://taxcode.avatax.avalara.com/"
 
 #. module: account_avatax
+#. odoo-python
+#: code:addons/account_avatax/models/account_avatax.py:0
+#, python-format
+msgid ""
+"The following customer(s) need to have a zip, state and country when using "
+"Avatax:"
+msgstr ""
+"De volgende klant(en) moeten een postcode, staat en land hebben bij het "
+"gebruik van Avatax:"
+
+#. module: account_avatax
 #: model:ir.model.fields,help:account_avatax.field_res_config_settings__avalara_commit
 msgid "The transactions will be committed for reporting in Avatax."
 msgstr "De transacties worden vastgelegd voor rapportage in Avatax."
@@ -637,7 +646,7 @@ msgid ""
 "Validate and correct the addresses of partners in North America with "
 "Avalara."
 msgstr ""
-"Valideer en corrigeer de adressen van partners in Noord-Amerika met Avalara."
+"Valideer en corrigeer de adressen van relaties in Noord-Amerika met Avalara."
 
 #. module: account_avatax
 #: model_terms:ir.ui.view,arch_db:account_avatax.avatax_validate_address_view_form

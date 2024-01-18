@@ -57,7 +57,7 @@
                                     </a>
                                 </t>
                                 <!-- Manage renewals -->
-                                <a t-if="subscription.to_renew and subscription.payment_token_id" role="button" class="btn btn-primary btn-block mb8" t-att-href="renew_url">
+                                <a t-if="subscription.to_renew and subscription.payment_token_id and (not subscription.end_date or subscription.next_invoice_date &lt; subscription.end_date)" role="button" class="btn btn-primary btn-block mb8" t-att-href="renew_url">
                                     <i class="fa fa-refresh"/> Renew
                                 </a>
                                 <!-- Download -->
@@ -105,7 +105,7 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div t-if="message" t-att-class="'alert ' + message_class" role="alert">
+                            <div t-if="message and message_class" t-att-class="'alert ' + message_class" role="alert">
                                 <p t-esc="message"/>
                             </div>
 
@@ -116,7 +116,7 @@
                                     <hr class="my-0"/>
                                     <table class="table table-borderless table-sm">
                                         <tbody style="white-space:nowrap">
-                                            <tr>
+                                            <tr t-if="template">
                                                 <th class="text-end pb-0">Current Plan:</th>
                                                 <td class="w-100 pb-0 text-wrap"><span t-field="template.name"/></td>
                                             </tr>
@@ -124,7 +124,7 @@
                                                 <th class="text-end pb-0">Frequency:</th>
                                                 <td class="w-100 pb-0 text-wrap"><span t-field="subscription.recurrence_id.name"/></td>
                                             </tr>
-                                            <tr>
+                                            <tr t-if="subscription.client_order_ref">
                                                 <th class="text-end pb-0">Reference:</th>
                                                 <td class="w-100 pb-0 text-wrap"><span t-field="subscription.client_order_ref"/></td>
                                             </tr>
@@ -132,7 +132,7 @@
                                                 <th class="text-end pb-0">Valid Until:</th>
                                                 <td class="w-100 pb-0"><span t-field="subscription.end_date"/></td>
                                             </tr>
-                                            <tr>
+                                            <tr t-if="subscription.start_date">
                                                 <th class="text-end pb-0">Start Date:</th>
                                                 <td class="w-100 pb-0"><span t-field="subscription.start_date"/></td>
                                             </tr>
@@ -275,9 +275,9 @@
                             </div> <!-- / Plan details ====== -->
 
                             <!-- ======  Subscription closed ====== -->
-                            <div t-if="subscription.to_renew or subscription.stage_category == 'closed'" id="payment_message">
+                            <div t-if="subscription.to_renew and (not subscription.end_date or subscription.next_invoice_date &lt; subscription.end_date)" id="payment_message">
                                 <div>
-                                    <p id="wc_warning_closed" t-if="not subscription.stage_category == 'closed'">Your subscription is closed.
+                                    <p id="wc_warning_closed" t-if="subscription.stage_category == 'closed'">Your subscription is closed.
                                         <t t-if="missing_periods == 1">If you wish to reopen it, you can pay your invoice for the current invoicing period.</t>
                                         <t t-if="missing_periods &gt; 1">If you wish to reopen it, the <t t-esc="missing_periods"/> missing payments (from <span t-field="subscription.next_invoice_date"/> to this day) will be automatically processed.</t>
                                     </p>
@@ -285,8 +285,7 @@
                                         <h5 class="mb-1">Pay Recurrently With</h5>
                                         <hr class="my-0"/>
                                         <t t-call="payment.checkout">
-                                            <t t-set="landing_route"
-                                               t-value="subscription.get_portal_url()"/>
+                                            <t t-set="landing_route" t-value="subscription.get_portal_url()"/>
                                         </t>
                                     </div>
                                 </div>

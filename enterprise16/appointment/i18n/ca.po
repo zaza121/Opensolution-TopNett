@@ -3,7 +3,6 @@
 # 	* appointment
 # 
 # Translators:
-# Pete M, 2022
 # CristianCruzParra, 2022
 # eriiikgt, 2022
 # AncesLatino2004, 2022
@@ -19,18 +18,21 @@
 # marcescu, 2022
 # Susanna Pujol, 2022
 # Manel Fernandez Ramirez <manelfera@outlook.com>, 2022
-# Josep Anton Belchi, 2022
-# Óscar Fonseca <tecnico@extreme-micro.com>, 2022
-# Farouk Jabiri, 2022
+# jabiri7, 2022
+# Ivan Espinola, 2023
+# Óscar Fonseca <tecnico@extreme-micro.com>, 2023
+# Josep Anton Belchi, 2023
+# martioodo hola, 2023
+# Albert Parera, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Farouk Jabiri, 2022\n"
-"Language-Team: Catalan (https://www.transifex.com/odoo/teams/41243/ca/)\n"
+"Last-Translator: Albert Parera, 2023\n"
+"Language-Team: Catalan (https://app.transifex.com/odoo/teams/41243/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -120,9 +122,9 @@ msgstr ""
 #: model:mail.template,body_html:appointment.appointment_booked_mail_template
 msgid ""
 "<div>\n"
-"    <t t-set=\"colors\" t-value=\"{'needsAction': 'grey', 'accepted': 'green', 'tentative': '#FFFF00', 'declined': 'red'}\"/>\n"
-"    <t t-set=\"recurrent\" t-value=\"object.recurrence_id and not ctx.get('calendar_template_ignore_recurrence')\"/>\n"
-"    <t t-set=\"mail_tz\" t-value=\"object._get_mail_tz() or ctx.get('mail_tz')\"/>\n"
+"    <t t-set=\"colors\" t-value=\"{'needsAction': 'grey', 'accepted': 'green', 'tentative': '#FFFF00', 'declined': 'red'}\"></t>\n"
+"    <t t-set=\"recurrent\" t-value=\"object.recurrence_id and not ctx.get('calendar_template_ignore_recurrence')\"></t>\n"
+"    <t t-set=\"mail_tz\" t-value=\"object._get_mail_tz() or ctx.get('mail_tz')\"></t>\n"
 "    <p>\n"
 "    Appointment booked for <t t-out=\"object.appointment_type_id.name or ''\">Technical Demo</t> <t t-if=\"object.appointment_type_id.category != 'custom'\"> with <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t></t>.\n"
 "    </p>\n"
@@ -150,13 +152,13 @@ msgid ""
 "                        </div>\n"
 "                        <t t-if=\"mail_tz\">\n"
 "                            <div style=\"font-size: 10px; font-weight: normal;\">\n"
-"                                (<t t-out=\"mail_tz\"/>)\n"
+"                                (<t t-out=\"mail_tz\"></t>)\n"
 "                            </div>\n"
 "                        </t>\n"
 "                    </t>\n"
 "                </div>\n"
 "            </td>\n"
-"            <td width=\"20px;\"/>\n"
+"            <td width=\"20px;\"></td>\n"
 "            <td style=\"padding-top: 5px;\">\n"
 "                <p><strong>Details of the event</strong></p>\n"
 "                <ul>\n"
@@ -180,99 +182,27 @@ msgid ""
 "                    <li t-if=\"object.videocall_location\">\n"
 "                        How to Join:\n"
 "                        <t t-if=\"object.get_base_url() in object.videocall_location\"> Join with Odoo Discuss</t>\n"
-"                        <t t-else=\"\"> Join at</t><br/>\n"
+"                        <t t-else=\"\"> Join at</t><br>\n"
 "                        <a t-attf-href=\"{{ object.videocall_location }}\" target=\"_blank\" t-out=\"object.videocall_location or ''\">www.mycompany.com/calendar/join_videocall/xyz</a>\n"
 "                    </li>\n"
 "                </ul>\n"
 "                <t t-if=\"not is_html_empty(object.description)\">\n"
 "                    <li>Description of the event:\n"
-"                    <t t-out=\"object.description\"/></li>\n"
+"                    <t t-out=\"object.description\"></t></li>\n"
 "                </t>\n"
 "            </td>\n"
 "    </tr></table>\n"
 "</div>\n"
 "            "
 msgstr ""
-"<div>\n"
-"    <t t-set=\"colors\" t-value=\"{'needsAction': 'grey', 'accepted': 'green', 'tentative': '#FFFF00', 'declined': 'red'}\"/>\n"
-"    <t t-set=\"recurrent\" t-value=\"object.recurrenceid and not ctx.get('calendartemplateignorerecurrence')\"/>\n"
-"    <t t-set=\"mailtz\" t-value=\"object.getmailtz() or ctx.get('mailtz')\"/>\n"
-"    <p>\n"
-"    Cita reservada per <t t-out=\"object.appointmenttypeid.name or ''\">Demo Tècnica</t> <t t-if=\"object.appointmenttypeid.category != 'custom'\"> amb <t t-out=\"object.partnerid.name or ''\">Brandon Freeman</t></t>).\n"
-"    </p>\n"
-"    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
-"        <a t-attf-href=\"/calendar/meeting/join?token={{ object.accesstoken }}\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">\n"
-"            Uneix-te a</a>\n"
-"        <a t-attf-href=\"/web?#id={{ object.id }}amp;viewtype=formamp;model=calendar.event\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">\n"
-"            Visualitza</a>\n"
-"    </div>\n"
-"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
-"            <td width=\"130px;\" style=\"min-width: 130px;\">\n"
-"                <div style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: #ffffff; min-height: 18px; background-color: #875A7B; border: 1px solid #875A7B;\">\n"
-"                    <t t-out=\"formatdatetime(dt=object.start, tz=mailtz if not object.allday else None, dtformat=quot;EEEEquot;, langcode=object.env.lang) or ''\">Dimecres</t>\n"
-"                </div>\n"
-"                <div style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid #875A7B;\">\n"
-"                    <t t-out=\"str(object.start.day) or ''\">1</t>\n"
-"                </div>\n"
-"                <div style=\"font-size: 12px; text-align: center; font-weight: bold; color: #ffffff; background-color: #875A7B;\">\n"
-"                    <t t-out=\"formatdatetime(dt=object.start, tz=mailtz if not object.allday else None, dtformat=quot;MMMM yquot;, langcode=object.env.lang) or ''\">gener 2020</t>\n"
-"                </div>\n"
-"                <div style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold; border: 1px solid #875A7B; border-bottom-start-radius: 3px;\">\n"
-"                    <t t-if=\"not object.allday\">\n"
-"                        <div>\n"
-"                            <t t-out=\"formattime(time=object.start, tz=mailtz, timeformat=quot;shortquot;, langcode=object.env.lang) or ''\">8:00</t>\n"
-"                        </div>\n"
-"                        <t t-if=\"mailtz\">\n"
-"                            <div style=\"font-size: 10px; font-weight: normal;\">\n"
-"                                (<t t-out=\"mailtz\"/>)\n"
-"                            </div>\n"
-"                        </t>\n"
-"                    </t>\n"
-"                </div>\n"
-"            </td>\n"
-"            <td width=\"20px;\"/>\n"
-"            <td style=\"padding-top: 5px;\">\n"
-"                <p><strong>Detalls de l'esdeveniment</strong></p>\n"
-"                <ul>\n"
-"                    <li t-if=\"object.location\">Ubicació: <t t-out=\"object.location or ''\">Bruxelles</t>\n"
-"                        (<a target=\"_blank\" t-attf-href=\"http://maps.google.com/maps?oi=map&amp;q={{ object.location }}\">Visualitza el mapa</a>)\n"
-"                    </li>\n"
-"                    <li t-if=\"recurrent\">Quan: <t t-out=\"object.recurrenceid.name or ''\">Cada 1 setmana, per 3 esdeveniments</t></li>\n"
-"                    <li t-if=\"not object.allday and object.duration\">Durada: <t t-out=\"('%dH%02d' % (object.duration,round(object.duration*60)%60)) or ''\">0H30</t></li>\n"
-"                    <li>assistents\n"
-"                    <ul>\n"
-"                        <li t-foreach=\"object.attendeeids\" t-as=\"attendee\">\n"
-"                            <div t-attf-style=\"display: inline-block; border-radius: 50%; width: 10px; height: 10px; background:{{ colors.get(attendee.state) or 'white' }};\"> </div>\n"
-"                            <t t-if=\"attendee.commonname\">\n"
-"                                <span style=\"margin-left:5px\" t-out=\"attendee.commonname or ''\">Mitchell Admin</span>\n"
-"                            </t>\n"
-"                            <t t-else=\"\">\n"
-"                                <span style=\"margin-left:5px\">You</span>\n"
-"                            </t>\n"
-"                        </li>\n"
-"                    </ul></li>\n"
-"                    <li t-if=\"object.videocalllocation\">\n"
-"                        Com unir-se:\n"
-"                        <t t-if=\"object.getbaseurl() in object.videocalllocation\"> Uneix-te amb el debat Odoo</t>\n"
-"                        <t t-else=\"\"> Uneix a</t><br/>\n"
-"                        <a t-attf-href=\"{{ object.videocall_location }}\" target=\"_blank\" t-out=\"object.videocall_location or ''\">www.mycompany.com/calendar/join_videocall/xyz</a>\n"
-"                    </li>\n"
-"                </ul>\n"
-"                <t t-if=\"not ishtmlempty(object.description)\">\n"
-"                    <li>Descripció de l'esdeveniment:\n"
-"                    <t t-out=\"object.description\"/></li>\n"
-"                </t>\n"
-"            </td>\n"
-"    </tr></table>\n"
-"</div>"
 
 #. module: appointment
 #: model:mail.template,body_html:appointment.appointment_canceled_mail_template
 msgid ""
 "<div>\n"
-"    <t t-set=\"colors\" t-value=\"{'needsAction': 'grey', 'accepted': 'green', 'tentative': '#FFFF00', 'declined': 'red'}\"/>\n"
-"    <t t-set=\"recurrent\" t-value=\"object.recurrence_id and not ctx.get('calendar_template_ignore_recurrence')\"/>\n"
-"    <t t-set=\"mail_tz\" t-value=\"object._get_mail_tz() or ctx.get('mail_tz')\"/>\n"
+"    <t t-set=\"colors\" t-value=\"{'needsAction': 'grey', 'accepted': 'green', 'tentative': '#FFFF00', 'declined': 'red'}\"></t>\n"
+"    <t t-set=\"recurrent\" t-value=\"object.recurrence_id and not ctx.get('calendar_template_ignore_recurrence')\"></t>\n"
+"    <t t-set=\"mail_tz\" t-value=\"object._get_mail_tz() or ctx.get('mail_tz')\"></t>\n"
 "    <p>\n"
 "    The appointment for <t t-out=\"object.appointment_type_id.name or ''\">Technical Demo</t> <t t-if=\"object.appointment_type_id.category != 'custom'\"> with <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t></t> has been canceled.\n"
 "    </p>\n"
@@ -292,13 +222,13 @@ msgid ""
 "                        <div><t t-out=\"format_time(time=object.start, tz=mail_tz, time_format=&quot;short&quot;, lang_code=object.env.lang) or ''\">8:00</t></div>\n"
 "                        <t t-if=\"mail_tz\">\n"
 "                            <div style=\"font-size: 10px; font-weight: normal;\">\n"
-"                                (<t t-out=\"mail_tz\"/>)\n"
+"                                (<t t-out=\"mail_tz\"></t>)\n"
 "                            </div>\n"
 "                        </t>\n"
 "                    </t>\n"
 "                </div>\n"
 "            </td>\n"
-"            <td width=\"20px;\"/>\n"
+"            <td width=\"20px;\"></td>\n"
 "            <td style=\"padding-top: 5px;\">\n"
 "                <del>\n"
 "                    <p><strong>Details of the event</strong></p>\n"
@@ -313,7 +243,7 @@ msgid ""
 "                            <li>\n"
 "                                <div t-attf-style=\"display: inline-block; border-radius: 50%; width: 10px; height: 10px; background:{{ colors.get(attendee.state) or 'white' }};\"> </div>\n"
 "                                <t t-if=\"attendee.common_name\">\n"
-"                                    <span style=\"margin-left:5px\" t-out=\"attendee.common_name or ''\"/>\n"
+"                                    <span style=\"margin-left:5px\" t-out=\"attendee.common_name or ''\"></span>\n"
 "                                </t>\n"
 "                                <t t-else=\"\">\n"
 "                                    <span style=\"margin-left:5px\">You</span>\n"
@@ -323,13 +253,13 @@ msgid ""
 "                        <li t-if=\"object.videocall_location\">\n"
 "                            How to Join:\n"
 "                            <t t-if=\"object.get_base_url() in object.videocall_location\"> Join with Odoo Discuss</t>\n"
-"                            <t t-else=\"\"> Join at</t><br/>\n"
+"                            <t t-else=\"\"> Join at</t><br>\n"
 "                            <a t-attf-href=\"{{ object.videocall_location }}\" target=\"_blank\" t-out=\"object.videocall_location or ''\">www.mycompany.com/calendar/join_videocall/xyz</a>\n"
 "                        </li>\n"
 "                    </ul>\n"
 "                    <t t-if=\"not is_html_empty(object.description)\">\n"
 "                        <li>Description of the event:\n"
-"                        <t t-out=\"object.description\"/></li>\n"
+"                        <t t-out=\"object.description\"></t></li>\n"
 "                    </t>\n"
 "                </del>\n"
 "            </td>\n"
@@ -337,72 +267,6 @@ msgid ""
 "</div>\n"
 "            "
 msgstr ""
-"<div>\n"
-"    <t t-set=\"colors\" t-value=\"{'needsAction': 'grey', 'accepted': 'green', 'tentative': '#FFFF00', 'declined': 'red'}\"/>\n"
-"    <t t-set=\"recurrent\" t-value=\"object.recurrenceid and not ctx.get('calendartemplateignorerecurrence')\"/>\n"
-"    <t t-set=\"mailtz\" t-value=\"object.getmailtz() or ctx.get('mailtz')\"/>\n"
-"    <p>\n"
-"    El nomenament de <t t-out=\"object.appointmenttypeid.name or ''\">Demostració Tècnica</t> <t t-if=\"object.appointmenttypeid.category != 'custom'\"> amb <t t-out=\"object.partnerid.name or ''\">Brandon Freeman</t></t> ha estat cancel·lat.\n"
-"    </p>\n"
-"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
-"            <td width=\"130px;\" style=\"min-width: 130px;\">\n"
-"                <div style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: #ffffff; min-height: 18px; background-color: #875A7B; border: 1px solid #875A7B;\">\n"
-"                    <t t-out=\"formatdatetime(dt=object.start, tz=mailtz, dtformat=quot;EEEEquot;, langcode=object.env.lang) or ''\">Dimecres</t>\n"
-"                </div>\n"
-"                <div style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid #875A7B;\">\n"
-"                    <t t-out=\"str(object.start.day) or ''\">1</t>\n"
-"                </div>\n"
-"                <div style=\"font-size: 12px; text-align: center; font-weight: bold; color: #ffffff; background-color: #875A7B;\">\n"
-"                    <t t-out=\"formatdatetime(dt=object.start, tz=mailtz, dtformat=quot;MMMM yquot;, langcode=object.env.lang) or ''\">gener 2020</t>\n"
-"                </div>\n"
-"                <div style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold; border: 1px solid #875A7B; border-bottom-start-radius: 3px;\">\n"
-"                    <t t-if=\"not object.allday\">\n"
-"                        <div><t t-out=\"formattime(time=object.start, tz=mailtz, timeformat=quot;shortquot;, langcode=object.env.lang) or ''\">8:00</t></div>\n"
-"                        <t t-if=\"mailtz\">\n"
-"                            <div style=\"font-size: 10px; font-weight: normal;\">\n"
-"                                (<t t-out=\"mailtz\"/>)\n"
-"                            </div>\n"
-"                        </t>\n"
-"                    </t>\n"
-"                </div>\n"
-"            </td>\n"
-"            <td width=\"20px;\"/>\n"
-"            <td style=\"padding-top: 5px;\">\n"
-"                <del>\n"
-"                    <p><strong>Detalls de l'esdeveniment</strong></p>\n"
-"                    <ul>\n"
-"                            <li t-if=\"object.location\">Ubicació: <t t-out=\"object.location or ''\">Bruxelles</t>\n"
-"                                (<a target=\"_blank\" t-attf-href=\"http://maps.google.com/maps?oi=map&amp;q={{ object.location }}\">Visualitza el mapa</a>)\n"
-"                            </li>\n"
-"                            <li t-if=\"recurrent\">Quan: <t t-out=\"object.recurrenceid.name or ''\">Cada 1 setmana, per 3 esdeveniments</t></li>\n"
-"                            <li t-if=\"not object.allday and object.duration\">Durada: <t t-out=\"('%dH%02d' % (object.duration,round(object.duration*60)%60)) or ''\">0H30</t></li>\n"
-"                        <li>assistents\n"
-"                        <ul t-foreach=\"object.attendeeids\" t-as=\"attendee\">\n"
-"                            <li>\n"
-"                                <div t-attf-style=\"display: inline-block; border-radius: 50%; width: 10px; height: 10px; background:{{ colors.get(attendee.state) or 'white' }};\"> </div>\n"
-"                                <t t-if=\"attendee.commonname\">\n"
-"                                    <span style=\"margin-left:5px\" t-out=\"attendee.commonname or ''\"/>\n"
-"                                </t>\n"
-"                                <t t-else=\"\">\n"
-"                                    <span style=\"margin-left:5px\">You</span>\n"
-"                                </t>\n"
-"                            </li>\n"
-"                        </ul></li>\n"
-"                        <li t-if=\"object.videocalllocation\">\n"
-"                            Com unir-se:\n"
-"                            <t t-if=\"object.getbaseurl() in object.videocalllocation\"> Uneix-te amb el debat Odoo</t>\n"
-"                            <t t-else=\"\"> Uneix a</t><br/>\n"
-"                            <a t-attf-href=\"{{ object.videocall_location }}\" target=\"_blank\" t-out=\"object.videocall_location or ''\">www.mycompany.com/calendar/join_videocall/xyz</a>\n"
-"                        </li>\n"
-"                    </ul>\n"
-"                    <t t-if=\"not ishtmlempty(object.description)\">\n"
-"                        <li>Descripció de l'esdeveniment:\n"
-"                        <t t-out=\"object.description\"/></li>\n"
-"                    </t>\n"
-"                </del>\n"
-"            </td>\n"
-"    </tr></table>\n"
-"</div>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_invite_view_form
@@ -545,7 +409,7 @@ msgstr "Afegeix una funció aquí..."
 #: code:addons/appointment/static/src/js/wysiwyg.js:0
 #, python-format
 msgid "Add a specific appointment."
-msgstr ""
+msgstr "Afegeix una cita específica."
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_info
@@ -661,8 +525,6 @@ msgstr "Qualsevol usuari"
 #. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/js/wysiwyg.js:0
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_form
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_info
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 #, python-format
 msgid "Appointment"
@@ -711,6 +573,13 @@ msgstr "Durada de la cita amb format"
 #: model:ir.model.fields,help:appointment.field_appointment_type__appointment_duration_formatted
 msgid "Appointment Duration formatted in words"
 msgstr "Durada de la cita amb format a les paraules"
+
+#. module: appointment
+#. odoo-python
+#: code:addons/appointment/models/appointment_type.py:0
+#, python-format
+msgid "Appointment Duration should be higher than 0.00."
+msgstr "La durada de la cita hauria de ser superior a 0.00."
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_calendar_event__appointment_invite_id
@@ -1605,7 +1474,7 @@ msgstr "Nombre d'errors"
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Nombre de missatges que requereixen una acció"
 
 #. module: appointment
@@ -1688,6 +1557,13 @@ msgstr "Opcions"
 
 #. module: appointment
 #. odoo-javascript
+#: code:addons/appointment/static/src/js/wysiwyg.js:0
+#, python-format
+msgid "Our Appointment Types"
+msgstr "Els nostres tipus de cites"
+
+#. module: appointment
+#. odoo-javascript
 #: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
 #, python-format
 msgid "Our first availability is"
@@ -1726,7 +1602,7 @@ msgstr "Usuaris possibles"
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
 msgid "Preview"
-msgstr "Previsualitza"
+msgstr "Vista prèvia"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointments_list_layout
@@ -1820,10 +1696,13 @@ msgstr "Dissabte"
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_form
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_info
 msgid "Schedule"
-msgstr "Programari"
+msgstr "Planificació"
 
 #. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/js/wysiwyg.js:0
 #: model_terms:ir.ui.view,arch_db:appointment.appointments_list_layout
+#, python-format
 msgid "Schedule an Appointment"
 msgstr "Programar una cita"
 
@@ -1832,7 +1711,7 @@ msgstr "Programar una cita"
 #: code:addons/appointment/static/src/js/wysiwyg.js:0
 #, python-format
 msgid "Schedule an appointment."
-msgstr ""
+msgstr "Programa una cita."
 
 #. module: appointment
 #: model_terms:ir.actions.act_window,help:appointment.calendar_event_action_report

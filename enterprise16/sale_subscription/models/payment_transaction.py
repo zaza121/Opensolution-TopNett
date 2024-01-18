@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from odoo import api, fields, models, Command
 
 
 class PaymentTransaction(models.Model):
@@ -15,17 +15,25 @@ class PaymentTransaction(models.Model):
         for tx in self:
             tx.renewal_allowed = tx.state in ('done', 'authorized')
 
+    def _create_or_link_to_invoice(self):
+        tx_to_invoice = self.env['payment.transaction']
+        for tx in self:
+            if len(tx.sale_order_ids) > 1 or tx.invoice_ids or not tx.sale_order_ids.is_subscription:
+                continue
+            tx_to_invoice += tx
+            draft_invoices = tx.sale_order_ids.order_line.invoice_lines.move_id.filtered(lambda am: am.state == 'draft')
+            if draft_invoices:
+                draft_invoices.state = 'cancel'
+
+        tx_to_invoice._invoice_sale_orders()
+        tx_to_invoice.invoice_ids._post()
+        tx_to_invoice.invoice_ids.transaction_ids._send_invoice()
+
     def _reconcile_after_done(self):
         # override to force invoice creation if the transaction is done for a subscription
         # We don't take care of the sale.automatic_invoice parameter in that case.
         res = super()._reconcile_after_done()
-        tx_to_invoice = self.env['payment.transaction']
-        for tx in self:
-            if tx.sale_order_ids.filtered(lambda so: so.state in ('sale', 'done') and so.is_subscription) and not tx.invoice_ids:
-                tx_to_invoice |= tx
-        tx_to_invoice._invoice_sale_orders()
-        tx_to_invoice.invoice_ids.filtered(lambda inv: inv.state == 'draft')._post()
-        tx_to_invoice._send_invoice()
+        self._create_or_link_to_invoice()
         return res
 
     def _get_invoiced_subscription_transaction(self):

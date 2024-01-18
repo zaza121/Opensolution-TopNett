@@ -83,7 +83,7 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
         cls.move_2017_2.action_post()
 
         # Deactive all currencies to ensure group_multi_currency is disabled.
-        cls.env['res.currency'].search([('name', '!=', 'USD')]).active = False
+        cls.env['res.currency'].search([('name', '!=', 'USD')]).with_context(force_deactivate=True).active = False
 
         cls.report = cls.env.ref('account_reports.partner_ledger_report')
 
@@ -104,7 +104,7 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
             ],
         )
 
-        options['unfolded_lines'] = [f'-res.partner-{self.partner_a.id}']
+        options['unfolded_lines'] = [self.report._get_generic_line_id('res.partner', self.partner_a.id)]
 
         self.assertLinesValues(
             self.report._get_lines(options),
@@ -131,7 +131,7 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
         self.report.load_more_limit = 2
 
         options = self._generate_options(self.report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-12-31'))
-        options['unfolded_lines'] = [f'-res.partner-{self.partner_a.id}']
+        options['unfolded_lines'] = [self.report._get_generic_line_id('res.partner', self.partner_a.id)]
 
         report_lines = self.report._get_lines(options)
 
@@ -188,7 +188,7 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
         When filtering on receivable accounts (i.e. trade_receivable and/or non_trade_receivable), partner_b should disappear from the report.
         '''
         options = self._generate_options(self.report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-12-31'))
-        options['unfolded_lines'] = [f'-res.partner-{self.partner_a.id}']
+        options['unfolded_lines'] = [self.report._get_generic_line_id('res.partner', self.partner_a.id)]
         options = self._update_multi_selector_filter(options, 'account_type', ['non_trade_receivable', 'trade_receivable'])
 
         self.assertLinesValues(
@@ -285,7 +285,7 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
         )
 
         # Unfold 'partner_a'
-        options['unfolded_lines'] = [f'-res.partner-{self.partner_a.id}']
+        options['unfolded_lines'] = [self.report._get_generic_line_id('res.partner', self.partner_a.id)]
 
         self.assertLinesValues(
             self.report._get_lines(options),
@@ -309,7 +309,7 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
         )
 
         # Unfold 'Unknown Partner'
-        options['unfolded_lines'] = ['no_partner--']
+        options['unfolded_lines'] = [self.report._get_generic_line_id('res.partner', None, markup='no_partner')]
 
         self.assertLinesValues(
             self.report._get_lines(options),
@@ -358,4 +358,145 @@ class TestPartnerLedgerReport(TestAccountReportsCommon):
                 ('Unknown Partner',                     1000.0,         1000.0,         0.0),
                 ('Total',                               22350.0,        23350.0,        -1000.0),
             ],
+        )
+
+    def test_partner_ledger_prefix_groups(self):
+        partner_names = [
+            'A',
+            'A partner',
+            'A nice partner',
+            'A new partner',
+            'An original partner',
+            'Another partner',
+            'Anonymous partner',
+            'Annoyed partner',
+            'Brave partner',
+        ]
+
+        test_date = '2010-12-13'
+        invoices_map = {}
+        test_partners = self.env['res.partner']
+        for name in partner_names:
+            partner = self.env['res.partner'].create({'name': name})
+            test_partners += partner
+            invoice = self.init_invoice('out_invoice', partner=partner, invoice_date=test_date, amounts=[42.0], taxes=[], post=True)
+            invoices_map[name] = invoice.date.strftime('%m/%d/%Y')
+
+        # Without prefix groups
+        options = self._generate_options(self.report, test_date, test_date)
+
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                                 Debit          Credit            Balance
+            [   0,                                      6,              7,                9],
+            [
+                ('A',                                42.0,             '',             42.0),
+                ('A new partner',                    42.0,             '',             42.0),
+                ('A nice partner',                   42.0,             '',             42.0),
+                ('A partner',                        42.0,             '',             42.0),
+                ('An original partner',              42.0,             '',             42.0),
+                ('Annoyed partner',                  42.0,             '',             42.0),
+                ('Anonymous partner',                42.0,             '',             42.0),
+                ('Another partner',                  42.0,             '',             42.0),
+                ('Brave partner',                    42.0,             '',             42.0),
+                ('Total',                           378.0,            0.0,            378.0),
+            ],
+        )
+
+        # With prefix groups
+        self.env['ir.config_parameter'].set_param('account_reports.partner_ledger.groupby_prefix_groups_threshold', '3')
+        options = self._generate_options(self.report, test_date, test_date, default_options={'unfold_all': True})
+
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                                  Debit          Credit            Balance
+            [   0,                                       6,              7,                9],
+            [
+                ('A (8 lines)',                      336.0,             '',            336.0),
+                ('A',                                 42.0,             '',             42.0),
+                (invoices_map['A'],                   42.0,             '',             42.0),
+                ('Total A',                           42.0,             '',             42.0),
+                ('A[ ] (3 lines)',                   126.0,             '',            126.0),
+                ('A N (2 lines)',                     84.0,             '',             84.0),
+                ('A new partner',                     42.0,             '',             42.0),
+                (invoices_map['A new partner'],       42.0,             '',             42.0),
+                ('Total A new partner',               42.0,             '',             42.0),
+                ('A nice partner',                    42.0,             '',             42.0),
+                (invoices_map['A nice partner'],      42.0,             '',             42.0),
+                ('Total A nice partner',              42.0,             '',             42.0),
+                ('Total A N (2 lines)',               84.0,             '',             84.0),
+                ('A P (1 line)',                      42.0,             '',             42.0),
+                ('A partner',                         42.0,             '',             42.0),
+                (invoices_map['A partner'],           42.0,             '',             42.0),
+                ('Total A partner',                   42.0,             '',             42.0),
+                ('Total A P (1 line)',                42.0,             '',             42.0),
+                ('Total A[ ] (3 lines)',             126.0,             '',            126.0),
+                ('AN (4 lines)',                     168.0,             '',            168.0),
+                ('AN[ ] (1 line)',                    42.0,             '',             42.0),
+                ('An original partner',               42.0,             '',             42.0),
+                (invoices_map['An original partner'], 42.0,             '',             42.0),
+                ('Total An original partner',         42.0,             '',             42.0),
+                ('Total AN[ ] (1 line)',              42.0,             '',             42.0),
+                ('ANN (1 line)',                      42.0,             '',             42.0),
+                ('Annoyed partner',                   42.0,             '',             42.0),
+                (invoices_map['Annoyed partner'],     42.0,             '',             42.0),
+                ('Total Annoyed partner',             42.0,             '',             42.0),
+                ('Total ANN (1 line)',                42.0,             '',             42.0),
+                ('ANO (2 lines)',                     84.0,             '',             84.0),
+                ('Anonymous partner',                 42.0,             '',             42.0),
+                (invoices_map['Anonymous partner'],   42.0,             '',             42.0),
+                ('Total Anonymous partner',           42.0,             '',             42.0),
+                ('Another partner',                   42.0,             '',             42.0),
+                (invoices_map['Another partner'],     42.0,             '',             42.0),
+                ('Total Another partner',             42.0,             '',             42.0),
+                ('Total ANO (2 lines)',               84.0,             '',             84.0),
+                ('Total AN (4 lines)',               168.0,             '',            168.0),
+                ('Total A (8 lines)',                336.0,             '',            336.0),
+                ('B (1 line)',                        42.0,             '',             42.0),
+                ('Brave partner',                     42.0,             '',             42.0),
+                (invoices_map['Brave partner'],       42.0,             '',             42.0),
+                ('Total Brave partner',               42.0,             '',             42.0),
+                ('Total B (1 line)',                  42.0,             '',             42.0),
+                ('Total',                            378.0,            0.0,            378.0),
+            ],
+        )
+
+    def test_filter_unreconciled_entries_only(self):
+        new_partner = self.env['res.partner'].create({'name': 'Obiwan Kenobi'})
+        move_1 = self.init_invoice('out_invoice', partner=new_partner, invoice_date='2019-01-01', amounts=[1000.0], taxes=[], post=True)
+        move_2 = self.init_invoice('out_invoice', partner=new_partner, invoice_date='2019-01-01', amounts=[5000.0], taxes=[], post=True)
+
+        self.env['account.payment.register'].create({
+            'payment_date': '2019-01-01',
+            'line_ids': move_1.line_ids.filtered(lambda l: l.display_type == 'payment_term'),
+            'amount': 700.0,
+        })._create_payments()
+        self.env['account.payment.register'].create({
+            'payment_date': '2019-01-01',
+            'line_ids': move_2.line_ids.filtered(lambda l: l.display_type == 'payment_term'),
+        })._create_payments()
+
+        self.assertEqual(move_1.payment_state, 'partial')
+        self.assertEqual(move_2.payment_state, 'in_payment')
+
+        options = self._generate_options(self.report, '2019-01-01', '2019-12-31', default_options={'partner_ids': new_partner.ids})
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                                      Debit              Credit            Balance
+            [   0,                                            6,                  7,                9],
+            [
+                ('Obiwan Kenobi',                        6000.0,             5700.0,             300.0),
+                ('Total',                                6000.0,             5700.0,             300.0),
+            ]
+        )
+
+        options['unreconciled'] = True
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                                      Debit              Credit            Balance
+            [   0,                                            6,                  7,                9],
+            [
+                ('Obiwan Kenobi',                        1000.0,             700.0,             300.0),
+                ('Total',                                1000.0,             700.0,             300.0),
+            ]
         )

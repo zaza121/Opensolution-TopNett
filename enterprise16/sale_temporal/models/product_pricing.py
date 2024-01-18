@@ -68,6 +68,7 @@ class ProductPricing(models.Model):
     @api.depends('recurrence_id')
     def _compute_name(self):
         for pricing in self:
+            # TODO in master: use pricing.recurrence_id.duration_display
             pricing.name = _(
                 "%s %s",
                 pricing.recurrence_id.duration,
@@ -176,6 +177,7 @@ class ProductPricing(models.Model):
 
     def _get_unit_label(self, duration):
         """ Get the translated product pricing unit label. """
+        # TODO in master: remove in favor of env['sale.temporal.recurrence']_get_unit_label
         if duration is None:
             return ""
         if float_compare(duration, 1.0, precision_digits=2) < 1\

@@ -12,7 +12,7 @@ class HrEmployee(models.Model):
         """
         if not pin:
             pin = False
-        if self.pin == pin:
+        if self.sudo().pin == pin:
             if set_in_session:
                 request.session['employee_id'] = self.id
             return True
@@ -32,5 +32,4 @@ class HrEmployee(models.Model):
         return [
             'id',
             'name',
-            'barcode',
         ]

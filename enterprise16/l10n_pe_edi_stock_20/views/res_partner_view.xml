@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="account.view_partner_property_form"/>
         <field name="arch" type="xml">
             <xpath expr="//group[@name='accounting_entries']" position="after">
-                <group string="Peru" name="peru">
+                <group string="Peru" name="peru"  attrs="{'invisible': [('country_code', '!=', 'PE')]}">
                     <field name="l10n_pe_edi_operator_license"
                         attrs="{'invisible': [('company_type', '!=', 'person')]}"/>
                     <field name="l10n_pe_edi_mtc_number"

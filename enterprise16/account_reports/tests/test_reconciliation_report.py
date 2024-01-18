@@ -390,7 +390,7 @@ class TestReconciliationReport(TestAccountReportsCommon):
         )
 
     def test_reconciliation_report_non_statement_payment(self):
-        ''' Test that moves not linked to a bank statement/payment but linked for example to expanses are used in the
+        ''' Test that moves not linked to a bank statement/payment but linked for example to expenses are all showing in the
         report
         '''
 
@@ -422,6 +422,25 @@ class TestReconciliationReport(TestAccountReportsCommon):
             ]
         }).action_post()
 
+        self.env['account.move'].create({
+            'journal_id': bank_journal.id,
+            'date': '2015-12-31',
+            'line_ids': [
+                (0, 0, {
+                    'name': 'Source',
+                    'debit': 500,
+                    'credit': 0,
+                    'account_id': self.company_data['default_account_expense'].id,
+                }),
+                (0, 0, {
+                    'name': 'Destination',
+                    'debit': 0,
+                    'credit': 500,
+                    'account_id': bank_journal.company_id.account_journal_payment_credit_account_id.id,
+                }),
+            ]
+        }).action_post()
+
         # ==== Report ====
 
         report = self.env.ref('account_reports.bank_reconciliation_report').with_context(
@@ -446,14 +465,91 @@ class TestReconciliationReport(TestAccountReportsCommon):
 
                     ('Total Balance of 101405 Bank',                                '01/02/2016',   ''),
 
-                    ('Outstanding Payments/Receipts',                               '',             -800.0),
+                    ('Outstanding Payments/Receipts',                               '',             -1300.0),
 
-                    ('(-) Outstanding Payments',                                    '',             -800.0),
+                    ('(-) Outstanding Payments',                                    '',             -1300.0),
+                    ('BNKKK/2015/00001',                                            '12/31/2015',   -500.0),
                     ('BNKKK/2014/00001',                                            '12/31/2014',   -800.0),
-                    ('Total (-) Outstanding Payments',                              '',             -800.0),
+                    ('Total (-) Outstanding Payments',                              '',             -1300.0),
 
-                    ('Total Outstanding Payments/Receipts',                         '',             -800.0),
+                    ('Total Outstanding Payments/Receipts',                         '',             -1300.0),
                 ],
                 currency_map={3: {'currency': bank_journal.currency_id}},
                 ignore_folded=False,
             )
+
+    def test_reconciliation_report_warning_hole(self):
+        bank_journal = self.company_data['default_journal_bank']
+
+        report = self.env.ref('account_reports.bank_reconciliation_report').with_context(
+            active_id=bank_journal.id,
+            active_model='account.journal'
+        )
+        previous_options = self._generate_options(report, None, fields.Date.from_string('2023-12-31'))
+
+        report_info = report.get_report_informations(previous_options)
+        self.assertFalse(report_info['options'].get('inconsistent_statement_ids'), "No warning should be displayed.")
+
+        self.env['account.bank.statement'].create({
+            'name': 'statement_1',
+            'date': '2023-06-08',
+            'balance_start': 0.0,
+            'balance_end_real': 42.0,
+            'line_ids': [
+                (0, 0, {'payment_ref': 'line_1', 'amount': 42.0,  'date': '2023-06-01', 'journal_id': bank_journal.id}),
+            ],
+        })
+
+        self.env['account.bank.statement'].create({
+            'name': 'statement_2',
+            'date': '2023-06-09',
+            'balance_start': 52.0, # Hole: 10 are missing between the last balance_end and this balance_start
+            'balance_end_real': 63.0,
+            'line_ids': [
+                (0, 0, {'payment_ref': 'line_2', 'amount': 11.0,  'date': '2023-06-08', 'journal_id': bank_journal.id}),
+            ],
+        })
+
+        report_info = report.get_report_informations(previous_options)
+        self.assertTrue(
+            report_info['options'].get('inconsistent_statement_ids'),
+            "A warning should be displayed, telling the user there is a hole in the statements chain."
+        )
+
+    def test_reconciliation_report_warning_misc(self):
+        bank_journal = self.company_data['default_journal_bank']
+
+        report = self.env.ref('account_reports.bank_reconciliation_report').with_context(
+            active_id=bank_journal.id,
+            active_model='account.journal'
+        )
+        previous_options = self._generate_options(report, None, fields.Date.from_string('2023-12-31'))
+
+        report_info = report.get_report_informations(previous_options)
+        self.assertFalse(report_info['options'].get('has_bank_miscellaneous_move_lines'), "No warning should be displayed.")
+
+        self.env['account.move'].create({
+            'journal_id': bank_journal.id,
+            'date': '2023-06-01',
+            'line_ids': [
+                (0, 0, {
+                    'name': 'line_1',
+                    'debit': 100,
+                    'credit': 0,
+                    'account_id': self.company_data['default_account_expense'].id,
+                }),
+                (0, 0, {
+                    'name': 'line_2',
+                    'debit': 0,
+                    'credit': 100,
+                    'account_id': bank_journal.default_account_id.id,
+                }),
+            ]
+        }).action_post()
+
+        report_info = report.get_report_informations(previous_options)
+
+        self.assertTrue(
+            report_info['options'].get('has_bank_miscellaneous_move_lines'),
+            "A warning should be displayed, telling the user a miscellaneous entry is affecting the bank account's balance."
+        )

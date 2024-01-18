@@ -38,8 +38,7 @@ class Note(models.Model):
         res = super().write(values)
         # check if dashboard note tag was added to add payroll users as followers.
         if 'tag_ids' in values and dashboard_note_tag:
-            notes_with_tag = self.filtered(lambda n: dashboard_note_tag in n.tag_ids)
-            notes_to_subscribe = notes_without_tag - notes_with_tag
+            notes_to_subscribe = notes_without_tag.filtered(lambda n: dashboard_note_tag in n.tag_ids)
             # If the dashboard note tag is removed, we don't remove them
             if notes_to_subscribe:
                 notes_to_subscribe.note_subscribe_payroll_users()

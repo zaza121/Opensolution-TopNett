@@ -67,8 +67,8 @@ class ProductTemplate(models.Model):
             else:
                 products_finite_qty |= product
 
-        # Prefetch qty_available for all variants
-        variants_to_check = products_finite_qty.product_variant_ids.filtered("qty_available")
+        # Check only for variants which quantity on hand in the date interval is positive or some had been rented out
+        variants_to_check = products_finite_qty.product_variant_ids.filtered(lambda p: bool(p.qty_available > 0 or p.qty_in_rent > 0))
         templates_with_available_qty = self.env['product.template']
         if variants_to_check:
             sols = self.env['sale.order.line'].search(
@@ -78,6 +78,8 @@ class ProductTemplate(models.Model):
                     ('state', 'in', ('sent', 'sale', 'done')),
                     ('return_date', '>', from_date),
                     ('reservation_begin', '<', to_date),
+                    # We're in sudo, need to restrict the search to the SOL of the website company
+                    ('company_id', '=', self.env.company.id),
                 ],
                 order="reservation_begin asc"
             )

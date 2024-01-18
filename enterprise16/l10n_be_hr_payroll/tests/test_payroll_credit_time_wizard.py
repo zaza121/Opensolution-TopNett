@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import date
+from freezegun import freeze_time
 
 from odoo.tests import tagged
 from odoo.exceptions import ValidationError
@@ -147,74 +148,77 @@ class TestPayrollCreditTime(TestPayrollCommon):
         a_current_contract = self.a_contracts[-1]
         a_allocation = self.allocations.filtered(lambda alloc: alloc.employee_id.id == self.employee_a.id)
 
-        leave = self.env['hr.leave'].create({
-            'holiday_status_id': self.paid_time_off_type.id,
-            'employee_id': self.employee_a.id,
-            'request_date_from': date(today.year, 2, 1),
-            'date_from': date(today.year, 2, 1),
-            'date_to': date(today.year, 2, 6),
-            'request_date_to': date(today.year, 2, 6),
-            'number_of_days': 6
-        })
-        leave.action_validate()
-
-        # Credit time
-        wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.belgian_company.ids, active_id=a_current_contract.id).new({
-            'date_start': date(today.year, 6, 1),
-            'date_end': date(today.year, 8, 31),
-            'resource_calendar_id': self.resource_calendar_4_5.id,
-            'leave_type_id': self.paid_time_off_type.id,
-            'part_time': True,
-            'previous_contract_creation': True,
-        })
-        self.assertEqual(wizard.time_off_allocation, 16) # 16 max
-        self.assertAlmostEqual(wizard.work_time_rate, 80, 2)
-        view = wizard.with_context(force_schedule=True).action_validate()
-
-        # Apply allocation changes directly
-        self.env['l10n_be.schedule.change.allocation']._cron_update_allocation_from_new_schedule(date(today.year, 6, 1))
-
-        leave = self.env['hr.leave'].create({
-            'holiday_status_id': self.paid_time_off_type.id,
-            'employee_id': self.employee_a.id,
-            'request_date_from': date(today.year, 7, 1),
-            'date_from': date(today.year, 7, 1),
-            'date_to': date(today.year, 7, 6),
-            'request_date_to': date(today.year, 7, 6),
-            'number_of_days': 6
-        })
-        leave.action_validate()
-
-        # Apply allocation changes directly
-        full_time_contract = self.env['hr.contract'].search(view['domain']).filtered(lambda contract: not contract.time_credit and contract.id != a_current_contract.id)
-        self.env['l10n_be.schedule.change.allocation']._cron_update_allocation_from_new_schedule(full_time_contract.date_start)
-        self.assertEqual(full_time_contract.time_credit, False)
-        self.assertEqual(a_allocation.number_of_days, 20, "6 remained paid time offs and 12 days has been taken by the employee this current year")
-
-        # Credit time
-        wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.belgian_company.ids, active_id=full_time_contract.id).new({
-            'date_start': date(today.year, 9, 2),
-            'date_end': date(today.year, 12, 31),
-            'resource_calendar_id': self.resource_calendar_mid_time.id,
-            'leave_type_id': self.paid_time_off_type.id,
-            'part_time': True,
-            'previous_contract_creation': True,
-        })
-        self.assertEqual(wizard.time_off_allocation, 12) # Should be 10 but since the employee has already taken 12 days, it's 12
-        self.assertAlmostEqual(wizard.work_time_rate, 50, 2)
-        view = wizard.with_context(force_schedule=True).action_validate()
-        # Apply allocation changes directly
-        self.env['l10n_be.schedule.change.allocation']._cron_update_allocation_from_new_schedule(date(today.year, 9, 2))
-
-        # Normally he has already taken all his paid time offs, if he takes another, we should have an error
-        with self.assertRaises(ValidationError):
+        # leaves don't count if theyre planned in the future, they have to actually be taken
+        with freeze_time(date(today.year, 2, 1)):
             leave = self.env['hr.leave'].create({
                 'holiday_status_id': self.paid_time_off_type.id,
                 'employee_id': self.employee_a.id,
-                'request_date_from': date(today.year, 10, 4),
-                'date_from': date(today.year, 10, 4),
-                'date_to': date(today.year, 10, 8),
-                'request_date_to': date(today.year, 10, 8),
-                'number_of_days': 5
+                'request_date_from': date(today.year, 2, 1),
+                'date_from': date(today.year, 2, 1),
+                'date_to': date(today.year, 2, 6),
+                'request_date_to': date(today.year, 2, 6),
+                'number_of_days': 6
             })
             leave.action_validate()
+
+            # Credit time
+            wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.belgian_company.ids, active_id=a_current_contract.id).new({
+                'date_start': date(today.year, 6, 1),
+                'date_end': date(today.year, 8, 31),
+                'resource_calendar_id': self.resource_calendar_4_5.id,
+                'leave_type_id': self.paid_time_off_type.id,
+                'part_time': True,
+                'previous_contract_creation': True,
+            })
+            self.assertEqual(wizard.time_off_allocation, 16) # 16 max
+            self.assertAlmostEqual(wizard.work_time_rate, 80, 2)
+            view = wizard.with_context(force_schedule=True).action_validate()
+
+            # Apply allocation changes directly
+            self.env['l10n_be.schedule.change.allocation']._cron_update_allocation_from_new_schedule(date(today.year, 6, 1))
+
+        with freeze_time(date(today.year, 7, 1)):
+            leave = self.env['hr.leave'].create({
+                'holiday_status_id': self.paid_time_off_type.id,
+                'employee_id': self.employee_a.id,
+                'request_date_from': date(today.year, 7, 1),
+                'date_from': date(today.year, 7, 1),
+                'date_to': date(today.year, 7, 6),
+                'request_date_to': date(today.year, 7, 6),
+                'number_of_days': 6
+            })
+            leave.action_validate()
+
+            # Apply allocation changes directly
+            full_time_contract = self.env['hr.contract'].search(view['domain']).filtered(lambda contract: not contract.time_credit and contract.id != a_current_contract.id)
+            self.env['l10n_be.schedule.change.allocation']._cron_update_allocation_from_new_schedule(full_time_contract.date_start)
+            self.assertEqual(full_time_contract.time_credit, False)
+            self.assertEqual(a_allocation.number_of_days, 20, "6 remained paid time offs and 12 days has been taken by the employee this current year")
+
+            # Credit time
+            wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.belgian_company.ids, active_id=full_time_contract.id).new({
+                'date_start': date(today.year, 9, 2),
+                'date_end': date(today.year, 12, 31),
+                'resource_calendar_id': self.resource_calendar_mid_time.id,
+                'leave_type_id': self.paid_time_off_type.id,
+                'part_time': True,
+                'previous_contract_creation': True,
+            })
+            self.assertEqual(wizard.time_off_allocation, 12) # Should be 10 but since the employee has already taken 12 days, it's 12
+            self.assertAlmostEqual(wizard.work_time_rate, 50, 2)
+            view = wizard.with_context(force_schedule=True).action_validate()
+            # Apply allocation changes directly
+            self.env['l10n_be.schedule.change.allocation']._cron_update_allocation_from_new_schedule(date(today.year, 9, 2))
+
+            # Normally he has already taken all his paid time offs, if he takes another, we should have an error
+            with self.assertRaises(ValidationError):
+                leave = self.env['hr.leave'].create({
+                    'holiday_status_id': self.paid_time_off_type.id,
+                    'employee_id': self.employee_a.id,
+                    'request_date_from': date(today.year, 10, 4),
+                    'date_from': date(today.year, 10, 4),
+                    'date_to': date(today.year, 10, 8),
+                    'request_date_to': date(today.year, 10, 8),
+                    'number_of_days': 5
+                })
+                leave.action_validate()

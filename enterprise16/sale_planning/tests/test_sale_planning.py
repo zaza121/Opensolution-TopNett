@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details
+from math import ceil
+from datetime import datetime, timedelta
 from freezegun import freeze_time
 from psycopg2 import IntegrityError
 
@@ -229,3 +231,84 @@ class TestSalePlanning(TestCommonSalePlanning):
                 self.assertEqual('2021-08-02 06:00:00', str(slot.start_datetime), 'Planning slot should take the start datetime induced by the magnifying glass in gantt. (Janice has NYC Timezone)')
                 self.assertEqual('2021-08-04 08:00:00', str(slot.end_datetime), 'Planning slot should last for all the week, until friday afternoon. (Janice has NYC Timezone)')
                 self.assertEqual(18.0, slot.allocated_hours, 'Planning slot should have 18 allocated hours.')
+
+    def test_copy_previous_week(self):
+        for qty, percent, hours in [(2, 40, 1), (1, 15, 2)]:
+            so = self.env['sale.order'].create({
+                "partner_id": self.planning_partner.id,
+            })
+            sol = self.env['sale.order.line'].create({
+                "product_id": self.plannable_product.id,
+                "product_uom_qty": qty,
+                "order_id": so.id,
+            })
+            so.action_confirm()
+
+            PlanningSlot = self.env['planning.slot']
+            start = datetime(2019, 6, 25, 8, 0)
+            PlanningSlot.create([{
+                'start_datetime': start + timedelta(hours=hours * i),
+                'end_datetime': start + timedelta(hours=hours * (i + 1)),
+                'allocated_percentage': percent,
+                'sale_line_id': sol.id,
+            } for i in range(2)])
+
+            can_create = True
+            while can_create:
+                start = start + timedelta(weeks=1)
+                can_create = PlanningSlot.action_copy_previous_week(str(start), [
+                    # dummy domain
+                    ('start_datetime', '=', True),
+                    ('end_datetime', '=', True),
+                ])
+
+            slots = PlanningSlot.search([
+                ('sale_line_id', '=', sol.id),
+                ('start_datetime', '!=', False),
+            ])
+            self.assertEqual(len(slots), ceil(qty / hours * 100 / percent))
+            self.assertTrue(
+                all(slots.mapped(lambda s: s.allocated_percentage == percent)),
+                'All slots should have the same allocated percentage',
+            )
+            self.assertAlmostEqual(
+                sum(slots.mapped(lambda s: s._get_slot_duration())) * percent / 100, qty,
+                msg='Total duration * allocated percentage should be 1 hour, as sold',
+            )
+
+    def test_copy_no_allocated_percentage(self):
+        """Mostly to test that the copy method does not crash when there is no allocated percentage."""
+        so = self.env['sale.order'].create({
+            "partner_id": self.planning_partner.id,
+        })
+        sol = self.env['sale.order.line'].create({
+            "product_id": self.plannable_product.id,
+            "product_uom_qty": 10,
+            "order_id": so.id,
+        })
+        so.action_confirm()
+
+        PlanningSlot = self.env['planning.slot']
+        start = datetime(2019, 6, 25, 8, 0)
+        slot = PlanningSlot.create({
+            'start_datetime': start,
+            'end_datetime': start + timedelta(hours=1),
+            'allocated_percentage': 0,
+            'sale_line_id': sol.id,
+        })
+        self.assertEqual(slot.allocated_percentage, 0)
+
+        copy_start = start + timedelta(weeks=1)
+        PlanningSlot.action_copy_previous_week(
+            str(copy_start), [
+                # dummy domain
+                ('start_datetime', '=', True),
+                ('end_datetime', '=', True),
+            ]
+        )
+
+        copy = PlanningSlot.search([('start_datetime', '=', copy_start), ('sale_line_id', '=', sol.id)])
+        self.assertEqual(len(copy), 1)
+        self.assertEqual(copy.allocated_percentage, 0)
+        self.assertEqual(copy.allocated_hours, 0)
+        self.assertEqual(copy.end_datetime, copy_start + timedelta(hours=1))

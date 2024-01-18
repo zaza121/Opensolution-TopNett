@@ -106,16 +106,41 @@
     </template>
 
     <template id="knowledge_article_tree_frontend" name="Frontend Article Tree">
-        <t t-call="knowledge.knowledge_article_tree_favorites" />
-        <t t-set="visible_articles" t-value="(workspace_articles | shared_articles)"/>
-        <section t-if="visible_articles">
-            <div class="o_section_header h4 mb-0">Shared with you</div>
-            <ul class="o_tree o_tree_workspace m-0 px-0 py-2">
-                <t t-call="knowledge.articles_template">
-                    <t t-set="articles" t-value="visible_articles"/>
-                </t>
-            </ul>
-        </section>
+        <!-- Search tree -->
+        <t t-if="search_tree">
+            <t t-if="articles">
+                <ul class="o_tree m-0 px-0 pt-1 pb-2">
+                    <t t-foreach="articles" t-as="article">
+                        <t t-set="readonly" t-value="portal_readonly_mode or not user_write_access_by_article.get(article.id)"/>
+                        <t t-set="isActive" t-value="article.id == active_article_id if active_article_id else False"/>
+                        <li t-attf-class="o_article #{ 'readonly' if readonly else '' }"
+                            t-attf-id="article_#{article.id}" t-att-data-article-id="article.id"
+                            t-att-data-category="article.category">
+                            <div t-attf-class="d-flex align-items-center #{ 'o_article_active fw-bold text-900' if isActive else 'text-muted' }">
+                                <t t-call="knowledge.articles_template_name"/>
+                            </div>
+                        </li>
+                    </t>
+                </ul>
+            </t>
+            <t t-else="">
+                <div class="text-muted text-center">No article found</div>
+            </t>
+        </t>
+        <!-- Section tree -->
+        <t t-else="">
+            <t t-call="knowledge.knowledge_article_tree_favorites" />
+            <t t-set="visible_articles" t-value="(workspace_articles | shared_articles)"/>
+            <section t-if="visible_articles">
+                <div class="o_section_header h4 mb-0">Shared with you</div>
+                <ul class="o_tree o_tree_workspace m-0 px-0 py-2">
+                    <t t-call="knowledge.articles_template">
+                        <t t-set="articles" t-value="visible_articles"/>
+                        <t t-set="articles_category" t-value="'portal_shared'"/>
+                    </t>
+                </ul>
+            </section>
+        </t>
     </template>
 </data>
 </odoo>

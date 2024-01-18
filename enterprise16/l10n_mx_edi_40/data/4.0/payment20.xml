@@ -89,7 +89,7 @@
                                 t-att-Folio="format_string(invoice_vals['folio_number'], 40)"
                                 t-att-Serie="format_string(invoice_vals['serie_number'], 25)"
                                 t-att-MonedaDR="invoice.currency_id.name"
-                                t-att-EquivalenciaDR="format_float(invoice_vals['exchange_rate'], 6) if invoice_vals['exchange_rate'] else '1'"
+                                t-att-EquivalenciaDR="format_float(invoice_vals['exchange_rate'], invoice_vals['equivalenciadr_precision_digits']) if invoice_vals['exchange_rate'] else '1'"
                                 t-att-NumParcialidad="invoice_vals['number_of_payments']"
                                 t-att-ImpSaldoAnt="format_float(invoice_vals['amount_before_paid'], invoice.currency_id.decimal_places)"
                                 t-att-ImpPagado="format_float(invoice_vals['amount_paid'], invoice.currency_id.decimal_places)"

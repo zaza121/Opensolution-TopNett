@@ -35,15 +35,13 @@ class HmrcVatObligation(models.Model):
         return [(o.id, "%s (%s - %s)" % (o.date_due, o.date_start, o.date_end)) for o in self]
 
     @api.model
-    def _get_auth_headers(self, bearer):
+    def _get_auth_headers(self, bearer, client_data=None):
         headers = {
             'Accept': 'application/vnd.hmrc.1.0+json',
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer %s' % bearer,
+            **self.env['hmrc.service']._get_fraud_prevention_info(client_data),
         }
-        headers.update({
-            'Authorization': 'Bearer %s' % bearer ,
-        })
-        headers.update(self.env['hmrc.service']._get_fraud_prevention_info())
         return headers
 
     @api.model
@@ -140,22 +138,22 @@ class HmrcVatObligation(models.Model):
 
         values = {}
         for line in lines:
-            line_id = self.env['account.generic.tax.report']._parse_line_id(line['id'])[-1][-1]
+            line_id = self.env['account.report']._parse_line_id(line['id'])[-1][-1]
             if reverse_table.get(line_id):
                 # Do a get for the no_format as for the totals you have twice the line, without and with amount
                 # We cannot pass a negative netVatDue to the API and the amounts of sales/purchases/goodssupplied/ ... must be rounded
                 if reverse_table[line_id] == 'netVatDue':
-                    values[reverse_table[line_id]] = abs(round(line['columns'][0].get('balance', 0.0), 2))
+                    values[reverse_table[line_id]] = abs(round(line['columns'][0].get('no_format', 0.0), 2))
                 elif reverse_table[line_id] in ('totalValueSalesExVAT', 'totalValuePurchasesExVAT', 'totalValueGoodsSuppliedExVAT', 'totalAcquisitionsExVAT'):
-                    values[reverse_table[line_id]] = round(line['columns'][0].get('balance', 0.0))
+                    values[reverse_table[line_id]] = round(line['columns'][0].get('no_format', 0.0))
                 else:
-                    values[reverse_table[line_id]] = round(line['columns'][0].get('balance', 0.0), 2)
+                    values[reverse_table[line_id]] = round(line['columns'][0].get('no_format', 0.0), 2)
         return values
 
-    def action_submit_vat_return(self):
+    def action_submit_vat_return(self, data=None):
         self.ensure_one()
-        report = self.env['account.generic.tax.report']
-        options = report._get_options(previous_options={'tax_report':self.env.ref('l10n_uk.tax_report').id})
+        report = self.env.ref('l10n_uk.tax_report')
+        options = report._get_options()
         options['date'].update({'date_from': fields.Date.to_string(self.date_start),
                         'date_to': fields.Date.to_string(self.date_end),
                         'filter': 'custom',
@@ -166,7 +164,8 @@ class HmrcVatObligation(models.Model):
         res = self.env['hmrc.service']._login()
         if res: # If you can not login, return url for re-login
             return res
-        headers = self._get_auth_headers(self.env.user.l10n_uk_hmrc_vat_token)
+        headers = self._get_auth_headers(self.env.user.l10n_uk_hmrc_vat_token, data)
+
         url = self.env['hmrc.service']._get_endpoint_url('/organisations/vat/%s/returns' % vat)
         data = values.copy()
         data.update({

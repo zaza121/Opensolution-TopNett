@@ -25,11 +25,17 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
         }
 
         if (Notification.permission === "granted") {
-            if (!this._isConfigurationUpToDate()) {
-                this._fetchPushConfiguration().then(function (config) {
-                    self._registerServiceWorker(config);
-                });
-            }
+            const { pushConfigurationPromise, wasUpdated } = this._getNotificationRequestConfiguration();
+            pushConfigurationPromise.then((pushConfiguration) => {
+                if (Object.keys(pushConfiguration).length === 1) {
+                    return superPromise;
+                }
+                const messaging = self._initializeFirebaseApp(pushConfiguration);
+                if (wasUpdated) {
+                    self._registerServiceWorker(pushConfiguration, messaging);
+                }
+                self._setForegroundNotificationHandler(pushConfiguration, messaging);
+            });
         } else if (Notification.permission !== "denied") {
             this._askPermission();
         }
@@ -41,6 +47,42 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
+
+    /**
+     * Will handle Firebase Messaging foreground notifications.
+     *
+     * The push notifications will only be displayed is the user has
+     * granted notification permission to the website.
+     *
+     * See: https://rnfirebase.io/messaging/usage#foreground-state-messages
+     *
+     * @private
+     */
+    _setForegroundNotificationHandler: function (config, messaging) {
+        const onMessage = (payload) => {
+            if (window.Notification && Notification.permission === "granted") {
+                const notificationData = payload.data;
+                const options = {
+                    message: notificationData.body,
+                    title: notificationData.title,
+                    type: 'success',
+                };
+                const targetUrl = notificationData.target_url;
+                if (targetUrl) {
+                    options.buttons = [{
+                        text: 'Open',
+                        click: () => window.open(targetUrl, '_blank'),
+                    }];
+                }
+                this.displayNotification(options);
+            }
+        };
+        messaging = messaging || this._initializeFirebaseApp(config);
+        if (!messaging) {
+            return;
+        }
+        messaging.onMessage(onMessage);
+    },
 
     /**
      * Will check browser compatibility before trying to register the service worker.
@@ -70,21 +112,20 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
     },
 
     /**
-     * Will register a service worker to display later notifications.
-     * This method also handles the notification "subscription token".
+     * Will initialize the firebase app with the given configuration
+     * and return the messaging object.
      *
-     * The token will be used by firebase to notify this user directly.
+     * @param {Object} config the push configuration
+     * @returns {firebase.messaging.Messaging}
      *
      * @private
      */
-    _registerServiceWorker: function (config) {
-        var self = this;
-
+    _initializeFirebaseApp: function (config) {
         if (!config.firebase_push_certificate_key
             || !config.firebase_project_id
             || !config.firebase_web_api_key) {
             // missing configuration
-            return;
+            return null;
         }
 
         firebase.initializeApp({
@@ -94,8 +135,30 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
         });
 
         var messaging = firebase.messaging();
+        return messaging;
+    },
+
+    /**
+     * Will register a service worker to display later notifications.
+     * This method also handles the notification "subscription token".
+     *
+     * The token will be used by firebase to notify this user directly.
+     *
+     * @param {Object} config the push configuration
+     * @param {firebase.messaging.Messaging} messaging
+     *
+     * @private
+     */
+    _registerServiceWorker: function (config, messaging) {
+        const self = this;
+
+        messaging = messaging || this._initializeFirebaseApp(config);
+        if (!messaging) {
+            return;
+        }
+
         var baseWorkerUrl = '/social_push_notifications/static/src/js/push_service_worker.js';
-        navigator.serviceWorker.register(baseWorkerUrl + '?senderId=' + config.firebase_sender_id)
+        navigator.serviceWorker.register(baseWorkerUrl + '?senderId=' + encodeURIComponent(config.firebase_sender_id))
             .then(function (registration) {
                 messaging.useServiceWorker(registration);
                 messaging.usePublicVapidKey(config.firebase_push_certificate_key);
@@ -111,8 +174,7 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
      *
      * @private
      */
-    _isConfigurationUpToDate: function () {
-        var pushConfiguration = this._getNotificationRequestConfiguration();
+    _isConfigurationUpToDate: function (pushConfiguration) {
         if (pushConfiguration) {
             if (new Date() < new Date(pushConfiguration.expirationDate)) {
                 return true;
@@ -131,24 +193,18 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
      * @private
      */
     _fetchPushConfiguration: function () {
-        var fetchPromise = this._rpc({
+        return this._rpc({
             route: '/social_push_notifications/fetch_push_configuration'
-        });
-
-        fetchPromise.then(function (config) {
-            var expirationDate = new Date();
+        }).then(function (config) {
+            const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + 7);
-            localStorage.setItem('social_push_notifications.notification_request_config',
-                JSON.stringify({
-                    'title': config.notification_request_title,
-                    'body': config.notification_request_body,
-                    'delay': config.notification_request_delay,
-                    'icon': config.notification_request_icon,
-                    'expirationDate': expirationDate
-            }));
+            Object.assign(config, {'expirationDate': expirationDate});
+            localStorage.setItem(
+                'social_push_notifications.notification_request_config',
+                JSON.stringify(config)
+            );
+            return config;
         });
-
-        return fetchPromise;
     },
 
     /**
@@ -227,25 +283,25 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
             return;
         }
 
-        var pushConfig = null;
-        var popupConfig = this._getNotificationRequestConfiguration();
-
-        if (!popupConfig || new Date() > new Date(popupConfig.expirationDate)) {
-            pushConfig = await this._fetchPushConfiguration();
-            popupConfig = {
-                title: pushConfig.notification_request_title,
-                body: pushConfig.notification_request_body,
-                delay: pushConfig.notification_request_delay,
-                icon: pushConfig.notification_request_icon
-            };
+        const { pushConfigurationPromise } = this._getNotificationRequestConfiguration();
+        const pushConfiguration = await pushConfigurationPromise;
+        if (Object.keys(pushConfiguration).length === 1) {
+            return;
         }
+        let popupConfig = {
+            title: pushConfiguration.notification_request_title,
+            body: pushConfiguration.notification_request_body,
+            delay: pushConfiguration.notification_request_delay,
+            icon: pushConfiguration.notification_request_icon
+        };
+
         if (!popupConfig || !popupConfig.title || !popupConfig.body) {
             return; // this means that the web push notifications are not enabled in the settings
         }
         if (forcedPopupConfig) {
-            popupConfig = _.extend({}, popupConfig, forcedPopupConfig);
+            Object.assign(popupConfig, forcedPopupConfig);
         }
-        self._showNotificationRequestPopup(popupConfig, pushConfig, nextAskPermissionKeySuffix);
+        self._showNotificationRequestPopup(popupConfig, pushConfiguration, nextAskPermissionKeySuffix);
     },
 
     /**
@@ -253,7 +309,7 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
      * It also reacts the its 'allow' and 'deny' events (see '_askPermission' for details).
      *
      * @param {Object} popupConfig the popup configuration (title,body,...)
-     * @param {Object} [pushConfig] optional, will be fetched if absent
+     * @param {Object} pushConfig the push configuration
      * @param {String} [nextAskPermissionKeySuffix] optional
      */
     _showNotificationRequestPopup: function (popupConfig, pushConfig, nextAskPermissionKeySuffix) {
@@ -274,13 +330,9 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
         notificationRequestPopup.on('allow', null, function () {
             Notification.requestPermission().then(function () {
                 if (Notification.permission === "granted") {
-                    if (pushConfig) {
-                        self._registerServiceWorker(pushConfig);
-                    } else {
-                        self._fetchPushConfiguration().then(function (config) {
-                            self._registerServiceWorker(config);
-                        });
-                    }
+                    const messaging = self._initializeFirebaseApp(pushConfig);
+                    self._registerServiceWorker(pushConfig, messaging);
+                    self._setForegroundNotificationHandler(pushConfig, messaging);
                 }
             });
         });
@@ -300,10 +352,27 @@ publicWidget.registry.NotificationWidget =  publicWidget.Widget.extend({
         );
     },
 
+    /**
+     * Get the notification request configuration.
+     *
+     * The configuration is first retrieved from local storage if it's still valid.
+     * If not, it will be fetched from the server.
+     *
+     * @returns {Promise, boolean} the push configuration as a promise and a boolean
+     * indicating if the configuration was updated.
+     *
+     * @private
+    */
     _getNotificationRequestConfiguration: function () {
-        return this._getJSONLocalStorageItem(
+        const pushConfiguration = this._getJSONLocalStorageItem(
             'social_push_notifications.notification_request_config'
         );
+
+        const wasUpdated = !this._isConfigurationUpToDate(pushConfiguration);
+        const pushConfigurationPromise = wasUpdated ? this._fetchPushConfiguration() :
+            Promise.resolve(pushConfiguration);
+
+        return { pushConfigurationPromise, wasUpdated };
     },
 
     _getJSONLocalStorageItem: function (key) {

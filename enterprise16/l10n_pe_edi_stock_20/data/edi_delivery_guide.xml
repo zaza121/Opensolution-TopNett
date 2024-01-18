@@ -139,10 +139,12 @@
                         <cac:DeliveryAddress>
                             <cbc:ID schemeName="Ubigeos"
                                 schemeAgencyName="PE:INEI"><t t-esc="record.partner_id.l10n_pe_district.code"/></cbc:ID>
-                            <cbc:AddressTypeCode
-                                t-att-listID="record.partner_id.vat"
-                                listAgencyName="PE:SUNAT"
-                                listName="Establecimientos anexos">0</cbc:AddressTypeCode>
+                            <t t-if="record.partner_id.l10n_latam_identification_type_id.l10n_pe_vat_code == '6'">
+                                <cbc:AddressTypeCode
+                                    t-att-listID="record.partner_id.vat"
+                                    listAgencyName="PE:SUNAT"
+                                    listName="Establecimientos anexos">0</cbc:AddressTypeCode>
+                            </t>
                             <cac:AddressLine>
                                 <cbc:Line><t t-esc="'%s %s %s %s' % (record.partner_id.street or '', record.partner_id.l10n_pe_district.name or '', record.partner_id.city or '', record.partner_id.state_id.name or '')"/></cbc:Line>
                             </cac:AddressLine>

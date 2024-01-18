@@ -44,11 +44,11 @@ class TestAccountReportsJournalFilter(AccountTestInvoicingCommon):
                     },
                 )
 
-    def _quick_create_journal(self, name, company):
+    def _quick_create_journal(self, name, company, journal_type='sale'):
         return self.env['account.journal'].create({
             'name': name,
             'code': name,
-            'type': 'sale',
+            'type': journal_type,
             'company_id': company.id,
         })
 
@@ -444,4 +444,69 @@ class TestAccountReportsJournalFilter(AccountTestInvoicingCommon):
             {'id': 'divider'},
             (j3, False),
             (j4, False),
+        ])
+
+    def test_journal_filter_with_groups_cash_flow_statement(self):
+        """
+        Test the behaviour of the journal filter with groups in a report
+        that does not allow all journals, cash flow statement is a perfect
+        fit for this use case
+        """
+        bnk = self._quick_create_journal("BNK", self.vanilla_company1, 'bank')
+        csh = self._quick_create_journal("CSH", self.vanilla_company1, 'cash')
+        misc = self._quick_create_journal("MISC", self.vanilla_company1, 'general')
+        exch = self._quick_create_journal("EXCH", self.vanilla_company1, 'general')
+        ifrs = self._quick_create_journal("IFRS", self.vanilla_company1, 'general')
+        caba = self._quick_create_journal("CABA", self.vanilla_company1, 'general')
+        inv = self._quick_create_journal("INV", self.vanilla_company1, 'sale')  # Not accepeted by the report
+        bill = self._quick_create_journal("BILL", self.vanilla_company1, 'purchase')  # Not accepted by the report
+
+        g1 = self._quick_create_journal_group("g1", self.vanilla_company1, inv + bill)
+        g2 = self._quick_create_journal_group("g2", self.vanilla_company1, misc + bill)
+
+        report = self.env.ref('account_reports.cash_flow_report')
+        options = report._get_options()
+        self._assert_filter_journal(options, "g1", [
+            {'id': 'divider'},
+            (g1, True),
+            (g2, False),  # g2 should be displayed because it has journals taht are allowed in the report
+            {'id': 'divider'},
+            (bnk, True),
+            (caba, True),
+            (csh, True),
+            (exch, True),
+            (ifrs, True),
+            (misc, True),
+        ])
+
+        # Check g2, all journals from g2 that are allowed in report should be selected
+        options['__journal_group_action'] = {'action': 'add', 'id': g2.id}
+        options = report._get_options(previous_options=options)
+        self._assert_filter_journal(options, "g2", [
+            {'id': 'divider'},
+            (g1, False),
+            (g2, True),
+            {'id': 'divider'},
+            (bnk, True),
+            (caba, True),
+            (csh, True),
+            (exch, True),
+            (ifrs, True),
+            (misc, False),
+        ])
+
+        # Uncheck g2.
+        options['__journal_group_action'] = {'action': 'remove', 'id': g2.id}
+        options = report._get_options(previous_options=options)
+        self._assert_filter_journal(options, "All Journals", [
+            {'id': 'divider'},
+            (g1, False),
+            (g2, False),
+            {'id': 'divider'},
+            (bnk, False),
+            (caba, False),
+            (csh, False),
+            (exch, False),
+            (ifrs, False),
+            (misc, False),
         ])

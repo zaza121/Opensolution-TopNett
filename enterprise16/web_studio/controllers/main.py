@@ -505,10 +505,9 @@ class WebStudioController(http.Controller):
             node = op.get('node')
             if node and node.get('tag') == 'field' and node.get('field_description'):
                 ttype = node['field_description'].get('type')
-                is_related = node['field_description'].get("related")
                 is_image = node['attrs'].get('widget') == 'image'
                 is_signature = node['attrs'].get('widget') == 'signature'
-                return ttype == 'binary' and not is_image and not is_signature and not is_related
+                return ttype == 'binary' and not is_image and not is_signature
             return False
 
         # Every time the creation of a binary field is requested,
@@ -532,6 +531,15 @@ class WebStudioController(http.Controller):
                 'type': 'char',
                 'field_description': _('Filename for %s', op['node']['field_description']['name']),
             })
+            node = op.get('node')
+            if node and node.get('tag') == 'field' and node.get('field_description') and node['field_description'].get('related'):
+                related_filename = node['field_description']['related'] + '_filename'
+                related_field = related_filename.split('.')[-1]
+                related_model = node['field_description']['model']
+                if not IrModelFields.search([('name', '=', related_field), ('model', '=', related_model)]):
+                    # Add the filename field only if the field exists in the related model
+                    continue
+                char_op['node']['field_description'].update({'related': related_filename})
             char_op['node']['attrs']['invisible'] = '1'
 
             # put the filename field after the binary field
@@ -550,17 +558,21 @@ class WebStudioController(http.Controller):
             # create a new field if it does not exist
             if 'node' in op:
                 if op['node'].get('tag') == 'field' and op['node'].get('field_description'):
-                    if op['node']['field_description'].get('special') == 'lines':
-                        field = request.env['ir.model']._get(model)._setup_one2many_lines()
-                    else:
+                    is_special_lines = op['node']['field_description'].get('special') == 'lines'
+                    if not is_special_lines:
                         model = op['node']['field_description']['model_name']
-                        # Check if field exists before creation
-                        field = IrModelFields.search([
-                            ('name', '=', op['node']['field_description']['name']),
-                            ('model', '=', model),
-                        ], limit=1)
+                    # Check if field exists before creation
+                    field = IrModelFields.search([
+                        ('name', '=', op['node']['field_description']['name']),
+                        ('model', '=', model),
+                    ], limit=1)
+
                     if not field:
-                        field = self.create_new_field(op['node']['field_description'])
+                        if is_special_lines:
+                            field = request.env['ir.model']._get(model)._setup_one2many_lines(
+                                op['node']['field_description']['name'])
+                        else:
+                            field = self.create_new_field(op['node']['field_description'])
                     op['node']['attrs']['name'] = field.name
                 if op['node'].get('tag') == 'filter' and op['target']['tag'] == 'group' and op['node']['attrs'].get('create_group'):
                     op['node']['attrs'].pop('create_group')
@@ -628,19 +640,21 @@ class WebStudioController(http.Controller):
                 filename_field_id.write({'name': new_name + '_filename'})
 
     def _create_studio_view(self, view, arch):
-        # We have to play with priorities. Consider the following:
-        # View Base: <field name="x"/><field name="y"/>
-        # View Standard inherits Base: <field name="x" position="after"><field name="z"/></field>
-        # View Custo inherits Base: <field name="x" position="after"><field name="x2"/></field>
-        # We want x,x2,z,y, because that's what we did in studio, but the order of xpath
-        # resolution is sequence,name, not sequence,id. Because "Custo" < "Standard", it
-        # would first resolve in x,x2,y, then resolve "Standard" with x,z,x2,y as result.
+        # We have to play with priorities in order for our customization to be the last
+        # to be applied.
+        # In studio, what the user sees is the resulting view from all the inheritance.
+        # Hence if the user does something it is on that result. To apply what they wanted, we need
+        # to set the customization as last.
+        priority = max(view.inherit_children_ids.mapped("priority"), default=0) * 10
+        default_prio = view._fields["priority"].default(view)
+        if priority <= default_prio:
+            priority = 99
         return request.env['ir.ui.view'].create({
             'type': view.type,
             'model': view.model,
             'inherit_id': view.id,
             'mode': 'extension',
-            'priority': 99,
+            'priority': priority,
             'arch': arch,
             'name': self._generate_studio_view_name(view),
         })
@@ -1519,14 +1533,11 @@ Are you sure you want to remove the selection values of those records?""") % len
             studio_view = self._create_studio_view(view, '<data/>')
         parser = etree.XMLParser(remove_blank_text=True)
         arch = etree.fromstring(studio_view.arch_db, parser=parser)
-        expr = "//field[@name='%s']" % field_name
-        if subview_xpath:
-            expr = subview_xpath + expr
         position = 'inside'
-        xpath_node = arch.find('xpath[@expr="%s"][@position="%s"]' % (expr, position))
+        xpath_node = arch.find('xpath[@expr="%s"][@position="%s"]' % (subview_xpath, position))
         if xpath_node is None:  # bool(node) == False if node has no children
             xpath_node = etree.SubElement(arch, 'xpath', {
-                'expr': expr,
+                'expr': subview_xpath,
                 'position': position
             })
         view_arch, _ = request.env[model]._get_view(view_type=subview_type)

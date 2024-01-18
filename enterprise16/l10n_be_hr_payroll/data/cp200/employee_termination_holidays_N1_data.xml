@@ -244,6 +244,7 @@ annual_taxable = inputs.ANNUAL_TAXABLE.amount if inputs.ANNUAL_TAXABLE else 0
 if children and annual_taxable &lt;= children_exoneration.get(children, children_exoneration[12]):
     result -= children_exoneration.get(children, children_exoneration[12]) - annual_taxable
 result_rate = - compute_termination_withholding_rate(payslip, categories, worked_days, inputs)
+result = max(result, 0)
         </field>
         <field name="struct_id" ref="l10n_be_hr_payroll.hr_payroll_structure_cp200_employee_departure_n1_holidays"/>
     </record>

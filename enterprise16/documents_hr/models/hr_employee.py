@@ -46,7 +46,7 @@ class HrEmployee(models.Model):
         self.ensure_one()
         if not self.address_home_id:
             # Prevent opening documents if the employee's address is not set or no user is linked.
-            raise ValidationError(_('You must set an address on the employee to use Documents features.'))
+            raise ValidationError(_('You must set a private address on the Employee in order to use Document\'s features.'))
         hr_folder = self._get_document_folder()
         action = self.env['ir.actions.act_window']._for_xml_id('documents.document_action')
         # Documents created within that action will be 'assigned' to the employee
@@ -59,12 +59,12 @@ class HrEmployee(models.Model):
         return action
 
     def action_send_documents_share_link(self):
-        invalid_employees = self.filtered(lambda e: not e.address_home_id.email)
+        invalid_employees = self.filtered(lambda e: not (e.address_home_id.email and e.user_id))
         if invalid_employees:
-            raise UserError(_('Employee\'s private email must be set to use \"Send Access Link\" function:\n%s', '\n'.join(invalid_employees.mapped('name'))))
+            raise UserError(_('Employee\'s related user and private email must be set to use \"Send Access Link\" function:\n%s', '\n'.join(invalid_employees.mapped('name'))))
         template = self.env.ref('documents_hr.mail_template_document_folder_link', raise_if_not_found=False)
         for employee in self:
-            if not employee.documents_share_id:
+            if not employee.documents_share_id or (employee.documents_share_id.owner_id != employee.user_id):
                 employee.documents_share_id = self.env['documents.share'].create({
                     'folder_id': self.env.company.documents_hr_folder.id,
                     'include_sub_folders': True,

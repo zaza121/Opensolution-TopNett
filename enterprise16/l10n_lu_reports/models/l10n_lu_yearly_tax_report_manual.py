@@ -647,7 +647,7 @@ class L10nLuYearlyTaxReportManual(models.Model):
         Returns the lines of the report grouped by tax > account
         """
         self.ensure_one()
-        tax_report = self.env.ref('l10n_lu.tax_report')
+        tax_report = self.env.ref('account.generic_tax_report_tax_account')
         options = tax_report._get_options({
             'date': {
                 'string': self.year,
@@ -657,7 +657,6 @@ class L10nLuYearlyTaxReportManual(models.Model):
                 'date_to': f'{self.year}-12-31',
                 'mode': 'range'
             },
-            'tax_report': 'generic_grouped_tax_account',
         })
         report_line_dicts = tax_report._get_lines(options)
         return report_line_dicts

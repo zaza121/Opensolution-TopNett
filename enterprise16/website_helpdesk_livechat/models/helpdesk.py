@@ -17,7 +17,7 @@ class HelpdeskTeam(models.Model):
         LiveChat = self.env['im_livechat.channel']
         for team in self:
             if team.name and team.use_website_helpdesk_livechat:
-                channel = LiveChat.search([('name', '=', team.name)])
+                channel = LiveChat.search([('name', '=', team.name)], limit=1)
                 if not channel:
                     if team.member_ids:
                         channel = LiveChat.create({'name': team.name, 'user_ids': [(6, _, team.member_ids.ids)]})

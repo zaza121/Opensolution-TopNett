@@ -6,10 +6,12 @@
 
             <!-- Custom numbers on invoice lines -->
             <xpath expr="//*[name()='cfdi:Concepto']" position="inside">
-                <t t-foreach="line_values['custom_numbers']" t-as="custom_number">
-                    <cfdi:InformacionAduanera
-                        xmlns:cfdi="http://www.sat.gob.mx/cfd/4"
-                        t-att-NumeroPedimento="custom_number"/>
+                <t t-if="not record.l10n_mx_edi_external_trade">
+                    <t t-foreach="line_values['custom_numbers']" t-as="custom_number">
+                        <cfdi:InformacionAduanera
+                            xmlns:cfdi="http://www.sat.gob.mx/cfd/4"
+                            t-att-NumeroPedimento="custom_number"/>
+                    </t>
                 </t>
             </xpath>
 

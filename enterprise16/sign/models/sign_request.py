@@ -5,24 +5,30 @@ import base64
 import io
 import os
 import time
+import unicodedata
 import uuid
 
 from PyPDF2 import PdfFileReader, PdfFileWriter
+try:
+    from PyPDF2.errors import PdfReadError
+except ImportError:
+    from PyPDF2.utils import PdfReadError
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.rl_config import TTFSearchPath
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from werkzeug.urls import url_join, url_quote
 from random import randint
 from markupsafe import Markup
 from hashlib import sha256
+from PIL import UnidentifiedImageError
 
 from odoo import api, fields, models, http, _, Command
-from odoo.tools import config, get_lang, is_html_empty, formataddr, groupby, format_date
+from odoo.tools import config, email_normalize, get_lang, is_html_empty, format_date, formataddr, groupby
 from odoo.exceptions import UserError, ValidationError
 
 TTFSearchPath.append(os.path.join(config["root_path"], "..", "addons", "web", "static", "fonts", "sign"))
@@ -93,7 +99,7 @@ class SignRequest(models.Model):
     request_item_infos = fields.Binary(compute="_compute_request_item_infos")
     last_action_date = fields.Datetime(related="message_ids.create_date", readonly=True, string="Last Action Date")
     completion_date = fields.Date(string="Completion Date", compute="_compute_progress", compute_sudo=True)
-    communication_company_id = fields.Many2one('res.company', string="Company used for communication")
+    communication_company_id = fields.Many2one('res.company', string="Company used for communication", default=lambda self: self.env.company)
 
     sign_log_ids = fields.One2many('sign.log', 'sign_request_id', string="Logs", help="Activity logs linked to this request")
     template_tags = fields.Many2many('sign.template.tag', string='Template Tags', related='template_id.tag_ids')
@@ -343,7 +349,7 @@ class SignRequest(models.Model):
             {'model_description': 'signature', 'company': self.communication_company_id or self.create_uid.company_id},
             {'email_from': self.create_uid.email_formatted,
              'author_id': self.create_uid.partner_id.id,
-             'email_to': formataddr((partner.name, partner.email_formatted)),
+             'email_to': partner.email_formatted,
              'subject': subject},
             force_send=force_send,
             lang=partner_lang,
@@ -452,6 +458,36 @@ class SignRequest(models.Model):
     def _get_normal_font_size(self):
         return 0.015
 
+    def _get_displayed_text(self, text):
+        """
+        Display the text based on his first character unicode name to choose Right-to-left or Left-to-right
+        This is just a hotfix to make things work
+        In the future the clean way be to use arabic-reshaper and python3-bidi libraries
+
+
+        Here we want to check the text is in a right-to-left language and if then, flip before returning it.
+        Depending on the language, the type should be Left-to-Right, Right-to-Left, or Right-to-Left Arabic
+        (Refer to this https://www.unicode.org/reports/tr9/#Bidirectional_Character_Types)
+        The base module ```unicodedata``` with his function ```bidirectional(str)``` helps us by taking a character in
+        argument and returns his type:
+        - 'L' for Left-to-Right character
+        - 'R' or 'AL' for Right-to-Left character
+
+        So we have to check if the first character of the text is of type 'R' or 'AL', and check that there is no
+        character in the rest of the text that is of type 'L'. Based on that we can confirm we have a fully Right-to-Left language,
+        then we can flip the text before returning it.
+        """
+        if not text:
+            return ''
+        maybe_rtl_letter = text.lstrip()[:1] or ' '
+        maybe_ltr_text = text[1:]
+        first_letter_is_rtl = unicodedata.bidirectional(maybe_rtl_letter) in ('AL', 'R')
+        no_letter_is_ltr = not any(unicodedata.bidirectional(letter) == 'L' for letter in maybe_ltr_text)
+        if first_letter_is_rtl and no_letter_is_ltr:
+            text = text[::-1]
+
+        return text
+
     def _generate_completed_document(self, password=""):
         self.ensure_one()
         if self.state != 'signed':
@@ -521,7 +557,10 @@ class SignRequest(models.Model):
                     frame = value_dict['frame']
 
                     if frame:
-                        image_reader = ImageReader(io.BytesIO(base64.b64decode(frame[frame.find(',')+1:])))
+                        try:
+                            image_reader = ImageReader(io.BytesIO(base64.b64decode(frame[frame.find(',')+1:])))
+                        except UnidentifiedImageError:
+                            raise ValidationError(_("There was an issue downloading your document. Please contact an administrator."))
                         _fix_image_transparency(image_reader._image)
                         can.drawImage(
                             image_reader,
@@ -534,6 +573,7 @@ class SignRequest(models.Model):
                         )
 
                     if item.type_id.item_type == "text":
+                        value = self._get_displayed_text(value)
                         can.setFont(font, height*item.height*0.8)
                         if item.alignment == "left":
                             can.drawString(width*item.posX, height*(1-item.posY-item.height*0.9), value)
@@ -550,10 +590,9 @@ class SignRequest(models.Model):
                             else:
                                 content.append(option.value)
                         font_size = height * normalFontSize * 0.8
-                        can.setFont(font, font_size)
                         text = " / ".join(content)
                         string_width = stringWidth(text.replace("<strike>", "").replace("</strike>", ""), font, font_size)
-                        p = Paragraph(text, getSampleStyleSheet()["Normal"])
+                        p = Paragraph(text, ParagraphStyle(name='Selection Paragraph', fontName=font, fontSize=font_size, leading=12))
                         posX = width * (item.posX + item.width * 0.5) - string_width // 2
                         posY = height * (1 - item.posY - item.height * 0.5) - p.wrap(width, height)[1] // 2
                         p.drawOn(can, posX, posY)
@@ -573,7 +612,10 @@ class SignRequest(models.Model):
                         can.drawString(width*item.posX, height*(1-item.posY-item.height*0.9), value)
 
                     elif item.type_id.item_type == "signature" or item.type_id.item_type == "initial":
-                        image_reader = ImageReader(io.BytesIO(base64.b64decode(value[value.find(',')+1:])))
+                        try:
+                            image_reader = ImageReader(io.BytesIO(base64.b64decode(value[value.find(',')+1:])))
+                        except UnidentifiedImageError:
+                            raise ValidationError(_("There was an issue downloading your document. Please contact an administrator."))
                         _fix_image_transparency(image_reader._image)
                         can.drawImage(image_reader, width*item.posX, height*(1-item.posY-item.height), width*item.width, height*item.height, 'auto', True)
 
@@ -592,8 +634,12 @@ class SignRequest(models.Model):
             if isEncrypted:
                 new_pdf.encrypt(password)
 
-            output = io.BytesIO()
-            new_pdf.write(output)
+            try:
+                output = io.BytesIO()
+                new_pdf.write(output)
+            except PdfReadError:
+                raise ValidationError(_("There was an issue downloading your document. Please contact an administrator."))
+
             self.completed_document = base64.b64encode(output.getvalue())
             output.close()
 
@@ -617,7 +663,7 @@ class SignRequest(models.Model):
         pdf_content, __ = self.env["ir.actions.report"].with_user(public_user).sudo()._render_qweb_pdf(
             'sign.action_sign_request_print_logs',
             self.ids,
-            data={'format_date': format_date}
+            data={'format_date': format_date, 'company_id': self.communication_company_id}
         )
         attachment_log = self.env['ir.attachment'].create({
             'name': "Certificate of completion - %s.pdf" % time.strftime('%Y-%m-%d - %H:%M:%S'),
@@ -805,7 +851,9 @@ class SignRequestItem(models.Model):
 
     def _send_signature_access_mail(self):
         for signer in self:
+            signer_email_normalized = email_normalize(signer.signer_email or '')
             signer_lang = get_lang(self.env, lang_code=signer.partner_id.lang).code
+            context = {'lang': signer_lang}
             body = self.env['ir.qweb']._render('sign.sign_template_mail_request', {
                 'record': signer,
                 'link': url_join(signer.get_base_url(), "sign/document/mail/%(request_id)s/%(access_token)s" % {'request_id': signer.sign_request_id.id, 'access_token': signer.sudo().access_token}),
@@ -813,22 +861,23 @@ class SignRequestItem(models.Model):
                 'body': signer.sign_request_id.message if not is_html_empty(signer.sign_request_id.message) else False,
                 'use_sign_terms': self.env['ir.config_parameter'].sudo().get_param('sign.use_sign_terms'),
                 'user_signature': signer.create_uid.signature,
-            }, minimal_qcontext=True)
+            }, lang=signer_lang, minimal_qcontext=True)
 
             attachment_ids = signer.sign_request_id.attachment_ids.ids
             self.env['sign.request']._message_send_mail(
                 body, 'mail.mail_notification_light',
                 {'record_name': signer.sign_request_id.reference},
-                {'model_description': 'signature', 'company': signer.communication_company_id or signer.sign_request_id.create_uid.company_id},
+                {'model_description': _('Signature'), 'company': signer.communication_company_id or signer.sign_request_id.create_uid.company_id},
                 {'email_from': signer.create_uid.email_formatted,
                  'author_id': signer.create_uid.partner_id.id,
-                 'email_to': formataddr((signer.partner_id.name, signer.signer_email)),
+                 'email_to': formataddr((signer.partner_id.name, signer_email_normalized)),
                  'attachment_ids': attachment_ids,
                  'subject': signer.sign_request_id.subject},
                 force_send=True,
                 lang=signer_lang,
             )
             signer.is_mail_sent = True
+            del context
 
     def _edit_and_sign(self, signature, **kwargs):
         """ Sign sign request items at once.
@@ -1052,7 +1101,7 @@ class SignRequestItem(models.Model):
 
     @api.depends('partner_id.email')
     def _compute_email(self):
-        for sign_request_item in self.filtered(lambda sri: sri.state == "sent"):
+        for sign_request_item in self.filtered(lambda sri: sri.state == "sent" or not sri.signer_email):
             sign_request_item.signer_email = sign_request_item.partner_id.email_normalized
 
 

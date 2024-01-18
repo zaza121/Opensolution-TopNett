@@ -1,14 +1,21 @@
 /** @odoo-module */
 import { registry } from "@web/core/registry";
 import { formView } from "@web/views/form/form_view";
-import { Record, RelationalModel } from "@web/views/relational_model";
+import { Record, RelationalModel } from "@web/views/basic_relational_model";
 
 /**
  * This model is overridden to allow configuring sale_order_lines through a popup
  * window when a product with 'rent_ok' is selected.
  *
  */
-export class RentalConfiguratorRelationalModel extends RelationalModel {}
+export class RentalConfiguratorRelationalModel extends RelationalModel {
+    setup(params, { action }) {
+        super.setup(...arguments);
+        this.action = action;
+    }
+}
+
+RentalConfiguratorRelationalModel.services = [...RelationalModel.services, "action"];
 
 export class RentalConfiguratorRecord extends Record {
 

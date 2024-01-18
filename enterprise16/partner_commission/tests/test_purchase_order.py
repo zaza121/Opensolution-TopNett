@@ -105,8 +105,8 @@ class TestPurchaseOrder(TestCommissionsSetup):
         so.pricelist_id = self.eur_20
         so.action_confirm()
         inv = so._create_invoices()
-        inv.name = 'INV/12345/0001'
         inv.action_post()
+        inv.name = 'INV/12345/0001'
         self._pay_invoice(inv)
         date_from = fields.Date.today()
         date_to = date_from + get_timedelta(1, 'year') - relativedelta(days=1)

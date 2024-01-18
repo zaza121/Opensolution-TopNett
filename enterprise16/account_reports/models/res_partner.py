@@ -24,15 +24,9 @@ class ResPartner(models.Model):
         return True
 
     def open_partner_ledger(self):
-        return {
-            'type': 'ir.actions.client',
-            'name': _('Partner Ledger'),
-            'tag': 'account_report',
-            'params': {
-                'options': {'partner_ids': [self.id]},
-                'ignore_session': 'both',
-            },
-            'context': {
-                'report_id': self.env.ref('account_reports.partner_ledger_report').id
-            }
+        action = self.env["ir.actions.actions"]._for_xml_id("account_reports.action_account_report_partner_ledger")
+        action['params'] = {
+            'options': {'partner_ids': [self.id]},
+            'ignore_session': 'both',
         }
+        return action

@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <tree string="Shift List" multi_edit="1" sample="1" editable="top">
                 <field name="resource_id" groups="planning.group_planning_user" widget="many2one_avatar_resource" optional="show"
-                    attrs="{'readonly': ['|', ('start_datetime', '=', False), ('end_datetime', '=', False)]}" context="{'show_job_title': True}"/>
+                    attrs="{'readonly': ['|', ('start_datetime', '=', False), ('end_datetime', '=', False)]}" context="{'show_job_title': True, 'form_view_ref': 'planning.resource_resource_with_employee_form_view_inherit'}"/>
                 <field name="resource_type" invisible="1"/>
                 <field name="role_id" optional="show" attrs="{'invisible': [('resource_type', '=', 'material')]}" placeholder="e.g. Bartender"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide" readonly="1"/>
@@ -29,20 +29,20 @@
             <form js_class="planning_form">
                 <header>
                     <button string="Publish &amp; Send" type="object" name="action_send" class="btn btn-primary"
-                        close="1" attrs="{'invisible': ['|', ('state', '=', 'published'), ('resource_type', '=', 'material')]}" groups="planning.group_planning_manager" data-hotkey="q"/>
+                        close="1" attrs="{'invisible': ['|', ('state', '=', 'published'), ('resource_type', '=', 'material')]}" groups="planning.group_planning_manager" data-hotkey="q" invisible="context.get('search_default_my_shifts')"/>
                     <button string="Publish" type="object" name="action_publish" class="btn btn-primary"
-                        close="1" groups="planning.group_planning_manager" attrs="{'invisible': ['|', ('state', '=', 'published'), ('resource_type', '=', 'material')]}" data-hotkey="w"/>
+                        close="1" groups="planning.group_planning_manager" attrs="{'invisible': ['|', ('state', '=', 'published'), ('resource_type', '=', 'material')]}" data-hotkey="w" invisible="context.get('search_default_my_shifts')"/>
                     <button name="action_self_assign" class="btn btn-secondary" type="object" string="I Take It"
-                        attrs="{'invisible': ['|', '|', '|', ('resource_id', '!=', False), ('start_datetime', '=', False), ('end_datetime', '=', False), ('is_past', '=', True)]}" close="1"/>
+                        attrs="{'invisible': ['|', '|', '|', ('resource_id', '!=', False), ('start_datetime', '=', False), ('end_datetime', '=', False), ('is_past', '=', True)]}" close="1" invisible="context.get('search_default_my_shifts')"/>
                     <button name="action_self_unassign" class="btn btn-secondary" type="object" string="I Am Unavailable"
                         attrs="{'invisible': ['|', '|', '|', '|', ('is_assigned_to_me', '=', False), ('allow_self_unassign', '=', False),
                         ('is_past', '=', True), ('is_unassign_deadline_passed', '=', True), ('resource_type', '=', 'material')]}"/>
                     <button string="Send" type="object" name="action_send" class="btn btn-secondary" close="1"
-                        attrs="{'invisible': ['|', ('state', '=', 'draft'), ('resource_type', '=', 'material')]}" groups="planning.group_planning_manager" data-hotkey="v"/>
+                        attrs="{'invisible': ['|', ('state', '=', 'draft'), ('resource_type', '=', 'material')]}" groups="planning.group_planning_manager" data-hotkey="v" invisible="context.get('search_default_my_shifts')"/>
                     <button string="Reset to Draft" type="object" name="action_unpublish"
                         class="btn btn-secondary" close="1" groups="planning.group_planning_manager"
                         attrs="{'invisible': ['|', ('state', '=', 'draft'), ('resource_type', '=', 'material')]}" data-hotkey="q"/>
-                    <field name="state" widget="statusbar" groups="planning.group_planning_manager"/>
+                    <field name="state" widget="statusbar" groups="planning.group_planning_manager" invisible="context.get('search_default_my_shifts')"/>
                 </header>
                 <field name="is_past" invisible="1"/>
                 <field name="is_unassign_deadline_passed" invisible="1"/>
@@ -114,7 +114,7 @@
                     </div>
                     <field name="allow_template_creation" invisible="1"/>
                     <label for="template_creation" groups="planning.group_planning_manager"></label>
-                    <field name="template_creation" nolabel="1" groups="planning.group_planning_manager"/>
+                    <field name="template_creation" class="ms-2" nolabel="1" groups="planning.group_planning_manager"/>
                     <field name="name" nolabel="1" placeholder="Additional note sent to the employee"/>
                 </sheet>
             </form>
@@ -143,12 +143,24 @@
                                 <div class="o_kanban_record_headings">
                                     <div class="o_kanban_record_title">
                                         <em>
-                                            <i class="fa fa-clock-o" role="img" aria-label="Date" title="Date"/>
-                                            <field name="start_datetime"/>
-                                            -
-                                            <field name="end_datetime"/>
+                                            <i class="me-1 fa fa-clock-o" role="img" aria-label="Date" title="Date"/>
+                                            <!-- To do: remove in master -->
+                                            <field name="start_datetime" invisible="1"/>
+                                            <field name="end_datetime" invisible="1"/>
+                                            <t t-if="record.start_datetime.raw_value and record.end_datetime.raw_value">
+                                                <field name="start_datetime"/>
+                                                -
+                                                <field name="end_datetime"/>
+                                            </t>
                                             <span class="d-inline-block">
-                                                (<field name="allocated_hours" widget="float_time"/>)
+                                                <!-- To do: remove in master -->
+                                                <field name="allocated_hours" widget="float_time" invisible="1"/>
+                                                <t t-if="record.start_datetime.raw_value and record.end_datetime.raw_value">
+                                                    (<field name="allocated_hours" widget="float_time"/>)
+                                                </t>
+                                                <t t-else="">
+                                                    <field name="allocated_hours" widget="float_time" class="ms-1"/>
+                                                </t>
                                                 <t t-if="record.resource_type.raw_value == 'user'">
                                                     (<field name="allocated_percentage"/>%)
                                                 </t>
@@ -173,7 +185,7 @@
                                 <t t-elif="record.resource_type.raw_value == 'material'">
                                     <span name="resource"><field name="resource_id"/></span>
                                 </t>
-                                <t t-else="">
+                                <t t-else="" name="role">
                                     <span name="role"><field name="role_id"/></span>
                                 </t>
                             </div>
@@ -186,7 +198,7 @@
                                         <field name="employee_id" widget="many2one_avatar_employee"/>
                                     </t>
                                     <t t-if="record.resource_type.value == 'Material'">
-                                        <field name="resource_id" widget="many2one_avatar_resource" options="{'hide_label': True}"/>
+                                        <field name="resource_id" widget="many2one_avatar_resource"/>
                                     </t>
                                 </div>
                             </div>
@@ -269,14 +281,36 @@
                 <filter name="published_shifts" string="Published" domain="[('state', '=', 'published')]" groups="planning.group_planning_manager"/>
                 <filter name="publication_warning" string="To Resend" domain="[('publication_warning', '=', True), ('overlap_slot_count', '=', 0)]" groups="planning.group_planning_manager"/>
                 <separator groups="planning.group_planning_manager"/>
-                <filter name="future" string="Future" domain="[('start_datetime', '&gt;=', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d'))]" />
-                <filter name="next_week" string="Next Week" domain="[('start_datetime', '&gt;', (context_today() + relativedelta(weeks=0, weekday=6)).strftime('%Y-%m-%d')), ('end_datetime', '&lt;', (context_today() + relativedelta(weeks=1, weekday=5)).strftime('%Y-%m-%d'))]" />
-                <filter name="this_week" string="This Week" domain="[('start_datetime', '&gt;', (context_today() + relativedelta(weeks=-1, weekday=6)).strftime('%Y-%m-%d')), ('end_datetime', '&lt;', (context_today() + relativedelta(weeks=0, weekday=5)).strftime('%Y-%m-%d'))]"/>
-                <filter name="tomorrow" string="Tomorrow" domain="[('start_datetime', '&gt;=', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d')), ('end_datetime', '&lt;', (context_today() + relativedelta(days=2)).strftime('%Y-%m-%d'))]"/>
-                <filter name="today" string="Today" domain="[('start_datetime', '&gt;=', context_today().strftime('%Y-%m-%d')), ('end_datetime', '&lt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d'))]" />
-                <filter name="yesterday" string="Yesterday" domain="[('start_datetime', '&gt;', (context_today() + relativedelta(days=-2)).strftime('%Y-%m-%d')), ('end_datetime', '&lt;', (context_today().strftime('%Y-%m-%d')))]"/>
-                <filter name="last_week" string="Last Week" domain="[('start_datetime', '&gt;', (context_today() + relativedelta(weeks=-2, weekday=6)).strftime('%Y-%m-%d')), ('end_datetime', '&lt;', (context_today() + relativedelta(weeks=-1, weekday=5)).strftime('%Y-%m-%d'))]"/>
-                <filter name="past" string="Past" domain="[('end_datetime', '&lt;', context_today().strftime('%Y-%m-%d'))]" />
+                <filter name="future" string="Future" domain="[
+                    ('start_datetime', '&gt;=', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d 00:00:00'))
+                ]"/>
+                <filter name="next_week" string="Next Week" domain="[
+                    ('start_datetime', '&lt;', (context_today() + relativedelta(weeks=1, weekday=6)).strftime('%Y-%m-%d 00:00:00')),
+                    ('end_datetime', '&gt;', (context_today() + relativedelta(weeks=0, weekday=6)).strftime('%Y-%m-%d 00:00:00')),
+                ]"/>
+                <filter name="this_week" string="This Week" domain="[
+                    ('start_datetime', '&lt;', (context_today() + relativedelta(weeks=0, weekday=6)).strftime('%Y-%m-%d 00:00:00')),
+                    ('end_datetime', '&gt;', (context_today() + relativedelta(weeks=-1, weekday=6)).strftime('%Y-%m-%d 00:00:00')),
+                ]"/>
+                <filter name="tomorrow" string="Tomorrow" domain="[
+                    ('start_datetime', '&lt;', (context_today() + relativedelta(days=2)).strftime('%Y-%m-%d 00:00:00')),
+                    ('end_datetime', '&gt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d 00:00:00')),
+                ]"/>
+                <filter name="today" string="Today"  domain="[
+                    ('start_datetime', '&lt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d 00:00:00')),
+                    ('end_datetime', '&gt;', context_today().strftime('%Y-%m-%d 00:00:00')),
+                ]"/>
+                <filter name="yesterday" string="Yesterday" domain="[
+                    ('start_datetime', '&lt;', context_today().strftime('%Y-%m-%d 00:00:00')),
+                    ('end_datetime', '&gt;', (context_today() + relativedelta(days=-1)).strftime('%Y-%m-%d 00:00:00')),
+                ]"/>
+                <filter name="last_week" string="Last Week" domain="[
+                    ('start_datetime', '&lt;', (context_today() + relativedelta(weeks=-1, weekday=6)).strftime('%Y-%m-%d 00:00:00')),
+                    ('end_datetime', '&gt;', (context_today() + relativedelta(weeks=-2, weekday=6)).strftime('%Y-%m-%d 00:00:00')),
+                ]"/>
+                <filter name="past" string="Past" domain="[
+                    ('end_datetime', '&lt;', context_today().strftime('%Y-%m-%d 00:00:00'))
+                ]"/>
                 <group string="Group By">
                     <filter name="group_by_department" string="Department" context="{'group_by': 'department_id'}" groups="planning.group_planning_user"/>
                     <filter name="group_by_manager" string="Manager" context="{'group_by': 'manager_id'}" groups="planning.group_planning_user"/>
@@ -294,7 +328,7 @@
         <field name="name">planning.slot.calendar</field>
         <field name="model">planning.slot</field>
         <field name="arch" type="xml">
-            <calendar string="Planning" date_start="start_datetime" date_stop="end_datetime" color="color" form_view_id="%(planning_view_form_inherit)d" event_open_popup="true" quick_add="False" js_class="planning_calendar" mode="month" show_unusual_days="True">
+            <calendar string="Planning" date_start="start_datetime" date_stop="end_datetime" color="color" form_view_id="%(planning_view_form_in_gantt)d" event_open_popup="true" quick_add="False" js_class="planning_calendar" mode="month" show_unusual_days="True">
                 <field name="resource_id" avatar_field="avatar_128" widget="many2one_avatar_resource"/>
                 <field name="resource_type" invisible="1"/>
                 <field name="is_hatched" invisible="1" />
@@ -336,7 +370,7 @@
         <field name="model">planning.slot</field>
         <field name="priority">25</field>
         <field name="arch" type="xml">
-            <calendar string="Planning" date_start="start_datetime" date_stop="end_datetime" color="color" form_view_id="%(planning_view_form_inherit)d" event_open_popup="true" show_unusual_days="True" quick_add="False" js_class="planning_calendar" mode="month">
+            <calendar string="Planning" date_start="start_datetime" date_stop="end_datetime" color="color" form_view_id="%(planning_view_form_in_gantt)d" event_open_popup="true" show_unusual_days="True" quick_add="False" js_class="planning_calendar" mode="month">
                 <field name="name"/>
                 <field name="resource_id" avatar_field="avatar_128" widget="many2one_avatar_resource"/>
                 <field name="resource_type" invisible="1"/>

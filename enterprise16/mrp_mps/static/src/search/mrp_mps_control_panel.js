@@ -116,10 +116,9 @@ export class MrpMpsControlPanel extends ControlPanel {
      * @private
      */
     onExportData() {
-        const resIds = Array.from(this.model.selectedRecords);
         const dialogProps = {
-            resIds,
             context: this.props.context,
+            defaultExportList: [],
             download: this.downloadExport.bind(this),
             getExportedFields: this.getExportedFields.bind(this),
             root: {

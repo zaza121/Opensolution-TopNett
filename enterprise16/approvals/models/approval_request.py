@@ -133,8 +133,8 @@ class ApprovalRequest(models.Model):
             approvers = approvers.filtered(lambda a: a.status == 'new')
 
         approvers._create_activity()
-        approvers.write({'status': 'pending'})
-        self.write({'date_confirmed': fields.Datetime.now()})
+        approvers.sudo().write({'status': 'pending'})
+        self.sudo().write({'date_confirmed': fields.Datetime.now()})
 
     def _get_user_approval_activities(self, user):
         domain = [
@@ -156,7 +156,7 @@ class ApprovalRequest(models.Model):
             current_approver = approval.approver_ids & approver
             approvers_to_update = approval.approver_ids.filtered(lambda a: a.status not in ['approved', 'refused'] and (a.sequence > current_approver.sequence or (a.sequence == current_approver.sequence and a.id > current_approver.id)))
 
-            if only_next_approver and approvers_to_update and approvers_to_update[0].category_approver:
+            if only_next_approver and approvers_to_update:
                 approvers_to_update = approvers_to_update[0]
             approvers_updated |= approvers_to_update
 
@@ -282,6 +282,13 @@ class ApprovalRequest(models.Model):
                         approver[0]._create_activity()
 
         return res
+
+    @api.constrains('approver_ids')
+    def _check_approver_ids(self):
+        for request in self:
+            # make sure the approver_ids are unique per request
+            if len(request.approver_ids) != len(request.approver_ids.user_id):
+                raise UserError(_("You cannot assign the same approver multiple times on the same request."))
 
 class ApprovalApprover(models.Model):
     _name = 'approval.approver'

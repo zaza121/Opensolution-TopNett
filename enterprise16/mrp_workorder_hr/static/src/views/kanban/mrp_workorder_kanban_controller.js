@@ -55,7 +55,7 @@ patch(MrpWorkorderKanbanController.prototype, 'mrp_workorder_hr', {
         if (!this.workcenter.allow_employee) {
             return;
         }
-        const fieldsToRead = ['id', 'name', 'barcode'];
+        const fieldsToRead = ['id', 'name'];
         const employees_domain = [];
         if (this.workcenter.employee_ids.length) {
             employees_domain.push(['id', 'in', this.workcenter.employee_ids]);
@@ -120,6 +120,7 @@ patch(MrpWorkorderKanbanController.prototype, 'mrp_workorder_hr', {
                 id: 0,
             };
         }
+        this.render(true);
     },
 
     closePopup(popupName) {
@@ -133,10 +134,10 @@ patch(MrpWorkorderKanbanController.prototype, 'mrp_workorder_hr', {
         };
     },
 
-    _onBarcodeScanned(barcode) {
-        const employee = this.employees.find(e => e.barcode === barcode);
+    async _onBarcodeScanned(barcode) {
+        const employee = await this.orm.call("mrp.workcenter", "get_employee_barcode", [this.workcenterId, barcode])
         if (employee) {
-            this.selectEmployee(employee.id);
+            this.selectEmployee(employee);
         } else {
             this.notification.add(this.env._t('This employee is not allowed on this workcenter'), {type: 'danger'});
         }

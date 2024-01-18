@@ -55,8 +55,11 @@
                                         t-att-currencyID="line.currency_id.name"
                                         t-esc="tax.amount"/>
                                 <cbc:TaxExemptionReasonCode
-                                        t-if="tax.tax_group_id.l10n_pe_edi_code != 'ICBPER' and line.l10n_pe_edi_affectation_reason"
+                                        t-if="tax.tax_group_id.l10n_pe_edi_code not in ('ISC', 'ICBPER') and line.l10n_pe_edi_affectation_reason"
                                         t-esc="line.l10n_pe_edi_affectation_reason"/>
+                                <cbc:TierRange
+                                        t-if="tax.tax_group_id.l10n_pe_edi_code == 'ISC' and tax.l10n_pe_edi_isc_type"
+                                        t-esc="tax.l10n_pe_edi_isc_type or ''"/>
                                 <cac:TaxScheme>
                                     <cbc:ID t-esc="tax.l10n_pe_edi_tax_code"/>
                                     <cbc:Name t-esc="tax.tax_group_id.l10n_pe_edi_code"/>
@@ -220,7 +223,7 @@
                         <cac:TaxSubtotal t-foreach="tax_details_grouped['tax_details'].values()" t-as="tax_detail_vals">
                             <cbc:TaxableAmount
                                     t-att-currencyID="record.currency_id.name"
-                                    t-esc="format_float(tax_detail_vals['base_amount_currency'])"/>
+                                    t-esc="format_float(tax_detail_vals['base_amount_currency'] - (isc_tax_amount if tax_detail_vals['l10n_pe_edi_code'] != 'ISC' else 0))"/>
                             <cbc:TaxAmount
                                     t-att-currencyID="record.currency_id.name"
                                     t-esc="format_float(tax_detail_vals['tax_amount_currency'] or 0.0)"/>

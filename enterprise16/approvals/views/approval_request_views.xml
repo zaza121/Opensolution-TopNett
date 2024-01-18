@@ -129,34 +129,34 @@
                     </div>
                     <group>
                         <group name="request_main">
-                            <field name="request_owner_id" domain="[('share', '=', False)]" attrs="{'readonly':['|', ('change_request_owner', '=', False), ('request_status','not in',('new', 'pending'))]}"/>
+                            <field name="request_owner_id" domain="[('share', '=', False)]" attrs="{'readonly':['|', ('change_request_owner', '=', False), ('request_status','!=', 'new')]}"/>
                             <field name="category_id" attrs="{'readonly':[('request_status','!=','new')]}" force_save="1"/>
                             <field name="date_confirmed" groups="base.group_no_one" readonly="1"/>
                             <label for="date" string="Date" attrs="{'invisible':[('has_date','==','no')]}"/>
                             <div attrs="{'invisible':[('has_date','==','no')]}">
                                 <div>
-                                    <field name="date" class="oe_inline" attrs="{'required': [('has_date','==','required')], 'readonly': [('request_status','not in',('new', 'pending'))]}"/>
+                                    <field name="date" class="oe_inline" attrs="{'required': [('has_date','==','required')], 'readonly': [('request_status', '!=', 'new')]}"/>
                                 </div>
                             </div>
                             <label for="date_start" string="Period" attrs="{'invisible':[('has_period','==','no')]}"/>
                             <div attrs="{'invisible':[('has_period','==','no')]}">
                                 <div>
-                                  <span>From: </span><field name="date_start" class="oe_inline" attrs="{'required': [('has_period','==','required')], 'readonly': [('request_status','not in',('new', 'pending'))]}"/>
+                                  <span>From: </span><field name="date_start" class="oe_inline" attrs="{'required': [('has_period','==','required')], 'readonly': [('request_status', '!=', 'new')]}"/>
                                 </div>
                                 <div>
-                                  <span>to: </span><field name="date_end" class="oe_inline ms-4" attrs="{'required': [('has_period','==','required')], 'readonly': [('request_status','not in',('new', 'pending'))]}"/>
+                                  <span>to: </span><field name="date_end" class="oe_inline ms-4" attrs="{'required': [('has_period','==','required')], 'readonly': [('request_status','!=','new')]}"/>
                                 </div>
                             </div>
-                            <field name="location" attrs="{'invisible':[('has_location','==','no')], 'required': [('has_location','==','required')], 'readonly': [('request_status','not in',('new', 'pending'))]}" placeholder="e.g. Brussels" />
-                            <field name="partner_id" attrs="{'invisible':[('has_partner','==','no')], 'required': [('has_partner','==','required')], 'readonly': [('request_status','not in',('new', 'pending'))]}"/>
+                            <field name="location" attrs="{'invisible':[('has_location','==','no')], 'required': [('has_location','==','required')], 'readonly': [('request_status','!=','new')]}" placeholder="e.g. Brussels" />
+                            <field name="partner_id" attrs="{'invisible':[('has_partner','==','no')], 'required': [('has_partner','==','required')], 'readonly': [('request_status','!=','new')]}"/>
                         </group>
                         <group name="request_details">
                             <field name="quantity" attrs="{
                                     'invisible':['|', ('has_quantity', '=', 'no'), ('has_product', '!=', 'no')],
                                     'required': [('has_quantity','=','required'), ('has_product', '=', 'no')],
-                                    'readonly':[('request_status','not in',('new', 'pending'))],
+                                    'readonly':[('request_status', '!=', 'new')],
                                 }"/>
-                            <field name="amount" attrs="{'invisible':[('has_amount','==','no')], 'required': [('has_amount','==','required')], 'readonly':[('request_status','not in',('new', 'pending'))]}"/>
+                            <field name="amount" attrs="{'invisible':[('has_amount','==','no')], 'required': [('has_amount','==','required')], 'readonly':[('request_status', '!=', 'new')]}"/>
                             <field name="reference" attrs="{'invisible':[('has_reference','==','no')], 'required': [('has_reference','==','required')]}"/>
                             <field name="company_id" invisible="1"/>
                         </group>
@@ -165,10 +165,10 @@
                         <page string="Products" name="products"
                             attrs="{'invisible': [('has_product', '=', 'no')]}">
                             <field name="product_line_ids"
-                                context="{'tree_view_ref': 'approvals.approval_product_line_view_tree'}" attrs="{'readonly':[('request_status','not in',('new', 'pending'))]}"/>
+                                context="{'tree_view_ref': 'approvals.approval_product_line_view_tree'}" attrs="{'readonly':[('request_status', '!=', 'new')]}"/>
                         </page>
                         <page string="Description" name="description">
-                            <field name="reason" attrs="{'readonly':[('request_status','not in',('new', 'pending'))]}"/>
+                            <field name="reason" attrs="{'readonly':[('request_status', '!=', 'new')]}"/>
                         </page>
                         <page string="Approver(s)" name="approvers">
                             <field name="approver_ids" mode="tree,kanban" attrs="{'readonly': [('request_status', '!=', 'new')]}">

@@ -24,6 +24,7 @@ class AccountChartTemplate(models.Model):
                 ('partner_id.country_id.code', '=', 'LU'),
                 ('chart_template_id', '=', self.env.ref('l10n_lu.lu_2011_chart_1').id)])
             self._configure_payroll_account_luxembourg(sa_companies)
+        super()._load_payroll_accounts()
 
     def _configure_payroll_account_luxembourg(self, companies):
         accounts_codes = [

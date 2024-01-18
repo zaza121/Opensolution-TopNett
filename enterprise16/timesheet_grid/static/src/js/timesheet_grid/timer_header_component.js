@@ -7,6 +7,8 @@ odoo.define('timesheet_grid.TimerHeaderComponent', function (require) {
 
     const { onMounted, onWillUpdateProps, onPatched, useState, useRef } = owl;
     const { ComponentAdapter } = require('web.OwlCompatibility');
+    const { useService } = require("@web/core/utils/hooks");
+    const { Markup } = require("web.utils");
 
     class TimerHeaderM2OAdapter extends ComponentAdapter {
         async updateWidget(nextProps) {
@@ -39,6 +41,7 @@ odoo.define('timesheet_grid.TimerHeaderComponent', function (require) {
             this.manualTimeInput = useRef("manualTimerInput");
             this.startButton = useRef("startButton");
             this.stopButton = useRef("stopButton");
+            this.notificationService = useService("notification");
             this.timerStarted = false;
 
             if (this.props.timerRunning === true) {
@@ -195,6 +198,13 @@ odoo.define('timesheet_grid.TimerHeaderComponent', function (require) {
         _onClickStopTimer(ev) {
             ev.stopPropagation();
             this.trigger('timer-stopped');
+            if (this.timerStarted && !this.props.projectId) {
+                this.notificationService.notify({
+                    title: this.env._t("Invalid fields:"),
+                    message: Markup(`<ul><li> ${escape(this.env._t("Project"))}</li></ul>`),
+                    type: "danger",
+                });
+            }
         }
         /**
          * @private

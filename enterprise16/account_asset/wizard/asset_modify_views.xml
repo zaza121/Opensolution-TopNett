@@ -18,6 +18,12 @@
                     <group>
                         <field name="date"/>
 
+                        <label for="method_number" attrs="{'invisible': [('modify_action', 'not in', ('modify', 'resume'))]}"/>
+                        <div class="o_row" attrs="{'invisible': [('modify_action', 'not in', ('modify', 'resume'))]}">
+                            <field name="method_number" required="1"/>
+                            <field name="method_period" required="1" nolabel="1"/>
+                        </div>
+
                         <field name="invoice_ids"
                                options="{'no_quick_create': True}"
                                context="{'default_move_type': 'out_invoice', 'input_full_display_name': True}"
@@ -40,11 +46,6 @@
                                attrs="{'invisible': [('gain_or_loss', '!=', 'loss')],
                                        'required': [('gain_or_loss', '=', 'loss')]}"/>
 
-                        <label for="method_number" attrs="{'invisible': [('modify_action', '!=', 'resume')]}"/>
-                        <div class="o_row" attrs="{'invisible': [('modify_action', '!=', 'resume')]}">
-                            <field name="method_number" required="1"/>
-                            <field name="method_period" required="1" nolabel="1"/>
-                        </div>
                         <field name="value_residual" attrs="{'invisible': [('modify_action', 'not in', ('modify', 'resume'))]}"/>
                         <field name="salvage_value" attrs="{'invisible': [('modify_action', 'not in', ('modify', 'resume'))]}"/>
                         <field name="account_asset_id" attrs="{'invisible': [('modify_action', '!=', 'modify')], 'required': [('gain_value', '!=', False)]}"/>

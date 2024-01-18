@@ -256,7 +256,7 @@ export class MapModel extends Model {
      */
     _fetchCoordinatesFromAddressOSM(metaData, data, record) {
         const address = encodeURIComponent(record.contact_address_complete.replace("/", " "));
-        const encodedUrl = `https://nominatim.openstreetmap.org/search/${address}?format=jsonv2`;
+        const encodedUrl = `https://nominatim.openstreetmap.org/search?q=${address}&format=jsonv2`;
         return this.http.get(encodedUrl);
     }
 
@@ -411,9 +411,9 @@ export class MapModel extends Model {
                         (coordinates) => {
                             if (coordinates.features.length) {
                                 partner.partner_longitude =
-                                    coordinates.features[0].geometry.coordinates[0];
+                                    parseFloat(coordinates.features[0].geometry.coordinates[0]);
                                 partner.partner_latitude =
-                                    coordinates.features[0].geometry.coordinates[1];
+                                    parseFloat(coordinates.features[0].geometry.coordinates[1]);
                                 data.partnerToCache.push(partner);
                             }
                         }
@@ -568,8 +568,8 @@ export class MapModel extends Model {
                     }
                     if (coordinates.length) {
                         for (const partner of partners) {
-                            partner.partner_longitude = coordinates[0].lon;
-                            partner.partner_latitude = coordinates[0].lat;
+                            partner.partner_longitude = parseFloat(coordinates[0].lon);
+                            partner.partner_latitude = parseFloat(coordinates[0].lat);
                             data.partnerToCache.push(partner);
                         }
                     }

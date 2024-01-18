@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import models
+from odoo import models, _
 from odoo.tools.misc import get_lang
 
 
@@ -11,11 +11,20 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
     _description = 'Disallowed Expenses Custom Handler'
 
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals):
-        results = self._get_query_results(options, groupby='category_id')
+        results = self._get_query_results(options, primary_fields=['category_id'])
         lines = []
 
-        for category_id in results:
-            lines.append((0, self._get_category_line(options, results[category_id], {'category': category_id})))
+        totals = {
+            column_group_key: {key: 0.0 for key in ['total_amount', 'disallowed_amount']}
+            for column_group_key in options['column_groups']
+        }
+
+        for group_key, result in results.items():
+            current = self._parse_hierarchy_group_key(group_key)
+            lines.append((0, self._get_category_line(options, result, current, len(current))))
+            self._update_total_values(totals, options, result)
+
+        lines.append((0, self._get_total_line(options, totals)))
 
         return lines
 
@@ -26,6 +35,52 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
         rg = self.env['account.disallowed.expenses.rate']._read_group(period_domain, ['rate'], 'category_id')
         options['multi_rate_in_period'] = any(cat['category_id_count'] > 1 for cat in rg)
 
+    def _caret_options_initializer(self):
+        return {
+            'account.account': [
+                {'name': _("General Ledger"), 'action': 'caret_option_open_general_ledger'},
+                {'name': _("Journal Items"), 'action': 'open_journal_items'},
+            ],
+        }
+
+    def open_journal_items(self, options, params):
+        ctx = {
+            'search_default_group_by_account': 1,
+            'search_default_posted': 0 if options.get('all_entries') else 1,
+            'date_from': options.get('date', {}).get('date_from'),
+            'date_to': options.get('date', {}).get('date_to'),
+            'expand': 1,
+        }
+
+        if options.get('date', {}).get('date_from'):
+            ctx['search_default_date_between'] = 1
+        else:
+            ctx['search_default_date_before'] = 1
+
+        domain = [('display_type', 'not in', ('line_section', 'line_note'))]
+
+        model_to_domain = {
+            'account.disallowed.expenses.category': 'account_id.disallowed_expenses_category_id',
+            'account.account': 'account_id',
+            'fleet.vehicle': 'vehicle_id',
+        }
+
+        for markup, res_model, res_id in self.env['account.report']._parse_line_id(params.get('line_id')):
+            if model_to_domain.get(res_model):
+                domain.append((model_to_domain[res_model], '=', res_id))
+            if markup:
+                ctx['search_default_account_id'] = int(markup)
+
+        return {
+            'name': 'Journal Items',
+            'view_mode': 'tree',
+            'res_model': 'account.move.line',
+            'views': [(False, 'list')],
+            'type': 'ir.actions.act_window',
+            'domain': domain,
+            'context': ctx,
+        }
+
     def _get_query(self, options, line_dict_id=None):
         """ Generates all the query elements based on the 'options' and the 'line_dict_id'.
             :param options:         The report options.
@@ -33,7 +88,7 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
             :return:                The query, split into several elements that can be overridden in child reports.
         """
         company_ids = tuple(self.env.companies.ids) if options.get('multi_company', False) else tuple(self.env.company.ids)
-        current = self._parse_line_id(line_dict_id)
+        current = self._parse_line_id(options, line_dict_id)
         params = {
             'date_to': options['date']['date_to'],
             'date_from': options['date']['date_from'],
@@ -78,50 +133,50 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
             WHERE aml.company_id in %(company_ids)s
               AND aml.date >= %(date_from)s AND aml.date <= %(date_to)s
               AND move.state != 'cancel'"""
-        where += current.get('category') and " AND category.id = %(category)s" or ""
-        where += current.get('account') and " AND aml.account_id = %(account)s" or ""
+        where += current.get('category_id') and " AND category.id = %(category_id)s" or ""
+        where += current.get('account_id') and " AND aml.account_id = %(account_id)s" or ""
         where += current.get('account_rate') and " AND rate.rate = %(account_rate)s" or ""
         where += not options.get('all_entries') and " AND move.state = 'posted'" or ""
 
         group_by = f" GROUP BY category.id, COALESCE(category.name->>'{lang}', category.name->>'en_US')"
-        group_by += current.get('category') and ", account_id" or ""
-        group_by += current.get('account') and options['multi_rate_in_period'] and ", rate.rate" or ""
+        group_by += current.get('category_id') and ", account_id" or ""
+        group_by += current.get('account_id') and options['multi_rate_in_period'] and ", rate.rate" or ""
 
         order_by = " ORDER BY category_id, account_id"
         order_by_rate = ", account_rate"
 
         return select, from_, where, group_by, order_by, order_by_rate, params
 
-    def _parse_line_id(self, line_id):
-        current = {'category': None}
+    def _parse_line_id(self, options, line_id):
+        current = {'category_id': None}
 
         if not line_id:
             return current
 
         for dummy, model, record_id in self.env['account.report']._parse_line_id(line_id):
             if model == 'account.disallowed.expenses.category':
-                current['category'] = record_id
+                current['category_id'] = record_id
             if model == 'account.account':
-                current['account'] = record_id
+                current['account_id'] = record_id
             if model == 'account.disallowed.expenses.rate':
                 current['account_rate'] = record_id
 
         return current
 
-    def _build_line_id(self, current, parent=False):
+    def _build_line_id(self, options, current, level, parent=False, markup=None):
         report = self.env['account.report']
         parent_line_id = ''
-        line_id = report._get_generic_line_id('account.disallowed.expenses.category', current['category'])
-        if current.get('account'):
+        line_id = report._get_generic_line_id('account.disallowed.expenses.category', current['category_id'])
+        if current.get('account_id'):
             parent_line_id = line_id
-            line_id = report._get_generic_line_id('account.account', current['account'], parent_line_id=line_id)
+            line_id = report._get_generic_line_id('account.account', current['account_id'], parent_line_id=line_id)
         if current.get('account_rate'):
             parent_line_id = line_id
-            line_id = report._get_generic_line_id('account.disallowed.expenses.rate', current['account_rate'], parent_line_id=line_id)
+            line_id = report._get_generic_line_id('account.disallowed.expenses.rate', current['account_rate'], markup=markup, parent_line_id=line_id)
 
         return parent_line_id if parent else line_id
 
-    def _get_query_results(self, options, groupby=None, line_dict_id=None):
+    def _get_query_results(self, options, line_dict_id=None, primary_fields=None, secondary_fields=None, selector=None):
         grouped_results = {}
 
         for column_group_key, column_group_options in self.env['account.report']._split_options_per_column_group(options).items():
@@ -130,105 +185,142 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
             self.env.cr.execute(select + from_ + where + group_by + order_by + order_by_rate, params)
 
             for results in self.env.cr.dictfetchall():
-                results['rate'] = self._get_current_rate(results)
-                results['disallowed_amount'] = self._get_current_disallowed_amount(results)
-                groupby = self._check_groupby(groupby, results)
-                grouped_results.setdefault(results[groupby][0], {})[column_group_key] = results
+                key = self._get_group_key(results, primary_fields, secondary_fields, selector)
+                grouped_results.setdefault(key, {})[column_group_key] = results
 
         return grouped_results
 
-    def _check_groupby(self, groupby, results):
-        # Hook to be overridden.
-        return groupby
+    def _get_group_key(self, results, primary_fields, secondary_fields, selector):
+        fields = []
+        if selector is None or self._get_single_value(results, selector):
+            fields = primary_fields
+        elif secondary_fields is not None:
+            fields = secondary_fields
+
+        group_key_list = []
+        for group_key in fields:
+            group_key_id = self._get_single_value(results, group_key)
+            if group_key_id:
+                group_key_list.append(group_key + '~' + (group_key_id and str(group_key_id) or ''))
+
+        return '|'.join(group_key_list)
+
+    def _parse_hierarchy_group_key(self, group_key):
+        return {
+            item: int(float(item_id))
+            for item, item_id
+            in [
+                full_id.split('~')
+                for full_id
+                in (group_key.split('|'))
+            ]
+        }
 
     def _report_expand_unfoldable_line_category_line(self, line_dict_id, groupby, options, progress, offset, unfold_all_batch_data=None):
-        results = self._get_query_results(options, groupby, line_dict_id)
+        results = self._get_query_results(options, line_dict_id, ['category_id', 'account_id'])
         lines = []
 
-        for account_id, values in results.items():
-            current = {
-                'category': list(values.values())[0]['category_id'][0],
-                'account': account_id,
-            }
-            lines.append(self._get_account_line(options, results[account_id], current))
+        for group_key, result in results.items():
+            current = self._parse_hierarchy_group_key(group_key)
+            lines.append(self._get_account_line(options, result, current, len(current)))
 
         return {'lines': lines}
 
     def _report_expand_unfoldable_line_account_line(self, line_dict_id, groupby, options, progress, offset, unfold_all_batch_data=None):
-        results = self._get_query_results(options, groupby, line_dict_id)
+        results = self._get_query_results(options, line_dict_id, ['category_id', 'account_id', 'account_rate'])
         lines = []
 
-        for rate, values in results.items():
-            base_line_values = list(values.values())[0]
-            current = {
-                'category': base_line_values['category_id'][0],
-                'account': base_line_values['account_id'][0],
-                'account_rate': rate,
-            }
-            lines.append(self._get_rate_line(options, results[rate], current))
+        for group_key, result in results.items():
+            current = self._parse_hierarchy_group_key(group_key)
+            base_line_values = list(result.values())[0]
+            account_id = self._get_single_value(base_line_values, 'account_id')
+            lines.append(self._get_rate_line(options, result, current, len(current), account_id))
 
         return {'lines': lines}
 
-    def _get_column_values(self, options, values):
+    def _get_column_values(self, options, values, update_vals=True):
         column_values = []
 
         for column in options['columns']:
-            col_val = values.get(column['column_group_key'], {}).get(column['expression_label'])
+            vals = values.get(column['column_group_key'], {})
+            if vals and update_vals:
+                vals['rate'] = self._get_current_rate(vals)
+                vals['disallowed_amount'] = self._get_current_disallowed_amount(vals)
+            col_val = vals.get(column['expression_label'])
+            blank_totals = column.get('blank_if_zero', False) and update_vals
 
-            if not col_val:
+            if not col_val and blank_totals:
                 column_values.append({})
             else:
                 column_values.append({
-                    'name': self.env['account.report'].format_value(col_val, figure_type=column['figure_type']),
+                    'name': self.env['account.report'].format_value(
+                        col_val,
+                        blank_if_zero=blank_totals,
+                        figure_type=column['figure_type'],
+                        digits=2 if column['figure_type'] == 'percentage' else None
+                    ),
                     'no_format': col_val,
                     'class': 'number',
                 })
 
         return column_values
 
-    def _get_category_line(self, options, values, current):
+    def _update_total_values(self, total, options, values):
+        for column_group_key in options['column_groups']:
+            for key in total[column_group_key]:
+                total[column_group_key][key] += values.get(column_group_key, {}).get(key) or 0.0
+
+    def _get_total_line(self, options, totals):
+        return {
+            'id': self.env['account.report']._get_generic_line_id(None, None, markup='total'),
+            'name': _('Total'),
+            'class': 'total',
+            'level': 1,
+            'columns': self._get_column_values(options, totals, update_vals=False),
+        }
+
+    def _get_category_line(self, options, values, current, level):
         base_line_values = list(values.values())[0]
         return {
-            **self._get_base_line(options, current),
+            **self._get_base_line(options, current, level),
             'name': '%s %s' % (base_line_values['category_code'][0], base_line_values['category_name'][0]),
             'columns': self._get_column_values(options, values),
-            'level': len(current),
+            'level': level,
             'unfoldable': True,
             'expand_function': '_report_expand_unfoldable_line_category_line',
-            'groupby': 'account_id',
         }
 
-    def _get_account_line(self, options, values, current):
+    def _get_account_line(self, options, values, current, level):
         base_line_values = list(values.values())[0]
+        unfoldable = options.get('multi_rate_in_period')
         return {
-            **self._get_base_line(options, current),
+            **self._get_base_line(options, current, level),
             'name': '%s %s' % (base_line_values['account_code'][0], base_line_values['account_name'][0]),
             'columns': self._get_column_values(options, values),
-            'level': len(current),
-            'unfoldable': options['multi_rate_in_period'],
-            'caret_options': False if options['multi_rate_in_period'] else 'account.account',
-            'account_id': base_line_values['account_id'],
-            'expand_function': options['multi_rate_in_period'] and 'disallowed_expenses_account_line_expand_function',
-            'groupby': 'rate',
+            'level': level,
+            'unfoldable': unfoldable,
+            'caret_options': False if unfoldable else 'account.account',
+            'account_id': base_line_values['account_id'][0],
+            'expand_function': unfoldable and '_report_expand_unfoldable_line_account_line',
         }
 
-    def _get_rate_line(self, options, values, current):
+    def _get_rate_line(self, options, values, current, level, markup=None):
         base_line_values = list(values.values())[0]
         return {
-            **self._get_base_line(options, current),
+            **self._get_base_line(options, current, level, markup),
             'name': f"{base_line_values['account_code'][0]} {base_line_values['account_name'][0]}",
             'columns': self._get_column_values(options, values),
-            'level': len(current),
+            'level': level,
             'unfoldable': False,
             'caret_options': 'account.account',
-            'account_id': base_line_values['account_id'],
+            'account_id': base_line_values['account_id'][0],
         }
 
-    def _get_base_line(self, options, current):
-        current_line_id = self._build_line_id(current)
+    def _get_base_line(self, options, current, level, markup=None):
+        current_line_id = self._build_line_id(options, current, level, markup=markup)
         return {
             'id': current_line_id,
-            'parent_id': self._build_line_id(current, parent=True),
+            'parent_id': self._build_line_id(options, current, level, parent=True, markup=markup, ),
             'unfolded': current_line_id in options.get('unfolded_lines') or options.get('unfold_all'),
         }
 

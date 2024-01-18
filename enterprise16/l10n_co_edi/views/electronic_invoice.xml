@@ -81,7 +81,7 @@
                 <EMI_1 t-out="company_partner._l10n_co_edi_get_partner_type()"/>
                 <EMI_2 t-out="company_partner._get_vat_without_verification_code()"/>
                 <EMI_3 t-out="company_partner._l10n_co_edi_get_carvajal_code_for_identification_type()"/>
-                <EMI_4 t-out="company_partner.l10n_co_edi_fiscal_regimen"/>
+                <EMI_4 t-out="company_partner._l10n_co_edi_get_fiscal_regimen_code()"/>
                 <EMI_6 t-out="company_partner.display_name"/>
                 <EMI_7 t-out="company_partner.l10n_co_edi_commercial_name or company_partner.name"/>
                 <EMI_8/>
@@ -119,9 +119,9 @@
                     <DFE_8/>
                 </DFE>
 
-                <GTE t-if="tax_types">
-                    <GTE_1 t-out="tax_types[0].code"/>
-                    <GTE_2 t-out="tax_types[0].name"/>
+                <GTE>
+                    <GTE_1 t-out="company_partner._l10n_co_edi_get_fiscal_regimen_code()"/>
+                    <GTE_2 t-out="company_partner._l10n_co_edi_get_fiscal_regimen_name()"/>
                 </GTE>
 
                 <CDE>
@@ -139,8 +139,6 @@
                 <ADQ_5 t-out="invoice_partner.ref"/>
                 <ADQ_6 t-out="invoice_partner.display_name"/>
                 <ADQ_7 t-out="invoice_partner.l10n_co_edi_commercial_name or invoice_partner.name"/>
-                <ADQ_8 t-out="invoice_partner.name"/>
-                <ADQ_9 t-out="invoice_partner.name"/>
                 <t t-if="invoice_partner.vat != '222222222222'">
                     <ADQ_10 t-out="invoice_partner._l10n_co_edi_get_company_address()"/>
                     <ADQ_11 t-out="str(invoice_partner.state_id.l10n_co_edi_code).zfill(2)"/>
@@ -202,14 +200,14 @@
                     <CDA_4 t-out="invoice_partner.email"/>
                 </CDA>
 
-                <GTA t-if="tax_types">
+                <GTA>
                     <t t-if="invoice_partner.vat == '222222222222'">
                         <GTA_1>ZZ</GTA_1>
                         <GTA_2>No Aplica</GTA_2>
                     </t>
                     <t t-else="">
-                        <GTA_1 t-out="tax_types[0].code"/>
-                        <GTA_2 t-out="tax_types[0].name"/>
+                        <GTA_1 t-out="invoice_partner._l10n_co_edi_get_fiscal_regimen_code()"/>
+                        <GTA_2 t-out="invoice_partner._l10n_co_edi_get_fiscal_regimen_name()"/>
                     </t>
                 </GTA>
             </ADQ>
@@ -299,7 +297,7 @@
                 <ITT>
                     <ITT_1 t-out="company_partner.display_name"/>
                     <ITT_2 t-out="';'.join(company_partner.l10n_co_edi_obligation_type_ids.mapped('name'))"/>
-                    <ITT_3 t-out="company_partner.l10n_co_edi_fiscal_regimen"/>
+                    <ITT_3 t-out="company_partner._l10n_co_edi_get_fiscal_regimen_code()"/>
                     <ITT_4 t-out="company_partner._get_vat_without_verification_code()"/>
                     <ITT_5 t-out="company_partner._l10n_co_edi_get_carvajal_code_for_identification_type()"/>
                     <ITT_6 t-out="company_partner._get_vat_verification_code()"/>

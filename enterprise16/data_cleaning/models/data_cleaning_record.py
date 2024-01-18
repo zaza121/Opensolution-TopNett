@@ -60,7 +60,7 @@ class DataCleaningRecord(models.Model):
         self.ensure_one()
 
         def _render(record, value, methods):
-            if methods:
+            if methods and methods[0] is not None:
                 return _render(record, methods[0](record, value), methods[1:])
             return (record, value)
 
@@ -121,7 +121,6 @@ class DataCleaningRecord(models.Model):
 
     def action_validate(self):
         records_done = self.env['data_cleaning.record']
-        original_records = {rec.id: rec for rec in self._original_records()}
         original_records = {'%s_%s' % (r._name, r.id): r for r in self._original_records()}
         for record in self:
             original_record = original_records.get('%s_%s' % (record.res_model_name, record.res_id))

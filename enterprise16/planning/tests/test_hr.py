@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from freezegun import freeze_time
 import pytz
 
@@ -239,7 +239,7 @@ class TestPlanningHr(TestCommonPlanning):
 
             self.resource_bert.employee_id.action_archive()
 
-            self.assertEqual(slot_1.end_datetime, datetime.combine(datetime.today(), time.max), 'End date of the splited shift should be today')
+            self.assertEqual(slot_1.end_datetime, datetime.combine(fields.Date.today()+ timedelta(days=1), time.min), 'End date of the splited shift should be today')
             self.assertNotEqual(slot_1.end_datetime, slot1_initial_end_date, 'End date should be updated')
             self.assertEqual(slot_2.end_datetime, slot2_initial_end_date, 'End date should be the same')
             self.assertFalse(slot_3.resource_id, 'Resource should be the False for archeived resource shifts')

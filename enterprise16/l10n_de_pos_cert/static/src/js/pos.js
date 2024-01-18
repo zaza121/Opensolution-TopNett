@@ -37,7 +37,7 @@ odoo.define('l10n_de_pos_cert.pos', function(require) {
                     this.company.l10n_de_fiskaly_api_secret = data['api_secret'];
                     this.useKassensichvVersion2 = this.config.l10n_de_fiskaly_tss_id.includes('|');
                     this.apiUrl = data['kassensichv_url'] + '/api/v' + (this.useKassensichvVersion2 ? '2' : '1'); // use correct version
-                    this.initVatRates(data['dsfinvk_url'] + '/api/v0');
+                    return this.initVatRates(data['dsfinvk_url'] + '/api/v0');
                 })
             }
             return super.after_load_server_data(...arguments);
@@ -82,7 +82,7 @@ odoo.define('l10n_de_pos_cert.pos', function(require) {
                 'api_secret': this.getApiSecret()
             }
 
-            $.ajax({
+            return $.ajax({
                 url: url + '/auth',
                 method: 'POST',
                 data: JSON.stringify(data),
@@ -90,7 +90,7 @@ odoo.define('l10n_de_pos_cert.pos', function(require) {
                 timeout: 5000
             }).then((data) => {
                 const token = data.access_token;
-                $.ajax({
+                return $.ajax({
                     url: url + '/vat_definitions',
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` },
@@ -267,6 +267,7 @@ odoo.define('l10n_de_pos_cert.pos', function(require) {
         }
         //@Override
         init_from_JSON(json) {
+            this.state = json.state;
             super.init_from_JSON(...arguments);
             if (this.pos.isCountryGermanyAndFiskaly()) {
                 this.fiskalyUuid = json.fiskaly_uuid;
@@ -282,14 +283,23 @@ odoo.define('l10n_de_pos_cert.pos', function(require) {
                 }
             }
         }
-        //@Override
-        add_product(product, options) {
+        check_germany_taxes(product){
             if (this.pos.isCountryGermanyAndFiskaly()) {
                 if (product.taxes_id.length === 0 || !(this.pos.taxes_by_id[product.taxes_id[0]].amount in this.pos.vatRateMapping)) {
                     throw new TaxError(product);
                 }
             }
-            super.add_product(...arguments);
+        }
+        //@Override
+        add_product(product, options) {
+            this.check_germany_taxes(product);
+            return super.add_product(...arguments);
+        }
+        //@override
+        add_orderline(line) {
+            if (line.order && !['paid', 'done', 'invoiced'].includes(line.order.state))
+                this.check_germany_taxes(line.product);
+            return super.add_orderline(...arguments);
         }
         _authenticate() {
             const data = {

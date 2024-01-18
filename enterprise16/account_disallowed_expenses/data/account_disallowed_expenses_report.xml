@@ -2,7 +2,7 @@
 <odoo>
 
     <template id="disallowed_expenses_main_template" inherit_id="account_reports.main_template">
-        <xpath expr="//div[hasclass('o_account_reports_page')]" position="before">
+        <xpath expr="//div[@id='warnings_div']" position="inside">
             <div class="alert alert-info text-center mb-0 no_print" t-if="options.get('multi_rate_in_period')">
                 <span>There are multiple disallowed expenses rates in this period</span>
             </div>
@@ -13,7 +13,7 @@
         <field name="name">Disallowed Expenses Report</field>
         <field name="filter_multi_company">selector</field>
         <field name="filter_journals" eval="True"/>
-        <field name="filter_unfold_all" eval="False"/>
+        <field name="filter_unfold_all" eval="True"/>
         <field name="main_template">account_disallowed_expenses.disallowed_expenses_main_template</field>
         <field name="search_bar" eval="True"/>
         <field name="custom_handler_model_id" ref="model_account_disallowed_expenses_report_handler"/>

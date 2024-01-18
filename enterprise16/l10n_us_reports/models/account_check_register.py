@@ -7,7 +7,7 @@ class USReportCustomHandler(models.AbstractModel):
     financial transactions in cash.
     '''
     _name = 'l10n_us.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = 'account.general.ledger.report.handler'
     _description = 'US Report Custom Handler'
 
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals):

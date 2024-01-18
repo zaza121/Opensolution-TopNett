@@ -16,6 +16,7 @@ export function insertChart(chartData) {
         },
         searchParams: { ...chartData.searchParams },
         stacked: chartData.metaData.stacked,
+        cumulative: chartData.metaData.cumulated,
         title: chartData.name,
         background: "#FFFFFF",
         legendPosition: "top",

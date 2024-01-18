@@ -25,14 +25,14 @@ hrContractSalary.include({
 
     onchangeCompanyCar: function(event) {
         var private_car_input = $("input[name='fold_private_car_reimbursed_amount']")
-        if (event.target.checked && private_car_input[0].checked) {
+        if (event.target.checked && private_car_input.length && private_car_input[0].checked) {
             private_car_input.click()
         }
     },
 
     onchangePrivateCar: function(event) {
         var company_car_input = $("input[name='fold_company_car_total_depreciated_cost']")
-        if (event.target.checked && company_car_input[0].checked) {
+        if (event.target.checked && company_car_input.length && company_car_input[0].checked) {
             company_car_input.click()
         }
     },

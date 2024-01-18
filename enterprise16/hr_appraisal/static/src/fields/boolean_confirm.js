@@ -28,18 +28,23 @@ export class BooleanToggleConfirm extends BooleanToggleField {
 
     onChange(value) {
         const record = this.props.record.data;
+        const updateAndSave = () => {
+            this.props.record.update({ [this.props.name]: value });
+            this.props.record.save();
+        }
 
         const isEmployee = record.employee_user_id && record.employee_user_id[0] === session.uid;
         const isManager = record.is_appraisal_manager || record.is_implicit_manager;
         if (isManager && value && !isEmployee) {
             this.dialogService.add(ConfirmationDialog, {
                 body: this.env._t("The employee's feedback will be published without their consent. Do you really want to publish it? This action will be logged in the chatter."),
-                confirm: () => this.props.update(value),
+                confirm: updateAndSave,
                 cancel: () => {},
             });
+
         }
         else {
-            this.props.update(value);
+            updateAndSave();
         }
     }
 }

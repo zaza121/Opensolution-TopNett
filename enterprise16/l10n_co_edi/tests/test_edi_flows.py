@@ -19,11 +19,6 @@ class TestEdiFlows(TestCoEdiCommon):
             self.assertRecordValues(self.invoice, [{'edi_state': 'to_send'}])
             self.assertRecordValues(document, [{'state': 'to_send'}])
 
-            self.invoice.button_draft()
-
-            self.assertRecordValues(self.invoice, [{'edi_state': 'to_send'}])
-            self.assertRecordValues(document, [{'state': 'to_send'}])
-
             self.invoice.button_cancel()
 
             self.assertRecordValues(self.invoice, [{'edi_state': 'cancelled'}])

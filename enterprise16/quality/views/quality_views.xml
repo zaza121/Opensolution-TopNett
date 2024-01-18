@@ -53,7 +53,7 @@
                 <field name="name" decoration-bf="1"/>
                 <field name="product_tmpl_id" optional="show"/>
                 <field name="product_id" optional="hide"/>
-                <field name="lot_id" optional="hide"/>
+                <field name="lot_id" optional="hide" groups="stock.group_production_lot"/>
                 <field name="team_id" optional="show"/>
                 <field name="user_id" optional="show" widget='many2one_avatar_user'/>
                 <field name="tag_ids" optional="hide" widget="many2many_tags"/>
@@ -106,7 +106,7 @@
         <field name="name">quality.point.view.tree</field>
         <field name="model">quality.point</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree default_order="sequence, id">
                 <field name="sequence" widget="handle"/>
                 <field name="name" decoration-bf="1"/>
                 <field name="title" optional="show"/>

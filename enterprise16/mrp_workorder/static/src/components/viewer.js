@@ -44,7 +44,7 @@ class DocumentViewer extends Component {
         if (!this.props || !this.props.value) {
             return false;
         }
-        if (this.props.resField === "worksheet_url") {
+        if (this.props.resField === "worksheet_url" || this.props.resField === "worksheet_google_slide") {
             return "google_slide";
         }
         for (const [magicNumber, type] of Object.entries(this.magicNumbers)) {

@@ -15,9 +15,12 @@ class SocialPostTemplate(models.Model):
         for post in self:
             post.display_facebook_preview = post.message and ('facebook' in post.account_ids.media_id.mapped('media_type'))
 
-    @api.depends(lambda self: ['message', 'image_ids'] + self._get_post_message_modifying_fields())
+    @api.depends(lambda self: ['message', 'image_ids', 'display_facebook_preview'] + self._get_post_message_modifying_fields())
     def _compute_facebook_preview(self):
         for post in self:
+            if not post.display_facebook_preview:
+                post.facebook_preview = False
+                continue
             post.facebook_preview = self.env['ir.qweb']._render('social_facebook.facebook_preview', {
                 **post._prepare_preview_values("facebook"),
                 'message': post._prepare_post_content(

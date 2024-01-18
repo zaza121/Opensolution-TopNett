@@ -3,17 +3,41 @@
 import logging
 import re
 
-from odoo import models
+from odoo import models, api
 
 _logger = logging.getLogger(__name__)
 
 class AccountEdiFormat(models.Model):
     _inherit = 'account.edi.format'
 
+    @api.model
+    def _l10n_mx_edi_get_invoice_attachment(self, res_model, res_id):
+        # OVERRIDE
+        return self.env['ir.attachment'].search([
+            ('name', 'like', '%-MX-Invoice-4.0.xml'),
+            ('res_model', '=', res_model),
+            ('res_id', '=', res_id)], limit=1, order='create_date desc')
+
     def _l10n_mx_edi_clean_to_legal_name(self, name):
-        """ We remove the SA de CV / SL de CV / S de RL de CV as they are never in the official name in the XML"""
-        res = re.sub(r"(?i:\s+(s\.?[al]\.?|s\.? de r\.?l\.?)"
-                     r"( de c\.?v\.?|))\s*$", "", name).upper()
+        """
+        We remove the most common 'denominación'/'razón social' as they are never in the official name:
+            Company S. en C.
+            Company S. de R.L.
+            Company S.A.
+            Company S. en C. por A.
+            Company S. C. L.
+            Company S. C. L. (limitada)
+            Company S. C. S.
+            Company S. C. S. (suplementada)
+            Company S.A.S.
+            Company SA de CV
+
+        It will not match:
+            Company de CV
+            Company SAS de cv
+        """
+        BUSINESS_NAME_RE = r"(?i:\s+(s\.?\s?(a\.?)( de c\.?v\.?|)|(s\.?\s?(a\.?s\.?)|s\.? en c\.?( por a\.?)?|s\.?\s?c\.?\s?(l\.?(\s?\(?limitada)?\)?|s\.?(\s?\(?suplementada\)?)?)|s\.? de r\.?l\.?)))\s*$"
+        res = re.sub(BUSINESS_NAME_RE, "", name).upper()
         return res
 
     def _l10n_mx_edi_get_40_values(self, move):
@@ -24,7 +48,7 @@ class AccountEdiFormat(models.Model):
             'supplier_name': self._l10n_mx_edi_clean_to_legal_name(move.company_id.name),
             'customer_name': self._l10n_mx_edi_clean_to_legal_name(move.commercial_partner_id.name),
         }
-        if customer.country_code not in [False, 'MX'] and not vals['fiscal_regime']:
+        if customer.country_code not in [False, 'MX']:
             vals['fiscal_regime'] = '616'
         return vals
 
@@ -41,7 +65,7 @@ class AccountEdiFormat(models.Model):
         return vals
 
     def _l10n_mx_edi_get_invoice_templates(self):
-        return 'l10n_mx_edi_40.cfdiv40', 'xsd_cached_cfdv40_xsd'
+        return 'l10n_mx_edi_40.cfdiv40', 'cfdv40.xsd'
 
     def _l10n_mx_edi_get_payment_template(self):
         return 'l10n_mx_edi_40.payment20'

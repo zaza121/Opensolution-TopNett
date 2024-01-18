@@ -142,6 +142,8 @@ class BankRecWidgetLine(models.Model):
     display_stroked_amount_currency = fields.Boolean(compute='_compute_display_stroked_amount_currency')
     display_stroked_balance = fields.Boolean(compute='_compute_display_stroked_balance')
 
+    manually_modified = fields.Boolean()
+
     def _compute_index(self):
         for line in self:
             line.index = uuid.uuid4()
@@ -151,6 +153,8 @@ class BankRecWidgetLine(models.Model):
         for line in self:
             if line.flag in ('aml', 'new_aml', 'liquidity', 'exchange_diff'):
                 line.account_id = line.source_aml_id.account_id
+            else:
+                line.account_id = line.account_id
 
     @api.depends('source_aml_id')
     def _compute_date(self):
@@ -159,12 +163,16 @@ class BankRecWidgetLine(models.Model):
                 line.date = line.source_aml_id.date
             elif line.flag in ('liquidity', 'auto_balance', 'manual', 'early_payment', 'tax_line'):
                 line.date = line.wizard_id.st_line_id.date
+            else:
+                line.date = line.date
 
     @api.depends('source_aml_id')
     def _compute_name(self):
         for line in self:
             if line.flag in ('aml', 'new_aml', 'liquidity'):
                 line.name = line.source_aml_id.name
+            else:
+                line.name = line.name
 
     @api.depends('source_aml_id')
     def _compute_partner_id(self):
@@ -173,6 +181,8 @@ class BankRecWidgetLine(models.Model):
                 line.partner_id = line.source_aml_id.partner_id
             elif line.flag in ('liquidity', 'auto_balance', 'manual', 'early_payment', 'tax_line'):
                 line.partner_id = line.wizard_id.partner_id
+            else:
+                line.partner_id = line.partner_id
 
     @api.depends('source_aml_id')
     def _compute_currency_id(self):
@@ -181,18 +191,24 @@ class BankRecWidgetLine(models.Model):
                 line.currency_id = line.source_aml_id.currency_id
             elif line.flag in ('auto_balance', 'manual', 'early_payment'):
                 line.currency_id = line.wizard_id.transaction_currency_id
+            else:
+                line.currency_id = line.currency_id
 
     @api.depends('source_aml_id')
     def _compute_balance(self):
         for line in self:
             if line.flag in ('aml', 'liquidity'):
                 line.balance = line.source_aml_id.balance
+            else:
+                line.balance = line.balance
 
     @api.depends('source_aml_id')
     def _compute_amount_currency(self):
         for line in self:
             if line.flag in ('aml', 'liquidity'):
                 line.amount_currency = line.source_aml_id.amount_currency
+            else:
+                line.amount_currency = line.amount_currency
 
     @api.depends('balance')
     def _compute_from_balance(self):
@@ -211,30 +227,40 @@ class BankRecWidgetLine(models.Model):
         for line in self:
             if line.flag in ('aml', 'new_aml'):
                 line.analytic_distribution = line.source_aml_id.analytic_distribution
+            else:
+                line.analytic_distribution = line.analytic_distribution
 
     @api.depends('source_aml_id')
     def _compute_tax_repartition_line_id(self):
         for line in self:
             if line.flag == 'aml':
                 line.tax_repartition_line_id = line.source_aml_id.tax_repartition_line_id
+            else:
+                line.tax_repartition_line_id = line.tax_repartition_line_id
 
     @api.depends('source_aml_id')
     def _compute_tax_ids(self):
         for line in self:
             if line.flag == 'aml':
                 line.tax_ids = [Command.set(line.source_aml_id.tax_ids.ids)]
+            else:
+                line.tax_ids = line.tax_ids
 
     @api.depends('source_aml_id')
     def _compute_tax_tag_ids(self):
         for line in self:
             if line.flag == 'aml':
                 line.tax_tag_ids = [Command.set(line.source_aml_id.tax_tag_ids.ids)]
+            else:
+                line.tax_tag_ids = line.tax_tag_ids
 
     @api.depends('source_aml_id')
     def _compute_group_tax_id(self):
         for line in self:
             if line.flag == 'aml':
                 line.group_tax_id = line.source_aml_id.group_tax_id
+            else:
+                line.group_tax_id = line.group_tax_id
 
     @api.depends('currency_id', 'amount_currency', 'source_amount_currency')
     def _compute_display_stroked_amount_currency(self):

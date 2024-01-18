@@ -3,18 +3,19 @@
 # 	* account_reports
 # 
 # Translators:
-# Martin Trigaux, 2022
-# Malaz Abuidris <msea@odoo.com>, 2022
 # Niyas Raphy, 2022
+# Jinjiu Liu, 2023
+# Martin Trigaux, 2023
+# Malaz Abuidris <msea@odoo.com>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Niyas Raphy, 2022\n"
-"Language-Team: Arabic (https://www.transifex.com/odoo/teams/41243/ar/)\n"
+"Last-Translator: Malaz Abuidris <msea@odoo.com>, 2023\n"
+"Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -67,6 +68,13 @@ msgstr ""
 "الحساب المناسب) "
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "%s is not a numeric value"
+msgstr "%s ليست قيمة عددية "
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_cell_template_unexplained_difference
 #: model_terms:ir.ui.view,arch_db:account_reports.line_template_general_ledger_report
@@ -84,6 +92,8 @@ msgid ""
 "'Open General Ledger' caret option is only available form report lines "
 "targetting accounts."
 msgstr ""
+"خيار علامة إقحام 'فتح دفتر الأستاذ العام' متاح فقط من بنود التقرير التي "
+"تستهدف الحسابات. "
 
 #. module: account_reports
 #. odoo-python
@@ -93,6 +103,8 @@ msgid ""
 "'View Bank Statement' caret option is only available for report lines "
 "targeting bank statements."
 msgstr ""
+"خيار علامة إقحام 'عرض كشف الحساب البنكي' متاح فقط من بنود التقرير التي "
+"تستهدف كشوف الحسابت البنكية. "
 
 #. module: account_reports
 #. odoo-python
@@ -100,6 +112,13 @@ msgstr ""
 #, python-format
 msgid "'external' engine does not support groupby, limit nor offset."
 msgstr "لا يدعم المحرك 'الخارجي' عمليات التجميع حسب، أو التقييد، أو الإزاحة. "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "(%s lines)"
+msgstr "(%s بنود) "
 
 #. module: account_reports
 #. odoo-python
@@ -114,6 +133,13 @@ msgstr "(+) الإيصالات المستحقة "
 #, python-format
 msgid "(-) Outstanding Payments"
 msgstr "(-) المدفوعات المستحقة "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "(1 line)"
+msgstr "(بند 1) "
 
 #. module: account_reports
 #. odoo-python
@@ -218,13 +244,6 @@ msgstr ""
 "            دفاتر اليومية:"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
-msgid "<span class=\"fa fa-calendar\" title=\"Dates\" role=\"img\" aria-label=\"Dates\"/>"
-msgstr ""
-"<span class=\"fa fa-calendar\" title=\"التواريخ \" role=\"img\" aria-"
-"label=\"Dates\"/>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.aged_report_line_template
 msgid ""
 "<span class=\"fa fa-circle color-green trust-partner\" role=\"img\" aria-"
@@ -316,17 +335,26 @@ msgstr "<span class=\"fa fa-filter\"/> الخيارات:"
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_analytic
 msgid "<span class=\"fa fa-folder-open\"/> Analytic Filter"
-msgstr ""
+msgstr "<span class=\"fa fa-folder-open\"/>عامل التصفية التحليلي "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_analytic
 msgid "<span class=\"fa fa-folder-open\"/> Analytic Group By"
-msgstr ""
+msgstr "<span class=\"fa fa-folder-open\"/> التجميع التحليلي "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_partner
 msgid "<span class=\"fa fa-folder-open\"/> Partners"
 msgstr "<span class=\"fa fa-folder-open\"/> الشركاء"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
+msgid ""
+"<span class=\"fa fa-fw fa-calendar\" title=\"Dates\" role=\"img\" aria-"
+"label=\"Dates\"/>"
+msgstr ""
+"<span class=\"fa fa-fw fa-calendar\" title=\"التواريخ \" role=\"img\" aria-"
+"label=\"Dates\"/>"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_tax_unit
@@ -388,16 +416,6 @@ msgstr ""
 "label=\"Search\" title=\"بحث \"/></span>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
-msgid ""
-"<span>Intrastat taxes are applied on unexpected journal entries "
-"(international or between non intrastat countries).</span>"
-msgstr ""
-"<span>ضرائب نظام إحصاءات التجارة بين دول الاتحاد الأوروبي مطبقة على قيود "
-"يومية غير متوقعة (عالمياً أو بين دول لا تنتمي لنظام إحصاءات التجارة بين دول "
-"الاتحاد الأوروبي).</span>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.template_tax_report
 msgid ""
 "<span>Please note that the report may include some rounding differences "
@@ -407,19 +425,13 @@ msgstr ""
 "السجلات.</span>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
-msgid "<span>Some partners are missing a VAT number.</span>"
-msgstr "<span>بعض الشركاء ينقصهم رقم الضريبة.</span>"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.template_tax_report
 msgid ""
 "<span>This company is part of a tax unit. You're currently not viewing the "
-"whole unit; to change that, tick the \"aggregate\" option of \"tax unit\" "
-"menu.</span>"
+"whole unit. To change that, use the Tax Unit filter.</span>"
 msgstr ""
 "<span>هذه الشركة جزء من وحدة ضريبية. لا تعرض الوحدة بأكملها حالياً؛ لتغيير "
-"ذلك، قم بتحديد خيار \"مجموع\" في قائمة \"الوحدة الضريبية\".</span>"
+"ذلك، استخدم عامل تصفية \"الوحدة الضريبية\".</span> "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.multicurrency_report_main_template
@@ -637,7 +649,7 @@ msgstr "حسابات دائنة مستحقة متأخرة "
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_payable_report_handler
 msgid "Aged Payable Custom Handler"
-msgstr ""
+msgstr "المعالج المخصص للحسابات الدائنة المستحقة "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -655,7 +667,7 @@ msgstr "المتأخر المدين"
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_receivable_report_handler
 msgid "Aged Receivable Custom Handler"
-msgstr ""
+msgstr "المعالج المخصص للحسابات المدينة المستحقة "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
@@ -680,7 +692,7 @@ msgstr "كافة اليوميات "
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "All Payable"
-msgstr "جميع المدفوعات"
+msgstr "جميع الذمم مستحقة الدفع "
 
 #. module: account_reports
 #. odoo-python
@@ -732,7 +744,7 @@ msgstr "الحسابات التحليلية:"
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report__filter_analytic_groupby
 msgid "Analytic Group By"
-msgstr "التحليلي تجميع حسب"
+msgstr "التجميع التحليلي حسب "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.filter_info_template
@@ -802,7 +814,7 @@ msgstr "متوسط أيام المدينين"
 #: code:addons/account_reports/models/account_journal_report.py:0
 #, python-format
 msgid "B: %s"
-msgstr ""
+msgstr "B: %s"
 
 #. module: account_reports
 #. odoo-python
@@ -839,11 +851,6 @@ msgstr "الرصيد بسعر العملية "
 #: model:account.report.column,name:account_reports.multicurrency_revaluation_report_balance_currency
 msgid "Balance in Foreign Currency"
 msgstr "الرصيد بالعملة الأجنبية "
-
-#. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
-msgid "Balance in GL"
-msgstr "الرصيد في دفتر الأستاذ العام "
 
 #. module: account_reports
 #. odoo-python
@@ -1079,6 +1086,11 @@ msgid "Change expected payment date"
 msgstr "تغيير تاريخ السداد المتوقع"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "Check them"
+msgstr "تفقدهم "
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_generic_tax_report.py:0
 #, python-format
@@ -1173,7 +1185,7 @@ msgstr "تكاليف الإيرادات "
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "Could not expand term %s while evaluating formula %s"
-msgstr ""
+msgstr "Could not expand term %s while evaluating formula %s"
 
 #. module: account_reports
 #. odoo-python
@@ -1272,7 +1284,7 @@ msgstr "الأصول المتداولة"
 #: model:account.report.line,name:account_reports.account_financial_report_current_liabilities0
 #: model:account.report.line,name:account_reports.account_financial_report_current_liabilities1
 msgid "Current Liabilities"
-msgstr "الالتزامات الجارية"
+msgstr "الالتزامات المتداولة "
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_current_year_earnings_line_2
@@ -1347,7 +1359,7 @@ msgstr "التاريخ:"
 #: model:account.report.column,name:account_reports.trial_balance_report_debit
 #, python-format
 msgid "Debit"
-msgstr "الخصم "
+msgstr "المدين"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_expression_form
@@ -1415,6 +1427,20 @@ msgid "EC Sales Report Custom Handler"
 msgstr "المعالج المخصص لتقارير مبيعات العمولة الأوروبية "
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "EC tax on non EC countries"
+msgstr "ضريبة الاتحاد الأوروبي للدول خارج الاتحاد الأوروبي "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "EC tax on same country"
+msgstr "ضريبة الاتحاد الأوروبي في نفس الدولة "
+
+#. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_equity0
 msgid "EQUITY"
 msgstr "رأس المال "
@@ -1473,6 +1499,13 @@ msgstr "نهاية الربع الماضي"
 #, python-format
 msgid "Ending Balance :"
 msgstr "الرصيد الختامي: "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_sales_report.py:0
+#, python-format
+msgid "Entries with partners with no VAT"
+msgstr "القيود التي بها شركاء بلا ضريبة القيمة المضافة "
 
 #. module: account_reports
 #. odoo-python
@@ -1562,7 +1595,7 @@ msgstr "حساب أحكام النفقات "
 #: code:addons/account_reports/wizard/multicurrency_revaluation.py:0
 #, python-format
 msgid "Expense Provision for %s"
-msgstr ""
+msgstr "حكم النفقات لـ %s"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_expenses0
@@ -1582,7 +1615,7 @@ msgstr "تصدير"
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_reports_export_wizard_format
 msgid "Export format for accounting's reports"
-msgstr "تصدير الصيغة للتقارير المحاسبية "
+msgstr "صيغة التصدير للتقارير المحاسبية "
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__export_format_ids
@@ -1592,7 +1625,7 @@ msgstr "التصدير إلى "
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_reports_export_wizard
 msgid "Export wizard for accounting's reports"
-msgstr "تصدير المُعالِج للتقارير المحاسبية "
+msgstr "مُعالِج التصدير للتقارير المحاسبية "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_expression_form
@@ -1733,6 +1766,13 @@ msgstr "معالج مخصص للتقرير الضريبي العام (الحسا
 #: model:ir.model,name:account_reports.model_account_generic_tax_report_handler_tax_account
 msgid "Generic Tax Report Custom Handler (Tax -> Account)"
 msgstr "معالج مخصص للتقرير الضريبي العام (الضريبة -> الحساب) "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_journal_report.py:0
+#, python-format
+msgid "Go to report configuration"
+msgstr "الذهاب إلى تهيئة التقرير "
 
 #. module: account_reports
 #. odoo-python
@@ -1926,7 +1966,7 @@ msgstr "حساب أحكام الدخل "
 #: code:addons/account_reports/wizard/multicurrency_revaluation.py:0
 #, python-format
 msgid "Income Provision for %s"
-msgstr ""
+msgstr "حكم الدخل لـ %s "
 
 #. module: account_reports
 #. odoo-python
@@ -1969,6 +2009,33 @@ msgstr "الرصيد الافتتاحي"
 #, python-format
 msgid "Insert foot note here"
 msgstr "إدراج تذييل هنا "
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "Intra-community taxes are applied on"
+msgstr "الضرائب بين المجتمعات مطبقة على "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid domain formula in expression %r of line %r: %s"
+msgstr "معادلة النطاق غير صالحة في التعبير %r للبند %r: %s "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid method %r"
+msgstr "الطريقة %r غير صالحة "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Invalid subformula in expression %r of line %r: %s"
+msgstr "المعادلة الفرعية غير صالحة في التعبير %r للبند %r: %s "
 
 #. module: account_reports
 #. odoo-python
@@ -2040,6 +2107,13 @@ msgid "Journal Report Custom Handler"
 msgstr "المعالج المخصص لتقرير اليومية "
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#, python-format
+msgid "Journal items with archived tax tags"
+msgstr "عناصر دفتر اليومية مع علامات تصنيف مؤرشفة للضريبة "
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.filter_info_template
 msgid "Journals:"
 msgstr "دفاتر اليومية:"
@@ -2090,6 +2164,11 @@ msgstr "الشهر الماضي"
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
 msgid "Last Quarter"
 msgstr "آخر ربع سنة"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Last Statement balance + Transactions since statement"
+msgstr "رصيد آخر كشف حساب + المعاملات منذ إصدار كشف الحساب "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_cell_template_link_last_statement
@@ -2557,7 +2636,7 @@ msgstr "بالإضافة للأصول غير المتداولة"
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_non_current_liabilities0
 msgid "Plus Non-current Liabilities"
-msgstr "بالإضافة للالتزامات غير الجارية"
+msgstr "بالإضافة للالتزامات غير المتداولة "
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_position0
@@ -2635,7 +2714,7 @@ msgstr "مقترح قيد يومية إقفال الضريبة. "
 #: code:addons/account_reports/wizard/multicurrency_revaluation.py:0
 #, python-format
 msgid "Provision for %(for_cur)s (1 %(comp_cur)s = %(rate)s %(for_cur)s)"
-msgstr ""
+msgstr "الحكل لـ %(for_cur)s (1 %(comp_cur)s = %(rate)s %(for_cur)s) "
 
 #. module: account_reports
 #. odoo-python
@@ -2748,6 +2827,11 @@ msgid "Rules"
 msgstr "القواعد"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Running Balance"
+msgstr "الرصيد الجاري "
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_comparison
 msgid "Same Period Last Year"
 msgstr "نفس الفترة العام الماضي"
@@ -2820,6 +2904,11 @@ msgid "Some controls failed."
 msgstr "لقد فشلت بعض عناصر التحكم.   "
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "Some journal items appear to point to obsolete report lines."
+msgstr "يبدو أن بعض عناصر دفتر اليومية تشير إلى بنود تقرير قديمة. "
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_extra_options_journal_audit_report
 msgid "Sort By Date"
 msgstr "فرز حسب التاريخ "
@@ -2876,7 +2965,7 @@ msgstr "الملخص"
 #: code:addons/account_reports/models/account_journal_report.py:0
 #, python-format
 msgid "T: %s"
-msgstr ""
+msgstr "T: %s"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3016,6 +3105,27 @@ msgstr "النص"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_journal_report.py:0
+#, python-format
+msgid ""
+"The 'load more limit' setting of this report is too low to display all the "
+"lines of the entry you're trying to show."
+msgstr ""
+"إعداد \"تحميل حد أكبر\" لهذا التقرير قليل جداً ولذلك لا يمكن عرض كافة بنود "
+"القيد التي تحاول عرضها. "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid ""
+"The Accounts Coverage Report is only available for the Profit and Loss and "
+"Balance Sheet reports."
+msgstr ""
+"تقرير تغطية الحسابات متاح فقط لتقارير الأرباح والخسائر والميزانية العمومية. "
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_bank_reconciliation_report.py:0
 #, python-format
 msgid "The Book balance in Odoo dated today"
@@ -3066,7 +3176,7 @@ msgstr "يجب أن تكون الشركة الرئيسية لوحدة ضريبي
 #, python-format
 msgid ""
 "The selected report line does not target a Journal Entry or a Journal Item."
-msgstr ""
+msgstr "بند التقرير المحدد لا يستهدف قيد دفتر يومية أو عنصر دفتر يومية. "
 
 #. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_res_company__account_tax_unit_ids
@@ -3125,6 +3235,13 @@ msgstr ""
 #, python-format
 msgid "This account is reported in multiple lines of the report"
 msgstr "توجد عدة تقارير حول هذا الحساب في عدة بنود من التقرير "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "This account is reported multiple times on the same line of the report"
+msgstr "توجد عدة تقارير حول هذا الحساب في نفس البند من التقرير "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
@@ -3226,6 +3343,7 @@ msgstr "مثلث الشكل "
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid ""
 "Trying to expand a group for a line which was not generated by a report "
@@ -3300,7 +3418,7 @@ msgstr "شريك مجهول "
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "Unknown bound criterium: %s"
-msgstr ""
+msgstr "فئة ربط غير معروفة: %s "
 
 #. module: account_reports
 #. odoo-python
@@ -3419,6 +3537,13 @@ msgstr "المعرّف غير صحيح لبند دفتر الأستاذ الخا
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
+#, python-format
+msgid "Wrong format for if_other_expr_above/if_other_expr_below formula: %s"
+msgstr "الصيغة غير صحيحة لمعادلة if_other_expr_above/if_other_expr_below: %s "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
 #: code:addons/account_reports/models/account_report.py:0
 #, python-format
 msgid "XLSX"
@@ -3433,11 +3558,44 @@ msgstr "أنت تستخدم أسعار صرف مخصصة "
 #. odoo-python
 #: code:addons/account_reports/models/account_move.py:0
 #, python-format
+msgid "You can't open a tax report from a move without a VAT closing date."
+msgstr ""
+"لا يمكنك فتح تقرير ضريبي من حركة دون تاريخ إقفال ضريبة القيمة المضافة. "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_move.py:0
+#, python-format
 msgid ""
 "You cannot reset this closing entry to draft, as it would delete carryover "
 "values impacting the tax report of a locked period. To do this, you first "
 "need to modify you tax return lock date."
 msgstr ""
+"لا يمكنك إعادة تعيين قيد الإقفال هذا إلى حالة المسودة، حيث إنه سيقوم بحذف "
+"قيم الترحيل التي تؤثر على التقرير الضريبي للفترة المقفلة. للقيام بذلك، عليك "
+"أولاً تعديل تاريخ إقفال الإقرار الضريبي الخاص بك. "
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_multicurrency_revaluation_report.py:0
+#, python-format
+msgid "You need to activate more than one currency to access this report."
+msgstr ""
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "[Draft]"
+msgstr "[Draft]"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "addressed to"
+msgstr "موجهة إلى "
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.main_template
+msgid "and correct their tax tags if necessary."
+msgstr "وتصحيح علامات تصنيف الضريبة إذا لزم الأمر. "
 
 #. module: account_reports
 #: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__year
@@ -3481,6 +3639,11 @@ msgid "in the next period."
 msgstr "في الفترة القادمة. "
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "invoices"
+msgstr "فاتورة"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_main_template
 msgid "journal items"
 msgstr "عناصر اليومية "
@@ -3503,6 +3666,11 @@ msgid "name of the model of the report"
 msgstr "اسم نموذج التقرير "
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "partners"
+msgstr "الشركاء "
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.main_template
 msgid "prior or included in this period"
 msgstr "قبل هذه الفترة أو مشمول فيها "
@@ -3521,6 +3689,11 @@ msgstr "شبه سنوي "
 #: model_terms:ir.ui.view,arch_db:account_reports.bank_reconciliation_report_main_template
 msgid "statements"
 msgstr "كشوفات الحسابات "
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "that are not established abroad."
+msgstr "التي لم يتم إنشاؤها في الخارج. "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.search_template_date_filter
@@ -3545,6 +3718,11 @@ msgid "which doesn't result from a bank statement nor payments."
 msgstr "والذي لا ينتج عن أي من كشف الحساب البنكي أو المدفوعات. "
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "who are not established in any of the EC countries."
+msgstr "غير المنشئين في أي من دول الاتحاد الأوروبي. "
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/xml/account_report_template.xml:0
 #, python-format
@@ -3557,6 +3735,11 @@ msgstr "سيتم ترحيلها إلى "
 #, python-format
 msgid "will be carried over to this line in the next period."
 msgstr "سيتم ترحيلها إلى هذا البند في الفترة التالية. "
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.sales_report_main_template
+msgid "without a valid intra-community VAT number."
+msgstr "دون رقم ضريبي صالح لبين المجتمعات. "
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.multicurrency_report_line_template

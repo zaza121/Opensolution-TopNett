@@ -98,6 +98,6 @@ class SwedishTaxReportTest(AccountSalesReportCommon):
         """
 
         self.assertXmlTreeEqual(
-            self.get_xml_tree_from_string(report.l10n_se_export_tax_report_to_xml(options)['file_content']),
+            self.get_xml_tree_from_string(self.env[report.custom_handler_model_name].l10n_se_export_tax_report_to_xml(options)['file_content']),
             self.get_xml_tree_from_string(expected_xml)
         )

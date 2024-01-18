@@ -72,6 +72,8 @@ class AccountMove(models.Model):
 
     def action_open_tax_report(self):
         action = self.env["ir.actions.actions"]._for_xml_id("account_reports.action_account_report_gt")
+        if not self.tax_closing_end_date:
+            raise UserError(_("You can't open a tax report from a move without a VAT closing date."))
         options = self._get_report_options_from_tax_closing_entry()[1]
         # Pass options in context and set ignore_session: read to prevent reading previous options
         action.update({'params': {'options': options, 'ignore_session': 'read'}})
@@ -132,7 +134,7 @@ class AccountMove(models.Model):
     def refresh_tax_entry(self):
         for move in self.filtered(lambda m: m.tax_closing_end_date and m.state == 'draft'):
             report, options = move._get_report_options_from_tax_closing_entry()
-            self.env[report.custom_handler_model_name]._generate_tax_closing_entries(report, options, closing_moves=move)
+            self.env['account.generic.tax.report.handler']._generate_tax_closing_entries(report, options, closing_moves=move)
 
     def _get_report_options_from_tax_closing_entry(self):
         self.ensure_one()

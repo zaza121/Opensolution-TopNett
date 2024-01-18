@@ -47,12 +47,20 @@ topbarMenuRegistry.addChild("clear_history", ["file"], {
     },
 });
 
+topbarMenuRegistry.addChild("download_as_json", ["file"], {
+    name: _lt("Download as JSON"),
+    sequence: 70,
+    isVisible: (env) => env.debug,
+    action: (env) => env.downloadAsJson(),
+    isReadonlyAllowed: true,
+});
+
 topbarMenuRegistry.addChild("data_sources_data", ["data"], (env) => {
     const pivots = env.model.getters.getPivotIds();
     const children = pivots.map((pivotId, index) =>
         createFullMenuItem(`item_pivot_${pivotId}`, {
             name: env.model.getters.getPivotDisplayName(pivotId),
-            sequence: 10 + index,
+            sequence: 1000,
             action: (env) => {
                 env.model.dispatch("SELECT_PIVOT", { pivotId: pivotId });
                 env.openSidePanel("PIVOT_PROPERTIES_PANEL", {});
@@ -64,7 +72,7 @@ topbarMenuRegistry.addChild("data_sources_data", ["data"], (env) => {
     const lists = env.model.getters.getListIds().map((listId, index) => {
         return createFullMenuItem(`item_list_${listId}`, {
             name: env.model.getters.getListDisplayName(listId),
-            sequence: 10 + index + pivots.length,
+            sequence: 1010,
             action: (env) => {
                 env.model.dispatch("SELECT_ODOO_LIST", { listId: listId });
                 env.openSidePanel("LIST_PROPERTIES_PANEL", {});
@@ -76,7 +84,7 @@ topbarMenuRegistry.addChild("data_sources_data", ["data"], (env) => {
     return children.concat(lists).concat([
         createFullMenuItem(`refresh_all_data`, {
             name: _t("Refresh all data"),
-            sequence: 1000,
+            sequence: 1020,
             action: (env) => {
                 env.model.dispatch("REFRESH_ALL_DATA_SOURCES");
             },
@@ -84,20 +92,20 @@ topbarMenuRegistry.addChild("data_sources_data", ["data"], (env) => {
         }),
         createFullMenuItem(`reinsert_pivot`, {
             name: _t("Re-insert pivot"),
-            sequence: 1010,
+            sequence: 1030,
             children: [REINSERT_PIVOT_CHILDREN],
             isVisible: (env) => env.model.getters.getPivotIds().length,
         }),
         createFullMenuItem(`insert_pivot_cell`, {
             name: _t("Insert pivot cell"),
-            sequence: 1020,
+            sequence: 1040,
             children: [INSERT_PIVOT_CELL_CHILDREN],
             isVisible: (env) => env.model.getters.getPivotIds().length,
             separator: true,
         }),
         createFullMenuItem(`reinsert_list`, {
             name: _t("Re-insert list"),
-            sequence: 1021,
+            sequence: 1050,
             children: [REINSERT_LIST_CHILDREN],
             isVisible: (env) => env.model.getters.getListIds().length,
         }),

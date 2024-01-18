@@ -92,6 +92,11 @@ Tour.register('hr_contract_salary_tour', {
             run: 'text Mitchell Admin 2',
         },
         {
+            content: "Applicant\'s Email",
+            trigger: '.o_group [name="email_from"] input',
+            run: 'text mitchell2.stephen@example.com',
+        },
+        {
             content: "Generate Offer",
             trigger: ".o_statusbar_buttons > button:contains('Generate Offer')",
             extra_trigger: ".o_statusbar_buttons",
@@ -100,12 +105,8 @@ Tour.register('hr_contract_salary_tour', {
         {
             content: "Send Offer",
             trigger: "button[name='send_offer']",
+            extra_trigger: ".modal-dialog .btn-primary:contains('Generate')",
             run: 'click',
-        },
-        {
-            content: "Confirm Partner Creation",
-            trigger: ".modal-dialog .btn-secondary:contains('Discard')",
-            run: 'click'
         },
         {
             content: "Send Offer",
@@ -822,6 +823,16 @@ Tour.register('hr_contract_salary_tour_2', {
             content: "Confirm Applicant Creation",
             trigger: ".o_control_panel button.o_form_button_save",
             run: 'click'
+        },
+        {
+            trigger: ".o_statusbar_status button.dropdown-toggle",
+            content: "Move applicant to hired stage",
+            run: 'click'
+        },
+        {
+            content: "Recruitment",
+            trigger: '.dropdown-item.btn.btn-secondary.o_arrow_button',
+            run: 'click',
         },
         {
             content: "Create Employee",

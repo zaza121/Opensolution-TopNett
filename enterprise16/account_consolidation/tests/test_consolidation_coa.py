@@ -62,6 +62,12 @@ class TestAccountConsolidationChart(AccountConsolidationTestCase):
             'name': 'Group AB',
             'sequence': 4,
         }])
+        group_aaa = self.env['consolidation.group'].create({
+            'chart_id': base_chart.id,
+            'parent_id': group_aa.id,
+            'name': 'Group AAA',
+            'sequence': 5,
+        })
         self.env['consolidation.account'].create([{
             'chart_id': base_chart.id,
             'name': 'Account BA',
@@ -69,36 +75,40 @@ class TestAccountConsolidationChart(AccountConsolidationTestCase):
             'group_id': group_b.id,
         }, {
             'chart_id': base_chart.id,
-            'name': 'Account AAA',
+            'name': 'Account AAAA',
             'currency_mode': 'end',
-            'group_id': group_aa.id,
+            'group_id': group_aaa.id,
         }, {
             'chart_id': base_chart.id,
-            'name': 'Account AAB',
+            'name': 'Account AAAB',
             'currency_mode': 'end',
-            'group_id': group_aa.id,
+            'group_id': group_aaa.id,
         }, {
             'chart_id': base_chart.id,
             'name': 'Account ABA',
             'currency_mode': 'end',
             'group_id': group_ab.id,
+        }, {
+            'chart_id': base_chart.id,
+            'name': 'Account X',
+            'currency_mode': 'end',
         }])
         copied_chart = base_chart.copy()
-        copied_group_a, copied_group_b, copied_group_aa, copied_group_ab = copied_chart.group_ids
+        copied_group_a, copied_group_b, copied_group_aa, copied_group_ab, copied_group_aaa = copied_chart.group_ids.sorted(lambda g: g.sequence)
         # Check that all four groups where properly copied and are linked to the chart ids.
-        for base_group, copied_group in zip(base_chart.group_ids, copied_chart.group_ids):
+        for base_group, copied_group in zip(base_chart.group_ids.sorted(lambda g: g.sequence), copied_chart.group_ids.sorted(lambda g: g.sequence)):
             self.assertEqual(copied_group.name, f'{base_group.name} (copy)')
 
         # Also make sure that all children groups have the right parents.
-        for parent_group, copied_group in zip([copied_group_a, copied_group_a], [copied_group_aa, copied_group_ab]):
+        for parent_group, copied_group in zip([copied_group_a, copied_group_a, copied_group_aa], [copied_group_aa, copied_group_ab, copied_group_aaa]):
             self.assertEqual(copied_group.parent_id, parent_group)
 
         # Ensure that all accounts were copied and are linked to the chart
-        for base_account, copied_account in zip(base_chart.account_ids, copied_chart.account_ids):
+        for base_account, copied_account in zip(base_chart.account_ids.sorted(lambda a: a.name), copied_chart.account_ids.sorted(lambda a: a.name)):
             self.assertEqual(copied_account.name, f'{base_account.name} (copy)')
 
         # Make sure that all copied accounts are linked to their groups too
-        expected_groups_for_accounts = [copied_group_b, copied_group_aa, copied_group_aa, copied_group_ab]
+        expected_groups_for_accounts = [self.env['consolidation.group'], copied_group_b, copied_group_aaa, copied_group_aaa, copied_group_ab]
         for copied_group, copied_account in zip(expected_groups_for_accounts, copied_chart.account_ids):
             self.assertEqual(copied_account.group_id, copied_group)
 

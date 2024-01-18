@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:27+0000\n"
-"PO-Revision-Date: 2022-12-15 13:27+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
+"PO-Revision-Date: 2023-05-23 08:35+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -134,12 +134,12 @@ msgid ""
 "<div>\n"
 "                    <p>\n"
 "                    <t t-if=\"ctx.get('employee')\">\n"
-"                        Dear <t t-out=\"ctx['employee'].name or ''\"/>,\n"
+"                        Dear <t t-out=\"ctx['employee'].name or ''\"></t>,\n"
 "                    </t>\n"
 "                    <t t-else=\"\">\n"
 "                        Hello,\n"
 "                    </t>\n"
-"                        <br/><br/>\n"
+"                        <br><br>\n"
 "                    <t t-if=\"ctx.get('assigned_new_shift')\">\n"
 "                        You have been assigned new shifts:\n"
 "                    </t>\n"
@@ -147,7 +147,7 @@ msgid ""
 "                        Please, find your planning for the following period:\n"
 "                    </t>\n"
 "                    </p>\n"
-"                    <br/>\n"
+"                    <br>\n"
 "\n"
 "                    <table style=\"table-layout: fixed; width: 80%; margin: auto;\">\n"
 "                        <tr>\n"
@@ -167,10 +167,10 @@ msgid ""
 "                    <div t-if=\"ctx.get('slot_unassigned_count')\">\n"
 "                        <p>There are new open shifts available. Please, assign yourself if you are available.</p>\n"
 "                    </div>\n"
-"                    <br/>\n"
+"                    <br>\n"
 "\n"
 "                    <t t-if=\"ctx.get('message')\">\n"
-"                        <p t-out=\"ctx['message'] or ''\"/>\n"
+"                        <p t-out=\"ctx['message'] or ''\"></p>\n"
 "                    </t>\n"
 "\n"
 "                    <p t-if=\"hasattr(object, 'allow_self_unassign') and object.allow_self_unassign and hasattr(object, 'self_unassign_days_before') and object.self_unassign_days_before\">\n"
@@ -184,14 +184,14 @@ msgstr ""
 #: model:mail.template,body_html:planning.email_template_slot_single
 msgid ""
 "<div>\n"
-"                    <p>Dear <t t-out=\"ctx.get('employee_name', '')\">Anita Oliver</t>,<br/><br/></p>\n"
+"                    <p>Dear <t t-out=\"ctx.get('employee_name', '')\">Anita Oliver</t>,<br><br></p>\n"
 "                    <t t-if=\"ctx.get('open_shift_available')\">\n"
 "                        <p>A new open shift is available:</p>\n"
 "                    </t>\n"
 "                    <t t-else=\"\">\n"
 "                        <p>You have been assigned the following schedule:</p>\n"
 "                    </t>\n"
-"                    <br/>\n"
+"                    <br>\n"
 "                    <table style=\"width: 80%; margin: auto;\">\n"
 "                        <tr>\n"
 "                            <th style=\"padding: 5px;text-align: left;\">From</th>\n"
@@ -207,7 +207,7 @@ msgid ""
 "                        </tr>\n"
 "                        <tr t-if=\"hasattr(object, 'sale_line_id') and object.sale_line_id\">\n"
 "                            <th style=\"padding: 5px;text-align: left;\">Sale Order Item</th>\n"
-"                            <td style=\"padding: 5px;\" t-out=\"object.sudo().sale_line_id.name or ''\"/>\n"
+"                            <td style=\"padding: 5px;\" t-out=\"object.sudo().sale_line_id.name or ''\"></td>\n"
 "                        </tr>\n"
 "                        <tr t-if=\"hasattr(object, 'project_id') and object.project_id\">\n"
 "                            <th style=\"padding: 5px;text-align: left;\">Project</th>\n"
@@ -238,11 +238,6 @@ msgstr ""
 msgid ""
 "<i class=\"fa fa-check-circle text-success\"/> You were successfully "
 "assigned this open shift."
-msgstr ""
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
-msgid "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
 msgstr ""
 
 #. module: planning
@@ -302,6 +297,11 @@ msgstr ""
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "<i class=\"fa small fa-minus\"></i> Role: Waiter"
+msgstr ""
+
+#. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
+msgid "<i class=\"me-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
 msgstr ""
 
 #. module: planning
@@ -549,6 +549,13 @@ msgstr ""
 #: code:addons/planning/models/planning_recurrency.py:0
 #, python-format
 msgid "An shift must be in the same company as its recurrency."
+msgstr ""
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning_recurrency.py:0
+#, python-format
+msgid "Recurring shifts cannot be planned further than 999 days in the future. If you need to schedule beyond this limit, please set the recurrence to repeat forever instead."
 msgstr ""
 
 #. module: planning
@@ -1950,6 +1957,13 @@ msgstr ""
 #. module: planning
 #: model:ir.model.constraint,message:planning.constraint_planning_slot_template_check_duration_positive
 msgid "The duration cannot be negative."
+msgstr ""
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning_template.py:0
+#, python-format
+msgid "The duration is too long."
 msgstr ""
 
 #. module: planning

@@ -13,8 +13,6 @@ import {
     patchDate,
 } from "@web/../tests/helpers/utils";
 import { makeView } from "@web/../tests/views/helpers";
-import { dialogService } from "@web/core/dialog/dialog_service";
-import { registry } from "@web/core/registry";
 import {
     toggleFilterMenu,
     toggleMenuItem,
@@ -25,8 +23,6 @@ import {
     setupControlPanelServiceRegistry,
 } from "@web/../tests/search/helpers";
 import { browser } from "@web/core/browser/browser";
-
-const serviceRegistry = registry.category("services");
 
 let serverData;
 let target;
@@ -40,7 +36,12 @@ QUnit.module("Views", (hooks) => {
                         id: { string: "ID", type: "integer" },
                         start: { string: "Start", type: "date", sortable: true },
                         stop: { string: "Stop", type: "date", sortable: true },
-                        recurring: { string: "Recurring Price", type: "integer", store: true },
+                        recurring: {
+                            string: "Recurring Price",
+                            type: "integer",
+                            store: true,
+                            group_operator: "sum",
+                        },
                     },
                     records: [
                         { id: 1, start: "2017-07-12", stop: "2017-08-11", recurring: 10 },
@@ -108,7 +109,6 @@ QUnit.module("Views", (hooks) => {
             },
         };
         setupControlPanelServiceRegistry();
-        serviceRegistry.add("dialog", dialogService);
 
         target = getFixture();
     });
@@ -235,9 +235,20 @@ QUnit.module("Views", (hooks) => {
             string: "Abc",
             type: "integer",
             store: true,
+            group_operator: "sum",
         };
-        serverData.models.subscription.fields.add = { string: "add", type: "integer", store: true };
-        serverData.models.subscription.fields.zoo = { string: "Zoo", type: "integer", store: true };
+        serverData.models.subscription.fields.add = {
+            string: "add",
+            type: "integer",
+            store: true,
+            group_operator: "sum",
+        };
+        serverData.models.subscription.fields.zoo = {
+            string: "Zoo",
+            type: "integer",
+            store: true,
+            group_operator: "sum",
+        };
 
         await makeView({
             type: "cohort",

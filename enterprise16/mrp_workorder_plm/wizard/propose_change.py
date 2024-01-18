@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import re
 from markupsafe import Markup
 
-from odoo import _, models
+from odoo import SUPERUSER_ID, models, _
+from odoo.tools import is_html_empty
 
 
 class ProposeChange(models.TransientModel):
@@ -45,18 +47,24 @@ class ProposeChange(models.TransientModel):
 
     def _do_update_step(self):
         eco = self._get_eco()
+        original_title = self.step_id.title
         super()._do_update_step(notify_bom=False)
         # get the step on the new bom related to the one we want to update
         new_step = eco.new_bom_id.operation_ids.quality_point_ids.filtered(lambda p: p._get_comparison_values() == self.step_id.point_id._get_comparison_values())
-        new_step.note = self.note
-        # Write reason in chatter
+        body = self._get_update_step_note(original_title)
         if new_step:
-            tl_text = _("New Instruction suggested by %(user_name)s", user_name=self._workorder_name())
-            body = Markup("<b>%s</b>") % tl_text
-            if self.comment:
-                tl_text = _("Reason:")
-                body += Markup("<br/><b>%s</b> %s") % (tl_text, self.comment)
+            new_step.note = self.step_id.note
+            # Write reason in chatter for record keeping in case of multiple suggestions before approval
             new_step.message_post(body=body)
+        else:
+            self.env['mail.activity'].sudo().create({
+                'res_model_id': self.env.ref('mrp_plm.model_mrp_eco').id,
+                'res_id': eco.id,
+                'user_id': self.workorder_id.product_id.responsible_id.id or SUPERUSER_ID,
+                'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
+                'summary': _('BoM feedback for not found step: %s (%s)', self.step_id.point_id.title, self.workorder_id.production_id.name),
+                'note': body,
+            })
 
     def _do_remove_step(self):
         eco = self._get_eco()
@@ -67,17 +75,34 @@ class ProposeChange(models.TransientModel):
         # Leave a note in the old step's chatter telling why it should be removed.
         old_step = self.step_id.point_id
         if old_step:
-            tl_text = _("%(user_name)s suggests to delete this instruction", user_name=self._workorder_name())
-            body = Markup("<b>%s</b>") % tl_text
-            if self.comment:
-                tl_text = _("Reason:")
-                body += Markup("<br/><b>%s</b> %s") % (tl_text, self.comment)
-            old_step.message_post(body=body)
+            old_step.message_post(body=self._get_remove_step_note())
 
     def _do_set_picture(self):
         eco = self._get_eco()
         super()._do_set_picture(notify_bom=False)
-        # get the step on the new bom related to the one we want to delete
+        # get the step on the new bom related to the one we want to update
         new_step = eco.new_bom_id.operation_ids.quality_point_ids.filtered(lambda p: p._get_comparison_values() == self.step_id.point_id._get_comparison_values())
-        new_step.note = Markup("<img class='img-fluid' src=%s/>") % self.image_url(self, 'picture')
-        new_step.source_document = 'step'
+        if new_step:
+            # remove existing images, but keep existing text + append image after text
+            existing_text = False
+            image = Markup('<img style="max-width: 75%%" class="img-fluid" src="%s"/>') % self.image_url(self, 'picture')
+            if not is_html_empty(new_step.note):
+                existing_text = Markup(re.sub(self.IMG_REGEX, '', new_step.note))
+            if existing_text and not is_html_empty(existing_text):
+                new_step.note = existing_text + image
+            else:
+                new_step.note = image
+            new_step.source_document = 'step'
+            new_step.worksheet_document = False
+            new_step.worksheet_url = False
+            # Write reason in chatter for record keeping in case of multiple suggestions before approval
+            new_step.message_post(body=self._get_set_picture_note())
+        else:
+            self.env['mail.activity'].sudo().create({
+                'res_model_id': self.env.ref('mrp_plm.model_mrp_eco').id,
+                'res_id': eco.id,
+                'user_id': self.workorder_id.product_id.responsible_id.id or SUPERUSER_ID,
+                'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
+                'summary': _('BoM feedback for not found step: %s (%s)', self.step_id.point_id.title, self.workorder_id.production_id.name),
+                'note': self._get_set_picture_note(),
+            })

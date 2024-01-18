@@ -69,9 +69,10 @@ class AccountMove(models.Model):
     def _compute_l10n_ar_fce_transmission_type(self):
         """ Automatically set the default value on the l10n_ar_fce_transmission_type field if the invoice is a mipyme
         one with the default value set in the company """
-        mipyme_fce_docs = self.filtered(lambda x: x._is_mipyme_fce() or x._is_mipyme_fce_refund())
-        for rec in mipyme_fce_docs:
-            rec.l10n_ar_fce_transmission_type = rec.company_id.l10n_ar_fce_transmission_type
+        mipyme_fce_docs = self.filtered(lambda x: x.country_code == 'AR' and x._is_mipyme_fce())
+        for rec in mipyme_fce_docs.filtered(lambda x: not x.l10n_ar_fce_transmission_type):
+            if rec.company_id.l10n_ar_fce_transmission_type:
+                rec.l10n_ar_fce_transmission_type = rec.company_id.l10n_ar_fce_transmission_type
         remaining = self - mipyme_fce_docs
         remaining.l10n_ar_fce_transmission_type = False
 
@@ -444,7 +445,7 @@ class AccountMove(models.Model):
                         'Alic': 0,
                         'Desc': tribute.tax_line_id.tax_group_id.name,
                         'BaseImp': float_repr(base_imp, precision_digits=2),
-                        'Importe': float_repr(tribute.price_subtotal, precision_digits=2)})
+                        'Importe': float_repr(abs(tribute.amount_currency), precision_digits=2)})
         return res if res else None
 
     def _get_related_invoice_data(self):

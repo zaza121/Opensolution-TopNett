@@ -86,7 +86,7 @@ tour.register('sale_subscription_tour', {
 },
 {
     trigger: 'div[name="subscription_pill"]',
-    content:  _t("Your contrat is recurrent"),
+    content:  _t("Your contract is recurrent"),
     position: "bottom",
 },
 

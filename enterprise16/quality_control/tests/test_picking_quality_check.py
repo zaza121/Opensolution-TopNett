@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from .test_common import TestQualityCommon
+from odoo.tests import Form
 
 class TestQualityCheck(TestQualityCommon):
 
@@ -676,3 +677,88 @@ class TestQualityCheck(TestQualityCommon):
 
         ml.lot_name = '1458'
         self.assertEqual(ml.check_ids.lot_name, '1458')
+
+    def test_update_sml_done_qty(self):
+        """
+        When changing the done quantity of a SML, the related QC should be
+        updated too
+        """
+        self.env['quality.point'].create({
+            'product_ids': [(4, self.product.id)],
+            'picking_type_ids': [(4, self.picking_type_id)],
+            'measure_on': 'move_line',
+        })
+
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': self.picking_type_id,
+            'location_id': self.location_id,
+            'location_dest_id': self.location_dest_id,
+        })
+        move = self.env['stock.move'].create({
+            'name': self.product.name,
+            'product_id': self.product.id,
+            'product_uom_qty': 2,
+            'product_uom': self.product.uom_id.id,
+            'picking_id': picking.id,
+            'location_id': self.location_id,
+            'location_dest_id': self.location_dest_id,
+        })
+        picking.action_confirm()
+
+        move.quantity_done = 1.0
+        self.assertEqual(picking.check_ids.qty_line, 1)
+
+        move.quantity_done = 0.0
+        self.assertEqual(picking.check_ids.qty_line, 0)
+
+        move.quantity_done = 2.0
+        self.assertEqual(picking.check_ids.qty_line, 2)
+
+    def test_quality_check_with_backorder(self):
+        """Test that a user without quality manager access rights can create a backorder"""
+        # Create a user wtih stock and quality user rights
+        user = self.env['res.users'].create({
+            'name': 'Inventory Manager',
+            'login': 'test',
+            'email': 'test@test.com',
+            'groups_id': [(6, 0, [self.env.ref('stock.group_stock_user').id, self.env.ref('quality.group_quality_user').id])]
+        })
+
+        self.env['quality.point'].create({
+            'product_ids': [(4, self.product.id)],
+            'picking_type_ids': [(4, self.picking_type_id)],
+            'measure_on': 'operation',
+        })
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': self.picking_type_id,
+            'location_id': self.location_id,
+            'location_dest_id': self.location_dest_id,
+        })
+        move = self.env['stock.move'].create({
+            'name': self.product.name,
+            'product_id': self.product.id,
+            'product_uom_qty': 2,
+            'product_uom': self.product.uom_id.id,
+            'picking_id': picking.id,
+            'location_id': self.location_id,
+            'location_dest_id': self.location_dest_id,
+        })
+        picking.action_confirm()
+        move.quantity_done = 1.0
+        # 'Pass' Quality Checks of shipment.
+        picking.check_ids.do_pass()
+        # Validate the picking and create a backorder
+        backorder_wizard_dict = picking.button_validate()
+        backorder_wizard = Form(self.env[backorder_wizard_dict['res_model']].with_context(backorder_wizard_dict['context'])).save()
+        backorder_wizard.with_user(user).process()
+
+        # Check that the backorder is created and in assigned state
+        self.assertEqual(picking.state, 'done')
+        backorder = picking.backorder_ids
+        self.assertEqual(backorder.state, 'assigned')
+        # 'Pass' Quality Checks of backorder.
+        backorder.check_ids.do_pass()
+        # Validate the backorder
+        backorder.move_ids.quantity_done = 1.0
+        backorder.with_user(user).button_validate()
+        self.assertEqual(backorder.state, 'done')

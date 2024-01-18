@@ -87,7 +87,7 @@
                         <span class="o_account_report_summary_content" t-att-style="'' if report_summary else 'display: none;'">
                             <t t-esc="report_summary" t-options="{'widget': 'text'}"/>
                         </span>
-                        <span class="o_account_report_summary_placeholder" t-att-style="'display: none;' if report_summary or context.get('print_mode') else ''">
+                        <span t-if="not report_summary and not context.get('print_mode')" class="o_account_report_summary_placeholder">
                             Add a note
                         </span>
                     </div>
@@ -106,6 +106,8 @@
                     </t>
                 </table>
             </xpath>
+
+            <xpath expr="//div[hasclass('col-8')]" position="replace"/>
             <xpath expr="//t[@t-call='account_reports.filter_info_template']" position="replace"/>
             <xpath expr="//div[hasclass('o_account_reports_header')]" position="before">
                 <t t-call="account_followup.followup_filter_info_template"/>

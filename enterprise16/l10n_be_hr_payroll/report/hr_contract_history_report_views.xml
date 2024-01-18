@@ -25,7 +25,7 @@
                 </div>
             </xpath>
             <field name="date_hired" position="after">
-                <field name="fiscal_voluntarism" attrs="{'invisible': [('wage_type', '=', 'hourly')]}"/>
+                <field name="fiscal_voluntarism" attrs="{'invisible': ['|', ('country_code', '!=', 'BE'),('wage_type', '=', 'hourly')]}"/>
                 <label for="fiscal_voluntary_rate"
                        attrs="{'invisible': ['|', ('wage_type', '=', 'hourly'), ('fiscal_voluntarism', '=', False)]}"/>
                 <div class="o_row" attrs="{'invisible': ['|', ('wage_type', '=', 'hourly'), ('fiscal_voluntarism', '=', False)]}">

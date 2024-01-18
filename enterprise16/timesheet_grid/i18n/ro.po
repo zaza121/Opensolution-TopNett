@@ -3,20 +3,20 @@
 # 	* timesheet_grid
 # 
 # Translators:
-# Fekete Mihai <mihai.fekete@forestandbiomass.ro>, 2022
-# Hongu Cosmin <cosmin513@gmail.com>, 2022
 # Dorin Hongu <dhongu@gmail.com>, 2022
-# Martin Trigaux, 2022
 # Foldi Robert <foldirobert@nexterp.ro>, 2022
+# Martin Trigaux, 2022
+# Cozmin Candea <office@terrabit.ro>, 2023
+# Hongu Cosmin <cosmin513@gmail.com>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:27+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:49+0000\n"
-"Last-Translator: Foldi Robert <foldirobert@nexterp.ro>, 2022\n"
-"Language-Team: Romanian (https://www.transifex.com/odoo/teams/41243/ro/)\n"
+"Last-Translator: Hongu Cosmin <cosmin513@gmail.com>, 2023\n"
+"Language-Team: Romanian (https://app.transifex.com/odoo/teams/41243/ro/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -28,22 +28,12 @@ msgstr ""
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "%s Spent"
-msgstr ""
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_kanban
-msgid "<i class=\"fa fa-pause text-warning\" title=\"Timer is Paused\"/>"
-msgstr "<i class=\"fa fa-pause text-warning\" title=\"Timer is Paused\"/>"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_kanban
-msgid "<i class=\"fa fa-play text-success\" title=\"Timer is Running\"/>"
-msgstr "<i class=\"fa fa-play text-success\" title=\"Timer is Running\"/>"
+msgstr "%s Consumat"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
 msgid "<span class=\"col-auto ms-2\">minutes</span>"
-msgstr ""
+msgstr "<span class=\"col-auto ms-2\">minute</span>"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
@@ -57,7 +47,7 @@ msgstr ""
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
 msgid "<strong>Time Rounding</strong>"
-msgstr ""
+msgstr "<strong>Rotunjire timp</strong>"
 
 #. module: timesheet_grid
 #: model:mail.template,body_html:timesheet_grid.mail_template_timesheet_reminder_user
@@ -70,13 +60,13 @@ msgid ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                <tr><td valign=\"middle\">\n"
-"                    <span style=\"font-size: 10px;\">Your Timesheets</span><br/>\n"
+"                    <span style=\"font-size: 10px;\">Your Timesheets</span><br>\n"
 "                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Abigail Peterson</span>\n"
 "                </td><td valign=\"middle\" align=\"right\">\n"
-"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.company_id.name\"/>\n"
+"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.company_id.name\">\n"
 "                </td></tr>\n"
 "                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
-"                  <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                  <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -86,23 +76,23 @@ msgid ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
-"                    <t t-set=\"timesheet_hours\" t-value=\"ctx.get('timesheet_hours', 0)\"/>\n"
-"                    <t t-set=\"working_hours\" t-value=\"ctx.get('working_hours', 0)\"/>\n"
+"                    <t t-set=\"timesheet_hours\" t-value=\"ctx.get('timesheet_hours', 0)\"></t>\n"
+"                    <t t-set=\"working_hours\" t-value=\"ctx.get('working_hours', 0)\"></t>\n"
 "                    <div>\n"
-"                        Hello <t t-out=\"object.name or ''\">Abigail Peterson</t>,<br/><br/>\n"
-"                        This is a friendly reminder to log your hours for the following period: <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> <i class=\"fa fa-long-arrow-right\"/> <t t-out=\"ctx.get('date_stop') or ''\">05/06/2021</t>.\n"
-"                        For the time being, you <t t-if=\"timesheet_hours != 0\">only</t> logged <t t-out=\"'%d' %int(timesheet_hours)\">2</t><t t-if=\"timesheet_hours % 1 != 0\" t-out=\"':%02d' % (round(timesheet_hours % 1 * 60))\">:30</t> hours on the <t t-out=\"'%d' %int(working_hours)\">8</t><t t-if=\"working_hours % 1 != 0\" t-out=\"':%02d' % (round(working_hours % 1 * 60))\">:30</t> requested.<br/>\n"
+"                        Hello <t t-out=\"object.name or ''\">Abigail Peterson</t>,<br><br>\n"
+"                        This is a friendly reminder to log your hours for the following period: <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> <i class=\"fa fa-long-arrow-right\"></i> <t t-out=\"ctx.get('date_stop') or ''\">05/06/2021</t>.\n"
+"                        For the time being, you <t t-if=\"timesheet_hours != 0\">only</t> logged <t t-out=\"'%d' %int(timesheet_hours)\">2</t><t t-if=\"timesheet_hours % 1 != 0\" t-out=\"':%02d' % (round(timesheet_hours % 1 * 60))\">:30</t> hours on the <t t-out=\"'%d' %int(working_hours)\">8</t><t t-if=\"working_hours % 1 != 0\" t-out=\"':%02d' % (round(working_hours % 1 * 60))\">:30</t> requested.<br>\n"
 "                        <div t-if=\"ctx.get('action_url')\" style=\"margin: 16px 0px 16px 0px;\">\n"
 "                            <a t-att-href=\"ctx.get('action_url')\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\">Fill in your timesheet</a>\n"
 "                        </div>\n"
-"                        <br/>Thank you,<br/>\n"
+"                        <br>Thank you,<br>\n"
 "                        <t t-if=\"user.signature\">\n"
-"                            <t t-out=\"user.signature or ''\">--<br/>Mitchell Admin</t>\n"
+"                            <t t-out=\"user.signature or ''\">--<br>Mitchell Admin</t>\n"
 "                        </t>\n"
 "                    </div>\n"
 "                </td></tr>\n"
 "                <tr><td style=\"text-align:center;\">\n"
-"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -152,13 +142,13 @@ msgid ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                <tr><td valign=\"middle\">\n"
-"                    <span style=\"font-size: 10px;\">Your Timesheets</span><br/>\n"
+"                    <span style=\"font-size: 10px;\">Your Timesheets</span><br>\n"
 "                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Abigail Peterson</span>\n"
 "                </td><td valign=\"middle\" align=\"right\">\n"
-"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.company_id.name\"/>\n"
+"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.company_id.name\">\n"
 "                </td></tr>\n"
 "                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
-"                <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -169,19 +159,19 @@ msgid ""
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                    <div>\n"
-"                        Hello <t t-out=\"object.name or ''\">Abigail Peterson</t>,<br/><br/>\n"
-"                        This is a friendly reminder to approve your team's timesheets for the following period: <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> - <t t-out=\"ctx.get('date_stop') or ''\">06/05/2021</t>.<br/>\n"
+"                        Hello <t t-out=\"object.name or ''\">Abigail Peterson</t>,<br><br>\n"
+"                        This is a friendly reminder to approve your team's timesheets for the following period: <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> - <t t-out=\"ctx.get('date_stop') or ''\">06/05/2021</t>.<br>\n"
 "                        <div t-if=\"ctx.get('action_url')\" style=\"margin: 16px 0px 16px 0px;\">\n"
 "                            <a t-att-href=\"ctx.get('action_url')\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\">Validate the Timesheets</a>\n"
 "                        </div>\n"
-"                        <br/>Thank you,<br/>\n"
+"                        <br>Thank you,<br>\n"
 "                        <t t-if=\"user.signature\">\n"
-"                            <t t-out=\"user.signature or ''\">--<br/>Mitchell Admin</t>\n"
+"                            <t t-out=\"user.signature or ''\">--<br>Mitchell Admin</t>\n"
 "                        </t>\n"
 "                    </div>\n"
 "                </td></tr>\n"
 "                <tr><td style=\"text-align:center;\">\n"
-"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -231,6 +221,9 @@ msgid ""
 "After a certain date, users will not be able to create, modify, or delete "
 "their timesheets. However, managers will still be able to do so."
 msgstr ""
+"După o anumită dată, utilizatorii nu vor putea crea, modifica sau șterge "
+"fișele lor de pontaj. Cu toate acestea, managerii vor putea face acest "
+"lucru."
 
 #. module: timesheet_grid
 #: model:ir.ui.menu,name:timesheet_grid.menu_timesheet_grid_validate_all_timesheets
@@ -248,6 +241,8 @@ msgstr "Valoare"
 #, python-format
 msgid "An employee must be linked to your user to record time."
 msgstr ""
+"Un angajat trebuie să fie legat de utilizatorul dvs. pentru a înregistra "
+"timpul."
 
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_account_analytic_line
@@ -260,11 +255,6 @@ msgstr "Cont analitic"
 #, python-format
 msgid "Apple App Store"
 msgstr "Apple App Store"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
-msgid "Block encoding of timesheets after a certain date"
-msgstr ""
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__can_edit
@@ -282,6 +272,8 @@ msgid ""
 "Check that your employees correctly filled in their timesheets and that "
 "their time is billable."
 msgstr ""
+"Verificați dacă angajații dvs. au completat corect fișele lor de pontaj și "
+"dacă timpul lor este facturabil."
 
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_res_company
@@ -299,20 +291,22 @@ msgid ""
 "Configure reminders in timesheet settings to remind managers to validate "
 "timesheets"
 msgstr ""
+"Configurați notificările în setările de pontaj pentru a notifica managerii "
+"de validarea pontajelor"
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/models/task.py:0
 #, python-format
 msgid "Confirm Time Spent"
-msgstr "Confirmați timpul petrecut"
+msgstr "Confirmați timpul consumat"
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/js/tours/timesheet_grid.js:0
 #, python-format
 msgid "Congratulations, you are now a master of Timesheets."
-msgstr ""
+msgstr "Felicitări, acum sunteți un maestru al fișelor de pontaj."
 
 #. module: timesheet_grid
 #: model_terms:ir.actions.act_window,help:timesheet_grid.action_timesheet_previous_month
@@ -327,7 +321,7 @@ msgstr ""
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_project_task_create_timesheet
 msgid "Create Timesheet from task"
-msgstr "Creare Fișe de Pontaj din sarcină"
+msgstr "Creare Fișă de pontaj din sarcină"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__create_uid
@@ -357,17 +351,17 @@ msgstr "Zi"
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_gantt_timesheet
 msgid "Days Spent —"
-msgstr ""
+msgstr "Zile consumate —"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__reminder_manager_delay
 msgid "Days to Remind Manager"
-msgstr "Zile pentru a reaminti managerul"
+msgstr "Zile pentru a reaminti managerului"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__reminder_user_delay
 msgid "Days to Remind User"
-msgstr "Zile pentru a reaminti utilizatorul"
+msgstr "Zile pentru a reaminti utilizatorului"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -375,13 +369,14 @@ msgstr "Zile pentru a reaminti utilizatorul"
 #: code:addons/timesheet_grid/static/src/js/timesheet_uom_timer.js:0
 #, python-format
 msgid "Decrease Time"
-msgstr ""
+msgstr "Scădeți timpul"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,help:timesheet_grid.field_account_analytic_line__employee_id
 msgid ""
 "Define an 'hourly cost' on the employee to track the cost of their time."
 msgstr ""
+"Definiți un 'cost orar' pentru angajat pentru a urmări costul timpului lui."
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
@@ -427,6 +422,8 @@ msgid ""
 "Difference between the number of %s allocated to the project and the number "
 "of %s recorded."
 msgstr ""
+"Diferența dintre numărul de %s alocate proiectului și numărul de %s "
+"înregistrate."
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -436,6 +433,8 @@ msgid ""
 "Difference between the number of %s allocated to the task and the number of "
 "%s recorded."
 msgstr ""
+"Diferența dintre numărul de %s alocate sarcinii și numărul de %s "
+"înregistrate."
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -445,6 +444,8 @@ msgid ""
 "Difference between the number of days recorded and the number of days the "
 "employee was supposed to work according to his contract."
 msgstr ""
+"Diferența dintre numărul de zile înregistrate și numărul de zile în care "
+"angajatul ar fi trebuit să lucreze în conformitate cu contractul său."
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -454,13 +455,15 @@ msgid ""
 "Difference between the number of hours recorded and the number of hours the "
 "employee was supposed to work according to his contract."
 msgstr ""
+"Diferența dintre numărul de ore înregistrate și numărul de ore în care "
+"angajatul ar fi trebuit să lucreze în conformitate cu contractul său."
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/js/widgets/timesheets_m2o_widget.js:0
 #, python-format
 msgid "Difference between the time allocated and the time recorded."
-msgstr ""
+msgstr "Diferența dintre timpul alocat și timpul înregistrat."
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
@@ -494,12 +497,12 @@ msgstr "Afișați reluarea temporizatorului"
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__display_timer_start_primary
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task__display_timer_start_primary
 msgid "Display Timer Start Primary"
-msgstr ""
+msgstr "Afișați temporizatorul de pornire primar"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task__display_timer_start_secondary
 msgid "Display Timer Start Secondary"
-msgstr ""
+msgstr "Afișați temporizatorul de pornire secundar"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__display_timer_stop
@@ -510,7 +513,7 @@ msgstr "Display Timer Stop"
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task__display_timesheet_timer
 msgid "Display Timesheet Time"
-msgstr "Afișați ora foii de timp"
+msgstr "Afișați ora fișei de pontaj"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -519,6 +522,8 @@ msgstr "Afișați ora foii de timp"
 msgid ""
 "Download our web/mobile apps to track your time from anywhere, even offline."
 msgstr ""
+"Descărcați aplicațiile web / mobil pentru a urmări timpul dvs. de oriunde, "
+"chiar și offline."
 
 #. module: timesheet_grid
 #: model:ir.model.fields.selection,name:timesheet_grid.selection__account_analytic_line__validated_status__draft
@@ -553,7 +558,7 @@ msgstr "Zilele de reamintire a angajaților"
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__encoding_uom_id
 msgid "Encoding Uom"
-msgstr "Codificare Uom"
+msgstr "Codificare unități de măsură"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -579,7 +584,7 @@ msgstr "Magazin Google Chrome"
 #: code:addons/timesheet_grid/static/src/xml/timesheet_grid.xml:0
 #, python-format
 msgid "Google Play Store"
-msgstr "Google Play Store"
+msgstr "Magazin Google Play"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -591,12 +596,12 @@ msgstr "Gruparea după dată nu este acceptată"
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
 msgid "Hours Spent"
-msgstr "Ore petrecute"
+msgstr "Ore consumate"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_gantt_timesheet
 msgid "Hours Spent —"
-msgstr ""
+msgstr "Ore consumate -"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__id
@@ -610,7 +615,14 @@ msgstr "ID"
 #: code:addons/timesheet_grid/static/src/js/timesheet_uom_timer.js:0
 #, python-format
 msgid "Increase Time"
-msgstr ""
+msgstr "Creșteți timpul"
+
+#. module: timesheet_grid
+#. odoo-javascript
+#: code:addons/timesheet_grid/static/src/js/timesheet_grid/timer_header_component.js:0
+#, python-format
+msgid "Invalid fields:"
+msgstr "Câmpuri nevalide:"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__is_timer_running
@@ -623,7 +635,7 @@ msgstr "Timerul rulează"
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard____last_update
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet____last_update
 msgid "Last Modified on"
-msgstr "Ultima modificare la"
+msgstr "Ultima modificare pe"
 
 #. module: timesheet_grid
 #: model:ir.ui.menu,name:timesheet_grid.menu_timesheet_grid_validate_previous_month
@@ -645,7 +657,7 @@ msgstr "Ultima actualizare pe"
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee__last_validated_timesheet_date
 msgid "Last Validated Timesheet Date"
-msgstr ""
+msgstr "Ultima dată de validare a fișei de pontaj"
 
 #. module: timesheet_grid
 #: model:ir.ui.menu,name:timesheet_grid.menu_timesheet_grid_validate_previous_week
@@ -662,6 +674,10 @@ msgid ""
 "can also directly add 15 minutes to this project by hitting the <b>shift + "
 "[A] keys</b>.</i>"
 msgstr ""
+"Lansați <b>cronometrul</b> pentru acest proiect apăsând tasta <b>[a]</b>. "
+"Comutați ușor de la un proiect la altul folosind aceste taste. <i>Sfat: de "
+"asemenea, puteți adăuga direct 15 minute la acest proiect apăsând tastele "
+"<b>shift + [A]</b>.</i>"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -673,8 +689,8 @@ msgstr "Lansați <b>temporizatorul</b> to start a new activity."
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_company__prevent_old_timesheets_encoding
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__prevent_old_timesheets_encoding
-msgid "Lock Dates"
-msgstr "Date Siguranță"
+msgid "Lock Timesheets"
+msgstr ""
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_company__timesheet_mail_manager_allow
@@ -701,7 +717,7 @@ msgstr "Îmbină"
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_merge_wizard_view_form
 msgid "Merge Timesheet"
-msgstr ""
+msgstr "Îmbină fișa de pontaj"
 
 #. module: timesheet_grid
 #. odoo-python
@@ -710,12 +726,12 @@ msgstr ""
 #: model:ir.model,name:timesheet_grid.model_hr_timesheet_merge_wizard
 #, python-format
 msgid "Merge Timesheets"
-msgstr ""
+msgstr "Îmbinare fișe de pontaj"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__timesheet_min_duration
 msgid "Minimal Duration"
-msgstr ""
+msgstr "Durata minimă"
 
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_ir_module_module
@@ -734,7 +750,7 @@ msgstr "Luna"
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_report_search_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_search
 msgid "My Department"
-msgstr ""
+msgstr "Departamentul meu"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_report_search_grid
@@ -780,7 +796,7 @@ msgstr "Nu există activități de validat."
 #. module: timesheet_grid
 #: model_terms:ir.actions.act_window,help:timesheet_grid.timesheet_grid_to_validate_action
 msgid "No timesheets to validate"
-msgstr ""
+msgstr "Nu există fișe de pontaj de validat"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,help:timesheet_grid.field_res_config_settings__reminder_manager_delay
@@ -789,6 +805,9 @@ msgid ""
 "email reminder will be sent to timesheet managers that still have timesheets"
 " to validate."
 msgstr ""
+"Numărul de zile după sfârșitul săptămânii/lunii după care un memento automat"
+" va fi trimis către managerii de fișe de pontaj care încă au fișe de pontaj "
+"de validat."
 
 #. module: timesheet_grid
 #: model:ir.model.fields,help:timesheet_grid.field_res_config_settings__reminder_user_delay
@@ -797,6 +816,9 @@ msgid ""
 "email reminder will be sent to timesheet users that still have timesheets to"
 " encode (according to their working hours)."
 msgstr ""
+"Numărul de zile după sfârșitul săptămânii/lunii după care un memento automat"
+" va fi trimis către utilizatorii de fișe de pontaj care încă au fișe de "
+"pontaj de codificat (în funcție de orele de lucru)."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -806,7 +828,7 @@ msgid ""
 "Only a Timesheets Approver or Manager is allowed to modify a validated "
 "entry."
 msgstr ""
-"Doar un aprobator sau un manager de foi de timp are permisiunea de a "
+"Doar un aprobator sau un manager de fișe de pontaj are permisiunea de a "
 "modifica o intrare validată."
 
 #. module: timesheet_grid
@@ -817,7 +839,7 @@ msgstr "Pauză"
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
 msgid "Pause timer"
-msgstr ""
+msgstr "Pauză cronometru"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -834,7 +856,15 @@ msgid "Press Esc to discard"
 msgstr "Apăsați Esc pentru a renunța"
 
 #. module: timesheet_grid
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
+msgid ""
+"Prevent employees from creating, modifying, or deleting timesheets prior to "
+"their most recent validated timesheet"
+msgstr ""
+
+#. module: timesheet_grid
 #. odoo-javascript
+#: code:addons/timesheet_grid/static/src/js/timesheet_grid/timer_m2o.js:0
 #: code:addons/timesheet_grid/static/src/js/timesheet_grid/timer_m2o.js:0
 #: model:ir.model,name:timesheet_grid.model_project_project
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__project_id
@@ -861,34 +891,34 @@ msgstr "Memento pentru a vă înregistra fișele de timp"
 #. module: timesheet_grid
 #: model:mail.template,subject:timesheet_grid.mail_template_timesheet_reminder_manager
 msgid "Reminder to validate your team's timesheets"
-msgstr ""
+msgstr "Memento pentru a valida fișele de timp ale echipei"
 
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.invalidate_timesheet_action
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_form_view
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_form
 msgid "Reset to draft"
-msgstr ""
+msgstr "Resetare la ciornă"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
 msgid "Resume"
-msgstr "Reluați"
+msgstr "Reluare"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
 msgid "Resume timer"
-msgstr ""
+msgstr "Reluare cronometrare"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__timesheet_rounding
 msgid "Round up"
-msgstr ""
+msgstr "Rotunjire în sus"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
 msgid "Rounding applied when tracking your time using the timer"
-msgstr ""
+msgstr "Rotunjire aplicată la urmărirea timpului folosind cronometrul"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
@@ -935,12 +965,14 @@ msgid ""
 "Select the user responsible for approving \"Timesheet\" of this employee.\n"
 "If empty, the approval is done by a Timesheets > Administrator or a Timesheets > User: all timesheets (as determined in the users settings)."
 msgstr ""
+"Selectați utilizatorul responsabil pentru aprobarea \"Fișelor de pontaj\" ale acestui angajat.\n"
+"Dacă este gol, aprobarea este făcută de un Timesheets > Administrator sau un Timesheets > User: toate fișele de pontaj (conform setărilor utilizatorului)."
 
 #. module: timesheet_grid
 #: model:ir.model.fields,help:timesheet_grid.field_account_analytic_line__is_timesheet
 msgid "Set if this analytic line represents a line of timesheet."
 msgstr ""
-"Setați dacă această linie analitică reprezintă o linie de foaie de timp."
+"Setați dacă această linie analitică reprezintă o linie de fișă de pontaj."
 
 #. module: timesheet_grid
 #: model:mail.template,description:timesheet_grid.mail_template_timesheet_reminder_user
@@ -948,6 +980,8 @@ msgid ""
 "Set reminders in settings to notify employees who didn't record their "
 "timesheet"
 msgstr ""
+"Setați memento în setări pentru a notifica angajații care nu au înregistrat "
+"fișele de pontaj"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -967,7 +1001,8 @@ msgstr ""
 #, python-format
 msgid "Sorry, you cannot use a timer for a validated timesheet"
 msgstr ""
-"Ne pare rău, nu puteți utiliza un cronometru pentru o foaie de timp validată"
+"Ne pare rău, nu puteți utiliza un cronometru pentru o fișă de pontaj "
+"validată"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -982,7 +1017,7 @@ msgstr "Start"
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
 msgid "Start timer"
-msgstr ""
+msgstr "Porniți cronometrul"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -1003,20 +1038,23 @@ msgid ""
 "Stop the <b>timer</b> when you are done. <i>Tip: hit <b>[Enter]</b> in the "
 "description to automatically log your activity.</i>"
 msgstr ""
+"Oprește <b>cronometrul</b> când terminați. <i>Sfat: apăsați <b>[Enter]</b> "
+"în descriere pentru a înregistra automat activitatea.</i>"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
 msgid "Stop timer"
-msgstr ""
+msgstr "Oprește cronometrul"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_report_search_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_search
 msgid "Suspicious Durations"
-msgstr ""
+msgstr "Durate suspecte"
 
 #. module: timesheet_grid
 #. odoo-javascript
+#: code:addons/timesheet_grid/static/src/js/timesheet_grid/timer_m2o.js:0
 #: code:addons/timesheet_grid/static/src/js/timesheet_grid/timer_m2o.js:0
 #: model:ir.model,name:timesheet_grid.model_project_task
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__task_id
@@ -1036,7 +1074,7 @@ msgid ""
 "Technical field used to display the timer if the encoding unit is 'Hours'."
 msgstr ""
 "Câmp tehnic utilizat pentru afișarea temporizatorului dacă unitatea de "
-"codificare este 'Hours'."
+"codificare este 'Ore'."
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
@@ -1047,13 +1085,18 @@ msgid ""
 "00:30 (assuming you have a round up of 15 min). We recommend having the same"
 " value for the minimal duration and for the round up."
 msgstr ""
+"Durata fișelor de pontaj codificate prin intermediul cronometrului va fi "
+"rotunjită automat la acest număr. De exemplu, dacă opriți cronometrul la "
+"00:16:56, durata intrării în fișa de pontaj va fi rotunjită automat la 00:30"
+" (în cazul în care aveți o rotunjire de 15 min). Recomandăm să aveți aceeași"
+" valoare pentru durata minimă și pentru rotunjire."
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/js/timesheet_grid/timesheet_grid_controller_mixin.js:0
 #, python-format
 msgid "The timesheet entry has successfully been created."
-msgstr ""
+msgstr "Intrarea în fișa de pontaj a fost creată cu succes."
 
 #. module: timesheet_grid
 #: model:ir.model.constraint,message:timesheet_grid.constraint_project_task_create_timesheet_time_positive
@@ -1065,35 +1108,35 @@ msgstr "Timpul fișei de pontaj trebuie să fie pozitiv"
 #: code:addons/timesheet_grid/wizard/timesheet_merge_wizard.py:0
 #, python-format
 msgid "The timesheets have successfully been merged."
-msgstr ""
+msgstr "Fișele de pontaj au fost unite cu succes."
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "The timesheets have successfully been reset to draft."
-msgstr ""
+msgstr "Fișele de pontaj au fost resetate cu succes la starea de ciornă."
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "The timesheets have successfully been validated."
-msgstr ""
+msgstr "Fișele de pontaj au fost validate cu succes."
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/wizard/timesheet_merge_wizard.py:0
 #, python-format
 msgid "The timesheets must have the same encoding unit"
-msgstr ""
+msgstr "Fișele de pontaj trebuie să aibă aceeași unitate de codificare"
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "There are no timesheets to merge."
-msgstr ""
+msgstr "Nu există fișe de pontaj de unit."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1103,6 +1146,8 @@ msgid ""
 "There are no timesheets to reset to draft or they have already been "
 "invoiced."
 msgstr ""
+"Nu există fișe de pontaj de resetat la starea de ciornă sau au fost deja "
+"facturate."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1111,6 +1156,8 @@ msgstr ""
 msgid ""
 "This project isn't expected to have task during this period. Planned hours :"
 msgstr ""
+"Acest proiect nu este așteptat să aibă sarcini în acest interval de timp. "
+"Ore planificate:"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__time_spent
@@ -1120,26 +1167,36 @@ msgstr "Data"
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_merge_wizard_view_form
 msgid "Time Spent"
-msgstr "Timp petrecut"
+msgstr "Timp consumat"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__timer_pause
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task__timer_pause
 msgid "Timer Last Pause"
-msgstr "Timer Ultima Pauză"
+msgstr "Ultima Pauză a cronometrului"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__timer_start
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task__timer_start
 msgid "Timer Start"
-msgstr "Timer Start"
+msgstr "Start cronometru"
+
+#. module: timesheet_grid
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_kanban
+msgid "Timer is Paused"
+msgstr ""
+
+#. module: timesheet_grid
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_kanban
+msgid "Timer is Running"
+msgstr ""
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee__timesheet_manager_id
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee_public__timesheet_manager_id
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_users__timesheet_manager_id
 msgid "Timesheet"
-msgstr "Fisa de pontaj"
+msgstr "Fișă de pontaj"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.view_employee_tree_inherit_timesheet
@@ -1149,12 +1206,12 @@ msgstr "Aprobator foaie de timp"
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_timesheet_grid_mixin
 msgid "Timesheet Grid mixin"
-msgstr ""
+msgstr "Grid mixin pentru fișa de pontaj"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__duration_unit_amount
 msgid "Timesheet Init Amount"
-msgstr ""
+msgstr "Valoare inițială a fișei de pontaj"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__is_timesheet
@@ -1165,29 +1222,29 @@ msgstr "Linie Fisa de pontaj"
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__unit_amount_validate
 msgid "Timesheet Unit Time"
-msgstr ""
+msgstr "Unitate de timp a fișei de pontaj"
 
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.timesheet_reminder_user_ir_actions_server
 #: model:ir.cron,cron_name:timesheet_grid.timesheet_reminder_user
 msgid "Timesheet: Employees Email Reminder"
-msgstr "Fișă de timp: memento prin e-mail al angajaților"
+msgstr "Fișă de pontaj: memento prin e-mail al angajaților"
 
 #. module: timesheet_grid
 #: model:mail.template,name:timesheet_grid.mail_template_timesheet_reminder_user
 msgid "Timesheet: Employees Reminder"
-msgstr ""
+msgstr "Fișă de pontaj: memento pentru angajați"
 
 #. module: timesheet_grid
 #: model:mail.template,name:timesheet_grid.mail_template_timesheet_reminder_manager
 msgid "Timesheet: Manager Reminder"
-msgstr ""
+msgstr "Fișă de pontaj: memento pentru manager"
 
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.timesheet_reminder_manager_ir_actions_server
 #: model:ir.cron,cron_name:timesheet_grid.timesheet_reminder_manager
 msgid "Timesheet: Managers Email Reminder"
-msgstr "Fișă de timp: memento de e-mail al managerilor"
+msgstr "Fișă de pontaj: memento de e-mail pentru manageri"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__timesheet_ids
@@ -1201,7 +1258,7 @@ msgstr "Fișe de pontaj"
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_timesheets_analysis_report
 msgid "Timesheets Analysis Report"
-msgstr ""
+msgstr "Raport de analiză a fișelor de pontaj"
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1211,6 +1268,8 @@ msgid ""
 "Timesheets before the %s (included) have been validated, and can no longer "
 "be %s."
 msgstr ""
+"Fișele de pontaj înainte de %s (inclusiv) au fost validate și nu mai pot fi "
+"%s."
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
@@ -1222,13 +1281,19 @@ msgid ""
 "of 15 min). We recommend having the same value for the minimal duration and "
 "for the round up."
 msgstr ""
+"Fișele de pontaj codificate prin intermediul cronometrului care nu "
+"îndeplinesc durata minimă vor fi automat rotunjite la valoarea definită. De "
+"exemplu, dacă opriți cronometrul la 00:04:36, durata intrării în fișa de "
+"pontaj va fi automat rotunjită la 00:15 (în cazul în care aveți o durată "
+"minimă de 15 minute). Recomandăm să aveți aceeași valoare pentru durata "
+"minimă și pentru rotunjire."
 
 #. module: timesheet_grid
 #: model:ir.actions.act_window,name:timesheet_grid.action_timesheet_previous_month
 #: model:ir.actions.act_window,name:timesheet_grid.action_timesheet_previous_week
 #: model:ir.actions.act_window,name:timesheet_grid.timesheet_grid_to_validate_action
 msgid "Timesheets to Validate"
-msgstr "Fișe de timp pentru validare"
+msgstr "Fișe de pontaj de validat"
 
 #. module: timesheet_grid
 #: model:ir.ui.menu,name:timesheet_grid.menu_timesheet_grid_validate
@@ -1251,6 +1316,8 @@ msgid ""
 "Track your working hours by projects every day and invoice this time to your"
 " customers."
 msgstr ""
+"Urmăriți orele de lucru pe proiecte în fiecare zi și facturați acest timp "
+"clienților dvs."
 
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_res_users
@@ -1260,7 +1327,7 @@ msgstr "Operator"
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__user_can_validate
 msgid "User Can Validate"
-msgstr ""
+msgstr "Operatorul poate valida"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__reminder_user_interval
@@ -1271,14 +1338,14 @@ msgstr "Frecvență memento utilizator"
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__user_timer_id
 #: model:ir.model.fields,field_description:timesheet_grid.field_project_task__user_timer_id
 msgid "User Timer"
-msgstr "Temporizator Utilizator"
+msgstr "Cronometru Utilizator"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,help:timesheet_grid.field_hr_employee_public__timesheet_manager_id
 msgid "User responsible of timesheet validation. Should be Timesheet Manager."
 msgstr ""
-"Utilizator responsabil de validarea foii de timp. Ar trebui să fie Manager "
-"de foaie de timp."
+"Utilizator responsabil de validarea fișelor de pontaj. Trebuie să fie "
+"Manager de fișe de pontaj."
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -1302,7 +1369,7 @@ msgstr "Validat"
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__validated_status
 msgid "Validated Status"
-msgstr ""
+msgstr "Stare validată"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__validated
@@ -1313,17 +1380,17 @@ msgstr "Linie validată"
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.timesheet_grid_all_timesheets_action_server
 msgid "Validation All Timesheet Server Action"
-msgstr ""
+msgstr "Validare toate fișele de pontaj Server Action"
 
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.timesheet_grid_week_action_server
 msgid "Validation Timesheet Week_view Server Action"
-msgstr "Foaie de timp de validare Acțiune server Week_view"
+msgstr "Validare fișe de pontaj Week_view Server Action"
 
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.timesheet_grid_month_action_server
 msgid "Validation Timesheet month_view Server Action"
-msgstr "Foaie de timp validare lună_vizualizare Acțiune server"
+msgstr "Validare fișe de pontaj month_view Server Action"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_grid
@@ -1338,6 +1405,7 @@ msgstr "Săptămână"
 msgid ""
 "Whether or not the current user can validate/reset to draft the record."
 msgstr ""
+"Dacă sau nu utilizatorul curent poate valida/reseta la ciornă înregistrarea."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1347,6 +1415,8 @@ msgid ""
 "You can only reset to draft the timesheets of employees of whom you are the "
 "manager or the timesheet approver."
 msgstr ""
+"Puteți reseta doar la ciornă fișele de pontaj ale angajaților cărora le "
+"sunteți manager sau aprobator al fișelor de pontaj."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1357,13 +1427,24 @@ msgid ""
 "You can only validate the timesheets of employees of whom you are the "
 "manager or the timesheet approver."
 msgstr ""
+"Puteți valida doar fișele de pontaj ale angajaților cărora le sunteți "
+"manager sau aprobator al fișelor de pontaj."
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "You cannot access timesheets that are not yours."
-msgstr "Nu puteți accesa fișele de timp care nu sunt ale dvs."
+msgstr "Nu puteți accesa fișele de pontaj care nu sunt ale dvs."
+
+#. module: timesheet_grid
+#. odoo-python
+#: code:addons/timesheet_grid/models/analytic.py:0
+#, python-format
+msgid ""
+"You cannot adjust the time of the timesheet for a project with timesheets "
+"disabled."
+msgstr ""
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1373,6 +1454,8 @@ msgid ""
 "You cannot delete a validated entry. Please, contact your manager or your "
 "timesheet approver."
 msgstr ""
+"Nu puteți șterge o intrare validată. Vă rugăm să contactați managerul sau "
+"aprobatorul fișelor de pontaj."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1382,6 +1465,8 @@ msgid ""
 "You cannot start the timer for a project in a company encoding its "
 "timesheets in days."
 msgstr ""
+"Nu puteți porni cronometrul pentru un proiect într-o companie care codifică "
+"fișele de pontaj în zile."
 
 #. module: timesheet_grid
 #. odoo-python
@@ -1392,15 +1477,16 @@ msgstr ""
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "You cannot use the timer on validated timesheets."
-msgstr ""
+msgstr "Nu puteți folosi cronometrul pe fișele de pontaj validate."
 
 #. module: timesheet_grid
 #. odoo-python
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid ""
-"You cannot validate the timesheets from employees that are not part of your "
-"team or there are no timesheets to validate."
+"You cannot validate the selected timesheets as they either belong to "
+"employees who are not part of your team or are not in a state that can be "
+"validated. This may be due to the fact that they are dated in the future."
 msgstr ""
 
 #. module: timesheet_grid
@@ -1425,14 +1511,14 @@ msgstr "zile"
 #: code:addons/timesheet_grid/models/analytic.py:0
 #, python-format
 msgid "deleted"
-msgstr ""
+msgstr "șters"
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/xml/timesheet_grid.xml:0
 #, python-format
 msgid "letter shortcut"
-msgstr ""
+msgstr "scurtătură literă"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -1453,25 +1539,25 @@ msgstr "modificat"
 #: code:addons/timesheet_grid/static/src/xml/timesheet_grid.xml:0
 #, python-format
 msgid "or a"
-msgstr ""
+msgstr "sau o(un)"
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/xml/timesheet_grid.xml:0
 #, python-format
 msgid "press"
-msgstr "apasa"
+msgstr "apasă"
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/xml/timesheet_grid.xml:0
 #, python-format
 msgid "press Shift + a letter shortcut"
-msgstr ""
+msgstr "apasă Shift + o scurtătură literă"
 
 #. module: timesheet_grid
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/xml/timesheet_grid.xml:0
 #, python-format
 msgid "to add"
-msgstr ""
+msgstr "de adăugat"

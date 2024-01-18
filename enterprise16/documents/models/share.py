@@ -45,7 +45,7 @@ class DocumentShare(models.Model):
     tag_ids = fields.Many2many('documents.tag', string="Shared Tags")
     partner_id = fields.Many2one('res.partner', string="Contact")
     owner_id = fields.Many2one('res.users', string="Document Owner", default=lambda self: self.env.uid)
-    email_drop = fields.Boolean(string='Upload by Email')
+    email_drop = fields.Boolean(compute='_compute_email_drop', string='Upload by Email', store=True, readonly=False)
 
     # Activity
     activity_option = fields.Boolean(string='Create a new activity')
@@ -74,7 +74,9 @@ class DocumentShare(models.Model):
         """
             Allows overriding the domain in customizations for modifying the search() domain
         """
-        if self.include_sub_folders:
+        if self.type == 'ids':
+            return []
+        elif self.include_sub_folders:
             return [[('folder_id', 'child_of', self.folder_id.id)]]
         else:
             return [[('folder_id', '=', self.folder_id.id)]]
@@ -178,6 +180,11 @@ class DocumentShare(models.Model):
                 if diff_time <= 0:
                     record.state = 'expired'
 
+    @api.depends('action', 'alias_name')
+    def _compute_email_drop(self):
+        for record in self:
+            record.email_drop = record.action == 'downloadupload' and bool(record.alias_name)
+
     @api.depends('access_token')
     def _compute_full_url(self):
         for record in self:
@@ -186,7 +193,7 @@ class DocumentShare(models.Model):
     def _inverse_action(self):
         # Prevent the alias from existing if the option is removed
         for record in self:
-            if record.action != 'downloadandupload' and record.alias_name:
+            if record.action != 'downloadupload' and record.alias_name:
                 record.alias_name = False
 
     def _alias_get_creation_values(self):

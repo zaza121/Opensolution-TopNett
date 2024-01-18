@@ -13,24 +13,27 @@
 # Arnau Ros, 2022
 # Manel Fernandez Ramirez <manelfera@outlook.com>, 2022
 # Martin Trigaux, 2022
-# Josep Anton Belchi, 2022
 # Quim - eccit <quim@eccit.com>, 2022
 # Jonatan Gk, 2022
 # RGB Consulting <odoo@rgbconsulting.com>, 2022
 # marcescu, 2022
 # Guspy12, 2022
-# Óscar Fonseca <tecnico@extreme-micro.com>, 2022
 # gerard navarro, 2022
-# Farouk Jabiri, 2022
+# jabiri7, 2022
+# Ivan Espinola, 2023
+# Óscar Fonseca <tecnico@extreme-micro.com>, 2023
+# martioodo hola, 2023
+# Albert Parera, 2023
+# Josep Anton Belchi, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:28+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:47+0000\n"
-"Last-Translator: Farouk Jabiri, 2022\n"
-"Language-Team: Catalan (https://www.transifex.com/odoo/teams/41243/ca/)\n"
+"Last-Translator: Josep Anton Belchi, 2023\n"
+"Language-Team: Catalan (https://app.transifex.com/odoo/teams/41243/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -167,18 +170,22 @@ msgid ""
 " selected employee(s) based on the dates and credit note specified on "
 "Payslips Run.</span>"
 msgstr ""
+"<span nolabel=\"1\" colspan=\"2\">Aquest assistent genera les fitxes de "
+"pagament de tots els empleats seleccionats sobre la base de les dates i de "
+"les notes de crèdit que figuren en les nòmines.</span>"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.hr_payroll_index_form_view
 msgid ""
-"<span role=\"status\" class=\"alert alert-warning\" attrs=\"{'invisible': "
-"[('display_warning', '=', False)]}\">You have selected contracts that are "
-"not running, this wizard can only index running contracts.</span>"
+"<span role=\"status\" class=\"alert alert-warning d-block\" "
+"attrs=\"{'invisible': [('display_warning', '=', False)]}\">You have selected"
+" contracts that are not running, this wizard can only index running "
+"contracts.</span>"
 msgstr ""
-"<span role=\"status\" class=\"alert alert-warning\" attrs=\"{'invisible': "
-"[('displaywarning', '=', False)]}\">Heu seleccionat contractes que no "
-"s'estan executant, aquest assistent només pot indexar els contractes en "
-"execució.</span>"
+"<span role=\"status\" class=\"alert alert-warning d-block\" "
+"attrs=\"{'invisible': [('display_warning', '=', False)]}\">Heu seleccionat "
+"contractes que no estan en curs, aquest assistent només pot indexar "
+"contractes que estan en curs.</span>"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.payroll_resource_calendar_view_form
@@ -285,22 +292,14 @@ msgstr "<strong>Horari de treball </strong>"
 msgid ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "    <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"        Dear <t t-esc=\"object.employee_id.name\"/>, a new payslip is available for you.<br/><br/>\n"
-"        Please find the PDF in your employee portal.<br/><br/>\n"
-"        Have a nice day,<br/>\n"
+"        Dear <t t-esc=\"object.employee_id.name\"></t>, a new payslip is available for you.<br><br>\n"
+"        Please find the PDF in your employee portal.<br><br>\n"
+"        Have a nice day,<br>\n"
 "        The HR Team\n"
 "    </td></tr>\n"
 "</tbody></table>\n"
 "            "
 msgstr ""
-"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
-"    <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"        Benvolgut <t t-esc=\"object.employeeid.name\"/>, hi ha una nova nòmina disponible per a tu.<br/><br/>\n"
-"        Cerqueu el vostre PDF al portal d'empleats.<br/><br/>\n"
-"        Bon dia,<br/>\n"
-"        L'equip de RH\n"
-"    </td></tr>\n"
-"</tbody></table>"
 
 #. module: hr_payroll
 #: model:ir.model.constraint,message:hr_payroll.constraint_hr_work_entry_type_is_unforeseen_is_leave
@@ -891,6 +890,7 @@ msgid "Config Settings"
 msgstr "Ajustos de configuració"
 
 #. module: hr_payroll
+#: model:ir.actions.server,name:hr_payroll.action_hr_payroll_confirm_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.hr_payroll_index_form_view
 #: model_terms:ir.ui.view,arch_db:hr_payroll.view_hr_payslip_form
 msgid "Confirm"
@@ -1012,11 +1012,6 @@ msgid "Country Code"
 msgstr "Codi de país"
 
 #. module: hr_payroll
-#: model:ir.actions.server,name:hr_payroll.action_hr_payroll_confirm_payroll
-msgid "Create Draft Entry"
-msgstr "Crea una entrada d'esborrany"
-
-#. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.res_config_settings_view_form
 msgid "Create SEPA payment"
 msgstr "Crea un pagament SEPA"
@@ -1088,7 +1083,7 @@ msgstr "Reemborsat"
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.view_hr_payslip_filter
 msgid "Credit Notes"
-msgstr "Abonaments"
+msgstr "Factures rectificatives"
 
 #. module: hr_payroll
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_contract_history__time_credit
@@ -1644,8 +1639,8 @@ msgstr "Nòmines generades"
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.hr_payroll_note_demo_content
-msgid "Give assurance card to new registered employees"
-msgstr "Doneu una targeta de garantia als nous empleats registrats"
+msgid "Give insurance card to new registered employees"
+msgstr ""
 
 #. module: hr_payroll
 #. odoo-python
@@ -2028,11 +2023,6 @@ msgid "Made Payment Order ? "
 msgstr "Realitzar ordre de pagament?"
 
 #. module: hr_payroll
-#: model_terms:ir.ui.view,arch_db:hr_payroll.report_payslip
-msgid "Made by Odoo with ❤️"
-msgstr "Feta per Odoo amb ❤️"
-
-#. module: hr_payroll
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__message_main_attachment_id
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__message_main_attachment_id
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_salary_attachment__message_main_attachment_id
@@ -2118,7 +2108,7 @@ msgstr "Quantitat mensual"
 #. module: hr_payroll
 #: model:ir.model.fields.selection,name:hr_payroll.selection__hr_payroll_structure_type__wage_type__monthly
 msgid "Monthly Fixed Wage"
-msgstr "Wage fix mensual"
+msgstr "Salari fix mensual"
 
 #. module: hr_payroll
 #: model:ir.model.constraint,message:hr_payroll.constraint_hr_salary_attachment_check_monthly_amount
@@ -2229,12 +2219,6 @@ msgid "New Payslip"
 msgstr "Nova nòmina"
 
 #. module: hr_payroll
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__activity_calendar_event_id
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__activity_calendar_event_id
-msgid "Next Activity Calendar Event"
-msgstr "Proper esdeveniment del calendari d'activitats"
-
-#. module: hr_payroll
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__activity_date_deadline
 #: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__activity_date_deadline
 msgid "Next Activity Deadline"
@@ -2288,6 +2272,8 @@ msgid ""
 "Note a description of your parameter, when it's used, how is it computed, "
 "what's the source, ..."
 msgstr ""
+"Tingueu en compte una descripció del vostre paràmetre, quan s'utilitza, com "
+"es calcula, quina és la font, ..."
 
 #. module: hr_payroll
 #. odoo-python
@@ -2350,7 +2336,7 @@ msgstr "Nombre d'hores de treball que s'han de considerar a temps complet."
 #: model:ir.model.fields,help:hr_payroll.field_hr_payslip__message_needaction_counter
 #: model:ir.model.fields,help:hr_payroll.field_hr_payslip_run__message_needaction_counter
 #: model:ir.model.fields,help:hr_payroll.field_hr_salary_attachment__message_needaction_counter
-msgid "Number of messages which requires an action"
+msgid "Number of messages requiring action"
 msgstr "Nombre de missatges que requereixen una acció"
 
 #. module: hr_payroll
@@ -3264,6 +3250,8 @@ msgid ""
 "Set a specific department if you wish to select all the employees from this "
 "department (and subdepartments) at once."
 msgstr ""
+"Establiu un departament específic si voleu seleccionar tots els empleats "
+"d'aquest departament (i subdepartaments) alhora."
 
 #. module: hr_payroll
 #: model_terms:ir.ui.view,arch_db:hr_payroll.view_hr_payslip_by_employees
@@ -3273,6 +3261,10 @@ msgid ""
 "generated for all the selected employees, based on their contracts "
 "configuration."
 msgstr ""
+"Establiu una estructura específica si voleu fer una nòmina de pagament "
+"addicional (p. ex.: Bonificació de final d'any). Si deixeu aquest camp buit,"
+" es generarà una nòmina normal per a tots els empleats seleccionats, en "
+"funció de la configuració dels contractes."
 
 #. module: hr_payroll
 #. odoo-javascript
@@ -3545,6 +3537,8 @@ msgid ""
 "There's no contract set on payslip %s for %s. Check that there is at least a"
 " contract set on the employee form."
 msgstr ""
+"No hi ha cap contracte establert al payslip %s per a %s. Comproveu que hi "
+"hagi almenys un contracte establert en el formulari de l'empleat."
 
 #. module: hr_payroll
 #. odoo-python
@@ -3909,20 +3903,6 @@ msgid "We have to improve our Payroll flow with the new Odoo process"
 msgstr "Hem de millorar el nostre flux de nòmina amb el nou procés Odoo"
 
 #. module: hr_payroll
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip__website_message_ids
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_payslip_run__website_message_ids
-#: model:ir.model.fields,field_description:hr_payroll.field_hr_salary_attachment__website_message_ids
-msgid "Website Messages"
-msgstr "Missatges del lloc web"
-
-#. module: hr_payroll
-#: model:ir.model.fields,help:hr_payroll.field_hr_payslip__website_message_ids
-#: model:ir.model.fields,help:hr_payroll.field_hr_payslip_run__website_message_ids
-#: model:ir.model.fields,help:hr_payroll.field_hr_salary_attachment__website_message_ids
-msgid "Website communication history"
-msgstr "Historial de comunicacions del lloc web"
-
-#. module: hr_payroll
 #: model:ir.model.fields.selection,name:hr_payroll.selection__hr_payroll_structure__schedule_pay__weekly
 #: model:ir.model.fields.selection,name:hr_payroll.selection__hr_payroll_structure_type__default_schedule_pay__weekly
 msgid "Weekly"
@@ -4139,6 +4119,17 @@ msgstr "Podeu accedir a les nòmines des del perfil de l'empleat."
 #, python-format
 msgid "You can't validate a cancelled payslip."
 msgstr "No podeu validar una nòmina cancel·lada."
+
+#. module: hr_payroll
+#. odoo-python
+#: code:addons/hr_payroll/models/hr_payslip_input_type.py:0
+#, python-format
+msgid ""
+"You cannot delete %s as it is used in another module but you can archive it "
+"instead."
+msgstr ""
+"No podeu suprimir %s ja que s'utilitza en un altre mòdul, però podeu "
+"arxivar-lo."
 
 #. module: hr_payroll
 #. odoo-python

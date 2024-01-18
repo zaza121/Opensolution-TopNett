@@ -3,16 +3,17 @@
 # 	* approvals
 # 
 # Translators:
-# Martin Trigaux, 2022
+# Martin Trigaux, 2023
+# Tony Ng, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 15.5alpha1+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-20 09:47+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Chinese (Taiwan) (https://www.transifex.com/odoo/teams/41243/zh_TW/)\n"
+"Last-Translator: Tony Ng, 2023\n"
+"Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -109,6 +110,7 @@ msgid "An additional reference that should be specified on the request."
 msgstr "An additional reference that should be specified on the request."
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_category.py:0
 #, python-format
 msgid "An user may not be in the approver list multiple times."
@@ -176,7 +178,7 @@ msgid "Approvals to review"
 msgstr "Approvals to review"
 
 #. module: approvals
-#. openerp-web
+#. odoo-javascript
 #: code:addons/approvals/static/src/components/approval/approval.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
@@ -200,6 +202,7 @@ msgid "Approver"
 msgstr "Approver"
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_category.py:0
 #, python-format
 msgid ""
@@ -233,12 +236,17 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_search
 msgid "Archived"
-msgstr "已歸檔"
+msgstr "已封存"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 msgid "Attach Document"
 msgstr "附加文件"
+
+#. module: approvals
+#: model:ir.model,name:approvals.model_ir_attachment
+msgid "Attachment"
+msgstr "附件"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_request__message_attachment_count
@@ -335,7 +343,7 @@ msgstr "Contract Approval"
 msgid ""
 "Conversion between Units of Measure can only occur if they belong to the "
 "same category. The conversion will be made based on the ratios."
-msgstr "計量單位轉換只能在同一個類型之間進行。轉換根據比例"
+msgstr "量度單位必須屬於相同類別，才可進行換算。單位換算會按照比例計算。"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_approver__create_uid
@@ -383,7 +391,7 @@ msgid "Date start"
 msgstr "Date start"
 
 #. module: approvals
-#. openerp-web
+#. odoo-javascript
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #, python-format
@@ -586,7 +594,6 @@ msgstr "勾選代表有新訊息需要您留意。"
 
 #. module: approvals
 #: model:ir.model.fields,help:approvals.field_approval_request__message_has_error
-#: model:ir.model.fields,help:approvals.field_approval_request__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
 msgstr "勾選代表有訊息發生傳送錯誤。"
 
@@ -683,7 +690,7 @@ msgid "Location"
 msgstr "地點"
 
 #. module: approvals
-#. openerp-web
+#. odoo-javascript
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #, python-format
@@ -717,6 +724,7 @@ msgid "Minimum Approval"
 msgstr "Minimum Approval"
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_category.py:0
 #, python-format
 msgid ""
@@ -756,6 +764,7 @@ msgid "Name"
 msgstr "名稱"
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_category.py:0
 #: model:ir.model.fields.selection,name:approvals.selection__approval_approver__status__new
 #: model:ir.model.fields.selection,name:approvals.selection__approval_request__user_status__new
@@ -835,8 +844,8 @@ msgstr "錯誤數量"
 
 #. module: approvals
 #: model:ir.model.fields,help:approvals.field_approval_request__message_needaction_counter
-msgid "Number of messages which requires an action"
-msgstr "需要處理的消息數量"
+msgid "Number of messages requiring action"
+msgstr "需要採取行動的訊息數目"
 
 #. module: approvals
 #: model:ir.model.fields,help:approvals.field_approval_request__message_has_error_counter
@@ -915,6 +924,7 @@ msgstr "產品變體"
 #: model:ir.ui.menu,name:approvals.approvals_menu_product_template
 #: model_terms:ir.ui.view,arch_db:approvals.approval_product_line_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_product_line_view_tree
+#: model_terms:ir.ui.view,arch_db:approvals.approval_product_line_view_tree_independent
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 msgid "Products"
 msgstr "產品"
@@ -938,7 +948,7 @@ msgid "Reference Sequence"
 msgstr "編碼序列"
 
 #. module: approvals
-#. openerp-web
+#. odoo-javascript
 #: code:addons/approvals/static/src/components/approval/approval.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
@@ -998,11 +1008,7 @@ msgid "Responsible User"
 msgstr "責任使用者"
 
 #. module: approvals
-#: model:ir.model.fields,field_description:approvals.field_approval_request__message_has_sms_error
-msgid "SMS Delivery error"
-msgstr "簡訊發送錯誤"
-
-#. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_category.py:0
 #: code:addons/approvals/models/approval_category.py:0
 #: model:ir.model.fields,field_description:approvals.field_approval_approver__sequence
@@ -1051,6 +1057,7 @@ msgid "The user will have access to the approvals configuration."
 msgstr "The user will have access to the approvals configuration."
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
 #, python-format
 msgid ""
@@ -1061,6 +1068,7 @@ msgstr ""
 "linked to your employee profile."
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
 #, python-format
 msgid ""
@@ -1071,6 +1079,7 @@ msgstr ""
 "to your manager."
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
 #, python-format
 msgid ""
@@ -1081,7 +1090,7 @@ msgstr ""
 "the approvers list."
 
 #. module: approvals
-#. openerp-web
+#. odoo-javascript
 #: code:addons/approvals/static/src/components/approval/approval.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: model:ir.model.fields.selection,name:approvals.selection__approval_approver__status__pending
@@ -1108,10 +1117,10 @@ msgstr "記錄的異常活動的類型。"
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__product_uom_id
 msgid "Unit of Measure"
-msgstr "單位"
+msgstr "量度單位"
 
 #. module: approvals
-#. openerp-web
+#. odoo-javascript
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: code:addons/approvals/static/src/xml/web_kanban_activity.xml:0
 #: model:ir.model.fields,field_description:approvals.field_approval_approver__user_id
@@ -1132,40 +1141,51 @@ msgid "Waiting"
 msgstr "正在等待"
 
 #. module: approvals
-#: model:ir.model.fields,field_description:approvals.field_approval_request__website_message_ids
-msgid "Website Messages"
-msgstr "網站信息"
-
-#. module: approvals
-#: model:ir.model.fields,help:approvals.field_approval_request__website_message_ids
-msgid "Website communication history"
-msgstr "網站溝通記錄"
-
-#. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_kanban
 msgid "Withdraw"
 msgstr "Withdraw"
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
 #, python-format
 msgid "You cannot approve before the previous approver."
 msgstr ""
 
 #. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+#, python-format
+msgid ""
+"You cannot assign the same approver multiple times on the same request."
+msgstr ""
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/ir_attachment.py:0
+#, python-format
+msgid ""
+"You cannot unlink an attachment which is linked to a validated, refused or "
+"cancelled approval request."
+msgstr ""
+
+#. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
 #, python-format
 msgid "You have to add at least %s approvers to confirm your request."
 msgstr "You have to add at least %s approvers to confirm your request."
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
 #, python-format
 msgid "You have to attach at lease one document."
 msgstr "You have to attach at lease one document."
 
 #. module: approvals
+#. odoo-python
 #: code:addons/approvals/models/approval_category.py:0
 #, python-format
 msgid "Your minimum approval exceeds the total of default approvers."

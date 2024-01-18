@@ -38,7 +38,7 @@ class ColumbianReportCustomHandler(models.AbstractModel):
                 col_val = current_value.get(col_expr)
                 col_class = ''
                 if col_expr == 'percentage':
-                    col_name = col_val = 0.15 if current_value['balance'] else 0
+                    col_name = col_val = 15 if current_value['balance'] else 0
                     col_class = 'number'
                 else:
                     if col_val is None:

@@ -5,16 +5,16 @@
 # Translators:
 # Cécile Collart <cco@odoo.com>, 2022
 # Martin Trigaux, 2022
-# Jolien De Paepe, 2022
+# Jolien De Paepe, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:30+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:48+0000\n"
-"Last-Translator: Jolien De Paepe, 2022\n"
-"Language-Team: French (https://www.transifex.com/odoo/teams/41243/fr/)\n"
+"Last-Translator: Jolien De Paepe, 2023\n"
+"Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -39,7 +39,7 @@ msgstr "%s %s"
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__active
 msgid "Active"
-msgstr "Active"
+msgstr "Actif"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_template_form_view_pricing
@@ -83,6 +83,7 @@ msgstr "Tarifs personnalisés"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Day"
 msgstr "Jour"
@@ -101,12 +102,17 @@ msgstr "Description"
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__display_name
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__display_name
 msgid "Display Name"
-msgstr "Afficher le nom"
+msgstr "Nom d'affichage"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__duration
 msgid "Duration"
 msgstr "Durée"
+
+#. module: sale_temporal
+#: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__duration_display
+msgid "Duration Display"
+msgstr "Durée de l'affichage"
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_product__display_price
@@ -117,6 +123,7 @@ msgstr "Premier prix de leasing du produit"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Hour"
 msgstr "Heure"
@@ -179,6 +186,7 @@ msgstr ""
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Month"
 msgstr "Mois"
@@ -241,27 +249,27 @@ msgstr "Règle de tarification des produits temporels"
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_template
 msgid "Product"
-msgstr "Article"
+msgstr "Produit"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__product_template_id
 msgid "Product Templates"
-msgstr "Modèles d'article"
+msgstr "Modèles de produit"
 
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_product_product
 msgid "Product Variant"
-msgstr "Variante d'article"
+msgstr "Variante de produit"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__product_variant_ids
 msgid "Product Variants"
-msgstr "Variantes d'article"
+msgstr "Variantes de produit"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
 msgid "Products"
-msgstr "Articles"
+msgstr "Produits"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_product_pricing__recurrence_id
@@ -291,7 +299,7 @@ msgstr "Bon de commande"
 #. module: sale_temporal
 #: model:ir.model,name:sale_temporal.model_sale_order_line
 msgid "Sales Order Line"
-msgstr "Ligne de bons de commande"
+msgstr "Ligne de commande"
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_pricing__product_variant_ids
@@ -299,14 +307,19 @@ msgid ""
 "Select Variants of the Product for which this rule applies. Leave empty if "
 "this rule applies for any variant of this template."
 msgstr ""
-"Sélectionnez les Variantes de l'Article auxquelles cette règle s'applique.  "
+"Sélectionnez les variantes de produit auxquelles cette règle s'applique. "
 "Laissez vide si cette règle s'applique à toutes les variantes de ce modèle."
 
 #. module: sale_temporal
 #: model:ir.model.fields,help:sale_temporal.field_product_pricing__product_template_id
 msgid "Select products on which this pricing will be applied."
 msgstr ""
-"Sélectionnez les articles sur lesquels cette tarification sera appliquée"
+"Sélectionnez les produits sur lesquels cette tarification sera appliquée."
+
+#. module: sale_temporal
+#: model:ir.model.fields,field_description:sale_temporal.field_sale_temporal_recurrence__subscription_unit_display
+msgid "Subscription Unit Display"
+msgstr "Afficher l'unité d'abonnement"
 
 #. module: sale_temporal
 #: model:ir.model.fields,field_description:sale_temporal.field_sale_order_line__temporal_type
@@ -327,12 +340,12 @@ msgstr "Le produit (%s) a des valeurs incompatibles :%s"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_template_form_view_pricing
-msgid "Time based pricing"
-msgstr "Prix basés sur le temps"
+msgid "Time-based pricing"
+msgstr "Tarification basée sur le temps"
 
 #. module: sale_temporal
 #: model_terms:ir.ui.view,arch_db:sale_temporal.product_pricelist_view
-msgid "Time based rules"
+msgid "Time-based rules"
 msgstr "Règles basées sur le temps"
 
 #. module: sale_temporal
@@ -348,6 +361,7 @@ msgstr "Variantes"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Week"
 msgstr "Semaine"
@@ -360,6 +374,7 @@ msgstr "Semaines"
 #. module: sale_temporal
 #. odoo-python
 #: code:addons/sale_temporal/models/product_pricing.py:0
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
 #, python-format
 msgid "Year"
 msgstr "Année"
@@ -398,3 +413,52 @@ msgstr ""
 #, python-format
 msgid "all variants"
 msgstr "toutes les variantes"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s months"
+msgstr "par %s mois"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s weeks"
+msgstr "par %s semaines"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per %s years"
+msgstr "par %s années"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per month"
+msgstr "par mois"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per week"
+msgstr "par semaine"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "per year"
+msgstr "par an"
+
+#. module: sale_temporal
+#. odoo-python
+#: code:addons/sale_temporal/models/sale_order_recurrence.py:0
+#, python-format
+msgid "This recurrence unit is not supported."
+msgstr "Cette unité de récurrence n'est pas prise en charge."

@@ -119,7 +119,7 @@
                             name="action_next"
                             type="object"
                             class="btn-primary"
-                            attrs="{'invisible': ['|', '|', ('is_user_working', '=', False), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('component_qty_to_do', '&lt;', 0)]}"
+                            attrs="{'invisible': ['|', ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('component_qty_to_do', '&lt;', 0)]}"
                             barcode_trigger="next"
                             string="VALIDATE"
                             />
@@ -128,14 +128,14 @@
                             class="btn-primary"
                             attrs="{'invisible': ['|', '|', ('is_user_working', '=', False), ('test_type', 'not in', ('register_consumed_materials', 'register_byproducts')), ('component_qty_to_do', '&gt;=', 0)]}"
                             barcode_trigger="continue"
-                            string="CONTINUE PRODUCTION"
+                            string="CONTINUE CONSUMPTION"
                             />
                         <button name="action_continue"
                             type="object"
                             class="btn-secondary"
-                            attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('test_type', 'not in', ('register_consumed_materials', 'register_byproducts')), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&lt;', 0)]}"
+                            attrs="{'invisible': ['|', '|', ('test_type', 'not in', ('register_consumed_materials', 'register_byproducts')), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&lt;', 0)]}"
                             barcode_trigger="continue"
-                            string="CONTINUE PRODUCTION"
+                            string="CONTINUE CONSUMPTION"
                             />
                         <button name="action_print" type="object" class="btn-primary" attrs="{'invisible': [('test_type', '!=', 'print_label')]}" barcode_trigger="print" string="Print Labels"/>
                     </div>

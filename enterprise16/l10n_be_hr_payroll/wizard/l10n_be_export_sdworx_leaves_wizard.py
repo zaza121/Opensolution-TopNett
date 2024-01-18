@@ -28,7 +28,7 @@ class L10nBeExportSDWorxLeavesWizard(models.TransientModel):
         return [(year, year) for year in range(current_year - 5, current_year + 1)]
 
     leave_ids = fields.Many2many(
-        'hr.leave', string="Leaves",
+        'hr.leave', string="Leaves", domain=lambda self: [('employee_company_id', '=', self.env.company.id)],
         compute='_compute_leave_ids', store=True, readonly=False)
     reference_year = fields.Selection(
         selection='_get_range_of_years',

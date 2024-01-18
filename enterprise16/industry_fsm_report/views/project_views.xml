@@ -131,9 +131,9 @@
                         <div class="text-muted" id="allow_billable_setting">
                             Create reports to be signed off by your customers
                         </div>
-                        <div class="mt-3 d-flex" attrs="{'invisible': [('allow_worksheets', '=', False)]}">
-                            <label for="worksheet_template_id" string="Worksheet Template"/>
-                            <field name="worksheet_template_id" class="oe_inline" context="{'default_res_model': 'project.task'}"/>
+                        <div class="mt-3 d-flex flex-wrap" attrs="{'invisible': [('allow_worksheets', '=', False)]}">
+                            <label for="worksheet_template_id" class="fw-bold" string="Worksheet Template"/>
+                            <field name="worksheet_template_id" class="oe_inline ps-2" context="{'default_res_model': 'project.task'}"/>
                         </div>
                     </div>
                 </div>
@@ -391,7 +391,7 @@
         <field name="view_mode">kanban,tree,calendar,map,pivot,graph,activity</field>
         <field name="search_view_id" ref="industry_fsm.project_task_view_search_fsm"/>
         <field name="domain">[('is_fsm', '=', True), ('display_project_id', '!=', False)]</field>
-        <field name="context" eval="{'fsm_mode': 1, 'task_nameget_with_hours': 1, 'default_scale': 'week'}"/>
+        <field name="context" eval="{'fsm_mode': 1, 'task_nameget_with_hours': 1, 'default_scale': 'week', 'default_user_ids': False}"/>
         <field name="help" type="html">
             <p class='o_view_nocontent_smiling_face'>
                 No tasks found. Let's create one!

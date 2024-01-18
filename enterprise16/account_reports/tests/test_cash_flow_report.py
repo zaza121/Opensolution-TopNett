@@ -5,6 +5,8 @@ from .common import TestAccountReportsCommon
 from odoo import fields
 from odoo.tests import tagged
 
+from odoo import Command
+
 @tagged('post_install', '-at_install')
 class TestCashFlowReport(TestAccountReportsCommon):
     @classmethod
@@ -63,6 +65,60 @@ class TestCashFlowReport(TestAccountReportsCommon):
 
     def _reconcile_on(self, lines, account):
         lines.filtered(lambda line: line.account_id == account and not line.reconciled).reconcile()
+
+    def test_growth_comparison(self):
+        """ Enables period comparison and tests the growth comparison column; in order to ensure this feature works on reports with dynamic lines.
+        """
+        self.report.filter_period_comparison = True
+        options = self._generate_options(self.report, fields.Date.from_string('2016-01-01'), fields.Date.from_string('2016-12-31'))
+        options = self._update_comparison_filter(options, self.report, 'previous_period', 1)
+
+        move_1 = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2015-01-01',
+            'journal_id': self.misc_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 100.0,     'credit': 0.0,     'account_id': self.account_bank.id}),
+                (0, 0, {'debit': 100.0,     'credit': 0.0,     'account_id': self.account_cash.id}),
+                (0, 0, {'debit':   0.0,     'credit': 200.0,   'account_id': self.account_no_tag.id}),
+            ],
+        })
+        move_1.action_post()
+
+        move_2 = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2016-01-01',
+            'journal_id': self.misc_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 1000.0,     'credit': 0.0,     'account_id': self.account_bank.id}),
+                (0, 0, {'debit': 1000.0,     'credit': 0.0,     'account_id': self.account_cash.id}),
+                (0, 0, {'debit':   0.0,      'credit': 2000.0,  'account_id': self.account_no_tag.id}),
+            ],
+        })
+        move_2.action_post()
+
+        self.assertGrowthComparisonValues(
+            self.report._get_lines(options),
+            [
+                ('Cash and cash equivalents, beginning of period',         'n/a',    'number'),
+                ('Net increase in cash and cash equivalents',              '900.0%', 'number color-green'),
+                ('Cash flows from operating activities',                   '',       ''),
+                ('Advance Payments received from customers',               '',       ''),
+                ('Cash received from operating activities',                '',       ''),
+                ('Advance payments made to suppliers',                     '',       ''),
+                ('Cash paid for operating activities',                     '',       ''),
+                ('Cash flows from investing & extraordinary activities',   '',       ''),
+                ('Cash in',                                                '',       ''),
+                ('Cash out',                                               '',       ''),
+                ('Cash flows from financing activities',                   '',       ''),
+                ('Cash in',                                                '',       ''),
+                ('Cash out',                                               '',       ''),
+                ('Cash flows from unclassified activities',                '900.0%', 'number color-green'),
+                ('Cash in',                                                '900.0%', 'number color-green'),
+                ('Cash out',                                               '',       ''),
+                ('Cash and cash equivalents, closing balance',             '1000.0%', 'number color-green'),
+            ]
+        )
 
     def test_cash_flow_journals(self):
         options = self._generate_options(self.report, fields.Date.from_string('2016-01-01'), fields.Date.from_string('2017-01-01'))
@@ -152,6 +208,89 @@ class TestCashFlowReport(TestAccountReportsCommon):
             ['Cash out',                                                             ''],
             ['Cash and cash equivalents, closing balance',                        600.0],
         ])
+
+    def test_cash_flow_comparison(self):
+        self.report.filter_period_comparison = True
+        self.report.default_opening_date_filter = 'this_year'
+
+        options = self._generate_options(self.report, fields.Date.from_string('2016-01-01'), fields.Date.from_string('2016-12-31'))
+        options = self._update_comparison_filter(options, self.report, comparison_type='previous_period', number_period=1)
+        options['filter_period_comparison'] = True
+
+        # Current period
+        invoice_current_period = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2016-01-08',
+            'journal_id': self.bank_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 230.0,  'credit': 0.0,    'account_id': self.account_receivable_1.id}),
+                (0, 0, {'debit': 0.0,    'credit': 230.0,  'account_id': self.account_no_tag.id}),
+            ],
+        })
+        invoice_current_period.action_post()
+
+        payment_current_period = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2016-01-16',
+            'journal_id': self.bank_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 0.0,   'credit': 230.0, 'account_id': self.account_receivable_1.id}),
+                (0, 0, {'debit': 230.0, 'credit': 0.0,   'account_id': self.account_bank.id}),
+            ],
+        })
+        payment_current_period.action_post()
+
+        self._reconcile_on((invoice_current_period + payment_current_period).line_ids, self.account_receivable_1)
+
+        # Past period
+        invoice_past_period = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2015-01-08',
+            'journal_id': self.bank_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 100.0,  'credit': 0.0,    'account_id': self.account_receivable_1.id}),
+                (0, 0, {'debit': 0.0,    'credit': 100.0,  'account_id': self.account_no_tag.id}),
+            ],
+        })
+        invoice_past_period.action_post()
+
+        payment_past_period = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2015-01-16',
+            'journal_id': self.bank_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 0.0,   'credit': 100.0, 'account_id': self.account_receivable_1.id}),
+                (0, 0, {'debit': 100.0, 'credit': 0.0,   'account_id': self.account_bank.id}),
+            ],
+        })
+        payment_past_period.action_post()
+
+        self._reconcile_on((invoice_past_period + payment_past_period).line_ids, self.account_receivable_1)
+
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                                                 Current period        Past period
+            [   0,                                                                1,                2],
+            [
+                ('Cash and cash equivalents, beginning of period',            100.0,               ''),
+                ('Net increase in cash and cash equivalents',                 230.0,            100.0),
+                ('Cash flows from operating activities',                         '',               ''),
+                ('Advance Payments received from customers',                     '',               ''),
+                ('Cash received from operating activities',                      '',               ''),
+                ('Advance payments made to suppliers',                           '',               ''),
+                ('Cash paid for operating activities',                           '',               ''),
+                ('Cash flows from investing & extraordinary activities',         '',               ''),
+                ('Cash in',                                                      '',               ''),
+                ('Cash out',                                                     '',               ''),
+                ('Cash flows from financing activities',                         '',               ''),
+                ('Cash in',                                                      '',               ''),
+                ('Cash out',                                                     '',               ''),
+                ('Cash flows from unclassified activities',                   230.0,            100.0),
+                ('Cash in',                                                   230.0,            100.0),
+                ('Cash out',                                                     '',               ''),
+                ('Cash and cash equivalents, closing balance',                330.0,            100.0),
+            ],
+        )
 
     def test_cash_flow_column_groups(self):
         self.report.filter_period_comparison = True
@@ -1030,3 +1169,178 @@ class TestCashFlowReport(TestAccountReportsCommon):
             ['Cash out',                                                           -400.0],
             ['Cash and cash equivalents, closing balance',                          100.0],
         ])
+
+    def test_cash_flow_handle_multiple_tags(self):
+        ''' Ensure that the balances are correct in the following situations:
+            - when several non-cash-flow-report account tags are set
+            - when a mix of several non-cash-flow-report tags and one cash-flow report tag are set.
+        '''
+
+        options = self._generate_options(self.report, fields.Date.from_string('2016-01-01'), fields.Date.from_string('2016-01-01'))
+
+        unrelated_tag_1 = self.env['account.account.tag'].create({
+            'name': 'Unrelated Tag 1',
+            'applicability': 'accounts',
+        })
+        unrelated_tag_2 = self.env['account.account.tag'].create({
+            'name': 'Unrelated Tag 2',
+            'applicability': 'accounts',
+        })
+
+        # account_no_tag will now have 2 tags unrelated to the Cash Flow Report.
+        # account_financing will now have the `account.account_tag_financing` tag, plus the two unrelated tags.
+        (self.account_no_tag + self.account_financing).write({
+            'tag_ids': [Command.link(unrelated_tag_1.id), Command.link(unrelated_tag_2.id)],
+        })
+
+        move = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2016-01-01',
+            'journal_id': self.bank_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 800.0, 'credit':   0.0, 'account_id': self.account_bank.id}),
+                (0, 0, {'debit':   0.0, 'credit': 300.0, 'account_id': self.account_no_tag.id}),
+                (0, 0, {'debit':   0.0, 'credit': 500.0, 'account_id': self.account_financing.id}),
+            ],
+        })
+
+        move.action_post()
+
+        self.assertLinesValues(self.report._get_lines(options), [0, 1], [
+            ['Cash and cash equivalents, beginning of period',                         ''],
+            ['Net increase in cash and cash equivalents',                           800.0],
+            ['Cash flows from operating activities',                                   ''],
+            ['Advance Payments received from customers',                               ''],
+            ['Cash received from operating activities',                                ''],
+            ['Advance payments made to suppliers',                                     ''],
+            ['Cash paid for operating activities',                                     ''],
+            ['Cash flows from investing & extraordinary activities',                   ''],
+            ['Cash in',                                                                ''],
+            ['Cash out',                                                               ''],
+            ['Cash flows from financing activities',                                500.0],
+            ['Cash in',                                                             500.0],
+            ['Cash out',                                                               ''],
+            ['Cash flows from unclassified activities',                             300.0],
+            ['Cash in',                                                             300.0],
+            ['Cash out',                                                               ''],
+            ['Cash and cash equivalents, closing balance',                          800.0],
+        ])
+
+    def test_cash_flow_hierarchy(self):
+        """ Test the 'hierarchy' option. I.e. we want to ensure that each section of the report (e.g. "Cash and cash equivalents, beginning of period" and "Cash and cash equivalents, closing balance") has its own dedicated hierarchy and they are not mixed up together.
+        """
+        options = self._generate_options(self.report, '2016-01-01', '2016-12-31')
+        self.env.company.totals_below_sections = True
+
+        # Create the account groups for the bank and cash accounts
+        self.env['account.group'].create([
+            {'name': 'Group Bank & Cash',   'code_prefix_start': '10',   'code_prefix_end': '10'},
+            {'name': 'Group Bank',          'code_prefix_start': '1014', 'code_prefix_end': '1014'},
+            {'name': 'Group Cash',          'code_prefix_start': '1015', 'code_prefix_end': '1015'},
+        ])
+        self.account_bank.code = "10140499"
+        self.account_cash.code = "10150199"
+
+        # Create opening balance
+        self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2015-01-01',
+            'journal_id': self.misc_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 100.0,     'credit':   0.0,   'account_id': self.account_bank.id}),
+                (0, 0, {'debit':  50.0,     'credit':   0.0,   'account_id': self.account_cash.id}),
+                (0, 0, {'debit':   0.0,     'credit': 150.0,   'account_id': self.account_no_tag.id}),
+            ],
+        }).action_post()
+
+        # Test the report with the hierarchy option disabled
+        # To make sure that the lines are in the right place we also check their 'level'
+        options['hierarchy'] = False
+        lines_wo_hierarchy = [
+            {
+                'name': line['name'],
+                'level': line['level'],
+                'book_value': line['columns'][-1]['name']
+            }
+            for line in self.report._get_lines(options)
+        ]
+        expected_values_wo_hierarchy = [
+            {'name': "Cash and cash equivalents, beginning of period",            'level': 0,    'book_value': '$\xa0150.00'},
+              {'name': "10140499 Bank",                                           'level': 1,    'book_value': '$\xa0100.00'},
+              {'name': "10150199 Cash",                                           'level': 1,    'book_value': '$\xa050.00'},
+              {'name': "Total Cash and cash equivalents, beginning of period",    'level': 1,    'book_value': '$\xa0150.00'},
+            {'name': "Net increase in cash and cash equivalents",                 'level': 0,    'book_value': ''},
+                {'name': "Cash flows from operating activities",                  'level': 2,    'book_value': ''},
+                  {'name': "Advance Payments received from customers",            'level': 3,    'book_value': ''},
+                  {'name': "Cash received from operating activities",             'level': 3,    'book_value': ''},
+                  {'name': "Advance payments made to suppliers",                  'level': 3,    'book_value': ''},
+                  {'name': "Cash paid for operating activities",                  'level': 3,    'book_value': ''},
+                {'name': "Cash flows from investing & extraordinary activities",  'level': 2,    'book_value': ''},
+                  {'name': "Cash in",                                             'level': 3,    'book_value': ''},
+                  {'name': "Cash out",                                            'level': 3,    'book_value': ''},
+                {'name': "Cash flows from financing activities",                  'level': 2,    'book_value': ''},
+                  {'name': "Cash in",                                             'level': 3,    'book_value': ''},
+                  {'name': "Cash out",                                            'level': 3,    'book_value': ''},
+                {'name': "Cash flows from unclassified activities",               'level': 2,    'book_value': ''},
+                  {'name': "Cash in",                                             'level': 3,    'book_value': ''},
+                  {'name': "Cash out",                                            'level': 3,    'book_value': ''},
+            {'name': "Cash and cash equivalents, closing balance",                'level': 0,    'book_value': '$\xa0150.00'},
+              {'name': "10140499 Bank",                                           'level': 1,    'book_value': '$\xa0100.00'},
+              {'name': "10150199 Cash",                                           'level': 1,    'book_value': '$\xa050.00'},
+              {'name': "Total Cash and cash equivalents, closing balance",        'level': 1,    'book_value': '$\xa0150.00'}
+        ]
+        # assertEqual is used and not assertLinesValues because we want to check the 'level'
+        self.assertEqual(len(lines_wo_hierarchy), len(expected_values_wo_hierarchy))
+        self.assertEqual(lines_wo_hierarchy, expected_values_wo_hierarchy)
+
+        # Test the report with the hierarchy option enabled
+        # To make sure that the lines are in the right place we also check their 'level'
+        options['hierarchy'] = True
+        lines = [
+            {
+                'name': line['name'],
+                'level': line['level'],
+                'book_value': line['columns'][-1]['name']
+            }
+            for line in self.report._get_lines(options)
+        ]
+        expected_values = [
+            {'name': "Cash and cash equivalents, beginning of period",            'level': 0,    'book_value': '$\xa0150.00'},
+              {'name': "10 Group Bank & Cash",                                    'level': 1,    'book_value': '$\xa0150.00'},
+                {'name': "1014 Group Bank",                                       'level': 2,    'book_value': '$\xa0100.00'},
+                  {'name': "10140499 Bank",                                       'level': 3,    'book_value': '$\xa0100.00'},
+                  {'name': "Total 1014 Group Bank",                               'level': 3,    'book_value': '$\xa0100.00'},
+                {'name': "1015 Group Cash",                                       'level': 2,    'book_value': '$\xa050.00'},
+                  {'name': "10150199 Cash",                                       'level': 3,    'book_value': '$\xa050.00'},
+                  {'name': "Total 1015 Group Cash",                               'level': 3,    'book_value': '$\xa050.00'},
+                {'name': "Total 10 Group Bank & Cash",                            'level': 2,    'book_value': '$\xa0150.00'},
+              {'name': "Total Cash and cash equivalents, beginning of period",    'level': 1,    'book_value': '$\xa0150.00'},
+            {'name': "Net increase in cash and cash equivalents",                 'level': 0,    'book_value': ''},
+                {'name': "Cash flows from operating activities",                  'level': 2,    'book_value': ''},
+                  {'name': "Advance Payments received from customers",            'level': 3,    'book_value': ''},
+                  {'name': "Cash received from operating activities",             'level': 3,    'book_value': ''},
+                  {'name': "Advance payments made to suppliers",                  'level': 3,    'book_value': ''},
+                  {'name': "Cash paid for operating activities",                  'level': 3,    'book_value': ''},
+                {'name': "Cash flows from investing & extraordinary activities",  'level': 2,    'book_value': ''},
+                  {'name': "Cash in",                                             'level': 3,    'book_value': ''},
+                  {'name': "Cash out",                                            'level': 3,    'book_value': ''},
+                {'name': "Cash flows from financing activities",                  'level': 2,    'book_value': ''},
+                  {'name': "Cash in",                                             'level': 3,    'book_value': ''},
+                  {'name': "Cash out",                                            'level': 3,    'book_value': ''},
+                {'name': "Cash flows from unclassified activities",               'level': 2,    'book_value': ''},
+                  {'name': "Cash in",                                             'level': 3,    'book_value': ''},
+                  {'name': "Cash out",                                            'level': 3,    'book_value': ''},
+            {'name': "Cash and cash equivalents, closing balance",                'level': 0,    'book_value': '$\xa0150.00'},
+              {'name': "10 Group Bank & Cash",                                    'level': 1,    'book_value': '$\xa0150.00'},
+                {'name': "1014 Group Bank",                                       'level': 2,    'book_value': '$\xa0100.00'},
+                  {'name': "10140499 Bank",                                       'level': 3,    'book_value': '$\xa0100.00'},
+                  {'name': "Total 1014 Group Bank",                               'level': 3,    'book_value': '$\xa0100.00'},
+                {'name': "1015 Group Cash",                                       'level': 2,    'book_value': '$\xa050.00'},
+                  {'name': "10150199 Cash",                                       'level': 3,    'book_value': '$\xa050.00'},
+                  {'name': "Total 1015 Group Cash",                               'level': 3,    'book_value': '$\xa050.00'},
+                {'name': "Total 10 Group Bank & Cash",                            'level': 2,    'book_value': '$\xa0150.00'},
+              {'name': "Total Cash and cash equivalents, closing balance",        'level': 1,    'book_value': '$\xa0150.00'}
+        ]
+        # assertEqual is used and not assertLinesValues because we want to check the 'level'
+        self.assertEqual(len(lines), len(expected_values))
+        self.assertEqual(lines, expected_values)

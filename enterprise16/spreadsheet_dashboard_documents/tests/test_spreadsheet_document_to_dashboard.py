@@ -1,3 +1,5 @@
+import base64
+
 from uuid import uuid4
 from odoo.tests.common import TransactionCase
 
@@ -97,6 +99,8 @@ class TestSpreadsheetDocumentToDashboard(TransactionCase):
                 "mimetype": "application/o-spreadsheet",
             }
         )
+        snapshot = base64.b64encode(b'{"sheets": [{ name: "a sheet"}]}')
+        document.spreadsheet_snapshot = snapshot
         revision = self.env["spreadsheet.revision"].create(
             {
                 "commands": [],
@@ -111,6 +115,8 @@ class TestSpreadsheetDocumentToDashboard(TransactionCase):
         dashboard = group.dashboard_ids[0]
         self.assertEqual(dashboard.name, document.name)
         self.assertEqual(dashboard.spreadsheet_snapshot, document.spreadsheet_snapshot)
+        self.assertEqual(dashboard.spreadsheet_snapshot, snapshot)
+        self.assertEqual(dashboard.data, document.datas)
         dashboard_revision = dashboard.spreadsheet_revision_ids[0]
         self.assertEqual(dashboard_revision.revision_id, revision.revision_id)
         self.assertEqual(dashboard_revision.res_id, dashboard.id)

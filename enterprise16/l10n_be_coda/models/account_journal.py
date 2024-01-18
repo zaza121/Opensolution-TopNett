@@ -333,12 +333,23 @@ class AccountJournal(models.Model):
         rslt.append('CODA')
         return rslt
 
-    def _check_coda(self, attachment):
+    def _check_coda(self, coda_string):
         # Matches the first 24 characters of a CODA file, as defined by the febelfin specifications
-        return re.match(rb'0{5}\d{9}05[ D] +', attachment.raw) is not None
+        return re.match(r'0{5}\d{9}05[ D] +', coda_string) is not None
 
     def _parse_bank_statement_file(self, attachment):
-        if not self._check_coda(attachment):
+        pattern = re.compile("[\u0020-\u1EFF\n\r]+")  # printable characters
+
+        # Try different encodings for the file
+        for encoding in ('utf_8', 'cp850', 'cp858', 'cp1140', 'cp1252', 'iso8859_15', 'utf_32', 'utf_16', 'windows-1252'):
+            try:
+                record_data = attachment.raw.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+            if pattern.fullmatch(record_data, re.MULTILINE):
+                break  # We only have printable characters, stick with this one
+
+        if not self._check_coda(record_data):
             return super()._parse_bank_statement_file(attachment)
 
         def rmspaces(s):
@@ -522,16 +533,6 @@ class AccountJournal(models.Model):
                 structured_com = _('Type of structured communication not supported: ') + co_type
                 note.append(communication)
             return structured_com, note
-
-        pattern = re.compile("[\u0020-\u1EFF\n\r]+")  # printable characters
-        # Try different encodings for the file
-        for encoding in ('cp850', 'cp858', 'cp1140', 'cp1252', 'iso8859_15', 'utf_32', 'utf_16', 'utf_8', 'windows-1252'):
-            try:
-                record_data = attachment.raw.decode(encoding)
-            except UnicodeDecodeError:
-                continue
-            if pattern.fullmatch(record_data, re.MULTILINE):
-                break  # We only have printable characters, stick with this one
 
         recordlist = record_data.split(u'\n')
         statements = []
@@ -731,6 +732,11 @@ class AccountJournal(models.Model):
                                 line['counterpartyNumber'] = False
                         except ValueError:
                             pass
+                        if (
+                            line.get('transaction_family', '') in ('01', '02', '41')  # Credit transfer
+                            and line.get('transaction_code', '') == '07'  # Collective transfer
+                        ):
+                            line['counterpartyNumber'] = False
                         if line['counterpartyNumber']:
                             note.append(_('Counter Party Account') + ': ' + line['counterpartyNumber'])
                     else:

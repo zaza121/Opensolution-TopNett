@@ -79,7 +79,7 @@ class PlanningSend(models.TransientModel):
                 'target': 'new',
             }
         else:
-            self.action_send()
+            return self.action_send()
 
     def action_send(self):
         if self.include_unassigned:

@@ -18,6 +18,7 @@ class TestWebsiteSaleSubscriptionCommon(TestSubscriptionCommon):
         ProductTemplate = cls.env['product.template']
         ProductAttributeVal = cls.env['product.attribute.value']
         Pricing = cls.env['product.pricing']
+        Pricelist = cls.env['product.pricelist']
 
         # create product 1
         cls.sub_product = ProductTemplate.create({
@@ -33,6 +34,7 @@ class TestWebsiteSaleSubscriptionCommon(TestSubscriptionCommon):
             }
         ])
 
+        # create product 2
         cls.sub_product_2 = ProductTemplate.create({
             'name': 'Streaming SUB Monthly',
             'list_price': 0,
@@ -43,6 +45,36 @@ class TestWebsiteSaleSubscriptionCommon(TestSubscriptionCommon):
                 'recurrence_id': cls.recurrence_month.id,
                 'price': 25.0,
                 'product_template_id': cls.sub_product_2.id,
+            }
+        ])
+        # create product 3
+        cls.sub_product_3 = ProductTemplate.create({
+            'name': 'Streaming SUB Yearly',
+            'list_price': 0,
+            'recurring_invoice': True,
+        })
+        cls.pricelist_111 = Pricelist.create({
+            'name': 'Pricelist111',
+            'selectable': True,
+        })
+        cls.pricelist_222 = Pricelist.create({
+            'name': 'Pricelist222',
+            'selectable': True,
+        })
+        Pricing.create([
+            {
+                'recurrence_id': cls.recurrence_year.id,
+                'price': 111.0,
+                'product_template_id': cls.sub_product_3.id,
+                'pricelist_id': cls.pricelist_111.id,
+            }
+        ])
+        Pricing.create([
+            {
+                'recurrence_id': cls.recurrence_year.id,
+                'price': 222.0,
+                'product_template_id': cls.sub_product_3.id,
+                'pricelist_id': cls.pricelist_222.id,
             }
         ])
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from random import sample
+
 from odoo import api, fields, models
 
 
@@ -31,5 +33,6 @@ class StockPicking(models.Model):
                 'documents': message.attachment_ids.mapped('datas'),
                 'iot_device_identifier': self.picking_type_id.iot_printer_id.identifier,
                 'iot_ip': self.picking_type_id.iot_printer_id.iot_ip,
+                'iot_idempotent_ids': sample(range(1, 100000000), len(message.attachment_ids)),
             })
         return message

@@ -21,7 +21,7 @@ patch(VariantMixin, "VariantMixinSubscription" , {
         const $duration = $parent.find(".o_subscription_duration");
         const $unit = $parent.find(".o_subscription_unit");
         $duration.text(combination.subscription_duration > 1 ? combination.subscription_duration : '');
-        $unit.text(combination.subscription_unit);
+        $unit.text(combination.subscription_unit_display);
 
         return result;
     }

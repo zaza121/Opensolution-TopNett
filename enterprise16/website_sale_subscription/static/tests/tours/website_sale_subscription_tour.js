@@ -50,7 +50,7 @@ tour.register('shop_buy_subscription_product', {
         },
         {
             content: "Check that we cannot add streaming monthly",
-            trigger: '#product_detail p:contains("This product has no valid combination.")',
+            trigger: '#product_detail p:contains("This product pricing is not compatible with the product(s) in your cart.")',
             run: function () {}, // it's a check
         },
         {

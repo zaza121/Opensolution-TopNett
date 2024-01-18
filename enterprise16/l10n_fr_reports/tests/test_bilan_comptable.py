@@ -20,7 +20,7 @@ class TestBilanComptable(TestAccountReportsCommon):
         ]
 
     def _build_generic_id_from_financial_line(self, financial_rep_ln_xmlid):
-        return f'-account.report.line-{self.env.ref(financial_rep_ln_xmlid).id}'
+        return self.env['account.report']._get_generic_line_id('account.report.line', self.env.ref(financial_rep_ln_xmlid).id)
 
     def test_bilan_comptable_bank_actif_passif(self):
         """

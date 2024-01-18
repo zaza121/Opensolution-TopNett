@@ -56,11 +56,8 @@ class SaleOrder(models.Model):
                 so.commission_plan_id = so.referrer_id.commission_plan_id
 
     def _set_commission_plan(self):
-        for order in self:
-            if not order.commission_plan_frozen and order.referrer_id and order.referrer_id.commission_plan_id != order.commission_plan_id:
-                order.commission_plan_frozen = True
-            else:
-                order.commission_plan_frozen = False
+        updated_plan_sale_order = self.filtered(lambda order: not order.commission_plan_frozen and order.referrer_id and order.referrer_id.commission_plan_id != order.commission_plan_id)
+        updated_plan_sale_order.commission_plan_frozen = True
 
     def _prepare_invoice(self):
         invoice_vals = super()._prepare_invoice()

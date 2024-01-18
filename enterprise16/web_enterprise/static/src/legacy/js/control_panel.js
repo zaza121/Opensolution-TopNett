@@ -4,6 +4,7 @@ odoo.define('web_enterprise.ControlPanel', function (require) {
     const ControlPanel = require('web.ControlPanel');
     const { device } = require('web.config');
     const { patch } = require('web.utils');
+    const { usePosition } = require("@web/core/position_hook");
 
     const { onMounted, useExternalListener, useRef, useState, useEffect } = owl;
     const STICKY_CLASS = 'o_mobile_sticky';
@@ -49,6 +50,13 @@ odoo.define('web_enterprise.ControlPanel', function (require) {
                 this.lastScrollTop = 0;
                 this.initialScrollTop = this._getScrollingElement().scrollTop;
             });
+            if (this.props.views && this.props.views.length > 1) {
+                const togglerRef = useRef("viewSwitcherTogglerRef");
+                usePosition(() => togglerRef.el, {
+                    popper: "viewSwitcherMenuRef",
+                    position: "bottom-end",
+                });
+            }
         },
 
         //---------------------------------------------------------------------

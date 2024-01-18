@@ -72,7 +72,8 @@ odoo.define('pos_settle_due.PaymentScreen', function (require) {
                 const hasCustomerAccountAsPaymentMethod = this.currentOrder.get_paymentlines().find(
                     paymentline => paymentline.payment_method.type === 'pay_later'
                 );
-                if (hasCustomerAccountAsPaymentMethod) {
+                const partner = this.currentOrder.get_partner();
+                if (hasCustomerAccountAsPaymentMethod && partner.total_due !== undefined) {
                     this.env.pos.refreshTotalDueOfPartner(this.currentOrder.get_partner());
                 }
             }

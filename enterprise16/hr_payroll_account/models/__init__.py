@@ -3,3 +3,4 @@
 
 from . import hr_payroll_account
 from . import account_journal
+from . import account_chart_template

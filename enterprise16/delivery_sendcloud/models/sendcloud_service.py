@@ -172,7 +172,7 @@ class SendCloud:
         return ' '
 
     def _validate_partner_details(self, partner):
-        if not partner.phone:
+        if not partner.phone and not partner.mobile:
             raise UserError(_('%(partner_name)s phone required', partner_name=partner.name))
         if not partner.email:
             raise UserError(_('%(partner_name)s email required', partner_name=partner.name))
@@ -210,6 +210,15 @@ class SendCloud:
             raise UserError(_("The weight of some products is missing: \n %s") % ", ".join(error_lines.product_id.mapped('name')))
         parcels = []
         delivery_packages = picking.carrier_id._get_packages_from_picking(picking, picking.carrier_id.sendcloud_default_package_type_id)
+        sale_order = picking.sale_id
+        if sale_order:
+            total_value = sum(line.price_reduce_taxinc * line.product_uom_qty for line in
+                              sale_order.order_line.filtered(
+                                  lambda l: l.product_id.type in ('consu', 'product') and not l.display_type))
+            currency_name = picking.sale_id.currency_id.name
+        else:
+            total_value = sum([line.product_id.lst_price * line.product_qty for line in picking.move_ids])
+            currency_name = picking.company_id.currency_id.name
         parcel_common = {
             'name': to_partner_id.name,
             'address': to_partner_id.street,
@@ -219,7 +228,7 @@ class SendCloud:
             'country_state': to_partner_id.state_id.code or '',
             'postal_code': to_partner_id.zip,
             'country': to_partner_id.country_id.code,
-            'telephone': to_partner_id.phone or '',
+            'telephone': to_partner_id.phone or to_partner_id.mobile or '',
             'email': to_partner_id.email or '',
             'request_label': True,
             'apply_shipping_rules': apply_rules,
@@ -228,10 +237,11 @@ class SendCloud:
             },
             'is_return': is_return,
             'shipping_method_checkout_name': shipment_name,
+            'order_number': picking.sale_id.name or picking.name,
             'customs_shipment_type': 4 if is_return else 2,
             'customs_invoice_nr': picking.origin or '',
-            'total_order_value': picking.sale_id.amount_total,
-            'total_order_value_currency': picking.sale_id.currency_id.name
+            'total_order_value': float_repr(total_value, 2),
+            'total_order_value_currency': currency_name
         }
         if sender_id:
             parcel_common.update({
@@ -248,7 +258,7 @@ class SendCloud:
                 'from_state': from_partner_id.state_id.code or '',
                 'from_postal_code': from_partner_id.zip or '',
                 'from_country': from_partner_id.country_id.code,
-                'from_telephone': from_partner_id.phone or '',
+                'from_telephone': from_partner_id.phone or from_partner_id.mobile or '',
                 'from_email': from_partner_id.email or '',
             })
         for pkg in delivery_packages:

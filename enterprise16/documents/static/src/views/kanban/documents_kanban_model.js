@@ -28,6 +28,7 @@ export class DocumentsKanbanRecord extends DocumentsRecordMixin(KanbanModel.Reco
                 isPdfSplit: false,
                 rules: this.data.available_rule_ids.records,
                 hasPdfSplit,
+                selection,
             });
         }
     }

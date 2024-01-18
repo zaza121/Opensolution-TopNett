@@ -3,7 +3,7 @@
     <t t-name="hr_referral.Welcome" owl="1">
         <div class="o_hr_referral_wrapper">
             <t t-if="dashboardData.onboarding_screen">
-                <div id="carouselOnboarding" class="carousel slide o_hr_referral_intro_carousel" data-bs-interval="false" t-on-click="_onNewSlide">
+                <div id="carouselOnboarding" class="carousel slide o_hr_referral_intro_carousel" data-bs-interval="false" t-ref="carousel">
                     <div class="carousel-header text-center">
                         <div class="o_hr_referral_logo">
                             <img src="/hr_referral/static/src/img/circle.svg" alt="Gather your team" class="img-fluid"/>
@@ -32,14 +32,14 @@
                             </t>
                         </ol>
                         <div class="carousel-controls d-flex">
-                            <a type="button" id="btn_skip" t-ref="btnSkipRef" class="o_hr_referral_btn btn me-1 btn-lg side-btn o_hr_referral_start" aria-label="Start" title="Skip and Start" t-on-click.prevent="() => this._completeOnboarding(true)">
+                            <a type="button" id="btn_skip" t-if="!state.reachedEnd" class="o_hr_referral_btn btn me-1 btn-lg side-btn o_hr_referral_start" aria-label="Start" title="Skip and Start" t-on-click.prevent="() => this._completeOnboarding(true)">
                                 Skip
                             </a>
-                            <a id="btn_next" t-ref="btnNextRef" class="o_hr_referral_btn btn ms-1 btn-lg btn-primary" href="#carouselOnboarding" role="button" data-bs-slide="next">
+                            <a id="btn_next" t-if="!state.reachedEnd" class="o_hr_referral_btn btn ms-1 btn-lg btn-primary" href="#carouselOnboarding" role="button" data-bs-slide="next">
                                 Next
                                 <i class="fa fa-chevron-right"/>
                             </a>
-                            <a type="button" t-ref="btnStartRef" id="btn_start" class="o_hr_referral_btn btn btn-lg btn-primary o_hr_referral_start" style="display: none;" aria-label="Start" title="Start" t-on-click.prevent="() => this._completeOnboarding(true)">
+                            <a type="button" id="btn_start" class="o_hr_referral_btn btn btn-lg btn-primary o_hr_referral_start" t-if="state.reachedEnd" aria-label="Start" title="Start" t-on-click.prevent="() => this._completeOnboarding(true)">
                                 Start Now
                             </a>
                         </div>

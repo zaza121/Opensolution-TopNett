@@ -2,6 +2,7 @@
 
 import { getNumberOfListFormulas } from "@spreadsheet/list/list_helpers";
 import spreadsheet from "@spreadsheet/o_spreadsheet/o_spreadsheet_extended";
+import { containsReferences } from "../helpers";
 
 const { autofillModifiersRegistry, autofillRulesRegistry } = spreadsheet.registries;
 
@@ -10,7 +11,11 @@ const { autofillModifiersRegistry, autofillRulesRegistry } = spreadsheet.registr
 //--------------------------------------------------------------------------
 
 autofillRulesRegistry.add("autofill_list", {
-    condition: (cell) => cell && cell.isFormula() && getNumberOfListFormulas(cell.content) === 1,
+    condition: (cell) =>
+        cell &&
+        cell.isFormula() &&
+        getNumberOfListFormulas(cell.content) === 1 &&
+        !containsReferences(cell),
     generateRule: (cell, cells) => {
         const increment = cells.filter(
             (cell) => cell && cell.isFormula() && getNumberOfListFormulas(cell.content) === 1
@@ -66,7 +71,7 @@ autofillModifiersRegistry.add("LIST_UPDATER", {
         return {
             cellData: {
                 style: undefined,
-                format: undefined,
+                format: data.cell && data.cell.format,
                 border: undefined,
                 content,
             },

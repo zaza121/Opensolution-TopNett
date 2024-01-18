@@ -68,7 +68,17 @@ class AppointmentCommon(MailCommon, common.HttpCase):
             login='staff_user_aust',
             tz='Australia/West'  # UTC + 8 (at least in February)
         )
-        cls.staff_users = cls.staff_user_bxls + cls.staff_user_aust
+        cls.staff_user_nz = mail_new_test_user(
+            cls.env,
+            company_id=cls.company_admin.id,
+            email='new_zealand@test.example.com',
+            groups='base.group_user',
+            name='Employee New Zealand',
+            notification_type='email',
+            login='staff_user_nz',
+            tz='Pacific/Auckland'  # UTC + 12
+        )
+        cls.staff_users = cls.staff_user_bxls + cls.staff_user_aust + cls.staff_user_nz
 
         # Default (test) appointment type
         # Slots are each hours from 8 to 13 (UTC + 1)

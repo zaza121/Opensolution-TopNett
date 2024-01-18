@@ -176,6 +176,141 @@ class TestTaskFlow(common.TransactionCase):
         )['user_ids']
         self.assertFalse(progress_bar, "Progress bar should be empty for non-project users")
 
+    def test_planned_date_consistency_for_tasks(self):
+        """ This test ensures that a task can not have date start set, if its date end is False and that it can not have a date end set if its date start is False """
+        task_1 = self.env['project.task'].create([{
+            'name': 'Task 1',
+            'user_ids': self.project_user,
+            'project_id': self.project_test.id,
+            'planned_date_begin': '2021-09-27 06:00:00',
+            'planned_date_end': '2021-09-28 15:00:00',
+        }])
+
+        task_1.planned_date_begin = False
+        self.assertFalse(task_1.planned_date_begin, 'the planned date begin should be set to False')
+        self.assertFalse(task_1.planned_date_end, 'the planned date end should be set to False')
+
+        task_1.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        self.assertEqual('2021-09-27', task_1.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should be set to the new date')
+        self.assertEqual('2021-09-28', task_1.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should be set to the new date')
+
+        task_1.planned_date_end = False
+        self.assertFalse(task_1.planned_date_begin, 'the planned date begin should be set to False')
+        self.assertFalse(task_1.planned_date_end, 'the planned date end should be set to False')
+
+        task_1.write({'planned_date_begin': '2021-09-27 06:00:00'})
+        self.assertFalse(task_1.planned_date_begin, 'the planned date begin should not be updated')
+        self.assertFalse(task_1.planned_date_end, 'the planned date end should not be updated')
+
+        task_1.write({'planned_date_end': '2021-09-27 06:00:00'})
+        self.assertFalse(task_1.planned_date_begin, 'the planned date begin should not be updated')
+        self.assertFalse(task_1.planned_date_end, 'the planned date end should not be updated')
+
+        # Test write on a recordset.
+        task_2 = self.env['project.task'].create([{
+            'name': 'Task 2',
+            'user_ids': self.project_user,
+            'project_id': self.project_test.id,
+            'planned_date_begin': '2021-09-23 06:00:00',
+            'planned_date_end': '2021-09-24 15:00:00',
+        }])
+        tasks = task_1 | task_2
+
+        # Case 1 : one record has a daterange set, one record has no daterange.
+        # Set a new daterange. both should be updated.
+        tasks.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        for task in tasks:
+            self.assertEqual('2021-09-27', task.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should be set to the new date')
+            self.assertEqual('2021-09-28', task.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should be set to the new date')
+        task_1.write({'planned_date_begin': False})
+        # Set the date start to a new date. None of the tasks should be updated.
+        tasks.write({'planned_date_begin': '2021-09-23 06:00:00'})
+        self.assertFalse(task_1.planned_date_begin, 'the planned date begin should not be updated')
+        self.assertFalse(task_1.planned_date_end, 'the planned date end should not be updated')
+        self.assertEqual('2021-09-27', task_2.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should not be updated')
+        self.assertEqual('2021-09-28', task_2.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should not be updated')
+        # Set the date end to a new date. None of the tasks should be updated.
+        tasks.write({'planned_date_end': '2021-09-30 06:00:00'})
+        self.assertFalse(task_1.planned_date_begin, 'the planned date begin should not be updated')
+        self.assertFalse(task_1.planned_date_end, 'the planned date end should not be updated')
+        self.assertEqual('2021-09-27', task_2.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should not be updated')
+        self.assertEqual('2021-09-28', task_2.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should not be updated')
+        # Set the date start to False. Both tasks should have a daterange set to False.
+        tasks.write({'planned_date_begin': False})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should be set to False')
+            self.assertFalse(task.planned_date_end, 'the planned date end should be set to False')
+        task_2.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        # Set the date end to False. Both tasks should have a daterange set to False.
+        tasks.write({'planned_date_end': False})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should be set to False')
+            self.assertFalse(task.planned_date_end, 'the planned date end should be set to False')
+
+        # Case 2 both record have no daterange
+        # Set the date start to a new date. None of the tasks should be updated.
+        tasks.write({'planned_date_begin': '2021-09-23 06:00:00'})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should not be updated')
+            self.assertFalse(task.planned_date_end, 'the planned date end should not be updated')
+        # Set the date end to a new date. None of the tasks should be updated.
+        tasks.write({'planned_date_end': '2021-09-30 06:00:00'})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should not be updated')
+            self.assertFalse(task.planned_date_end, 'the planned date end should not be updated')
+        # Set the date start to False. None of the tasks should be updated.
+        tasks.write({'planned_date_begin': False})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should not be updated')
+            self.assertFalse(task.planned_date_end, 'the planned date end should not be updated')
+        # Set the date end to False. None of the tasks should be updated.
+        tasks.write({'planned_date_end': False})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should not be updated')
+            self.assertFalse(task.planned_date_end, 'the planned date end should not be updated')
+        # Set a new daterange. Both tasks should be updated.
+        tasks.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        for task in tasks:
+            self.assertEqual('2021-09-27', task.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should be set to the new date')
+            self.assertEqual('2021-09-28', task.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should be set to the new date')
+
+        # Case 3 both record have a different daterange set
+        task_2.write({'planned_date_begin': '2021-09-23 06:00:00', 'planned_date_end': '2021-09-24 15:00:00'})
+        # Set the date start to a new date. Both tasks should be updated.
+        tasks.write({'planned_date_begin': '2021-09-22 06:00:00'})
+        self.assertEqual('2021-09-22', task_1.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should be set to the new date')
+        self.assertEqual('2021-09-28', task_1.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should not be updated')
+        self.assertEqual('2021-09-22', task_2.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should be set to the new date')
+        self.assertEqual('2021-09-24', task_2.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should not be updated')
+        task_2.write({'planned_date_begin': '2021-09-23 06:00:00'})
+        # Set the date end to a new date. None of the tasks should be updated.
+        tasks.write({'planned_date_end': '2021-09-30 06:00:00'})
+        self.assertEqual('2021-09-22', task_1.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should not be updated')
+        self.assertEqual('2021-09-30', task_1.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should be set to the new date')
+        self.assertEqual('2021-09-23', task_2.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should not be updated')
+        self.assertEqual('2021-09-30', task_2.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should be set to the new date')
+        task_1.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        task_2.write({'planned_date_begin': '2021-09-23 06:00:00', 'planned_date_end': '2021-09-24 15:00:00'})
+        # Set the date start to False. Both tasks should be set to False.
+        tasks.write({'planned_date_begin': False})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should be set to False')
+            self.assertFalse(task.planned_date_end, 'the planned date end should be set to False')
+        task_1.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        task_2.write({'planned_date_begin': '2021-09-23 06:00:00', 'planned_date_end': '2021-09-24 15:00:00'})
+        # Set the date end to False. Both tasks should be updated.
+        tasks.write({'planned_date_end': False})
+        for task in tasks:
+            self.assertFalse(task.planned_date_begin, 'the planned date begin should be set to False')
+            self.assertFalse(task.planned_date_end, 'the planned date end should be set to False')
+        task_1.write({'planned_date_begin': '2021-09-27 06:00:00', 'planned_date_end': '2021-09-28 15:00:00'})
+        task_2.write({'planned_date_begin': '2021-09-23 06:00:00', 'planned_date_end': '2021-09-24 15:00:00'})
+        # Set a new daterange. Both should be updated.
+        tasks.write({'planned_date_begin': '2021-09-25 06:00:00', 'planned_date_end': '2021-09-26 15:00:00'})
+        for task in tasks:
+            self.assertEqual('2021-09-25', task.planned_date_begin.strftime('%Y-%m-%d'), 'the planned date begin should be set to the new date')
+            self.assertEqual('2021-09-26', task.planned_date_end.strftime('%Y-%m-%d'), 'the planned date end should be set to the new date')
+
     def test_performance(self):
         nb = 40
         self.create_tasks(nb=nb)

@@ -61,13 +61,19 @@ QUnit.module("spreadsheet_edition > List collaborative", {
 });
 
 QUnit.test("Add a list", async (assert) => {
-    assert.expect(1);
     insertList(alice, "1");
     assert.spreadsheetIsSynchronized(
         [alice, bob, charlie],
         (user) => user.getters.getListIds().length,
         1
     );
+    assert.spreadsheetIsSynchronized(
+        [alice, bob, charlie],
+        (user) => getCellValue(user, "A4"),
+        "Loading..."
+    );
+    await nextTick();
+    assert.spreadsheetIsSynchronized([alice, bob, charlie], (user) => getCellValue(user, "A4"), 17);
 });
 
 QUnit.test("Add two lists concurrently", async (assert) => {

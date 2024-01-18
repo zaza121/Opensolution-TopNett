@@ -16,11 +16,13 @@ class BaseAutomation(models.Model):
         """ Override the check of delay to try to use a user-related calendar.
             If no calendar is found, fallback on the default behavior.
         """
-        if action.trg_date_calendar_id and action.trg_date_range_type == 'day' and action.trg_date_resource_field_id:
+        if action.trg_date_range_type == 'day' and action.trg_date_resource_field_id:
             user = record[action.trg_date_resource_field_id.name]
-            if user.employee_id and user.employee_id.contract_id and user.employee_id.contract_id.resource_calendar_id:
-                calendar = user.employee_id.contract_id.resource_calendar_id
-                start_dt = Datetime.from_string(record_dt)
-                resource_id = user.employee_id.resource_id.id
-                return calendar.schedule_days_get_date(action.trg_date_range, day_date=start_dt, compute_leaves=True, resource_id=resource_id)
+            calendar = user.employee_id.contract_id.resource_calendar_id
+            if calendar:
+                return calendar.plan_days(
+                    action.trg_date_range,
+                    fields.Datetime.from_string(record_dt),
+                    compute_leaves=True,
+                )
         return super(BaseAutomation, self)._check_delay(action, record, record_dt)

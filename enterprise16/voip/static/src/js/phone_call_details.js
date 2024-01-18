@@ -496,9 +496,12 @@ const PhoneCallDetails = Widget.extend({
      * @private
      */
     async _onInputNumber() {
-        var self = this;
-        var value = $('#input_transfer').val().toLowerCase();
-        var number = cleanNumber(value);
+        const searchTerms = $("#input_transfer").val().toLowerCase();
+        if (searchTerms.trim() === "") {
+            $("#table_contact").empty();
+            return;
+        }
+        const number = cleanNumber(searchTerms);
         if (number) {
             var domain = ['&', '|',
                 ['sanitized_phone', '!=', ''],
@@ -506,47 +509,47 @@ const PhoneCallDetails = Widget.extend({
                 '|', '|',
                 ['sanitized_phone', 'ilike', number],
                 ['sanitized_mobile', 'ilike', number],
-                ['name', 'ilike', value],
+                ['name', 'ilike', searchTerms],
             ];
         } else {
             var domain = ['&', '|',
                 ['sanitized_phone', '!=', ''],
                 ['sanitized_mobile', '!=', ''],
-                ['name', 'ilike', value],
+                ['name', 'ilike', searchTerms],
             ];
         }
-        let contacts = await this._rpc({
+        const contacts = await this._rpc({
             model: 'res.partner',
             method: 'search_read',
             domain: [['user_ids', '!=', false]].concat(domain),
             fields: ['id', 'display_name', 'sanitized_phone', 'sanitized_mobile'],
             limit: 8,
         });
-        var lines = ''
-        for (let i = 0; i < contacts.length; i++) {
-            var name = contacts[i].display_name;
-            var phone = contacts[i].sanitized_phone;
-            var mobile = contacts[i].sanitized_mobile;
-            var default_phone = phone;
-            var indexOf = name.toLowerCase().indexOf(value);
-            var nameBolt = ''
-            if (indexOf >= 0) {
-                // We matched the name, we made the following line to keep the upper cases
-                nameBolt = name.slice(0, indexOf) + '<b>' + name.slice(indexOf, indexOf + value.length) + '</b>' + name.slice(indexOf + value.length)
-            } else if (phone && phone.includes(number)) {
-                nameBolt = name + ' (' + phone.replace(number, '<b>' + number + '</b>') + ')';
-            } else if (mobile && mobile.includes(number)) {
-                nameBolt = name + ' (' + mobile.replace(number, '<b>' + number + '</b>') + ')';
-                default_phone = mobile;
+        let lines = "";
+        const regex = new RegExp(`(^.*)(${_.str.escapeRegExp(searchTerms)})(.*$)`, "i");
+        for (const contact of contacts) {
+            for (const key of ["display_name", "sanitized_phone", "sanitized_mobile"]) {
+                const value = contact[key];
+                if (!value) {
+                    continue;
+                }
+                const [, start, match, end] = (value.match(regex) || []).map(_.escape);
+                if (match) {
+                    let searchResult = `${start}<b>${match}</b>${end}`;
+                    let phoneNumber = contact.sanitized_mobile || contact.sanitized_phone;
+                    if (key === "sanitized_phone" || key === "sanitized_mobile") {
+                        searchResult = `${_.escape(contact.display_name)} (${searchResult})`;
+                        phoneNumber = contact[key];
+                    }
+                    lines += `<tr class="transfer_contact_line cursor-pointer" data-number="${_.escape(phoneNumber)}"><td>${searchResult}</td></tr>`;
+                    break;
+                }
             }
-            lines += '<tr class="transfer_contact_line cursor-pointer" data-number="' + default_phone + '"><td>' + nameBolt + '</td></tr>';
-            }
+        }
         $('#table_contact').empty().append(lines);
-        $('#table_contact tr').on('click', async function(event){self._onClickContactLine(event);});
-        $('#input_transfer').removeClass('is-invalid')
-
-        $('.o_dial_transfer_button').popover('update')
-
+        $("#table_contact tr").on("click", (ev) => this._onClickContactLine(ev));
+        $("#input_transfer").removeClass("is-invalid");
+        $(".o_dial_transfer_button").popover("update");
     },
 });
 

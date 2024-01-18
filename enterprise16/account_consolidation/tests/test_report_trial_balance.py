@@ -8,7 +8,9 @@ class TestTrialBalanceReport(AccountConsolidationTestCase):
     def setUp(self):
         super().setUp()  # providing self.default_company, self.us_company and self.chart
         # Fix test when running on runbot as demo data are loaded and collide with the data of this test
-        self.env['consolidation.period'].search([]).unlink()
+        periods_to_unlink = self.env['consolidation.period'].search([])
+        periods_to_unlink.journal_ids.line_ids.with_context(allow_unlink=True).unlink()
+        periods_to_unlink.unlink()
         self._create_chart_of_accounts(self.chart)
         self._generate_default_periods_and_journals(self.chart)
         self._generate_default_lines()

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="account_financial_report_l10n_pcg_cdr" model="account.report">
-        <field name="name">Compte de résultats</field>
+        <field name="name">Profit and Loss (SYSCOHADA)</field>
         <field name="root_report_id" ref="account_reports.profit_and_loss"/>
         <field name="filter_multi_company">selector</field>
         <field name="column_ids">
@@ -12,7 +12,7 @@
         </field>
         <field name="line_ids">
             <record id="account_financial_report_line_01_syscohada_cdr_tot" model="account.report.line">
-                <field name="name">PRODUITS ET CHARGES</field>
+                <field name="name">INCOME AND EXPENSES</field>
                 <field name="code">SYSCOHADA_CDR_TOT</field>
                 <field name="children_ids">
                     <record id="account_financial_report_line_01_syscohada_cdr_char_vent" model="account.report.line">
@@ -29,7 +29,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr_char_acht" model="account.report.line">
-                        <field name="name">RA | Achats de marchandises</field>
+                        <field name="name">RA | Purchases of goods</field>
                         <field name="code">SYSCOHADA_Achats_de_marchandises</field>
                         <field name="hierarchy_level" eval="5"/>
                         <field name="expression_ids">
@@ -42,7 +42,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr_char_stck" model="account.report.line">
-                        <field name="name">RB | Variation de stocks de marchandises</field>
+                        <field name="name">RB | Change in inventory of goods</field>
                         <field name="code">SYSCOHADA_Variation_de_stocks_mar</field>
                         <field name="hierarchy_level" eval="5"/>
                         <field name="expression_ids">
@@ -55,7 +55,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr_marg_comr" model="account.report.line">
-                        <field name="name">XA | MARGE COMMERCIALE (Somme TA à RB)</field>
+                        <field name="name">XA | TRADE MARGIN (Sum of TA to RB)</field>
                         <field name="code">SYSCOHADA_Marge_commerciale </field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr_marg_comr_balance" model="account.report.expression">
@@ -67,7 +67,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr_char_fbr" model="account.report.line">
-                                <field name="name">TB | Ventes de produits fabriqués</field>
+                                <field name="name">TB | Sales of manufactured products</field>
                                 <field name="code">SYSCOHADA_Ventes_prod_fab</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_01_syscohada_cdr_char_fbr_balance" model="account.report.expression">
@@ -79,7 +79,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_01_syscohada_cdr_char_tc" model="account.report.line">
-                                <field name="name">TC | Travaux, services vendus</field>
+                                <field name="name">TC | Work, services sold</field>
                                 <field name="code">SYSCOHADA_Travaux_services_vn</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_01_syscohada_cdr_char_tc_balance" model="account.report.expression">
@@ -91,7 +91,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_01_syscohada_cdr_char_pa" model="account.report.line">
-                                <field name="name">TD | Produits accessoires</field>
+                                <field name="name">TD | Accessory Products</field>
                                 <field name="code">SYSCOHADA_Produits_accessoires</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_01_syscohada_cdr_char_pa_balance" model="account.report.expression">
@@ -105,7 +105,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr_char_exp" model="account.report.line">
-                        <field name="name">XB | CHIFFRE D'AFFAIRES (TA + TB + TC + TD)</field>
+                        <field name="name">XB | SALES REVENUES (TA + TB + TC + TD)</field>
                         <field name="code">SYSCOHADA_Chiffres_affaires</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr_char_exp_balance" model="account.report.expression">
@@ -117,7 +117,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_syscohada_cdrc_te" model="account.report.line">
-                                <field name="name">TE | Production stockée (ou déstockage)</field>
+                                <field name="name">TE | Stored production (or destocking)</field>
                                 <field name="code">SYSCOHADA_Produc_stck</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc_te_balance" model="account.report.expression">
@@ -129,7 +129,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc_tf" model="account.report.line">
-                                <field name="name">TF | Production immobilisée</field>
+                                <field name="name">TF | Capitalized production</field>
                                 <field name="code">SYSCOHADA_Produc_immo</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc_tf_balance" model="account.report.expression">
@@ -141,7 +141,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc_tg" model="account.report.line">
-                                <field name="name">TG | Subventions d'exploitation</field>
+                                <field name="name">TG | Operating Grants</field>
                                 <field name="code">SYSCOHADA_Sub_exp</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc_tg_balance" model="account.report.expression">
@@ -153,7 +153,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc_th" model="account.report.line">
-                                <field name="name">TH | Autres produits</field>
+                                <field name="name">TH | Other products</field>
                                 <field name="code">SYSCOHADA_Autres_prod</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc_th_balance" model="account.report.expression">
@@ -165,7 +165,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc5" model="account.report.line">
-                                <field name="name">TI | Transferts de charges d'exploitation</field>
+                                <field name="name">TI | Operating expense transfers</field>
                                 <field name="code">SYSCOHADA_Transf_chrg_exp</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc5_balance" model="account.report.expression">
@@ -177,7 +177,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc8" model="account.report.line">
-                                <field name="name">RC | Achats de matières premières et fournitures liées</field>
+                                <field name="name">RC | Purchases of raw materials and related supplies</field>
                                 <field name="code">SYSCOHADA_Achats_mat_prem</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc8_balance" model="account.report.expression">
@@ -189,7 +189,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc9" model="account.report.line">
-                                <field name="name">RD | Variation de stocks de matières premières et fournitures liées</field>
+                                <field name="name">RD | Change in inventory of raw materials and related supplies</field>
                                 <field name="code">SYSCOHADA_Var_stocks_mp</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc9_balance" model="account.report.expression">
@@ -201,7 +201,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc10" model="account.report.line">
-                                <field name="name">RE | Autres achats</field>
+                                <field name="name">RE | Other Purchases</field>
                                 <field name="code">SYSCOHADA_Autres_achats</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc10_balance" model="account.report.expression">
@@ -213,7 +213,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc11" model="account.report.line">
-                                <field name="name">RF | Variation de stocks d'autres approvisionnements</field>
+                                <field name="name">RF | Change in inventory of other supplies</field>
                                 <field name="code">SYSCOHADA_Var_stocks_autres_app</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc11_balance" model="account.report.expression">
@@ -225,7 +225,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc12" model="account.report.line">
-                                <field name="name">RG | Transports</field>
+                                <field name="name">RG | Transport</field>
                                 <field name="code">SYSCOHADA_Transports</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc12_balance" model="account.report.expression">
@@ -237,7 +237,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc13" model="account.report.line">
-                                <field name="name">RH | Services exterieurs</field>
+                                <field name="name">RH | External Services</field>
                                 <field name="code">SYSCOHADA_Services_ext</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc13_balance" model="account.report.expression">
@@ -249,7 +249,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc14" model="account.report.line">
-                                <field name="name">RI | Impôts et taxes</field>
+                                <field name="name">RI | Taxes and Fees</field>
                                 <field name="code">SYSCOHADA_impots_et_taxes</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc14_balance" model="account.report.expression">
@@ -261,7 +261,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc15" model="account.report.line">
-                                <field name="name">RJ | Autres charges</field>
+                                <field name="name">RJ | Other expenses</field>
                                 <field name="code">SYSCOHADA_Autres_charges</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc15_balance" model="account.report.expression">
@@ -275,7 +275,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr_char_fin" model="account.report.line">
-                        <field name="name">XC | VALEUR AJOUTEE (XB+RA+RB) + (Somme TE à RJ)</field>
+                        <field name="name">XC | ADDED VALUE (XB+RA+RB) + (Sum of TE to RJ)</field>
                         <field name="code">SYSCOHADA_Val_ajoutee</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr_char_fin_balance" model="account.report.expression">
@@ -287,7 +287,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_syscohada_cdrc17" model="account.report.line">
-                                <field name="name">RK | Charges de personnel</field>
+                                <field name="name">RK | Personnel expenses</field>
                                 <field name="code">SYSCOHADA_Charges_pers</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc17_balance" model="account.report.expression">
@@ -301,7 +301,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_syscohada_cdrc18" model="account.report.line">
-                        <field name="name">XD | EXCEDENT BRUT D'EXPLOITATION (XC+RK)</field>
+                        <field name="name">XD | GROSS OPERATING SURPLUS (XC+RK)</field>
                         <field name="code">SYSCOHADA_EBE</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_syscohada_cdrc18_balance" model="account.report.expression">
@@ -313,7 +313,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_syscohada_rpam" model="account.report.line">
-                                <field name="name">TJ | Reprise d'amortissements, provisions et dépréciations</field>
+                                <field name="name">TJ | Reversal of depreciation, provisions and impairment</field>
                                 <field name="code">SYSCOHADA_Reprise_amr_prov_dep</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_rpam_balance" model="account.report.expression">
@@ -325,7 +325,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_dap" model="account.report.line">
-                                <field name="name">RL | Dotations aux amortissements, aux provisions et dépréciations</field>
+                                <field name="name">RL | Depreciation, amortization, provisions and impairment</field>
                                 <field name="code">SYSCOHADA_Dot_am_prov_dep</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_dap_balance" model="account.report.expression">
@@ -339,7 +339,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_syscohada_cdrc19" model="account.report.line">
-                        <field name="name">XE | RESULTAT D'EXPLOITATION  (XD+TJ+RL)</field>
+                        <field name="name">XE | OPERATING INCOME (XD+TJ+RL)</field>
                         <field name="code">SYSCOHADA_Resultat_exp</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_syscohada_cdrc19_balance" model="account.report.expression">
@@ -351,7 +351,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_syscohada_rvfn" model="account.report.line">
-                                <field name="name">TK | Revenus financiers et assimilés</field>
+                                <field name="name">TK | Financial and Similar Income</field>
                                 <field name="code">SYSCOHADA_Revenu_fin_ass</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_rvfn_balance" model="account.report.expression">
@@ -363,7 +363,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_rpad" model="account.report.line">
-                                <field name="name">TL | Reprises de provisions et dépréciations financières</field>
+                                <field name="name">TL | Reversals of provisions and financial depreciation</field>
                                 <field name="code">SYSCOHADA_Reprise_prov_dep_fin</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_rpad_balance" model="account.report.expression">
@@ -375,7 +375,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_trfcgf" model="account.report.line">
-                                <field name="name">TM | Transferts de charges financières</field>
+                                <field name="name">TM | Financial expense transfers</field>
                                 <field name="code">SYSCOHADA_Transferts_charges_fin</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_trfcgf_balance" model="account.report.expression">
@@ -387,7 +387,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_ff" model="account.report.line">
-                                <field name="name">RM | Frais financiers et charges assimilées</field>
+                                <field name="name">RM | Financial expenses and similar charges</field>
                                 <field name="code">SYSCOHADA_Frais_fin_chrg_ass</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_ff_balance" model="account.report.expression">
@@ -399,7 +399,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_dpdf" model="account.report.line">
-                                <field name="name">RN | Dotations aux provisions et aux dépréciations financières</field>
+                                <field name="name">RN | Allocation to provisions and financial depreciation</field>
                                 <field name="code">SYSCOHADA_Dot_prov_dep_fin</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_dpdf_balance" model="account.report.expression">
@@ -413,7 +413,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_syscohada_cdrc20" model="account.report.line">
-                        <field name="name">XF | RESULTAT FINANCIER (Somme TK à RN)</field>
+                        <field name="name">XF | FINANCIAL RESULT (Sum of TK to RN)</field>
                         <field name="code">SYSCOHADA_Resultat_fin</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_syscohada_cdrc20_balance" model="account.report.expression">
@@ -425,7 +425,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr_char_exc" model="account.report.line">
-                        <field name="name">XG | RESULTAT DES ACTIVITES ORDINAIRES (XE+XF)</field>
+                        <field name="name">XG | INCOME FROM ORDINARY ACTIVITIES (XE+XF)</field>
                         <field name="code">SYSCOHADA_Resultat_AO</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr_char_exc_balance" model="account.report.expression">
@@ -437,7 +437,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_syscohada_cdrc21" model="account.report.line">
-                                <field name="name">TN | Produits de cessions d'immobilisations</field>
+                                <field name="name">TN | Proceeds from disposal of fixed assets</field>
                                 <field name="code">SYSCOHADA_Prod_cess_immo</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc21_balance" model="account.report.expression">
@@ -449,7 +449,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc22" model="account.report.line">
-                                <field name="name">TO | Autres produits HAO</field>
+                                <field name="name">TO | Other O.A.S products</field>
                                 <field name="code">SYSCOHADA_Autres_prod_HAO</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc22_balance" model="account.report.expression">
@@ -461,7 +461,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_cdrc23" model="account.report.line">
-                                <field name="name">RO | Valeurs comptables des cessions d'immobilisations</field>
+                                <field name="name">RO | Book value of fixed asset disposals</field>
                                 <field name="code">SYSCOHADA_Val_comp_cess_immo</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_cdrc23_balance" model="account.report.expression">
@@ -473,7 +473,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_syscohada_rp" model="account.report.line">
-                                <field name="name">RP | Autres charges HAO</field>
+                                <field name="name">RP | Other expenses O.A.S</field>
                                 <field name="code">SYSCOHADA_Autres_chrg_HAO</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_syscohada_rp_balance" model="account.report.expression">
@@ -487,7 +487,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr24" model="account.report.line">
-                        <field name="name">XH | RESULTAT HORS ACTIVITES ORDINAIRES (Somme TN à RP)</field>
+                        <field name="name">XH | INCOME OUTSIDE OF ORDINARY ACTIVITIES (Sum of TN to RP)</field>
                         <field name="code">SYSCOHADA_Resultat_HAO</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr24_balance" model="account.report.expression">
@@ -499,7 +499,7 @@
                         </field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_01_syscohada_prct" model="account.report.line">
-                                <field name="name">RQ | Participations des travailleurs</field>
+                                <field name="name">RQ | Employee Share Ownership</field>
                                 <field name="code">SYSCOHADA_Part_trav</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_01_syscohada_prct_balance" model="account.report.expression">
@@ -511,7 +511,7 @@
                                 </field>
                             </record>
                             <record id="account_financial_report_line_01_syscohada_ir" model="account.report.line">
-                                <field name="name">RS | Impôts sur le resultat</field>
+                                <field name="name">RS | Income taxes</field>
                                 <field name="code">SYSCOHADA_Impots_resultat</field>
                                 <field name="expression_ids">
                                     <record id="account_financial_report_line_01_syscohada_ir_balance" model="account.report.expression">
@@ -525,7 +525,7 @@
                         </field>
                     </record>
                     <record id="account_financial_report_line_01_syscohada_cdr25" model="account.report.line">
-                        <field name="name">XI | RESULTAT NET (XG+XH+RQ+RS)</field>
+                        <field name="name">XI | NET INCOME (XG+XH+RQ+RS)</field>
                         <field name="code">SYSCOHADA_XI</field>
                         <field name="expression_ids">
                             <record id="account_financial_report_line_01_syscohada_cdr25_balance" model="account.report.expression">
@@ -541,7 +541,7 @@
         </field>
     </record>
     <record id="action_account_report_sypnl" model="ir.actions.client">
-        <field name="name">Compte des résultats</field>
+        <field name="name">Profit and Loss</field>
         <field name="tag">account_report</field>
         <field name="context" eval="{'report_id': ref('account_financial_report_l10n_pcg_cdr')}"/>
     </record>

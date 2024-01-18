@@ -5,7 +5,13 @@ import spreadsheet from "@spreadsheet/o_spreadsheet/o_spreadsheet_extended";
 import { spreadsheetLinkMenuCellService } from "@spreadsheet/ir_ui_menu/index";
 import { registry } from "@web/core/registry";
 import { createSpreadsheet } from "../../spreadsheet_test_utils";
-import { click, getFixture, legacyExtraNextTick, nextTick, patchWithCleanup } from "@web/../tests/helpers/utils";
+import {
+    click,
+    getFixture,
+    legacyExtraNextTick,
+    nextTick,
+    patchWithCleanup,
+} from "@web/../tests/helpers/utils";
 import { getCell } from "@spreadsheet/../tests/utils/getters";
 import { setCellContent, setSelection } from "@spreadsheet/../tests/utils/commands";
 import { getMenuServerData } from "@spreadsheet/../tests/links/menu_data_utils";
@@ -49,7 +55,7 @@ function beforeEach() {
     patchWithCleanup(Grid.prototype, {
         setup() {
             this._super();
-            this.hoveredCell = {col : 0, row : 0};
+            this.hoveredCell = { col: 0, row: 0 };
         },
     });
 }
@@ -79,6 +85,31 @@ QUnit.module("spreadsheet > menu link ui", { beforeEach }, () => {
             target.querySelector(".o-link-tool a").text,
             "menu with xmlid",
             "The link tooltip should display the menu name"
+        );
+    });
+
+    QUnit.test("update selected ir menu", async function (assert) {
+        await openMenuSelector();
+        await click(target, ".o_field_many2one input");
+        assert.ok(target.querySelector("button.o-confirm").disabled);
+        const item1 = document.querySelectorAll(".ui-menu-item")[1];
+        // FIXME - drop jquery
+        $(item1).trigger("mouseenter");
+        await click(item1);
+        assert.equal(
+            target.querySelector(".o_field_many2one input").value,
+            "menu without xmlid",
+            "The menu displayed should be the menu name"
+        );
+        await click(target, ".o_field_many2one input");
+        const item2 = document.querySelectorAll(".ui-menu-item")[0];
+        // FIXME - drop jquery
+        $(item2).trigger("mouseenter");
+        await click(item2);
+        assert.equal(
+            target.querySelector(".o_field_many2one input").value,
+            "menu with xmlid",
+            "The menu displayed should be the menu name"
         );
     });
 
@@ -114,6 +145,7 @@ QUnit.module("spreadsheet > menu link ui", { beforeEach }, () => {
             assert.ok(target.querySelector("button.o-confirm").disabled);
             const item = document.querySelectorAll(".ui-menu-item")[1];
             // don't ask why it's needed and why it only works with a jquery event >:(
+            // FIXME - drop jquery
             $(item).trigger("mouseenter");
             await click(item);
             await click(target, "button.o-confirm");

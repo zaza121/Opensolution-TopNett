@@ -6,7 +6,7 @@
     'version': '1.0',
     'category': 'Human Resources/Payroll',
     'sequence': 95,
-    'depends': ['hr_work_entry_holidays', 'hr_payroll'],
+    'depends': ['hr_holidays_gantt', 'hr_work_entry_holidays', 'hr_payroll'],
     'data': [
         'security/hr_payroll_holidays_security.xml',
         'views/res_config_settings_views.xml',

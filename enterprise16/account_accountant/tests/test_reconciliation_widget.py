@@ -291,3 +291,46 @@ class TestReconciliationWidget(TestAccountReconciliationCommon):
         }])
 
         self.assertEqual(invoice.amount_residual, 350)
+
+    def test_payment_matching_order(self):
+        """Test reconciliation occurs in the order specified by user"""
+
+        invoices = self.env['account.move']
+        for amount in (100, 300, 200):
+            invoices += self._create_invoice(
+                invoice_amount=amount,
+                move_type='out_invoice',
+                currency_id=None,
+                payment_term_id=self.env.ref('account.account_payment_term_immediate').id
+            )
+        invoices.action_post()
+
+        payment = self.env['account.payment'].create({
+            'payment_method_line_id': self.inbound_payment_method_line.id,
+            'payment_type': 'inbound',
+            'partner_type': 'customer',
+            'partner_id': self.partner_agrolait_id,
+            'amount': 500,
+            'journal_id': self.bank_journal_euro.id,
+            'company_id': self.company.id,
+        })
+        payment.action_post()
+
+        receivable_line_ids = []
+        for m in (payment, *invoices):
+            receivable_line_ids.append(m.line_ids.filtered(lambda l: l.account_id.account_type == 'asset_receivable').id)
+
+        data_for_reconciliation = [
+            {
+                'id': None,
+                'type': None,
+                'mv_line_ids': receivable_line_ids,
+                'new_mv_line_dicts': [],
+            }
+        ]
+
+        self.env["account.reconciliation.widget"].process_move_lines(data_for_reconciliation)
+
+        self.assertEqual(invoices[0].payment_state, 'in_payment')
+        self.assertEqual(invoices[1].payment_state, 'in_payment')
+        self.assertEqual(invoices[2].payment_state, 'partial')

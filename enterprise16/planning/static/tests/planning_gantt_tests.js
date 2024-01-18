@@ -29,6 +29,7 @@ odoo.define("planning.planning_gantt_tests.js", function (require) {
                             ["2022-10-14 11:00:00", "2022-10-14 15:00:00"],
                         ],
                     },
+                    { 1: false }
                 ]
             );
         }
@@ -343,6 +344,95 @@ odoo.define("planning.planning_gantt_tests.js", function (require) {
             const gantt = await createView(createViewArgs);
 
             assert.containsOnce(gantt, '.o_gantt_total .o_gantt_cell[data-date="2022-10-01 00:00:00"] .o_gantt_consolidated_pill_title:contains("15:00")', "2022-10-01 00:00:00 pill's display is taking unavailability into account");
+            gantt.destroy();
+        });
+
+        QUnit.test("gantt view totals are not based on company's resource calendar", async function (assert) {
+            assert.expect(1);
+            const createViewArgs = _getCreateViewArgsForGanttViewTotalsTests.bind(this)();
+            createViewArgs.data.task.records[0] = {
+                id: 1,
+                name: "test",
+                start_datetime: "2022-10-10 10:00:00",
+                end_datetime: "2022-10-10 20:00:00",
+                resource_id: false,
+                allocated_percentage: 100,
+            };
+            createViewArgs.mockRPC = async function (route, args) {
+                if (args.method === "gantt_company_hours_per_day") {
+                    // let's say the company hours_per_day is 8h/day
+                    return 8;
+                }
+                if (args.method === "gantt_resource_work_interval") {
+                    return [
+                        { false:
+                            [  // false key is when the resource_id is false
+                                ["2022-10-10 06:00:00", "2022-10-10 10:00:00"], //Monday    4h
+                                ["2022-10-11 06:00:00", "2022-10-11 10:00:00"], //Tuesday   5h
+                                ["2022-10-11 11:00:00", "2022-10-11 12:00:00"],
+                                ["2022-10-12 06:00:00", "2022-10-12 10:00:00"], //Wednesday 6h
+                                ["2022-10-12 11:00:00", "2022-10-12 13:00:00"],
+                                ["2022-10-13 06:00:00", "2022-10-13 10:00:00"], //Thursday  7h
+                                ["2022-10-13 11:00:00", "2022-10-13 14:00:00"],
+                                ["2022-10-14 06:00:00", "2022-10-14 10:00:00"], //Friday    8h
+                                ["2022-10-14 11:00:00", "2022-10-14 15:00:00"],
+                            ],
+                        },
+                        { false: false },
+                    ];
+                }
+                return this._super.apply(this, arguments);
+            }
+            const gantt = await createView(createViewArgs);
+            await testUtils.nextTick();
+            assert.containsOnce(gantt,
+                '.o_gantt_total .o_gantt_cell[data-date="2022-10-10 00:00:00"] .o_gantt_consolidated_pill[title="08:00"]',
+                "2022-10-10 pill's display 8h/day");
+            gantt.destroy();
+        });
+
+        QUnit.test("gantt view totals are not based on employee calendar when he has flexible working time",
+            async function (assert) {
+            assert.expect(1);
+            const createViewArgs = _getCreateViewArgsForGanttViewTotalsTests.bind(this)();
+            const resource_id = 1;
+            createViewArgs.data.task.records[0] = {
+                id: 1,
+                name: "test",
+                start_datetime: "2022-10-10 13:00:00",
+                end_datetime: "2022-10-10 19:00:00",
+                resource_id: resource_id,
+                allocated_percentage: 100,
+            };
+            createViewArgs.mockRPC = async function (route, args) {
+                if (args.method === "gantt_company_hours_per_day") {
+                    // let's say the company hours_per_day is 8h/day
+                    return 8;
+                }
+                if (args.method === "gantt_resource_work_interval") {
+                    return [{
+                        [resource_id]: [
+                            ["2022-10-10 06:00:00", "2022-10-10 10:00:00"], //Monday    4h
+                            ["2022-10-11 06:00:00", "2022-10-11 10:00:00"], //Tuesday   5h
+                            ["2022-10-11 11:00:00", "2022-10-11 12:00:00"],
+                            ["2022-10-12 06:00:00", "2022-10-12 10:00:00"], //Wednesday 6h
+                            ["2022-10-12 11:00:00", "2022-10-12 13:00:00"],
+                            ["2022-10-13 06:00:00", "2022-10-13 10:00:00"], //Thursday  7h
+                            ["2022-10-13 11:00:00", "2022-10-13 14:00:00"],
+                            ["2022-10-14 06:00:00", "2022-10-14 10:00:00"], //Friday    8h
+                            ["2022-10-14 11:00:00", "2022-10-14 15:00:00"],
+                        ],
+                    }, {
+                        [resource_id]: true,  // the employee has a flexible_hours
+                    }];
+                }
+                return this._super.apply(this, arguments);
+            }
+            const gantt = await createView(createViewArgs);
+            await testUtils.nextTick();
+            assert.containsOnce(gantt,
+                '.o_gantt_total .o_gantt_cell[data-date="2022-10-10 00:00:00"] .o_gantt_consolidated_pill[title="06:00"]',
+                "2022-10-10 pill's display 6h/day");
             gantt.destroy();
         });
 

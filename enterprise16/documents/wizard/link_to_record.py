@@ -5,13 +5,19 @@ class LinkToRecordWizard(models.TransientModel):
     _name = "documents.link_to_record_wizard"
     _description = "Documents Link to Record"
 
+    def _get_model_domain(self):
+        models = self.env['ir.model'].sudo().search([('model', '!=', 'documents.document'), ('is_mail_thread', '=', 'True')])
+        # check that model is in the registry so there's no issue when checking the view in upgrades
+        model_ids = models.filtered(lambda m: self.env[m.model].check_access_rights('write', raise_exception=False) if m.model in self.env else False).ids
+        return [('id', 'in', model_ids)]
+
     @api.model
     def _selection_target_model(self):
         return [(model.model, model.name)
                 for model in self.env['ir.model'].sudo().search([('model', '!=', 'documents.document'), ('is_mail_thread', '=', 'True')])]
 
     document_ids = fields.Many2many('documents.document', string='Documents', readonly=True)
-    model_id = fields.Many2one('ir.model', string='Model')
+    model_id = fields.Many2one('ir.model', string='Model', domain=_get_model_domain)
     is_readonly_model = fields.Boolean('is_readonly_model', default=True)
     resource_ref = fields.Reference(string='Record', selection='_selection_target_model')
     accessible_model_ids = fields.Many2many('ir.model', string='Models', compute='_compute_accessible_model_ids')

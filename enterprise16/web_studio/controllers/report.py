@@ -268,7 +268,7 @@ class WebStudioReportController(main.WebStudioController):
 
     @http.route('/web_studio/edit_report_view_arch', type='json', auth='user')
     def edit_report_view_arch(self, report_name, record_id, view_id, view_arch):
-        view = request.env['ir.ui.view'].browse(view_id)
+        view = request.env['ir.ui.view'].with_context(lang=None).browse(view_id)
         view.write({'arch': view_arch})
         # TODO: we might need to keep studio_arch as it was before the changes
         result = self.get_report_views(report_name, record_id)

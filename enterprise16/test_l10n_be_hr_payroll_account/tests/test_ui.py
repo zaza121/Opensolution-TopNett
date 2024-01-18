@@ -15,7 +15,13 @@ from odoo.modules.module import get_module_resource
 class TestUi(odoo.tests.HttpCase):
     def test_ui(self):
         # no user available for belgian company so to set hr responsible change company of demo
-        demo = mail_new_test_user(self.env, name="Laurie Poiret", login='be_demo', groups='hr.group_hr_user,sign.group_sign_user')
+        demo = mail_new_test_user(
+            self.env,
+            email='be_demo@test.example.com',
+            groups='hr.group_hr_user,sign.group_sign_user',
+            login='be_demo',
+            name="Laurie Poiret",
+        )
         pdf_path = get_module_resource('hr_contract_salary', 'static', 'src', 'demo', 'employee_contract.pdf')
         pdf_content = base64.b64encode(open(pdf_path, "rb").read())
 

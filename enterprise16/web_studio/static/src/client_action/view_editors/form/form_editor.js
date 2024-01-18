@@ -7,6 +7,7 @@ import { FormEditorCompiler } from "./form_editor_compiler";
 import { registry } from "@web/core/registry";
 import { omit } from "@web/core/utils/objects";
 import { makeModelErrorResilient } from "@web_studio/client_action/view_editors/utils";
+import { getModifier } from "@web/views/view_compiler";
 
 class EditorArchParser extends formView.ArchParser {
     parse(arch, models, modelName) {
@@ -17,6 +18,21 @@ class EditorArchParser extends formView.ArchParser {
         parsed.fieldNodes = omit(parsed.fieldNodes, ...noFetchFields);
         parsed.activeFields = omit(parsed.activeFields, ...noFetchFields);
         return parsed;
+    }
+
+    parseXML() {
+        const result = super.parseXML(...arguments);
+        const copy = result.cloneNode(true);
+
+        Array.from(copy.querySelectorAll("field > tree, field > form, field > kanban")).forEach(
+            (el) => {
+                if (getModifier(el, "invisible")) {
+                    el.remove();
+                }
+            }
+        );
+
+        return copy;
     }
 }
 

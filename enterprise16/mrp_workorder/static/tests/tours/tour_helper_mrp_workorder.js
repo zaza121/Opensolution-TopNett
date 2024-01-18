@@ -25,7 +25,7 @@ function assertRainbow(present = false) {
 }
 
 function assertDoneButton(present = false) {
-    const $doneButton = $('button.btn-primary[name=do_finish');
+    const $doneButton = $('button.btn-primary[name=do_finish]');
     assert(Boolean(present ? $doneButton.length : !$doneButton.length), true, 'mark as done check');
 }
 

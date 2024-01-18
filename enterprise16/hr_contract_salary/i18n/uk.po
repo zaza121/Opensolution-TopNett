@@ -4,16 +4,16 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022
+# Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:29+0000\n"
+"POT-Creation-Date: 2023-04-14 06:18+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2022\n"
-"Language-Team: Ukrainian (https://www.transifex.com/odoo/teams/41243/uk/)\n"
+"Last-Translator: Alina Lisnenko <alina.lisnenko@erp.co.ua>, 2023\n"
+"Language-Team: Ukrainian (https://app.transifex.com/odoo/teams/41243/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -55,6 +55,15 @@ msgstr "<i class=\"fa fa-check-circle-o mr8\"/>Вітання"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
 msgid ""
+"<span attrs=\"{'invisible': [('contract_id', '!=', False)]}\">An offer "
+"template need to be selected to have an offer link.</span>"
+msgstr ""
+"<span attrs=\"{'invisible': [('contract_id', '!=', False)]}\">Щоб мати "
+"посилання на пропозицію, потрібно вибрати шаблон пропозиції.</span>"
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
 "<span class=\"alert alert-warning\" role=\"alert\" colspan=\"2\" attrs=\"{'invisible':[('contract_id', '!=', False)]}\">\n"
 "                            Before accessing the simulation link, you first need to set up an offer template.\n"
 "                    </span>"
@@ -66,12 +75,12 @@ msgstr ""
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
 msgid "<span class=\"ms-3\">/ month</span>"
-msgstr ""
+msgstr "<span class=\"ms-3\">/ місяць</span>"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
 msgid "<span class=\"ms-3\">/ year</span>"
-msgstr ""
+msgstr "<span class=\"ms-3\">/ рік</span>"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.res_config_settings_view_form
@@ -512,11 +521,14 @@ msgid "Default Access Token Validity Duration"
 msgstr "Тривалість терміну дії токена доступу за замовчуванням"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__default_contract_id
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__default_contract_id
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_job__default_contract_id
-msgid "Default contract used when making an offer to an applicant."
-msgstr "Типовий контракт, який використовується при поданні заявки заявнику."
+msgid ""
+"Default contract used to generate an offer. If empty, advantages will be "
+"taken from current contract of the employee/nothing for an applicant."
+msgstr ""
+"Контракт за замовчуванням, який використовується для створення пропозиції. "
+"Якщо поле порожнє, переваги будуть взяті з поточного контракту працівника "
+"або нічого для заявника."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__sign_template_id
@@ -663,7 +675,7 @@ msgstr "Співробітник підписав його контракт"
 #. module: hr_contract_salary
 #: model:mail.template,name:hr_contract_salary.mail_template_send_offer
 msgid "Employee: Contract And Salary Package"
-msgstr ""
+msgstr "Співробітник: Контракт та зарплатний пакет"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -769,15 +781,6 @@ msgid ""
 msgstr ""
 "Відповідальний HR %s повинен бути користувачем підпису та мати дійсну адресу"
 " електронної пошти, якщо вказано шаблон нового контрактного документа"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
-msgid ""
-"He/She will review your contract.<br/> Feel free to contact him/her if you "
-"have further questions."
-msgstr ""
-"Він/вона перегляне ваш контракт.<br/> Не соромтеся зв'язатися з ним/нею, "
-"якщо у вас виникнуть додаткові запитання."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__helper
@@ -1127,6 +1130,14 @@ msgstr "Посилання на пропозицію"
 
 #. module: hr_contract_salary
 #. odoo-python
+#: code:addons/hr_contract_salary/wizard/generate_simulation_link.py:0
+#, python-format
+msgid "Offer link can not be send. The applicant needs to have a name."
+msgstr ""
+"Посилання на пропозицію не можна надіслати. Заявник повинен мати ім'я."
+
+#. module: hr_contract_salary
+#. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #: code:addons/hr_contract_salary/controllers/main.py:0
@@ -1267,7 +1278,7 @@ msgstr "Перерахувати"
 #. module: hr_contract_salary
 #: model:mail.template,name:hr_contract_salary.mail_template_send_offer_applicant
 msgid "Recruitment: Your Salary Package"
-msgstr ""
+msgstr "Рекрутинг: Ваш зарплатний пакет"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_advantage_value__color__red
@@ -1405,13 +1416,15 @@ msgstr "Надіслати копію до"
 #. module: hr_contract_salary
 #: model:mail.template,description:hr_contract_salary.mail_template_send_offer_applicant
 msgid "Sent automatically when you generate an offer for an application"
-msgstr ""
+msgstr "Надсилається автоматично, коли ви створюєте пропозицію для заявки"
 
 #. module: hr_contract_salary
 #: model:mail.template,description:hr_contract_salary.mail_template_send_offer
 msgid ""
 "Sent manually when you generate a simulation link on the employee contract"
 msgstr ""
+"Надсилається вручну, коли ви створюєте посилання для моделювання в контракті"
+" працівника"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_advantage__sequence
@@ -1546,9 +1559,20 @@ msgstr "Контракт, з якого цей контракт був дубл�
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
 msgid ""
+"The employee does not have a valid work email set. The Simulation Link won't"
+" be able to be completed."
+msgstr ""
+"У працівника не встановлено дійсну робочу електронну адресу. Симуляційне "
+"посилання не можна буде завершити."
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.generate_simulation_link_view_form
+msgid ""
 "The employee does not have a valid email set in the private information. The"
 " Simulation Link won't be able to be completed."
 msgstr ""
+"Співробітник не вказав дійсну електронну адресу в конфіденційній інформації."
+" Симуляційне посилання не можна буде завершити."
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1589,6 +1613,15 @@ msgid "There is no available option to customize your salary"
 msgstr "Немає доступної функції, щоб налаштувати вашу зарплату"
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_thank_you
+msgid ""
+"They will review your contract.<br/> Feel free to contact them if you have "
+"any questions."
+msgstr ""
+"Вони переглянуть ваш контракт.<br/> Не соромтеся звертатися до них, якщо у "
+"вас виникнуть запитання."
+
+#. module: hr_contract_salary
 #. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 #, python-format
@@ -1614,7 +1647,7 @@ msgid ""
 "This link is invalid. Please contact the HR Responsible to get a new one..."
 msgstr ""
 "Це посилання недійсне. Будь ласка, зв’яжіться з відділом кадрів, щоб "
-"отримати новий..."
+"отримати нове..."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__monthly_yearly_costs

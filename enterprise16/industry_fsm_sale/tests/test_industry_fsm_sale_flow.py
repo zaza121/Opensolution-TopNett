@@ -198,3 +198,45 @@ class TestFsmFlowSale(TestFsmFlowSaleCommon):
         self.task.sale_order_id._create_invoices()
         self.assertEqual(self.task.invoice_count, 2)
         self.assertFalse(self.task.display_create_invoice_primary)
+
+    def test_invoice_fsm_task_with_diff_shipping_address(self):
+        """
+        When the shipping address is different from the invoice address,
+        the task should be able to be invoiced once done.
+        """
+        # activate setting for splitting the invoice and shipping address
+        config = self.env['res.config.settings'].create({
+            'group_sale_delivery_address': True,
+        })
+        config.execute()
+        fsm_product = self.env['product.product'].create({
+            'name': 'Fsm Product',
+            'type': 'service',
+            'list_price': 100,
+            'service_policy': 'ordered_prepaid',
+            'project_id': self.fsm_project.id,
+            'service_tracking': 'task_global_project',
+        })
+        billing_partner, shipping_partner = self.env['res.partner'].create([{
+            'name': 'Billing Partner',
+        }, {
+            'name': 'Shipping Partner',
+        }])
+        sale_order = self.env['sale.order'].create({
+            'partner_id': billing_partner.id,
+            'partner_invoice_id': billing_partner.id,
+            'partner_shipping_id': shipping_partner.id,
+        })
+        sale_order.order_line = self.env['sale.order.line'].create([{
+            'product_id': fsm_product.id,
+            'product_uom_qty': 1.0,
+            'order_id': sale_order.id,
+        }])
+        sale_order.action_confirm()
+        self.assertEqual(len(sale_order.tasks_ids), 1, "We should have 1 task after confirming the SO.")
+        task = sale_order.tasks_ids[0]
+        self.assertEqual(task.commercial_partner_id, shipping_partner,
+                         "Partner on the task should be the shipping address.")
+        self.assertEqual(task.sale_order_id, sale_order, "The sale order should be linked to the task.")
+        task.action_fsm_validate()
+        self.assertTrue(task.task_to_invoice, "Task should be invoiceable")

@@ -36,7 +36,8 @@
                             class="w-100 py-2 o_social_youtube_thumbnail"/>
                     </a>
                     <div class="px-2">
-                        <field name="message"/>
+                        <div t-if="formatPost" t-out="formatPost(record.message.value)"/>
+                        <div t-else="" t-out="record.message.value"/>
                     </div>
                 </div>
 

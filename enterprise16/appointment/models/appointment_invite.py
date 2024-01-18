@@ -187,9 +187,9 @@ class AppointmentShare(models.Model):
 
     @api.autovacuum
     def _gc_appointment_invite(self):
-        limit_dt = fields.Datetime.subtract(fields.Datetime.now(), months=3)
+        limit_dt = fields.Datetime.subtract(fields.Datetime.now(), months=6)
 
         invites = self.env['appointment.invite'].search([('create_date', '<=', limit_dt)])
 
-        to_remove = invites.filtered(lambda invite: not invite.calendar_event_ids or invite.calendar_event_ids[-1].end < limit_dt)
+        to_remove = invites.filtered(lambda invite: not invite.calendar_event_ids or max([event.stop for event in invite.calendar_event_ids]) < limit_dt)
         to_remove.unlink()

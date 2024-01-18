@@ -76,6 +76,7 @@ class HrPayslip(models.Model):
         for expense in self.expense_sheet_ids:
             expense.action_sheet_move_create()
             expense.set_to_paid()
+            expense.payment_state = 'paid'
         return res
 
     def open_expenses(self):

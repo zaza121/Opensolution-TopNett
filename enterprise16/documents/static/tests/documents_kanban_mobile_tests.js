@@ -57,7 +57,7 @@ QUnit.module('documents_kanban_mobile_tests.js', {
         assert.expect(12);
 
         const pyEnv = await startServer();
-        pyEnv['documents.folder'].create({ name: 'Workspace1', description: '_F1-test-description_' });
+        pyEnv['documents.folder'].create({ name: 'Workspace1', description: '_F1-test-description_', has_write_access: true });
         await createDocumentsView({
             type: "kanban",
             resModel: 'documents.document',
@@ -110,13 +110,13 @@ QUnit.module('documents_kanban_mobile_tests.js', {
         await click(searchPanel, '.o_search_panel_category_value:nth-of-type(2) header');
         // close search panel
         await click(searchPanel, '.o_mobile_search_footer');
-        assert.ok(target.querySelector('.o_documents_kanban_upload').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_upload').disabled,
             "the upload button should be enabled when a folder is selected");
-        assert.ok(target.querySelector('.o_documents_kanban_url').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_url').disabled,
             "the upload url button should be enabled when a folder is selected");
-        assert.ok(target.querySelector('.o_documents_kanban_request').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_request').disabled,
             "the request button should be enabled when a folder is selected");
-        assert.ok(target.querySelector('.o_documents_kanban_share_domain').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_share_domain').disabled,
             "the share button should be enabled when a folder is selected");
     });
 
@@ -202,7 +202,7 @@ QUnit.module('documents_kanban_mobile_tests.js', {
         assert.expect(12);
 
         const pyEnv = await startServer();
-        pyEnv['documents.folder'].create({ name: 'Workspace1', description: '_F1-test-description_' });
+        pyEnv['documents.folder'].create({ name: 'Workspace1', description: '_F1-test-description_', has_write_access: true });
         await createDocumentsView({
             type: 'list',
             resModel: 'documents.document',
@@ -249,13 +249,13 @@ QUnit.module('documents_kanban_mobile_tests.js', {
         await click(searchPanel, '.o_search_panel_category_value:nth-of-type(2) header');
         // close search panel
         await click(searchPanel, '.o_mobile_search_footer');
-        assert.ok(target.querySelector('.o_documents_kanban_upload').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_upload').disabled,
             "the upload button should be enabled when a folder is selected");
-        assert.ok(target.querySelector('.o_documents_kanban_url').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_url').disabled,
             "the upload url button should be enabled when a folder is selected");
-        assert.ok(target.querySelector('.o_documents_kanban_request').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_request').disabled,
             "the request button should be enabled when a folder is selected");
-        assert.ok(target.querySelector('.o_documents_kanban_share_domain').disabled,
+        assert.notOk(target.querySelector('.o_documents_kanban_share_domain').disabled,
             "the share button should be enabled when a folder is selected");
     });
 

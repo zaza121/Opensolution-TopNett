@@ -167,7 +167,7 @@ class TestAccountAvataxCommon(TestAvataxCommon, AccountTestInvoicingCommon):
         # to make sure we use the tax values that Avatax returns and not the tax values
         # Odoo computes (these values would be wrong if a user manually changes it for example).
         cls.example_tax = cls.env["account.tax"].create({
-            'name': 'CA STATE TAX [06] (6.0 %)',
+            'name': 'CA STATE TAX [06] (6.0000 %)',
             'company_id': cls.env.user.company_id.id,
             'amount': 1,
             'amount_type': 'percent',
@@ -233,7 +233,6 @@ class TestAccountAvataxCommon(TestAvataxCommon, AccountTestInvoicingCommon):
             'move_type': 'out_invoice',
             'partner_id': cls.partner.id,
             'fiscal_position_id': cls.fp_avatax.id,
-            'invoice_date': '2021-01-01',
             'invoice_line_ids': [
                 (0, 0, {
                     'product_id': cls.product_user.id,

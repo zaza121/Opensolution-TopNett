@@ -65,7 +65,8 @@
                                     </thead>
                                     <tbody>
                                         <tr t-foreach="partner['lines']" t-as="line">
-                                            <td><t t-esc="line.get('bimestre')"/></td>
+                                            <td t-if="report_name.endswith('fuente')"><t t-esc="line.get('account_name')"/></td>
+                                            <td t-if="report_name.endswith('ica')"><t t-esc="line.get('bimestre')"/></td>
                                             <td><t t-esc="line.get('tax_base_amount')"/></td>
                                             <td><t t-esc="line.get('balance')"/></td>
                                         </tr>

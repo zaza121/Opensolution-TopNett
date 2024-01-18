@@ -988,3 +988,105 @@ class TestAccountAssetNew(AccountTestInvoicingCommon):
             self._get_depreciation_move_values(date='2024-11-30', depreciation_value=348.15, remaining_value=10096.15, depreciated_value=47903.85, state='draft'),
             self._get_depreciation_move_values(date='2024-12-31', depreciation_value=10096.15, remaining_value=0, depreciated_value=58000, state='draft'),
         ])
+
+    def test_copy_prorata_date(self):
+        """ Verifies that prorata date and acquisition date are copied when duplicate an asset
+            For this test, the prorata computation type is set to None.
+            The idea is of this test is to verify that we do copy prorata date.
+        """
+        old_car_asset = self.create_asset(
+            value=60000,
+            periodicity='yearly',
+            periods=5,
+            method='linear',
+            salvage_value=0,
+
+        )
+        old_car_asset.validate()
+
+        self.assertEqual(old_car_asset.state, 'open')
+        self.assertEqual(old_car_asset.book_value, 36000)
+        self.assertEqual(old_car_asset.acquisition_date, fields.Date.from_string('2020-02-01'))
+        self.assertEqual(old_car_asset.prorata_date, fields.Date.from_string('2020-01-01'))
+        self.assertRecordValues(old_car_asset.depreciation_move_ids, [
+            self._get_depreciation_move_values(date='2020-12-31', depreciation_value=12000, remaining_value=48000, depreciated_value=12000, state='posted'),
+            self._get_depreciation_move_values(date='2021-12-31', depreciation_value=12000, remaining_value=36000, depreciated_value=24000, state='posted'),
+            self._get_depreciation_move_values(date='2022-12-31', depreciation_value=12000, remaining_value=24000, depreciated_value=36000, state='draft'),
+            self._get_depreciation_move_values(date='2023-12-31', depreciation_value=12000, remaining_value=12000, depreciated_value=48000, state='draft'),
+            self._get_depreciation_move_values(date='2024-12-31', depreciation_value=12000, remaining_value=0, depreciated_value=60000, state='draft'),
+        ])
+
+        new_car_asset = old_car_asset.copy()
+        new_car_asset.original_value = 60000
+        new_car_asset.validate()
+
+        self.assertEqual(new_car_asset.state, 'open')
+        self.assertEqual(new_car_asset.book_value, 36000)
+        self.assertEqual(new_car_asset.acquisition_date, fields.Date.from_string('2020-02-01'))
+        self.assertEqual(new_car_asset.prorata_date, fields.Date.from_string('2020-01-01'))
+        self.assertRecordValues(new_car_asset.depreciation_move_ids, [
+            self._get_depreciation_move_values(date='2020-12-31', depreciation_value=12000, remaining_value=48000, depreciated_value=12000, state='posted'),
+            self._get_depreciation_move_values(date='2021-12-31', depreciation_value=12000, remaining_value=36000, depreciated_value=24000, state='posted'),
+            self._get_depreciation_move_values(date='2022-12-31', depreciation_value=12000, remaining_value=24000, depreciated_value=36000, state='draft'),
+            self._get_depreciation_move_values(date='2023-12-31', depreciation_value=12000, remaining_value=12000, depreciated_value=48000, state='draft'),
+            self._get_depreciation_move_values(date='2024-12-31', depreciation_value=12000, remaining_value=0, depreciated_value=60000, state='draft'),
+        ])
+
+    def test_change_computation_method_before_lock_date(self):
+        """Test that we can change the computation method when there are draft moves before the lock date.
+        """
+        self.car.company_id.fiscalyear_lock_date = '2022-06-30'
+        self.car.compute_depreciation_board()
+
+        self.assertEqual(self.car.state, 'draft')
+        self.assertEqual(self.car.book_value, 60000)
+        self.assertRecordValues(self.car.depreciation_move_ids, [
+            self._get_depreciation_move_values(date='2020-12-31', depreciation_value=12000, remaining_value=48000, depreciated_value=12000, state='draft'),
+            self._get_depreciation_move_values(date='2021-12-31', depreciation_value=12000, remaining_value=36000, depreciated_value=24000, state='draft'),
+            self._get_depreciation_move_values(date='2022-12-31', depreciation_value=12000, remaining_value=24000, depreciated_value=36000, state='draft'),
+            self._get_depreciation_move_values(date='2023-12-31', depreciation_value=12000, remaining_value=12000, depreciated_value=48000, state='draft'),
+            self._get_depreciation_move_values(date='2024-12-31', depreciation_value=12000, remaining_value=0, depreciated_value=60000, state='draft'),
+        ])
+
+        # Change the computation type
+        self.car.prorata_computation_type = 'constant_periods'
+        self.car.prorata_date = '2021-01-01'
+        self.car.compute_depreciation_board()
+
+        self.assertEqual(self.car.state, 'draft')
+        self.assertEqual(self.car.book_value, 60000)
+        self.assertRecordValues(self.car.depreciation_move_ids, [
+            self._get_depreciation_move_values(date='2025-12-31', depreciation_value=12000, remaining_value=0, depreciated_value=60000, state='draft'),
+            self._get_depreciation_move_values(date='2024-12-31', depreciation_value=12000, remaining_value=12000, depreciated_value=48000, state='draft'),
+            self._get_depreciation_move_values(date='2023-12-31', depreciation_value=12000, remaining_value=24000, depreciated_value=36000, state='draft'),
+            self._get_depreciation_move_values(date='2022-12-31', depreciation_value=12000, remaining_value=36000, depreciated_value=24000, state='draft'),
+            self._get_depreciation_move_values(date='2021-12-31', depreciation_value=12000, remaining_value=48000, depreciated_value=12000, state='draft'),
+        ])
+
+    def test_post_moves_after_lock_date(self):
+        """Test that we can change the computation method when there are draft moves before the lock date.
+        """
+        self.car.company_id.fiscalyear_lock_date = '2021-06-30'
+        self.car.compute_depreciation_board()
+
+        self.assertEqual(self.car.state, 'draft')
+        self.assertEqual(self.car.book_value, 60000)
+        self.assertRecordValues(self.car.depreciation_move_ids, [
+            self._get_depreciation_move_values(date='2020-12-31', depreciation_value=12000, remaining_value=48000, depreciated_value=12000, state='draft'),
+            self._get_depreciation_move_values(date='2021-12-31', depreciation_value=12000, remaining_value=36000, depreciated_value=24000, state='draft'),
+            self._get_depreciation_move_values(date='2022-12-31', depreciation_value=12000, remaining_value=24000, depreciated_value=36000, state='draft'),
+            self._get_depreciation_move_values(date='2023-12-31', depreciation_value=12000, remaining_value=12000, depreciated_value=48000, state='draft'),
+            self._get_depreciation_move_values(date='2024-12-31', depreciation_value=12000, remaining_value=0, depreciated_value=60000, state='draft'),
+        ])
+
+        self.car.validate()
+
+        self.assertEqual(self.car.state, 'open')
+        self.assertEqual(self.car.book_value, 36000)
+        self.assertRecordValues(self.car.depreciation_move_ids, [
+            self._get_depreciation_move_values(date='2021-07-31', depreciation_value=12000, remaining_value=48000, depreciated_value=12000, state='posted'),
+            self._get_depreciation_move_values(date='2021-12-31', depreciation_value=12000, remaining_value=36000, depreciated_value=24000, state='posted'),
+            self._get_depreciation_move_values(date='2022-12-31', depreciation_value=12000, remaining_value=24000, depreciated_value=36000, state='draft'),
+            self._get_depreciation_move_values(date='2023-12-31', depreciation_value=12000, remaining_value=12000, depreciated_value=48000, state='draft'),
+            self._get_depreciation_move_values(date='2024-12-31', depreciation_value=12000, remaining_value=0, depreciated_value=60000, state='draft'),
+        ])

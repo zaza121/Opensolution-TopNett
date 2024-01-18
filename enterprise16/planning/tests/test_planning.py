@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
 from odoo import fields
+from odoo.exceptions import ValidationError
 from odoo.tests.common import Form
 
 from .common import TestCommonPlanning
@@ -275,3 +276,33 @@ class TestPlanning(TestCommonPlanning):
         test_week = test_week.save()
         self.assertEqual(test_week.start_datetime, datetime(2019, 6, 24, 8, 0), 'It should adjust to employee calendar: 0am -> 9pm')
         self.assertEqual(test_week.end_datetime, datetime(2019, 6, 28, 17, 0), 'It should adjust to employee calendar: 0am -> 9pm')
+
+    def test_name_long_duration(self):
+        """ Set an absurdly high duration to ensure we validate it and get an error """
+        template_slot = self.env['planning.slot.template'].create({
+            'start_time': 9,
+            'duration': 100000,
+        })
+        with self.assertRaises(ValidationError):
+            # only try to get the name, this triggers its compute
+            template_slot.name
+
+    def test_avoid_rounding_error_when_creating_template(self):
+        """
+        Regression test: in some odd circumstances,
+        a floating point error during the divmod conversion from float -> hours/min can lead to incorrect minutes
+        5.1 after a divmod(1) gives back minutes = 0.0999999999964 instead of 1, hence the source of error
+        """
+        template = self.env['planning.slot.template'].create({
+            'start_time': 8,
+            'duration': 5.1,  # corresponds to 5:06
+        })
+        self.assertEqual(template.start_time + template.duration, 13.1, 'Template end time should be the start + duration')
+        slot = self.env['planning.slot'].create({
+            'start_datetime': datetime(2021, 1, 1, 0, 0),
+            'end_datetime': datetime(2021, 1, 1, 23, 59),
+        })
+        slot.write({
+            'template_id': template.id,
+        })
+        self.assertEqual(slot.end_datetime.minute, 6, 'The min should be 6, just like in the template, not 5 due to rounding error')

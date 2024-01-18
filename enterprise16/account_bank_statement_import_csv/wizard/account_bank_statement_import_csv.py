@@ -51,9 +51,7 @@ class AccountBankStmtImportCSV(models.TransientModel):
         if not journal_id or not bank_stmt_import:
             return data
 
-        journal = self.env['account.journal'].browse(journal_id)
         statement_vals = options['statement_vals'] = {}
-
         ret_data = []
 
         import_fields.append('sequence')
@@ -65,8 +63,6 @@ class AccountBankStmtImportCSV(models.TransientModel):
             self._parse_float_from_data(data, index_debit, 'debit', options)
             self._parse_float_from_data(data, index_credit, 'credit', options)
             import_fields.append('amount')
-            import_fields.remove('debit')
-            import_fields.remove('credit')
             convert_to_amount = True
 
         # add starting balance and ending balance to context
@@ -80,7 +76,10 @@ class AccountBankStmtImportCSV(models.TransientModel):
             statement_vals['balance_end_real'] = data[len(data)-1][index_balance]
             import_fields.remove('balance')
 
-        currency_index = 'foreign_currency_id' in import_fields and import_fields.index('foreign_currency_id') or False
+        if convert_to_amount:
+            import_fields.remove('debit')
+            import_fields.remove('credit')
+
         for index, line in enumerate(data):
             line.append(index)
             remove_index = []
@@ -97,9 +96,6 @@ class AccountBankStmtImportCSV(models.TransientModel):
                 line.remove(line[index])
             if line[import_fields.index('amount')]:
                 ret_data.append(line)
-            # Don't set the currency_id on statement line if the currency is the same as the company one.
-            if currency_index is not False and line[currency_index] == (journal.currency_id or journal.company_id.currency_id).name:
-                line[currency_index] = False
 
         return ret_data
 

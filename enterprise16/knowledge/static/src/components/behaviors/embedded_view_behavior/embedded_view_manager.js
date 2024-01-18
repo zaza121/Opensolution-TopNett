@@ -8,7 +8,6 @@ import { useService } from "@web/core/utils/hooks";
 
 const {
     Component,
-    onMounted,
     onWillStart,
     useSubEnv } = owl;
 
@@ -27,6 +26,7 @@ export class EmbeddedViewManager extends Component {
 
         this.actionService = useService('action');
         this.dialogService = useService('dialog');
+        this.embedViewsFilterService = useService('knowledgeEmbedViewsFilters');
 
         useOwnDebugContext(); // define a debug context when the developer mode is enable
         const config = {
@@ -62,7 +62,6 @@ export class EmbeddedViewManager extends Component {
             __getGlobalState__: this.__getGlobalState__,
         });
         onWillStart(this.onWillStart.bind(this));
-        onMounted(this.onMounted.bind(this));
     }
 
     /**
@@ -87,6 +86,19 @@ export class EmbeddedViewManager extends Component {
      */
     onWillStart () {
         const { action, context, viewType } = this.props;
+        const contextKeyOptionalFields = context.keyOptionalFields;
+        if (contextKeyOptionalFields && !contextKeyOptionalFields.includes(context.knowledgeEmbeddedViewId)) {
+            // If the key from the context does not contain the embeddedViewId this means that we are inserting
+            // a brand new embed. Thus we are adding the optionalFields stored with contextKeyOptionalFields
+            // inside the localStorage with a key that contains the embeddedViewId.
+            // This way when we are rendering the embedded view and its fullscreen version we are using the correct
+            // key and rendering the correct fields.
+            const optionalFields = localStorage.getItem(contextKeyOptionalFields);
+            if (optionalFields !== null && !localStorage.getItem(contextKeyOptionalFields+`,${context.knowledgeEmbeddedViewId}`)) {
+                localStorage.setItem(contextKeyOptionalFields+`,${context.knowledgeEmbeddedViewId}`, optionalFields);
+                context.keyOptionalFields = contextKeyOptionalFields+`,${context.knowledgeEmbeddedViewId}`;
+            }
+        }
         this.env.config.setDisplayName(action.display_name);
         this.env.config.views = action.views;
         const ViewProps = {
@@ -104,6 +116,7 @@ export class EmbeddedViewManager extends Component {
                 const [formViewId] = this.action.views.find((view) => {
                     return view[1] === 'form';
                 }) || [false];
+                this.saveEmbedViewFilters();
                 this.actionService.doAction({
                     type: 'ir.actions.act_window',
                     res_model: action.res_model,
@@ -115,6 +128,7 @@ export class EmbeddedViewManager extends Component {
                 const [formViewId] = this.action.views.find((view) => {
                     return view[1] === 'form';
                 }) || [false];
+                this.saveEmbedViewFilters();
                 this.actionService.doAction({
                     type: 'ir.actions.act_window',
                     res_model: action.res_model,
@@ -125,17 +139,24 @@ export class EmbeddedViewManager extends Component {
         if (action.search_view_id) {
             ViewProps.searchViewId = action.search_view_id[0];
         }
+        if (context.orderBy) {
+            try {
+                ViewProps.orderBy = JSON.parse(context.orderBy);
+            } catch {};
+        }
         if (this.props.viewType in EMBEDDED_VIEW_LIMITS) {
             ViewProps.limit = EMBEDDED_VIEW_LIMITS[this.props.viewType];
         }
+
+        this.embedViewsFilterService.applyFilter(
+            this.actionService.currentController,
+            this.props.context.knowledgeEmbeddedViewId,
+            ViewProps
+        );
+
         this.EmbeddedView = View;
         this.EmbeddedViewProps = ViewProps;
         this.action = action;
-        this.props.onLoadStart();
-    }
-
-    onMounted () {
-        this.props.onLoadEnd();
     }
 
     /**
@@ -160,10 +181,35 @@ export class EmbeddedViewManager extends Component {
         if (this.action.type !== "ir.actions.act_window") {
             throw new Error('Can not open the view: The action is not an "ir.actions.act_window"');
         }
+        const props = {};
+        if (this.action.context.orderBy) {
+            try {
+                props.orderBy = JSON.parse(this.action.context.orderBy);
+            } catch {};
+        }
+        this.saveEmbedViewFilters();
         this.action.globalState = this.getEmbeddedViewGlobalState();
         this.actionService.doAction(this.action, {
             viewType: this.props.viewType,
+            props,
+            additionalContext: { knowledgeEmbeddedViewId: this.props.context.knowledgeEmbeddedViewId }
         });
+    }
+
+    /**
+     * This function is called when opening a record from an embedded list or kanban view or when creating
+     * a new record in the said view.
+     * This function calls the correct function of the filter service in order to save the searchModel of the
+     * view.
+     * By saving the searchModel we allow filters applied to a view to be reassigned to it when coming back
+     * via the breadcrumbs created by opening/creating a record.
+     */
+    saveEmbedViewFilters() {
+        this.embedViewsFilterService.saveFilters(
+            this.actionService.currentController,
+            this.props.context.knowledgeEmbeddedViewId,
+            this.getEmbeddedViewGlobalState().searchModel
+        );
     }
 }
 
@@ -173,8 +219,6 @@ EmbeddedViewManager.props = {
     action: { type: Object },
     context: { type: Object },
     viewType: { type: String },
-    onLoadStart: { type: Function },
-    onLoadEnd: { type: Function },
     setTitle: { type: Function },
     getTitle: { type: Function },
     readonly: { type: Boolean },

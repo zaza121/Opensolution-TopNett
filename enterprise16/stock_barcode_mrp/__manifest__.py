@@ -10,7 +10,11 @@
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [
+            'stock_barcode_mrp/static/src/**/*.js',
             'stock_barcode_mrp/static/src/**/*.xml',
+        ],
+        'web.assets_tests': [
+            'stock_barcode_mrp/static/tests/tours/**/*',
         ],
     }
 }

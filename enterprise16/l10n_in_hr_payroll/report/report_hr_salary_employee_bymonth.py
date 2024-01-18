@@ -12,8 +12,7 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
     _description = "Indian Salary by Month Report"
 
     def get_periods(self, form):
-        #       Get start year-month-date and end year-month-date
-        self.mnths = []
+        # Get start year-month-date and end year-month-date
         first_year = int(form['start_date'][0:4])
         last_year = int(form['end_date'][0:4])
 
@@ -23,24 +22,24 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
         current_month = first_month
         current_year = first_year
 
-#       Get name of the months from integer
+        # Get name of the months from integer
         mnth_name = []
         total_mnths = []
+        months = []
         for count in range(0, no_months):
             total_mnths.append(0)
             m = date(current_year, current_month, 1).strftime('%b')
             mnth_name.append(m)
-            self.mnths.append(str(current_month) + '-' + str(current_year))
+            months.append(str(current_month) + '-' + str(current_year))
             if current_month == 12:
                 current_month = 0
                 current_year = last_year
             current_month = current_month + 1
-        return mnth_name, self.mnths, total_mnths
+        return mnth_name, months, total_mnths
 
     def get_salary(self, form, emp_id, emp_salary, total_mnths, mnths):
         category_id = form.get('category_id', [])
         category_id = category_id and category_id[0] or False
-        self.mnths = mnths
         self.env.cr.execute("""
                             select to_char(p.date_to,'mm-yyyy') as to_date ,sum(pl.total)
                             from hr_payslip_line as pl
@@ -54,7 +53,7 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
         salary = dict(sal)
         total = 0.0
         cnt = 0
-        for month in self.mnths:
+        for month in mnths:
             if len(month) != 7:
                 month = '0' + str(month)
             if month in salary and salary[month]:
@@ -69,7 +68,6 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
     def get_employee(self, form, mnths, total_mnths):
         emp_salary = []
         salary_list = []
-        self.mnths_total = []
         emp_ids = form.get('employee_ids', [])
         employees = self.env['hr.employee'].browse(emp_ids)
 
@@ -80,18 +78,17 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
             emp_salary.append(total)
             salary_list.append(emp_salary)
             emp_salary = []
-        self.mnths_total.append(total_mnths)
         return salary_list
 
     def get_months_tol(self):
-        return self.mnths_total
+        return []
 
     def get_total(self, mnths_total):
-        self.total = 0.0
+        total = 0.0
         for item in mnths_total:
             for count in range(1, len(item)):
-                self.total += item[count]
-        return self.total
+                total += item[count]
+        return total
 
     @api.model
     def _get_report_values(self, docids, data=None):
@@ -102,8 +99,8 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
         docs = self.env[model].browse(self.env.context.get('active_id'))
         get_periods, months, total_mnths = self.get_periods(data['form'])
         get_employee = self.get_employee(data['form'], months, total_mnths)
-        get_months_tol = self.get_months_tol()
-        get_total = self.get_total(get_months_tol)
+        get_total = self.get_total([total_mnths])
+
         return {
             'doc_ids': docids,
             'doc_model': model,
@@ -111,7 +108,7 @@ class ReportHrSalaryEmployeeBymonth(models.AbstractModel):
             'docs': docs,
             'get_periods': get_periods,
             'get_employee': get_employee,
-            'get_months_tol': get_months_tol,
+            'get_months_tol': [total_mnths],
             'get_total': get_total,
             'month_len': len(total_mnths) + 1
         }

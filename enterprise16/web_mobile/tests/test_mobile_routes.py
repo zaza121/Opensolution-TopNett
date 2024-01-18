@@ -196,6 +196,8 @@ class MobileRoutesTest(HttpCase):
 class MobileRoutesMultidbTest(MobileRoutesTest):
 
     def run(self, result=None):
+        if not config['list_db']:
+            return
         dblist = (get_db_name(), 'another_database')
         assert len(dblist) >= 2, "There should be at least 2 databases"
         with patch('odoo.http.db_list') as db_list, \

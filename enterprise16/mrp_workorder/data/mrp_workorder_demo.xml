@@ -58,15 +58,6 @@
         <field name="sequence">8</field>
     </record>
 
-    <!-- Quality Control From WorkOrder -->
-    <!-- For [PCSC234] Computer SC234 -->
-    <record id="quality_point4" model="quality.point">
-        <field name="product_ids" eval="[(4, ref('product.product_product_3'))]"/>
-        <field name="operation_id" ref="mrp.mrp_routing_workcenter_0"/>
-        <field name="picking_type_ids" model="stock.warehouse" eval="[(4, obj().env.ref('stock.warehouse0').manu_type_id.id)]"/>
-        <field name="note">Assemble the different parts of the desk combination.</field>
-    </record>
-
     <!-- Split the pdf added in mrp demo data-->
     <record id="base.group_user" model="res.groups">
         <field name="implied_ids" eval="[(4, ref('mrp.group_mrp_routings')), (4, ref('mrp_workorder.group_mrp_wo_tablet_timer'))]"/>

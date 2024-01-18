@@ -2,8 +2,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import uuid
+import logging
 from odoo import _, api, fields, models, SUPERUSER_ID
 
+_logger = logging.getLogger(__name__)
 
 class CalendarEvent(models.Model):
     _inherit = "calendar.event"
@@ -80,21 +82,29 @@ class CalendarEvent(models.Model):
         author = {'author_id': self.env.ref('base.partner_root').id} if self.env.user._is_public() else {}
 
         if 'appointment_type_id' in changes:
-            booked_template = self.env.ref('appointment.appointment_booked_mail_template').sudo()
-            res['appointment_type_id'] = (booked_template, {
-                **author,
-                'auto_delete_message': True,
-                'subtype_id': self.env['ir.model.data']._xmlid_to_res_id('appointment.mt_calendar_event_booked'),
-                'email_layout_xmlid': 'mail.mail_notification_light'
-            })
+            try:
+                booked_template = self.env.ref('appointment.appointment_booked_mail_template')
+            except ValueError as e:
+                _logger.warning("Mail could not be sent, as mail template is not found : %s", e)
+            else:
+                res['appointment_type_id'] = (booked_template.sudo(), {
+                    **author,
+                    'auto_delete_message': True,
+                    'subtype_id': self.env['ir.model.data']._xmlid_to_res_id('appointment.mt_calendar_event_booked'),
+                    'email_layout_xmlid': 'mail.mail_notification_light'
+                })
         if 'active' in changes and not self.active and self.start > fields.Datetime.now():
-            canceled_template = self.env.ref('appointment.appointment_canceled_mail_template').sudo()
-            res['active'] = (canceled_template, {
-                **author,
-                'auto_delete_message': True,
-                'subtype_id': self.env['ir.model.data']._xmlid_to_res_id('appointment.mt_calendar_event_canceled'),
-                'email_layout_xmlid': 'mail.mail_notification_light'
-            })
+            try:
+                canceled_template = self.env.ref('appointment.appointment_canceled_mail_template')
+            except ValueError as e:
+                _logger.warning("Mail could not be sent, as mail template is not found : %s", e)
+            else:
+                res['active'] = (canceled_template.sudo(), {
+                    **author,
+                    'auto_delete_message': True,
+                    'subtype_id': self.env['ir.model.data']._xmlid_to_res_id('appointment.mt_calendar_event_canceled'),
+                    'email_layout_xmlid': 'mail.mail_notification_light'
+                })
         return res
 
     def _track_subtype(self, init_values):

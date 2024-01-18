@@ -7,6 +7,7 @@
 import ajax from "web.ajax";
 import config from "web.config";
 import core from "web.core";
+import { localization } from "@web/core/l10n/localization";
 import { sprintf } from "@web/core/utils/strings";
 import Dialog from "web.Dialog";
 import { Document } from "@sign/js/common/document";
@@ -43,8 +44,8 @@ const SignNameAndSignature = NameAndSignature.extend({
 
     this.requestID = requestID;
     this.accessToken = accessToken;
-    this.defaultSignature = options.defaultSignature || "";
-    this.signatureChanged = !options.defaultSignature;
+    this.openInDrawMode = options.openInDrawMode;
+    this.signatureChanged = !options.openInDrawMode;
     this.fonts = signatureFonts;
     this.hash = hash;
     this.signLabel = _t('Signed with Odoo Sign');
@@ -52,8 +53,7 @@ const SignNameAndSignature = NameAndSignature.extend({
     this.frame = options.defaultFrame;
     this.frameChanged = false;
 
-    // if defaultSignature exists, we don't want to have mode set to auto
-    if (this.defaultSignature) {
+    if (this.openInDrawMode) {
       this.signMode = 'draw';
     }
   },
@@ -73,33 +73,27 @@ const SignNameAndSignature = NameAndSignature.extend({
     this.$frameButton = this.$('.o_web_frame_button');
     this.$frameDiv = this.$('.o_sign_frame');
     this.$frameButton.prop('checked', this.activeFrame);
-    this.$frameDiv.toggleClass('active', this.activeFrame);
+    this.toggleFrameDiv();
     return res;
   },
 
   /**
-   * Sets the existing signature.
-   *
+   * Toggles the active class in the frame div depending on the following rules:
+   * If sign mode is draw, hide the div. Otherwise, respect the activeFrame checkbox value
+   */
+  toggleFrameDiv() {
+    this.$frameDiv.toggleClass('active', this.signMode !== 'draw' ? this.activeFrame : false);
+  },
+
+  /**
+   * Calls toggleFrameDiv on every mode change to calculate if the frame div should be shown or not in the new mode
    * @override
    */
-  resetSignature: function () {
-    const self = this;
-    return this._super.apply(this, arguments).then(function () {
-      if (
-        self.defaultSignature &&
-        self.defaultSignature !== self.emptySignature
-      ) {
-        const settings = self.$signatureField.jSignature("getSettings");
-        const decorColor = settings["decor-color"];
-        self.$signatureField.jSignature("updateSetting", "decor-color", null);
-        self.$signatureField.jSignature("reset");
-        self.$signatureField.jSignature("importData", self.defaultSignature);
-        settings["decor-color"] = decorColor;
-
-        return self._waitForSignatureNotEmpty();
-      }
-    });
+  setMode: async function () {
+    this._super.apply(this, arguments);
+    this.toggleFrameDiv();
   },
+
   //----------------------------------------------------------------------
   // Handlers
   //----------------------------------------------------------------------
@@ -119,19 +113,20 @@ const SignNameAndSignature = NameAndSignature.extend({
     this.signatureChanged = true;
     this.activeFrame = !this.activeFrame;
     this.$frameButton.prop('checked', this.activeFrame);
-    this.$frameDiv.toggleClass('active', this.activeFrame);
+    this.toggleFrameDiv();
   },
 
   _updateFrame: function () {
     if (this.activeFrame && !this.frameChanged) {
       this.signatureChanged = true;
       this.frameChanged = true;
-      return html2canvas(this.$frameDiv[0],
+      const xOffset = localization.direction === "rtl" ? 0.75 : 0.06; // magic numbers
+      return html2canvas(this.$frameDiv.toggleClass('active', this.activeFrame)[0],
         {
           'backgroundColor': null,
           'width': this.$signatureField.width(),
           'height': this.$signatureField.height(),
-          'x': -this.$signatureField.width() * 0.06, // TODO VISUEL
+          'x': -this.$signatureField.width() * xOffset, // TODO VISUEL
           'y': -this.$signatureField.height() * 0.09, // TODO VISUEL
         }
       ).then(canvas => {
@@ -145,7 +140,7 @@ const SignNameAndSignature = NameAndSignature.extend({
     return this.activeFrame ? this.frame : false;
   },
   /**
-   * If a user clicks on draw, we overwrite the signature in the server.
+   * If a user clicks on clear, we overwrite the signature in the server.
    *
    * @override
    * @see NameAndSignature._onClickSignDrawClear()
@@ -179,18 +174,7 @@ const SignNameAndSignature = NameAndSignature.extend({
       this.signatureChanged = true;
     }
     return this._super.apply(this, arguments);
-  },
-  /**
-   * If a user clicks on draw, we overwrite the signature in the server.
-   *
-   * @override
-   * @see NameAndSignature._onClickSignDrawButton()
-   * @private
-   */
-  _onClickSignDrawButton: function () {
-    this.signatureChanged = true;
-    return this._super.apply(this, arguments);
-  },
+  }
 });
 
 // The goal of this override is to make the dialog re-enable the validate button
@@ -282,15 +266,12 @@ const SignatureDialog = SignInfoDialog.extend({
    * @override
    */
   start: function () {
-    const self = this;
     this.$primaryButton = this.$footer.find(".btn-primary");
     this.$secondaryButton = this.$footer.find(".btn-secondary");
-    this.opened().then(function () {
-      self
-        .$(".o_web_sign_name_and_signature")
-        .replaceWith(self.nameAndSignature.$el);
+    this.opened().then(() => {
+      this.$(".o_web_sign_name_and_signature").replaceWith(this.nameAndSignature.$el);
       // initialize the signature area
-      self.nameAndSignature.resetSignature();
+      this.nameAndSignature.resetSignature();
     });
     return this._super.apply(this, arguments);
   },
@@ -1339,7 +1320,7 @@ export const SignableDocument = Document.extend({
           defaultName: this.getParent().signerName || "",
           fontColor: "DarkBlue",
           signatureType: type.item_type,
-          defaultSignature: type.auto_value,
+          openInDrawMode: Boolean(type.auto_value),
           defaultFrame: type.frame_value,
           displaySignatureRatio:
             parseFloat($signatureItem.css("width")) /
@@ -1475,10 +1456,14 @@ export const SignableDocument = Document.extend({
        */
       adjustSignatureSize: function (data, signatureItem) {
         if (!data) { return Promise.resolve(false); }
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           const img = new Image();
-          img.onload = function () {
+          img.onload = () => {
             const c = document.createElement("canvas");
+            if (!signatureItem.parent().hasClass('page')) {
+                // checks if element is detached from pdf js
+                this.refreshSignItems();
+            }
             const boxWidth = signatureItem.width();
             const boxHeight = signatureItem.height();
             const imgHeight = img.height;
@@ -1713,6 +1698,28 @@ export const SignableDocument = Document.extend({
     });
   },
 
+  getSignatureValueFromElement($el, type) {
+    const types = {
+      "text": () => {
+        const textValue = $el.text() && $el.text().trim() ? $el.text() : false;
+        const value  = $el.val() && $el.val().trim() ? $el.val() : $el.find("input").val() || false;
+        return value || textValue;
+      },
+      "initial": () => $el.data("signature"),
+      "signature": () => $el.data("signature"),
+      "textarea": () => this.textareaApplyLineBreak($el[0]),
+      "selection": () => $el.val() && $el.val().trim() ? $el.val() : false,
+      "checkbox": () => {
+        if ($el[0].checked) {
+          return "on"
+        } else {
+          return $el.data("required") ? false : "off";
+        }
+      }
+    };
+    return type in types ? types[type]() : types["text"]();
+  },
+
   /**
    * Gets the signature values dictionary from the iframeWidget.configuration
    * Gets the added sign items that were added in edit while signing
@@ -1729,37 +1736,10 @@ export const SignableDocument = Document.extend({
         if (resp > 0 && resp !== this.iframeWidget.role) {
           continue;
         }
-        let value;
-        /*open inputs*/
-        if ($elem.prop('nodeName').toLowerCase() === 'input' || $elem.find("input").length) {
-            value =
-              $elem.val() && $elem.val().trim()
-                ? $elem.val()
-                : $elem.find("input").val() || false;
-        } else {
-        /*Already prefilled*/
-            value =
-              $elem.text() && $elem.text().trim() ? $elem.text() : false;
-        }
 
-        let frameValue = false;
-        let frameHash = false;
+        const value = this.getSignatureValueFromElement($elem, $elem.data('typeData').item_type);
+        const [frameValue, frameHash] = $elem.data("signature") ? [$elem.data("frame"), $elem.data('frameHash')] : [false, false];
 
-        if ($elem.data("signature")) {
-          value = $elem.data("signature");
-          frameValue = $elem.data("frame");
-          frameHash = $elem.data('frameHash');
-        }
-        if ($elem[0].type === "checkbox") {
-          value = false;
-          if ($elem[0].checked) {
-            value = "on";
-          } else {
-            if (!$elem.data("required")) value = "off";
-          }
-        } else if ($elem[0].type === "textarea") {
-          value = this.textareaApplyLineBreak($elem[0]);
-        }
         if (!value) {
           if ($elem.data("required")) {
             return [{}, {}];
@@ -1804,11 +1784,12 @@ export const SignableDocument = Document.extend({
   /**
    * Opens an error dialog
    * @param { String } errorMessage translated error message
-   * @param {*} confirmCallback callback after confirm
+   * @param { Function } confirmCallback callback after confirm
+   * @param { String | Boolean } title string or false for default
    */
-  openErrorDialog(errorMessage, confirmCallback) {
+  openErrorDialog(errorMessage, confirmCallback, title=false) {
     Dialog.alert(this, errorMessage, {
-      title: _t("Error"),
+      title: title || _t("Error"),
       confirm_callback: confirmCallback,
     });
   },

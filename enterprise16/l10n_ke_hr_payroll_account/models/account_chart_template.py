@@ -24,6 +24,7 @@ class AccountChartTemplate(models.Model):
                 ('partner_id.country_id.code', '=', 'KE'),
                 ('chart_template_id', '=', self.env.ref('l10n_ke.l10nke_chart_template').id)])
             self._configure_payroll_account_kenya(ke_companies)
+        super()._load_payroll_accounts()
 
     def _configure_payroll_account_kenya(self, companies):
         accounts_codes = [

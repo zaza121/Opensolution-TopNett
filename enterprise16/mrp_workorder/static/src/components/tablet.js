@@ -141,7 +141,7 @@ class Tablet extends Component {
                     value: this.selectedStep.worksheet_url,
                     page: 1,
                 };
-            } else if (this.data.operation !== undefined && this.selectedStep.worksheet_page) {
+            } else if (this.selectedStep.source_document !== "step" && this.data.operation !== undefined) {
                 if (this.data.operation.worksheet) {
                     return {
                         resModel: "mrp.routing.workcenter",
@@ -192,27 +192,36 @@ class Tablet extends Component {
     }
 
     get views() {
-        const data = {
-            workorder: {
-                type: 'workorder_form',
-                mode: 'edit',
-                resModel: 'mrp.workorder',
-                viewId: this.viewsId.workorder,
-                resId: this.workorderId,
-                display: { controlPanel: false },
-                workorderBus: this.workorderBus,
-            },
-            check: {
-                type: 'workorder_form',
-                mode: 'edit',
-                resModel: 'quality.check',
-                viewId: this.viewsId.check,
-                resId: this.state.selectedStepId,
-                display: { controlPanel: false },
-                workorderBus: this.workorderBus,
-            },
+        const workorder = {
+            type: 'workorder_form',
+            mode: 'edit',
+            resModel: 'mrp.workorder',
+            viewId: this.viewsId.workorder,
+            resId: this.workorderId,
+            display: { controlPanel: false },
+            workorderBus: this.workorderBus,
+            context: this.props.action.context,
         };
-        return data;
+        if (this.state.selectedStepId) {
+            workorder.onRecordChanged = async (rootRecord) => {
+                await rootRecord.save();
+                this.render(true);
+            }
+        }
+        const check = {
+            type: 'workorder_form',
+            mode: 'edit',
+            resModel: 'quality.check',
+            viewId: this.viewsId.check,
+            resId: this.state.selectedStepId,
+            display: { controlPanel: false },
+            workorderBus: this.workorderBus,
+        };
+        check.onRecordChanged = async (rootRecord) => {
+            await rootRecord.save();
+            this.render(true);
+        }
+        return { workorder, check };
     }
 
     get checkInstruction() {
@@ -260,7 +269,7 @@ class Tablet extends Component {
         await this.getState();
     }
 
-    _onBarcodeScanned(barcode) {
+    async _onBarcodeScanned(barcode) {
         if (barcode.startsWith('O-BTN.') || barcode.startsWith('O-CMD.')) {
             // Do nothing. It's already handled by the barcode service.
             return;

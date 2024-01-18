@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
-from odoo.addons.appointment.controllers.appointment import AppointmentController
+from odoo.addons.website_appointment.controllers.appointment import WebsiteAppointment
 
 
 class AppointmentType(models.Model):
@@ -74,7 +74,7 @@ class AppointmentType(models.Model):
     @api.model
     def _search_get_detail(self, website, order, options):
         invite_token = options.get('invite_token')
-        allowed_appointment_type_ids = AppointmentController._fetch_available_appointments(
+        allowed_appointment_type_ids = WebsiteAppointment._fetch_available_appointments(
             options.get('filter_appointment_type_ids'),
             options.get('filter_staff_user_ids'),
             invite_token).ids

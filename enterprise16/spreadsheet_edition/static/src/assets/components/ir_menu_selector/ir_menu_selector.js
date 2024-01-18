@@ -34,7 +34,7 @@ export class MenuSelectorWidgetAdapter extends ComponentAdapter {
      * @override
      */
     async updateWidget(nextProps) {
-        if(nextProps.menuId !== this.props.menuId){
+        if(nextProps.menuId && nextProps.menuId !== this.props.menuId) {
             this.widget.updateWidgetValue(nextProps.menuId);
         }
     }

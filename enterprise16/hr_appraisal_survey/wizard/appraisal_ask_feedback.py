@@ -82,7 +82,7 @@ class AppraisalAskFeedback(models.TransientModel):
         employees_info = employees.mapped(lambda employee: {
             'id': employee.id,
             'email': employee.work_email or employee.user_id.partner_id.email,
-            'partner_id': employee.user_id.partner_id or employee.address_home_id
+            'partner_id': employee.user_id.partner_id or employee.sudo().address_home_id
         })
         emails = [e['email'] for e in employees_info]
         partner_ids = [e['partner_id']['id'] for e in employees_info]
@@ -99,16 +99,15 @@ class AppraisalAskFeedback(models.TransientModel):
         if existing_answers:
             existing_answer_emails = existing_answers.filtered('email').mapped('email')
             existing_answer_partners_id = existing_answers.filtered('partner_id').mapped('partner_id')
-            employees_done = employees_info.filtered(lambda employee:
-                employee.email in existing_answer_emails
-                or employee.partner_id in existing_answer_partners_id
-            )
+            for employee_data in employees_info:
+                if employee_data.get('email') in existing_answer_emails or employee_data.get('partner_id') in existing_answer_partners_id:
+                    employees_done.append(employee_data)
             existing_answers = existing_answers.sorted(lambda answer: answer.create_date, reverse=True)
             for employee_done in employees_done:
-                answer |= existing_answers\
+                answers |= existing_answers\
                     .filtered(lambda a:
-                        (a.partner_id and a.partner_id == employee_done.partner_id)
-                        or (a.email and a.email == employee_done.email)
+                        (a.partner_id and a.partner_id == employee_done.get('partner_id'))
+                        or (a.email and a.email == employee_done.get('email'))
                     )[:1]
 
         for new_employee in filter(lambda e: e['id'] not in [e['id'] for e in employees_done], employees_info):

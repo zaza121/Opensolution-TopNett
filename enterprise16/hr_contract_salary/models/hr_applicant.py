@@ -14,6 +14,17 @@ class HrApplicant(models.Model):
     access_token = fields.Char('Security Token', copy=False)
     access_token_end_date = fields.Date('Access Token Validity Date', copy=False)
 
+    def _move_to_hired_stage(self):
+        self.ensure_one()
+        first_hired_stage = self.env['hr.recruitment.stage'].search([
+            '|',
+            ('job_ids', '=', False),
+            ('job_ids', '=', self.job_id.id),
+            ('hired_stage', '=', True)])
+
+        if first_hired_stage:
+            self.stage_id = first_hired_stage[0].id
+
     def action_show_proposed_contracts(self):
         self._check_interviewer_access()
 

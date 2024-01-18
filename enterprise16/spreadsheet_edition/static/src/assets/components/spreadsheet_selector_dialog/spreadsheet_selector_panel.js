@@ -113,6 +113,7 @@ SpreadsheetSelectorPanel.defaultProps = {
 };
 SpreadsheetSelectorPanel.props = {
     onSpreadsheetSelected: Function,
+    onSpreadsheetDblClicked: Function,
     displayBlank: {
         type: Boolean,
         optional: true,

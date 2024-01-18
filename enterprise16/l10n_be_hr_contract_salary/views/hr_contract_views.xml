@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="hr_contract_salary.hr_contract_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='%(hr_contract_salary.generate_simulation_link_action)d']" position="attributes">
-                <attribute name="attrs">{'invisible': ['&amp;', ('country_code', '=', 'BE'), '|', ('employee_id', '=', False), '&amp;', ('time_credit', '=', True), ('work_time_rate', '=', 0)]}</attribute>
+                <attribute name="attrs">{'invisible': ['|', ('employee_id', '=', False), '&amp;', ('country_code', '=', 'BE'), '&amp;', ('time_credit', '=', True), ('work_time_rate', '=', 0)]}</attribute>
             </xpath>
             <field name="image_1920" position="after">
                 <field name="id_card"/>

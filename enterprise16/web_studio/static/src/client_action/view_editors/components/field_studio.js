@@ -1,5 +1,5 @@
 /** @odoo-module */
-import { Field, fieldVisualFeedback } from "@web/views/fields/field";
+import { Field } from "@web/views/fields/field";
 import { FieldContentOverlay } from "./field_content_overlay";
 
 import { useStudioRef, studioIsVisible } from "@web_studio/client_action/view_editors/utils";
@@ -31,20 +31,29 @@ export class FieldStudio extends Field {
         const classNames = super.classNames;
         classNames["o_web_studio_show_invisible"] = !studioIsVisible(this.props);
         classNames["o-web-studio-editor--element-clickable"] = !!this.props.studioXpath;
-        if (!this.props.hasLabel && classNames["o_field_empty"]) {
+        if (this.studioIsEmpty()) {
             delete classNames["o_field_empty"];
             classNames["o_web_studio_widget_empty"] = true;
         }
         return classNames;
     }
 
-    getEmptyPlaceholder() {
-        const { hasEmptyPlaceholder, hasLabel, fieldInfo, name, record } = this.props;
-        if (hasLabel || !hasEmptyPlaceholder) {
+    studioIsEmpty() {
+        const { name, record, hasLabel, fieldInfo } = this.props;
+        if (hasLabel) {
             return false;
         }
-        const { empty } = fieldVisualFeedback(this.FieldComponent, record, name, fieldInfo);
-        return empty ? record.activeFields[name].string : false;
+        return "isEmpty" in fieldInfo.FieldComponent
+            ? fieldInfo.FieldComponent.isEmpty(record, name)
+            : !record.data[name];
+    }
+
+    getEmptyPlaceholder() {
+        const { hasEmptyPlaceholder, name, record } = this.props;
+        if (!hasEmptyPlaceholder) {
+            return false;
+        }
+        return this.studioIsEmpty() && record.activeFields[name].string;
     }
 
     isX2ManyEditable(props) {
@@ -53,11 +62,7 @@ export class FieldStudio extends Field {
         if (!["one2many", "many2many"].includes(field.type)) {
             return false;
         }
-        const activeField = record.activeFields[name];
-        if (["many2many_tags", "hr_org_chart"].includes(activeField.widget)) {
-            return false;
-        }
-        return true;
+        return !!this.FieldComponent.useSubView;
     }
 
     onEditViewType(viewType) {

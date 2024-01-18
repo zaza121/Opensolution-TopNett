@@ -98,7 +98,7 @@
                                         <field name="code">LU_BSABR_203</field>
                                         <field name="groupby">account_id</field>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">4011 + 4012 + 4013 + 4014 + 401 + 4111 + 4121 + 421 + 44113</field>
+                                        <field name="account_codes_formula">4011 + 4012 + 4013 + 4014 + 4019 + 4111 + 4121 + 421 + 44113</field>
                                     </record>
                                     <record id="account_financial_report_l10n_lu_bs_abr_line_1_4_2_2" model="account.report.line">
                                         <field name="name">b) becoming due and payable after more than one year</field>
@@ -182,7 +182,7 @@
                                     <record id="account_financial_report_l10n_lu_bs_abr_line_2_1_5_pre_balance" model="account.report.expression">
                                         <field name="label">pre_balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="['|', ('account_id.internal_group', 'in', ['income', 'expense']), ('account_id.code', '=like', '141%')]"/>
+                                        <field name="formula" eval="['|', ('account_id.internal_group', 'in', ['income', 'expense']), '|', ('account_id.code', '=like', '141%'), ('account_id.code', '=like', '142%')]"/>
                                         <field name="date_scope">from_beginning</field>
                                         <field name="subformula">-sum</field>
                                     </record>
@@ -201,7 +201,7 @@
                                     <record id="account_financial_report_l10n_lu_bs_abr_line_2_1_6_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">domain</field>
-                                        <field name="formula" eval="['|', ('account_id.internal_group', 'in', ['income', 'expense']), ('account_id.code', '=like', '142%')]"/>
+                                        <field name="formula" eval="[('account_id.internal_group', 'in', ['income', 'expense'])]"/>
                                         <field name="date_scope">from_fiscalyear</field>
                                         <field name="subformula">-sum</field>
                                     </record>

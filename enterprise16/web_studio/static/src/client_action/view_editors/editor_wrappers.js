@@ -1,27 +1,12 @@
 /** @odoo-module */
 import { ComponentWrapper } from "web.OwlCompatibility";
 import { mapActiveFieldsToFieldsInfo } from "@web/views/legacy_utils";
-import { OPTIONS_BY_WIDGET } from "@web_studio/legacy/js/views/view_editor_sidebar";
 
 import { registry } from "@web/core/registry";
 
 function isVisible(el) {
     const style = window.getComputedStyle(el);
     return style.display !== "none";
-}
-
-function addDefaultWidgetsOptionsValues(fieldsInfo) {
-    for (const viewInfo of Object.values(fieldsInfo)) {
-        const _fieldsInfo = Object.values(viewInfo).filter((f) => f.widget in OPTIONS_BY_WIDGET);
-        for (const fieldInfo of _fieldsInfo) {
-            const missingOptions = OPTIONS_BY_WIDGET[fieldInfo.widget].filter(
-                ({ name }) => !(name in fieldInfo.options)
-            );
-            for (const option of missingOptions) {
-                fieldInfo.options[option.name] = option.default;
-            }
-        }
-    }
 }
 
 class BasicEditorWrapper extends ComponentWrapper {
@@ -45,11 +30,6 @@ class BasicEditorWrapper extends ComponentWrapper {
             this.env.config.type,
             this.env
         );
-        addDefaultWidgetsOptionsValues(fieldsInfo);
-
-        for (const fInfo of Object.values(fieldsInfo[this.env.config.type])) {
-            fInfo.FieldComponent = fInfo.__WOWL_FIELD_DESCR__.FieldComponent;
-        }
 
         this.state = {
             fieldsInfo,

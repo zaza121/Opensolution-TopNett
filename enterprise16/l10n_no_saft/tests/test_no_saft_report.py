@@ -30,6 +30,13 @@ class TestNoSaftReport(TestAccountReportsCommon):
             'l10n_no_bronnoysund_number': '987654325',
         })
 
+        cls.env['res.partner'].create({
+            'name': 'Mr Big CEO',
+            'is_company': False,
+            'phone': '+47 11 11 12 34',
+            'parent_id': cls.company_data['company'].partner_id.id,
+        })
+
         cls.product_a.default_code = 'PA'
         cls.product_b.default_code = 'PB'
 
@@ -101,10 +108,10 @@ class TestNoSaftReport(TestAccountReportsCommon):
                             </Address>
                             <Contact>
                                 <ContactPerson>
-                                    <FirstName>company_1_data</FirstName>
+                                    <FirstName>Mr Big CEO</FirstName>
                                     <LastName/>
                                 </ContactPerson>
-                                <Telephone>+47 11 11 11 11</Telephone>
+                                <Telephone>+47 11 11 12 34</Telephone>
                             </Contact>
                         </Company>
                         <DefaultCurrencyCode>NOK</DefaultCurrencyCode>
@@ -210,10 +217,10 @@ class TestNoSaftReport(TestAccountReportsCommon):
                                 </Address>
                                 <Contact>
                                     <ContactPerson>
-                                        <FirstName>company_1_data</FirstName>
+                                        <FirstName>Mr Big CEO</FirstName>
                                         <LastName/>
                                     </ContactPerson>
-                                    <Telephone>+47 11 11 11 11</Telephone>
+                                    <Telephone>+47 11 11 12 34</Telephone>
                                 </Contact>
                                 <OwnerID>___ignore___</OwnerID>
                             </Owner>

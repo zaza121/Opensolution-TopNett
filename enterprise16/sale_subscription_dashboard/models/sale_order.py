@@ -14,6 +14,19 @@ from markupsafe import Markup
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    def init(self):
+        self._cr.execute("""
+            CREATE INDEX IF NOT EXISTS sale_subscription_dashboard_start_date_index
+                                    ON account_move_line (subscription_start_date) 
+                                 WHERE subscription_start_date IS NOT NULL;
+        """)
+        self._cr.execute("""
+            CREATE INDEX IF NOT EXISTS sale_subscription_dashboard_index
+                                    ON account_move_line (company_id, subscription_start_date, subscription_end_date)
+                                 WHERE subscription_id IS NOT NULL;
+        """)
+        super().init()
+
     @api.model
     def _get_subscription_dates_ranges(self):
         today = fields.Date.context_today(self)

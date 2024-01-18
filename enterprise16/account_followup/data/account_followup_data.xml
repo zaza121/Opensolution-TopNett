@@ -12,7 +12,7 @@
             <field name="subject">{{ (object.company_id or object._get_followup_responsible().company_id).name }} Payment Reminder - {{ object.commercial_company_name }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
-                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <p style="margin: 0px; padding: 0px;">
                         <t t-if="object.id != object.commercial_partner_id.id">Dear <t t-out="object.name or ''"/> (<t t-out="object.commercial_partner_id.name or ''"/>),</t>
                         <t t-else="">Dear <t t-out="object.name or ''"/>,</t>
                         <br />

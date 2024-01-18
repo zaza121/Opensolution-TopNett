@@ -5,7 +5,7 @@
         <t t-set="currentFolder" t-value="getCurrentFolder()"/>
         <div class="o_documents_inspector h-100">
             <t t-set="nbPreviews" t-value="props.selection.length"/>
-            <div t-if="props.withFilePreview" class="o_documents_inspector_preview d-flex flex-row flex-wrap align-items-center justify-content-center position-relative">
+            <div t-if="props.withFilePreview || nbPreviews === 0" class="o_documents_inspector_preview d-flex flex-row flex-wrap align-items-center justify-content-center position-relative">
                 <div t-if="nbPreviews === 0">
                     <t t-if="currentFolder">
                         <div class="o_inspector_folder_description">
@@ -29,7 +29,7 @@
             </div>
         </div>
     </t>
-    
+
     <t t-name="documents.DocumentsInspector.previews" owl="1">
         <t t-foreach="records.slice(0, 4)" t-as="record" t-key="record_index">
             <t t-set="additionalRecordData" t-value="getRecordAdditionalData(record)"/>
@@ -63,7 +63,7 @@
                 <div t-elif="record.data.type === 'empty'"
                      class="o_inspector_request_icon fa fa-upload fa-5x"
                      t-att-title="record.data.name"
-                     t-on-click.stop.prevent="() => this.documentsReplaceInput.el.click()"/>
+                     t-on-click.stop.prevent="() => { this.documentsReplaceInput.el.setAttribute('data-index', record_index); this.documentsReplaceInput.el.click() }"/>
                 <div t-else=""
                      t-attf-class="o_image o_mimetype_icon {{
                         (mimetype and (mimetype.indexOf('pdf') !== -1 or
@@ -84,7 +84,7 @@
             <i class="o_selection_size"><b><t t-esc="nbPreviews"/></b> documents selected</i>
         </div>
     </t>
-    
+
     <t t-name="documents.DocumentsInspector.globalInfo" owl="1">
         <div class="o_inspector_info_columns">
             <table class="o_inspector_table">
@@ -101,7 +101,7 @@
             </table>
         </div>
     </t>
-    
+
     <t t-name="documents.DocumentsInspector.infoRow" owl="1">
         <tr>
             <td class="o_inspector_label align-middle">
@@ -119,14 +119,23 @@
             <div class="btn-group">
                 <t t-set="locked" t-value="isLocked"/>
                 <t t-set="editDisabled" t-value="isEditDisabled"/>
-                <button class="btn fa fa-download o_inspector_button o_inspector_download" title="Download" t-on-click.stop.prevent="onDownload"/>
+                <t t-if="records[0].data.type == 'url'">
+                    <t t-set="url" t-value="records[0].data.url"/>
+                    <a t-if="url and (url.startsWith('https://') || url.startsWith('http://') || url.startsWith('ftp://'))"
+                        t-att-href="url" target="new" t-att-class="nbPreviews > 1 ? 'pe-none' : ''">
+                        <button class="btn fa fa-link o_inspector_button" t-att-disabled="nbPreviews > 1" title="Link"/>
+                    </a>
+                </t>
+                <t t-else="">
+                    <button class="btn fa fa-download o_inspector_button o_inspector_download" title="Download" t-on-click.stop.prevent="onDownload" t-att-disabled="records.every(record => record.data.type == 'empty')"/>
+                </t>
                 <t t-if="records[0].data.active">
                     <!-- groups does not work here -->
                     <button t-if="currentFolder.id" class="btn fa fa-share-alt o_inspector_button o_inspector_share" title="Share this selection" groups="documents.group_documents_user"
-                        t-on-click.stop.prevent="onShare" t-att-disabled="editDisabled"/>
+                        t-on-click.stop.prevent="onShare"/>
+                    <input type="file" t-ref="replaceFileInput" class="o_inspector_replace_input o_input_file o_hidden" t-on-change.stop="onReplace"/>
                     <t t-if="nbPreviews === 1">
                         <button t-if="records[0].data.type !== 'url'" class="btn fa fa-retweet o_inspector_button o_inspector_replace" title="Replace" t-on-click.stop.prevent="() => this.documentsReplaceInput.el.click()" t-att-disabled="editDisabled || locked"/>
-                        <input type="file" t-ref="replaceFileInput" class="o_inspector_replace_input o_input_file o_hidden" t-on-change.stop="onReplace"/>
                         <button t-att-class="'btn fa o_inspector_button o_inspector_lock' + (records[0].data.lock_uid ? ' o_locked fa-lock' : ' fa-unlock-alt')" title="Lock"
                             t-on-click.stop.prevent="onLock" t-att-disabled="editDisabled || locked"/>
                     </t>
@@ -170,23 +179,23 @@
                 <tbody>
                     <t t-if="nbPreviews === 1">
                         <t t-call="documents.DocumentsInspector.field">
-                            <t t-set="field">name</t>
+                            <t t-set="field" t-translation="off">name</t>
                         </t>
                         <t t-if="records[0].data.type === 'url'" t-call="documents.DocumentsInspector.field">
-                            <t t-set="field">url</t>
+                            <t t-set="field" t-translation="off">url</t>
                         </t>
                     </t>
                     <t t-call="documents.DocumentsInspector.field">
-                        <t t-set="field">partner_id</t>
+                        <t t-set="field" t-translation="off">partner_id</t>
                         <t t-set="additionalProps" t-value="{canOpen: false}"/>
                     </t>
                     <t t-call="documents.DocumentsInspector.field">
-                        <t t-set="field">owner_id</t>
+                        <t t-set="field" t-translation="off">owner_id</t>
                         <t t-set="additionalProps" t-value="{canOpen: false, canCreate: false, canCreateEdit: false, canQuickCreate: false}"/>
                     </t>
                     <t t-call="documents.DocumentsInspector.field">
-                        <t t-set="icon">fa fa-folder text-odoo</t>
-                        <t t-set="field">folder_id</t>
+                        <t t-set="icon" t-translation="off">fa fa-folder text-odoo</t>
+                        <t t-set="field" t-translation="off">folder_id</t>
                         <t t-set="additionalProps" t-value="{canOpen: false, canCreate: false, canCreateEdit: false, canQuickCreate: false}"/>
                     </t>
                     <tr class="o_inspector_divider"/>
@@ -233,7 +242,7 @@
                     <div class="o_inspector_rule o_inspector_trigger_hover_target mb-2" t-att-data-id="rule.resId">
                         <button t-att-tile="rule.data.note || ''" class="btn fa fa-play text-white bg-primary o_inspector_trigger_rule"
                             t-on-click.stop.prevent="(ev) => this.triggerRule(rule)"/>
-                        <span class="ms-2" t-att-title="rule.data.note || ''"><t t-esc="rule.data.display_name"/></span> 
+                        <span class="ms-2" t-att-title="rule.data.note || ''"><t t-esc="rule.data.display_name"/></span>
                     </div>
                 </t>
             </div>

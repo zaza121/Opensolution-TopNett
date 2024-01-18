@@ -10,7 +10,7 @@ class HrContract(models.Model):
 
     @api.model
     def _get_available_vehicles_domain(self, driver_id=None, vehicle_type='car'):
-        return expression.AND([
+        domain = expression.AND([
             expression.OR([
                 [('company_id', '=', False)],
                 [('company_id', '=', self.company_id.id)]
@@ -31,6 +31,10 @@ class HrContract(models.Model):
             ]),
             [('write_off_date', '=', False)],
         ])
+        waiting_stage = self.env.ref('fleet.fleet_vehicle_state_waiting_list', raise_if_not_found=False)
+        if waiting_stage:
+            domain = expression.AND([[('state_id', '!=', waiting_stage.id)], domain])
+        return domain
 
     def _get_possible_model_domain(self, vehicle_type='car'):
         return [('can_be_requested', '=', True), ('vehicle_type', '=', vehicle_type)]

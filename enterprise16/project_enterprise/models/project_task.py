@@ -77,6 +77,13 @@ class Task(models.Model):
         for task in self:
             task.display_warning_dependency_in_gantt = not task.is_closed
 
+    @api.onchange('planned_date_begin', 'planned_date_end')
+    def _onchange_planned_date(self):
+        if not self.planned_date_end and self.planned_date_begin:
+            self.planned_date_begin = False
+        elif not self.planned_date_begin and self.planned_date_end:
+            self.planned_date_end = False
+
     def _get_planning_overlap_per_task(self):
         if not self.ids:
             return {}
@@ -90,7 +97,7 @@ class Task(models.Model):
                And T2.is_closed IS FALSE
                AND T2.planned_date_begin IS NOT NULL
                AND T2.planned_date_end IS NOT NULL
-               AND T2.planned_date_end > NOW()
+               AND T2.planned_date_end > NOW() AT TIME ZONE 'UTC'
                AND T2.project_id IS NOT NULL
                AND (T.planned_date_begin::TIMESTAMP, T.planned_date_end::TIMESTAMP)
           OVERLAPS (T2.planned_date_begin::TIMESTAMP, T2.planned_date_end::TIMESTAMP)
@@ -101,7 +108,7 @@ class Task(models.Model):
                And T.is_closed IS FALSE
                AND T.planned_date_begin IS NOT NULL
                AND T.planned_date_end IS NOT NULL
-               AND T.planned_date_end > NOW()
+               AND T.planned_date_end > NOW() AT TIME ZONE 'UTC'
                AND T.project_id IS NOT NULL
           GROUP BY T.id
         """
@@ -138,13 +145,13 @@ class Task(models.Model):
                 AND T1.planned_date_end > T2.planned_date_begin
                 AND T1.planned_date_begin IS NOT NULL
                 AND T1.planned_date_end IS NOT NULL
-                AND T1.planned_date_end > NOW()
+                AND T1.planned_date_end > NOW() AT TIME ZONE 'UTC'
                 AND T1.active = 't'
                 AND T1.is_closed IS FALSE
                 AND T1.project_id IS NOT NULL
                 AND T2.planned_date_begin IS NOT NULL
                 AND T2.planned_date_end IS NOT NULL
-                AND T2.planned_date_end > NOW()
+                AND T2.planned_date_end > NOW() AT TIME ZONE 'UTC'
                 AND T2.project_id IS NOT NULL
                 AND T2.active = 't'
                 AND T2.is_closed IS FALSE
@@ -260,10 +267,27 @@ class Task(models.Model):
 
     def write(self, vals):
         compute_default_planned_dates = None
+        date_start_update = 'planned_date_begin' in vals
+        date_end_update = 'planned_date_end' in vals
         if not self._context.get('fsm_mode', False) \
            and not self._context.get('smart_task_scheduling', False) \
-           and 'planned_date_begin' in vals and 'planned_date_end' in vals:  # if fsm_mode=True then the processing in industry_fsm module is done for these dates.
+           and date_start_update and date_end_update:  # if fsm_mode=True then the processing in industry_fsm module is done for these dates.
             compute_default_planned_dates = self.filtered(lambda task: not task.planned_date_begin and not task.planned_date_end)
+
+        date_start = vals.get('planned_date_begin', True)
+        date_end = vals.get('planned_date_end', True)
+        no_current_date_end = any(not task.planned_date_end for task in self)
+        no_current_date_begin = any(not task.planned_date_begin for task in self)
+        # Either the date_end or the date_start was set to False, so we set both dates to False
+        if not date_start or not date_end:
+            vals['planned_date_begin'] = False
+            vals['planned_date_end'] = False
+        else:
+            # Either the date_end or the date_start was set to a new value, while the other date is False, so we discard the date from the values to write.
+            if (date_start_update and no_current_date_end and not date_end_update):
+                del vals['planned_date_begin']
+            elif (date_end_update and no_current_date_begin and not date_start_update):
+                del vals['planned_date_end']
 
         res = super().write(vals)
 
@@ -323,7 +347,7 @@ class Task(models.Model):
         sorted_tasks = self.sorted('priority', reverse=True)
         if (vals.get('user_ids') and len(vals['user_ids']) == 1) or ('user_ids' not in vals and len(self.user_ids) == 1):
             user = self.env['res.users'].browse(vals.get('user_ids', self.user_ids.ids))
-            tz_info = user.tz or self._context.get('tz', 'UTC')
+            tz_info = user.tz or self._context.get('tz') or 'UTC'
             dependencies_dict = {  # contains a task as key and the list of tasks before this one as values
                 task:
                     [t for t in self if t != task and t in task.depend_on_ids]
@@ -462,7 +486,7 @@ class Task(models.Model):
             fill the empty schedule slot between contract with the company schedule.
         """
         if user:
-            employees_work_days_data, dummy = user._get_valid_work_intervals(date_start, date_end)
+            employees_work_days_data, dummy = user.sudo()._get_valid_work_intervals(date_start, date_end)
             schedule = employees_work_days_data.get(user.id) or Intervals([])
             # We are using this function to get the intervals for which the schedule of the employee is invalid. Those data are needed to check if we must fallback on the
             # company schedule. The validity_intervals['valid'] does not contain the work intervals needed, it simply contains large intervals with validity time period
@@ -597,7 +621,7 @@ class Task(models.Model):
         invalid_interval = interval
         resource = self._web_gantt_reschedule_get_resource() if resource is None else resource
         default_company = company or self.company_id or self.project_id.company_id
-        resource_calendar_validity = resource._get_calendars_validity_within_period(
+        resource_calendar_validity = resource.sudo()._get_calendars_validity_within_period(
             date_start, date_end, default_company=default_company
         )[resource.id]
         for calendar in resource_calendar_validity:
@@ -855,14 +879,16 @@ class Task(models.Model):
             action['views'] = [(gantt_view.id, 'gantt'), (map_view.id, 'map')] + [(state, view) for state, view in action['views'] if view not in ['gantt', 'map']]
         action.update({
             'name': _('Overlapping Tasks'),
+            'domain' : [
+                ('user_ids', 'in', self.user_ids.ids),
+                ('planned_date_begin', '<', self.planned_date_end),
+                ('planned_date_end', '>', self.planned_date_begin),
+            ],
             'context': {
                 'fsm_mode': False,
                 'task_nameget_with_hours': False,
                 'initialDate': self.planned_date_begin,
                 'search_default_conflict_task': True,
-                'search_default_planned_date_begin': self.planned_date_begin,
-                'search_default_planned_date_end': self.planned_date_end,
-                'search_default_user_ids': self.user_ids.ids,
             }
         })
         return action

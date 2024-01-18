@@ -28,8 +28,9 @@ class EventSaleReport(models.Model):
         if read_group_fields:
             res_read_group = super().read_group(
                 domain, read_group_fields, groupby, offset=offset, limit=limit, orderby=orderby, lazy=lazy)
-            res[0].update(res_read_group[0])
-            res = res[:1] + res_read_group[1:]
+            if res_read_group:
+                res[0].update(res_read_group[0])
+                res = res[:1] + res_read_group[1:]
         return res
 
     def _get_special_values(self, special_template_fields, domain):

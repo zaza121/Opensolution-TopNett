@@ -11,6 +11,7 @@ registerPatch({
          */
         download() {
             if (this.documentOwner) {
+                this.documentOwner.download();
                 return;
             }
             return this._super();

@@ -9,6 +9,7 @@
                 <form>
                     <group>
                         <field name="message" invisible="1"/>
+                        <field name="hmrc_gov_client_device_id" invisible="1"/>
                         <field name="obligation_id" options="{'no_create': True}"/>
                     </group>
                     <div class="alert alert-info" role="alert" style="margin-bottom:0px;" attrs="{'invisible': [('message','=', False)]}">
@@ -26,8 +27,7 @@
 
                     <footer>
                         <button string="Cancel" special="cancel" data-hotkey="z"/>
-                        <button string="Send" class="oe_highlight" type="object" name="send"
-                                attrs="{'invisible': [('accept_legal', '=', False)]}"/>
+                        <widget name="send_hmrc_button" attrs="{'invisible': [('accept_legal', '=', False)]}"/>
                     </footer>
                 </form>
             </field>

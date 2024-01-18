@@ -16,7 +16,7 @@ class AccountMoveLine(models.Model):
             create_column(self.env.cr, "account_move_line", "subscription_mrr", "numeric")
         return super()._auto_init()
 
-    subscription_id = fields.Many2one("sale.order")
+    subscription_id = fields.Many2one("sale.order", index=True)
     subscription_start_date = fields.Date(
         string="Subscription Revenue Start Date", readonly=True
     )

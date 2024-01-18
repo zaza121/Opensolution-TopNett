@@ -20,7 +20,7 @@ class HrContract(models.Model):
     full_time_required_hours = fields.Float(related='resource_calendar_id.full_time_required_hours')
     is_fulltime = fields.Boolean(related='resource_calendar_id.is_fulltime')
     wage_type = fields.Selection(related='structure_type_id.wage_type')
-    hourly_wage = fields.Monetary('Hourly Wage', default=0, required=True, tracking=True, help="Employee's hourly gross wage.")
+    hourly_wage = fields.Monetary('Hourly Wage', tracking=True, help="Employee's hourly gross wage.")
     payslips_count = fields.Integer("# Payslips", compute='_compute_payslips_count', groups="hr_payroll.group_hr_payroll_user")
     calendar_changed = fields.Boolean(help="Whether the previous or next contract has a different schedule or not")
 
@@ -258,6 +258,35 @@ class HrContract(models.Model):
         """
         return
 
+    def get_work_hours(self, date_from, date_to, domain=None):
+        # Get work hours between 2 dates (datetime.date)
+        # To correctly englobe the period, the start and end periods are converted
+        # using the calendar timezone.
+        assert not isinstance(date_from, datetime)
+        assert not isinstance(date_to, datetime)
+
+        date_from = datetime.combine(fields.Datetime.to_datetime(date_from), datetime.min.time())
+        date_to = datetime.combine(fields.Datetime.to_datetime(date_to), datetime.max.time())
+        work_data = defaultdict(int)
+
+        contracts_by_company_tz = defaultdict(lambda: self.env['hr.contract'])
+        for contract in self:
+            contracts_by_company_tz[(
+                contract.company_id,
+                (contract.resource_calendar_id or contract.employee_id.resource_calendar_id).tz
+            )] += contract
+        utc = pytz.timezone('UTC')
+
+        for (company, contract_tz), contracts in contracts_by_company_tz.items():
+            tz = pytz.timezone(contract_tz) if contract_tz else pytz.utc
+            date_from_tz = tz.localize(date_from).astimezone(utc).replace(tzinfo=None)
+            date_to_tz = tz.localize(date_to).astimezone(utc).replace(tzinfo=None)
+            work_data_tz = contracts.with_company(company).sudo()._get_work_hours(
+                date_from_tz, date_to_tz, domain=domain)
+            for work_entry_type_id, hours in work_data_tz.items():
+                work_data[work_entry_type_id] += hours
+        return work_data
+
     def _get_work_hours(self, date_from, date_to, domain=None):
         """
         Returns the amount (expressed in hours) of work
@@ -267,11 +296,10 @@ class HrContract(models.Model):
         :param date_to: The end date
         :returns: a dictionary {work_entry_id: hours_1, work_entry_2: hours_2}
         """
+        assert isinstance(date_from, datetime)
+        assert isinstance(date_to, datetime)
 
-        date_from = datetime.combine(date_from, datetime.min.time())
-        date_to = datetime.combine(date_to, datetime.max.time())
         work_data = defaultdict(int)
-
         # First, found work entry that didn't exceed interval.
         work_entries = self.env['hr.work.entry']._read_group(
             self._get_work_hours_domain(date_from, date_to, domain=domain, inside=True),

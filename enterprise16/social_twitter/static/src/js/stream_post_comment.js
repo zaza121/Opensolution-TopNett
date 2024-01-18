@@ -16,11 +16,11 @@ export class StreamPostCommentTwitter extends StreamPostComment {
     }
 
     get link() {
-        return sprintf('https://www.twitter.com/%s/statuses/%s', this.comment.from.id, this.comment.id);
+        return sprintf('https://www.twitter.com/%s/statuses/%s', encodeURIComponent(this.comment.from.id), encodeURIComponent(this.comment.id));
     }
 
     get authorLink() {
-        return sprintf('https://twitter.com/intent/user?user_id=%s', this.comment.from.id);
+        return sprintf('https://twitter.com/intent/user?user_id=%s', encodeURIComponent(this.comment.from.id));
     }
 
     get isAuthor() {

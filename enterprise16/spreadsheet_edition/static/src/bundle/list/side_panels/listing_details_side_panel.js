@@ -15,14 +15,12 @@ export class ListingDetailsSidePanel extends Component {
     setup() {
         this.getters = this.env.model.getters;
         this.dialog = useService("dialog");
-        const loadData = async () => {
-            this.dataSource = await this.env.model.getters.getAsyncListDataSource(
-                this.props.listId
-            );
+        const loadData = async (listId) => {
+            this.dataSource = await this.env.model.getters.getAsyncListDataSource(listId);
             this.modelDisplayName = await this.dataSource.getModelLabel();
         };
-        onWillStart(loadData);
-        onWillUpdateProps(loadData);
+        onWillStart(() => loadData(this.props.listId));
+        onWillUpdateProps((nextProps) => loadData(nextProps.listId));
     }
 
     get listDefinition() {

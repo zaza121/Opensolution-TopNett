@@ -98,6 +98,10 @@ export function useDocumentView(helpers) {
             const folder = env.searchModel.getSelectedFolder();
             return !folder.id || !folder.has_write_access;
         },
+        hasShareDocuments: () => {
+            const folder = env.searchModel.getSelectedFolder();
+            return !folder.id
+        },
         // Listeners
         onClickDocumentsRequest: () => {
             action.doAction("documents.action_request_form", {
@@ -105,9 +109,15 @@ export function useDocumentView(helpers) {
                     default_partner_id: props.context.default_partner_id || false,
                     default_folder_id: env.searchModel.getSelectedFolderId(),
                     default_tag_ids: [x2ManyCommands.replaceWith(env.searchModel.getSelectedTagIds())],
+                    default_res_id: props.context.default_res_id || false,
+                    default_res_model: props.context.default_res_model || false,
                 },
                 fullscreen: env.isSmall,
-                onClose: async () => env.model.load(),
+                onClose: async () => {
+                    await env.model.load();
+                    env.model.useSampleModel = env.model.root.records.length === 0;
+                    env.model.notify();
+                },
             });
         },
         onClickDocumentsAddUrl: () => {
@@ -120,7 +130,11 @@ export function useDocumentView(helpers) {
                     default_res_model: props.context.default_res_model || false,
                 },
                 fullscreen: env.isSmall,
-                onClose: async () => env.model.load(),
+                onClose: async () => {
+                    await env.model.load();
+                    env.model.useSampleModel = env.model.root.records.length === 0;
+                    env.model.notify();
+                },
             });
         },
         onClickShareDomain: async () => {
@@ -137,12 +151,12 @@ export function useDocumentView(helpers) {
             ]);
             let shareResId = act.res_id;
             let saved = false;
-            const close = dialogService.add(
+            dialogService.add(
                 ShareFormViewDialog,
                 {
                     resModel: "documents.share",
                     resId: shareResId,
-                    onSave: async (record) => {
+                    onRecordSaved: async (record) => {
                         saved = true;
                         // Copy the share link to the clipboard
                         navigator.clipboard.writeText(record.data.full_url);
@@ -150,9 +164,7 @@ export function useDocumentView(helpers) {
                         notification.add(env._t("The share url has been copied to your clipboard."), {
                             type: "success",
                         });
-                        close();
                     },
-                    onDiscard: () => {close();},
                 },
                 {
                     onClose: async () => {
@@ -179,7 +191,7 @@ function useDocumentsViewFilePreviewer({ getSelectedDocumentsElements }) {
         attachmentViewer: null,
     });
 
-    const onOpenDocumentsPreview = async ({ documents, mainDocument, isPdfSplit, rules, hasPdfSplit }) => {
+    const onOpenDocumentsPreview = async ({ documents, mainDocument, isPdfSplit, rules, hasPdfSplit, selection}) => {
         const messaging = await env.services.messaging.get();
         const openPdfSplitter = (documents) => {
             let newDocumentIds = [];
@@ -247,9 +259,10 @@ function useDocumentsViewFilePreviewer({ getSelectedDocumentsElements }) {
             },
             onDeleteCallback: () => {
                 component.env.documentsView.previewStore.documentList = null;
+                selectedDocument.record.toggleSelection(false);
                 // Restore selection
-                if (documents.length > 1) {
-                    for (const rec of documents) {
+                if (selection.length > 1) {
+                    for (const rec of selection) {
                         rec.toggleSelection(true);
                     }
                 }
@@ -261,6 +274,7 @@ function useDocumentsViewFilePreviewer({ getSelectedDocumentsElements }) {
                 if (component.root.el) {
                     component.root.el.querySelector(".o_documents_view").classList.remove("overflow-hidden");
                 }
+                component.render(true);
             },
             onSelectDocument: (record) => {
                 for (const rec of component.model.root.selection) {

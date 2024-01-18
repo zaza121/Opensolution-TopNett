@@ -14,8 +14,11 @@ patch(SocialPostFormatterMixin, 'social_linkedin.SocialPostFormatterMixin', {
     _formatPost(value) {
         value = this._super(...arguments);
         if (this._getMediaType() === 'linkedin') {
+            const LINKEDIN_HASHTAG_REGEX = /{hashtag\|#\|([a-zA-Z\d\-_]+)}/g;
             value = value.replace(this.REGEX_HASHTAG,
                 `$1<a href='https://www.linkedin.com/feed/hashtag/$2' target='_blank'>#$2</a>`);
+            value = value.replace(LINKEDIN_HASHTAG_REGEX,
+                `<a href='https://www.linkedin.com/feed/hashtag/$1' target='_blank'>#$1</a>`);
         }
         return value;
     }

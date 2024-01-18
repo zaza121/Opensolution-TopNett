@@ -6,6 +6,7 @@ import KnowledgeTreePanelMixin from './tools/tree_panel_mixin.js';
 import publicWidget from 'web.public.widget';
 import session from 'web.session';
 import { qweb as QWeb } from 'web.core';
+import { debounce } from "@web/core/utils/timing";
 
 publicWidget.registry.KnowledgeWidget = publicWidget.Widget.extend(KnowledgeTreePanelMixin, {
     selector: '.o_knowledge_form_view',
@@ -14,6 +15,7 @@ publicWidget.registry.KnowledgeWidget = publicWidget.Widget.extend(KnowledgeTree
         'click .o_article_caret': '_onFold',
         'click .o_favorites_toggle_button': '_toggleFavorite',
         'click .o_knowledge_toc_link': '_onTocLinkClick',
+        'click .o_knowledge_article_load_more': '_loadMoreArticles',
     },
 
     /**
@@ -22,9 +24,12 @@ publicWidget.registry.KnowledgeWidget = publicWidget.Widget.extend(KnowledgeTree
      */
     start: function () {
         return this._super.apply(this, arguments).then(() => {
-            const id = this.$el.data('article-id');
-            this._renderTree(id, '/knowledge/tree_panel/portal');
+            this.$id = this.$el.data('article-id');
+            this.resId = this.$id;  // necessary for the 'KnowledgeTreePanelMixin' extension
+            this._renderTree(this.$id, '/knowledge/tree_panel/portal');
             this._setResizeListener();
+            // Debounce the search articles method to reduce the number of rpcs
+            this._searchArticles = debounce(this._searchArticles, 500);
             /**
              * The embedded views are currently not supported in the frontend due
              * to some technical limitations. Instead of showing an empty div, we
@@ -33,7 +38,7 @@ publicWidget.registry.KnowledgeWidget = publicWidget.Widget.extend(KnowledgeTree
              * to load the embedded view.
              */
             const $placeholder = $(QWeb.render('knowledge.embedded_view_placeholder', {
-                url: `/knowledge/article/${id}`,
+                url: `/knowledge/article/${this.$id}`,
                 isLoggedIn: session.user_id !== false
             }));
             const $container = $('.o_knowledge_behavior_type_embedded_view');
@@ -45,19 +50,28 @@ publicWidget.registry.KnowledgeWidget = publicWidget.Widget.extend(KnowledgeTree
     /**
      * @param {Event} event
      */
-    _searchArticles: function (event) {
-        const $input = $(event.currentTarget);
-        const $tree = $('.o_tree');
-        const keyword = $input.val().toLowerCase();
-        this._traverse($tree, $li => {
-            if ($li.text().toLowerCase().includes(keyword)) {
-                $li.removeClass('d-none');
-                return true;
-            } else {
-                $li.addClass('d-none');
-                return false;
-            }
-        });
+    _searchArticles: async function (ev) {
+        ev.preventDefault();
+        const searchTerm = this.$('.knowledge_search_bar').val();
+        if (!searchTerm){
+            // Renders the basic user article tree (with only its cached articles unfolded)
+            await this._renderTree(this.$id, '/knowledge/tree_panel/portal');
+            return;
+        }
+        // Renders articles based on search term in a flatenned tree (no sections nor child articles)
+        const container = this.el.querySelector('.o_knowledge_tree');
+        try {
+            const htmlTree = await this._rpc({
+                route: '/knowledge/tree_panel/portal/search',
+                params: {
+                    search_term: searchTerm,
+                    active_article_id: this.$id,
+                }
+            });
+            container.innerHTML = htmlTree;
+        } catch {
+            container.innerHTML = "";
+        }
     },
 
     /**
@@ -106,6 +120,11 @@ publicWidget.registry.KnowledgeWidget = publicWidget.Widget.extend(KnowledgeTree
         const icon = star.querySelector('i');
         icon.classList.toggle('fa-star', result);
         icon.classList.toggle('fa-star-o', !result);
+
+        // Add the article to the favorite tree if the favorite tree is visible
+        if (!document.querySelector('.o_favorite_container')) {
+            return;
+        }
         let unfoldedFavoriteArticlesIds = localStorage.getItem('knowledge.unfolded.favorite.ids');
         unfoldedFavoriteArticlesIds = unfoldedFavoriteArticlesIds ? unfoldedFavoriteArticlesIds.split(";").map(Number) : [];
         // Add/Remove the article to/from the favorite in the sidebar

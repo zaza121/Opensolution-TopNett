@@ -209,19 +209,23 @@ class HrSalaryAttachment(models.Model):
                 self.action_done()
 
         remaining = total_amount
-        monthly_attachments = self.filtered(lambda a: not a.has_total_amount)
-        fixed_total_attachments = self - monthly_attachments
-        # Pay the recurring monthly attachment first
-        for attachment in monthly_attachments:
-            amount = min(attachment.monthly_amount, remaining)
-            remaining -= amount
+        # It is necessary to sort attachments to pay monthly payments (child_support) first
+        attachments_sorted = self.sorted(key=lambda a: a.has_total_amount)
+        # For all types of attachments, we must pay the monthly_amount without exceeding the total amount
+        for attachment in attachments_sorted:
+            amount = min(attachment.monthly_amount, attachment.remaining_amount, remaining)
             if not amount:
                 continue
-            _record_payment(attachment, amount)
-        # Consume the fixed total amount attachments
-        for attachment in fixed_total_attachments:
-            amount = min(attachment.remaining_amount, remaining)
             remaining -= amount
-            if not amount:
-                continue
             _record_payment(attachment, amount)
+        # If we still have remaining, balance the attachments (running) that have a total amount
+        # in the chronology of estimated end dates.
+        if remaining:
+            fixed_total_attachments = self.filtered(lambda a: a.state == 'open' and a.has_total_amount)
+            fixed_total_attachments_sorted = fixed_total_attachments.sorted(lambda a: a.date_estimated_end)
+            for attachment in fixed_total_attachments_sorted:
+                amount = min(attachment.remaining_amount, attachment.remaining_amount, remaining)
+                if not amount:
+                    continue
+                remaining -= amount
+                _record_payment(attachment, amount)

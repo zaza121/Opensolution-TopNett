@@ -185,7 +185,8 @@
                                 <field name="user_id" invisible="1" groups="hr_timesheet.group_hr_timesheet_approver"/>
                             </group>
                             <group>
-                                <field name="employee_id" required="1" groups="hr_timesheet.group_hr_timesheet_approver" attrs="{'readonly': [('id', '!=', False), ('validated', '=', True)]}" widget="many2one_avatar_employee" context="{'active_test': True}"/>
+                                <field name="employee_id" required="1" groups="hr.group_hr_user" options="{'relation': 'hr.employee'}" attrs="{'readonly': [('id', '!=', False), ('validated', '=', True)]}" widget="many2one_avatar_employee" context="{'active_test': True}"/>
+                                <field name="employee_id" required="1" groups="!hr.group_hr_user" options="{'relation': 'hr.employee.public'}" attrs="{'readonly': [('id', '!=', False), ('validated', '=', True)]}" widget="many2one_avatar_employee" context="{'active_test': True}"/>
                                 <field name="date" attrs="{'readonly': [('id', '!=', False), ('validated', '=', True)]}"/>
                                 <field name="unit_amount" widget="timesheet_uom" attrs="{'readonly': [('id', '!=', False), '|', ('validated', '=', True), ('timer_start', '!=', False)]}" decoration-danger="unit_amount &gt; 24"/>
                             </group>
@@ -204,7 +205,10 @@
             <field name="inherit_id" ref="timesheet_grid.timesheet_view_form"/>
             <field name="mode">primary</field>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='employee_id']" position="attributes">
+                <xpath expr="//field[@name='employee_id'][1]" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='employee_id'][2]" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>
             </field>
@@ -386,7 +390,7 @@
                 </xpath>
                 <xpath expr="//filter[@name='month']" position="after">
                     <separator/>
-                    <filter string="Suspicious Durations" name="suspicious_durations" domain="['|', ('unit_amount', '&gt;', 24), ('unit_amount', '=', 0), ('date', '&lt;', context_today().strftime('%Y-%m-%d')), ('is_timer_running', '=', False)]"/>
+                    <filter string="Suspicious Durations" name="suspicious_durations" domain="['|', ('unit_amount', '&gt;', 24), ('unit_amount', '=', 0), ('is_timer_running', '=', False)]"/>
                 </xpath>
                 <xpath expr="//filter[@name='mine']" position="after">
                     <filter name="my_team_timesheet" string="My Team" domain="[
@@ -403,9 +407,6 @@
         <!-- make sure this view will be loaded after timesheet_grid.timesheet_view_search -->
         <record id="hr_timesheet.hr_timesheet_line_my_timesheet_search" model="ir.ui.view">
             <field name="inherit_id" ref="timesheet_view_search" />
-            <field name="arch" type="xml">
-                <filter name="my_department_timesheet" position="replace"/>
-            </field>
         </record>
 
         <record id="hr_timesheet_line_inherit_my_timesheet_search" model="ir.ui.view">
@@ -413,6 +414,7 @@
             <field name="model">account.analytic.line</field>
             <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_my_timesheet_search"/>
             <field name="arch" type="xml">
+                <filter name="my_department_timesheet" position="replace"/>
                 <filter name="my_team_timesheet" position="replace"/>
             </field>
         </record>
@@ -446,7 +448,7 @@
                     <attribute name="class">ms-2</attribute>
                 </xpath>
                 <xpath expr="//field[@name='stage_id']" position="before">
-                    <field name="timer_start" widget="timer_start_field" class="text-secondary me-auto h2 ms-2 ms-sm-0 fw-bold" groups="hr_timesheet.group_hr_timesheet_user"/>
+                    <field name="timer_start" widget="timer_start_field" class="text-secondary me-auto h2 ms-2 ms-sm-0 fw-bold py-2" groups="hr_timesheet.group_hr_timesheet_user"/>
                 </xpath>
             </field>
         </record>
@@ -491,10 +493,10 @@
                     <field name="timer_start" invisible="1"/>
                     <field name="timer_pause" invisible="1"/>
                     <t t-if="record.display_timesheet_timer &amp;&amp; record.timer_pause.raw_value">
-                        <i class="fa fa-pause text-warning" title="Timer is Paused"></i>
+                        <i class="fa fa-pause text-warning" title="Timer is Paused" t-attf-class="{{ record.planned_date_end.raw_value ? 'ms-2' : '' }}"/>
                     </t>
                     <t t-elif="record.display_timesheet_timer &amp;&amp; record.timer_start.raw_value">
-                        <i class="fa fa-play text-success" title="Timer is Running"></i>
+                        <i class="fa fa-play text-success" title="Timer is Running" t-attf-class="{{ record.planned_date_end.raw_value ? 'ms-2' : '' }}"></i>
                     </t>
                 </xpath>
             </field>
@@ -520,8 +522,8 @@
                 <p>
                 Keep track of your working hours by project every day and bill your customers for that time.
               </p>
-              <p>Get our web/mobile apps to track your time from anywhere, even offline.</p>
-               <div>
+              <p class="d-none">Get our web/mobile apps to track your time from anywhere, even offline.</p>
+               <div class="d-none">
                    <a href="http://www.odoo.com/app/timesheet?platform=chrome" target="_blank" class="o_chrome_store_link d-none d-sm-inline-block">
                         <img alt="Google Chrome Store" class="img img-fluid h-100" src="project/static/src/img/chrome_store.png"/>
                     </a>
@@ -584,8 +586,8 @@
                 <p>
                 Keep track of your working hours by project every day and bill your customers for that time.
               </p>
-              <p>Get our web/mobile apps to track your time from anywhere, even offline.</p>
-               <div>
+              <p class="d-none">Get our web/mobile apps to track your time from anywhere, even offline.</p>
+               <div class="d-none">
                    <a href="http://www.odoo.com/app/timesheet?platform=chrome" target="_blank" class="o_chrome_store_link d-none d-sm-inline-block">
                         <img alt="Google Chrome Store" class="img img-fluid h-100" src="project/static/src/img/chrome_store.png"/>
                     </a>
@@ -622,8 +624,8 @@
                     day. Every time spent on a project will become a cost and can be re-invoiced to
                     customers if required.
                 </p>
-                <p>Download our web/mobile apps to track your time from anywhere, even offline.</p>
-                <div>
+                <p class="d-none">Download our web/mobile apps to track your time from anywhere, even offline.</p>
+                <div class="d-none">
                     <a href="http://www.odoo.com/app/timesheet?platform=chrome" target="_blank" class="o_chrome_store_link d-none d-sm-inline-block">
                         <img alt="Google Chrome Store" class="img img-fluid h-100" src="project/static/src/img/chrome_store.png"/>
                     </a>

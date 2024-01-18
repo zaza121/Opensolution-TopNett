@@ -17,11 +17,12 @@
                     <field name="possible_template_ids" invisible="1"/>
                     <field name="sign_template_ids" options="{'no_create': True}" kanban_view_ref="%(sign.sign_template_view_kanban_mobile)s"
                         widget="many2many_tags" force_save="1"/>
-                    <field name="employee_ids" widget="many2many_avatar_employee" required="1"/>
+                    <field name="employee_ids" widget="many2many_avatar_employee" context="{'force_email':True}" required="1"/>
                 </group>
                 <group attrs="{'invisible': [('sign_template_ids', '=', [])]}" string="Sign Request Options">
                     <field name="employee_role_id" options="{'no_create': True}"/>
                     <field name="responsible_id" options="{'no_create_edit': True}"
+                        context="{'allow_create_employee': False, 'default_create_employee': False}"
                         attrs="{'invisible': [('has_both_template', '=', False)], 'required': [('has_both_template', '=', True)]}"/>
                     <field name="cc_partner_ids" widget="many2many_tags" placeholder="Write email or search contact..."/>
                 </group>

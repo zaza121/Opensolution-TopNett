@@ -260,7 +260,7 @@
                         <t t-call="l10n_be_hr_payroll.NaturalPerson"/>
                     </t>
 
-                    <ContributionUnrelatedToNP>
+                    <ContributionUnrelatedToNP t-if="group_insurance_basis != '00000000000'">
                         <UnrelatedEmployerClass t-esc="employer_class"/>
                         <UnrelatedWorkerCode>865</UnrelatedWorkerCode>
                         <UnrelatedCalculationBasis t-esc="group_insurance_basis"/>
@@ -314,6 +314,14 @@
                         -->
                         <UnrelatedAmount t-esc="double_holiday_pay_contribution"/>
                     </ContributionUnrelatedToNP>
+
+                    <t t-if="employer_compensation">
+                        <EmployerCompensation>
+                            <CompensationCode>1</CompensationCode>
+                            <CompensationAmount t-esc="employer_compensation"/>
+                        </EmployerCompensation>
+                    </t>
+
                 </EmployerDeclaration>
             </Form>
         </DmfAOriginal>

@@ -26,7 +26,8 @@ export class ExpirationPanel extends Component {
     }
 
     get buttonText() {
-        return this.subscription.lastRequestStatus === "error" ? "Retry" : "Register";
+        const { _t } = this.env;
+        return this.subscription.lastRequestStatus === "error" ? _t("Retry") : _t("Register");
     }
 
     get alertType() {
@@ -60,6 +61,7 @@ export class ExpirationPanel extends Component {
     }
 
     async onCodeSubmit() {
+        const { _t } = this.env;
         const enterpriseCode = this.inputRef.el.value;
         if (!enterpriseCode) {
             return;
@@ -68,7 +70,7 @@ export class ExpirationPanel extends Component {
         if (this.subscription.lastRequestStatus === "success") {
             this.state.displayRegisterForm = false;
         } else {
-            this.state.buttonText = "Retry";
+            this.state.buttonText = _t("Retry");
         }
     }
 }

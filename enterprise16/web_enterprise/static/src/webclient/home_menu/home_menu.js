@@ -195,7 +195,7 @@ export class HomeMenu extends Component {
 
     _focusInput() {
         if (!this.env.isSmall && this.inputRef.el) {
-            this.inputRef.el.focus();
+            this.inputRef.el.focus({ preventScroll: true });
         }
     }
 

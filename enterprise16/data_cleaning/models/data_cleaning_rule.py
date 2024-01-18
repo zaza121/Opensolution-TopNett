@@ -80,7 +80,7 @@ class DataCleaningRule(models.Model):
     def _compute_action(self):
         for rule in self:
             action = rule.action
-            action_display = dict(ACTIONS).get(action)
+            action_display = dict(ACTIONS).get(action, '')
             if action == 'trim':
                 action = '%s_%s' % (action, rule.action_trim)
                 action_display = '%s (%s)' % (action_display, dict(ACTIONS_TRIM).get(rule.action_trim))

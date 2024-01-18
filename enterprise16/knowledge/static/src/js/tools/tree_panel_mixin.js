@@ -1,5 +1,7 @@
 /** @odoo-module */
 
+import { localization } from "@web/core/l10n/localization";
+
 export default {
     //--------------------------------------------------------------------------
     // Handlers
@@ -12,9 +14,16 @@ export default {
     resizeSidebar: function (el, saveSize) {
         const onPointerMove = _.throttle(event => {
             event.preventDefault();
-            el.style.setProperty('--knowledge-article-sidebar-size', `${event.pageX}px`);
+            let width;
+            if (localization.direction === "rtl") {
+                // Sidebar is placed on the right
+                width = window.innerWidth - event.pageX;
+            } else {
+                width = event.pageX;
+            }
+            el.style.setProperty('--knowledge-article-sidebar-size', `${width}px`);
             if (saveSize) {
-                localStorage.setItem('knowledgeArticleSidebarSize', event.pageX);
+                localStorage.setItem('knowledgeArticleSidebarSize', width);
             }
         }, 100);
         const onPointerUp = () => {
@@ -108,7 +117,14 @@ export default {
                // Show children content stored in sibling
                $li.append($ul.detach().show());
            } else {
-               const children = await this._fetchChildrenArticles($li.data('articleId')); 
+               let children;
+               try {
+                   children = await this._fetchChildrenArticles($li.data('articleId'));
+               } catch (error) {
+                   // Article is not accessible anymore, remove it from the sidebar
+                   $li.remove();
+                   throw error;
+               }
                const $newUl = $('<ul/>').append(children);
                $li.append($newUl);
            }
@@ -143,6 +159,44 @@ export default {
              unfoldedArticlesIds.splice(unfoldedArticlesIds.indexOf(articleId), 1);
              localStorage.setItem(storageKey, unfoldedArticlesIds.join(";"));
          }
-     }
+     },
+
+    async _loadMoreArticles(ev) {
+        ev.preventDefault();
+
+        let addedArticles;
+        const rpcParams = {
+            active_article_id: this.resId || false,
+            parent_id: ev.target.dataset['parentId'] || false,
+            category: ev.target.dataset['category'] || false,
+            limit: ev.target.dataset['limit'],
+            offset: ev.target.dataset['offset'] || 0,
+        };
+
+        // backend / publicWidget compatibility
+        if (this.rpc) {
+            addedArticles = await this.rpc(
+                '/knowledge/tree_panel/load_more',
+                rpcParams
+            );
+        } else {
+            addedArticles = await this._rpc({
+                route: '/knowledge/tree_panel/load_more',
+                params: rpcParams,
+            });
+        }
+
+        const listRoot = ev.target.closest('ul');
+        // remove existing "Load more" link
+        ev.target.remove();
+        // remove the 'forced' displayed active article
+        const forcedDisplayedActiveArticle = listRoot.querySelector(
+            '.o_knowledge_article_force_show_active_article');
+        if (forcedDisplayedActiveArticle) {
+            forcedDisplayedActiveArticle.remove();
+        }
+        // insert the returned template
+        listRoot.insertAdjacentHTML('beforeend', addedArticles);
+    }
 };
 

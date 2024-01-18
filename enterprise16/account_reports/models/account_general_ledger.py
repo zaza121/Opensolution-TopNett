@@ -25,6 +25,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 if column['expression_label'] != 'amount_currency'
             ]
 
+        # Automatically unfold the report when printing it, unless some specific lines have been unfolded
+        options['unfold_all'] = (self._context.get('print_mode') and not options.get('unfolded_lines')) or options['unfold_all']
+
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals):
         lines = []
         date_from = fields.Date.from_string(options['date']['date_from'])
@@ -84,7 +87,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
 
             # load_more_limit canno( be passed to this call, otherwise it won't be applied per account but on the whole result.
             # We gain perf from batching, but load every result, even if the limit restricts them later.
-            'aml_values': self._get_aml_values(report, options, account_ids_to_expand),
+            'aml_values': self._get_aml_values(report, options, account_ids_to_expand)[0],
         }
 
     def _tax_declaration_lines(self, report, options, tax_type):
@@ -111,7 +114,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
 
         # Call the generic tax report
         generic_tax_report = self.env.ref('account.generic_tax_report')
-        tax_report_options = generic_tax_report._get_options({**options, 'forced_domain': [('tax_line_id.type_tax_use', '=', tax_type)]})
+        tax_report_options = generic_tax_report._get_options({**options, 'report_id': generic_tax_report.id, 'forced_domain': [('tax_line_id.type_tax_use', '=', tax_type)]})
         tax_report_lines = generic_tax_report._get_lines(tax_report_options)
         tax_type_parent_line_id = generic_tax_report._get_generic_line_id(None, None, markup=tax_type)
 
@@ -142,6 +145,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         """
         # Execute the queries and dispatch the results.
         query, params = self._get_query_sums(report, options)
+
+        if not query:
+            return []
 
         groupby_accounts = {}
         groupby_companies = {}
@@ -218,6 +224,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         # 1) Get sums for all accounts.
         # ============================================
         for column_group_key, options_group in options_by_column_group.items():
+            if not options.get('general_ledger_strict_range'):
+                options_group = self._get_options_sum_balance(options_group)
+
             # Sum is computed including the initial balance of the accounts configured to do so, unless a special option key is used
             # (this is required for trial balance, which is based on general ledger)
             sum_date_scope = 'strict_range' if options_group.get('general_ledger_strict_range') else 'normal'
@@ -300,7 +309,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         fiscalyear_dates = self.env.company.compute_fiscalyear_dates(fields.Date.from_string(options['date']['date_from']))
 
         # Trial balance uses the options key, general ledger does not
-        new_date_to = fiscalyear_dates['date_to'] if options.get('include_current_year_in_unaff_earnings') else fiscalyear_dates['date_from'] - timedelta(days=1)
+        new_date_to = fields.Date.from_string(new_options['date']['date_to']) if options.get('include_current_year_in_unaff_earnings') else fiscalyear_dates['date_from'] - timedelta(days=1)
 
         new_options['date'] = {
             'mode': 'single',
@@ -313,7 +322,14 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         rslt = {account_id: {} for account_id in expanded_account_ids}
         aml_query, aml_params = self._get_query_amls(report, options, expanded_account_ids, offset=offset, limit=limit)
         self._cr.execute(aml_query, aml_params)
+        aml_results_number = 0
+        has_more = False
         for aml_result in self._cr.dictfetchall():
+            aml_results_number += 1
+            if aml_results_number == limit:
+                has_more = True
+                break
+
             if aml_result['ref']:
                 aml_result['communication'] = f"{aml_result['ref']} - {aml_result['name']}"
             else:
@@ -340,7 +356,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             else:
                 account_result[aml_key][aml_result['column_group_key']] = aml_result
 
-        return rslt
+        return rslt, has_more
 
     def _get_query_amls(self, report, options, expanded_account_ids, offset=0, limit=None):
         """ Construct a query retrieving the account.move.lines when expanding a report line with or without the load
@@ -426,10 +442,10 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         for column_group_key, options_group in report._split_options_per_column_group(options).items():
             new_options = self._get_options_initial_balance(options_group)
             ct_query = self.env['res.currency']._get_query_currency_table(new_options)
-            tables, where_clause, where_params = report._query_get(new_options, 'normal', domain=[
-                ('account_id', 'in', account_ids),
-                ('account_id.include_initial_balance', '=', True),
-            ])
+            domain = [('account_id', 'in', account_ids)]
+            if new_options.get('include_current_year_in_unaff_earnings'):
+                domain += [('account_id.include_initial_balance', '=', True)]
+            tables, where_clause, where_params = report._query_get(new_options, 'normal', domain=domain)
             params.append(column_group_key)
             params += where_params
             queries.append(f"""
@@ -480,12 +496,52 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         new_options = options.copy()
         date_to = new_options['comparison']['periods'][-1]['date_from'] if new_options.get('comparison', {}).get('periods') else new_options['date']['date_from']
         new_date_to = fields.Date.from_string(date_to) - timedelta(days=1)
-        fiscalyear_dates = self.env.company.compute_fiscalyear_dates(new_date_to)
+
+        # Date from computation
+        # We have two case:
+        # 1) We are choosing a date that starts at the beginning of a fiscal year and we want the initial period to be
+        # the previous fiscal year
+        # 2) We are choosing a date that starts in the middle of a fiscal year and in that case we want the initial period
+        # to be the beginning of the fiscal year
+        date_from = fields.Date.from_string(new_options['date']['date_from'])
+        current_fiscalyear_dates = self.env.company.compute_fiscalyear_dates(date_from)
+
+        if date_from == current_fiscalyear_dates['date_from']:
+            # We want the previous fiscal year
+            previous_fiscalyear_dates = self.env.company.compute_fiscalyear_dates(date_from - timedelta(days=1))
+            new_date_from = previous_fiscalyear_dates['date_from']
+            include_current_year_in_unaff_earnings = True
+        else:
+            # We want the current fiscal year
+            new_date_from = current_fiscalyear_dates['date_from']
+            include_current_year_in_unaff_earnings = False
+
         new_options['date'] = {
             'mode': 'range',
+            'date_from': fields.Date.to_string(new_date_from),
             'date_to': fields.Date.to_string(new_date_to),
-            'date_from': fields.Date.to_string(fiscalyear_dates['date_from']),
         }
+        new_options['include_current_year_in_unaff_earnings'] = include_current_year_in_unaff_earnings
+
+        return new_options
+
+    def _get_options_sum_balance(self, options):
+        new_options = options.copy()
+
+        if not options.get('general_ledger_strict_range'):
+            # Date from
+            date_from = fields.Date.from_string(new_options['date']['date_from'])
+            current_fiscalyear_dates = self.env.company.compute_fiscalyear_dates(date_from)
+            new_date_from = current_fiscalyear_dates['date_from']
+
+            new_date_to = new_options['date']['date_to']
+
+            new_options['date'] = {
+                'mode': 'range',
+                'date_from': fields.Date.to_string(new_date_from),
+                'date_to': new_date_to,
+            }
+
         return new_options
 
     ####################################################
@@ -512,7 +568,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     'class': 'number',
                 })
 
-        unfold_all = self._context.get('print_mode') or options.get('unfold_all')
+        unfold_all = options.get('unfold_all')
         line_id = report._get_generic_line_id('account.account', account.id)
         return {
             'id': line_id,
@@ -564,17 +620,24 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     'class': col_class,
                 })
 
-        first_column_group_key = options['columns'][0]['column_group_key']
-        if eval_dict[first_column_group_key]['payment_id']:
-            caret_type = 'account.payment'
-        else:
-            caret_type = 'account.move.line'
+        aml_id = None
+        move_name = None
+        caret_type = None
+        for column_group_dict in eval_dict.values():
+            aml_id = column_group_dict.get('id', '')
+            if aml_id:
+                if column_group_dict.get('payment_id'):
+                    caret_type = 'account.payment'
+                else:
+                    caret_type = 'account.move.line'
+                move_name = column_group_dict['move_name']
+                break
 
         return {
-            'id': report._get_generic_line_id('account.move.line', eval_dict[first_column_group_key]['id'], parent_line_id=parent_line_id),
+            'id': report._get_generic_line_id('account.move.line', aml_id, parent_line_id=parent_line_id),
             'caret_options': caret_type,
             'parent_id': parent_line_id,
-            'name': eval_dict[first_column_group_key]['move_name'],
+            'name': move_name,
             'columns': line_columns,
             'level': 2,
         }
@@ -638,30 +701,22 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
 
         # Get move lines
         limit_to_load = report.load_more_limit + 1 if report.load_more_limit and not self._context.get('print_mode') else None
-
+        has_more = False
         if unfold_all_batch_data:
             aml_results = unfold_all_batch_data['aml_values'][model_id]
         else:
-            aml_results = self._get_aml_values(report, options, [model_id], offset=offset, limit=limit_to_load)[model_id]
+            aml_results, has_more = self._get_aml_values(report, options, [model_id], offset=offset, limit=limit_to_load)
+            aml_results = aml_results[model_id]
 
-        has_more = False
-        treated_results_count = 0
         next_progress = progress
         for aml_result in aml_results.values():
-            if limit_to_load and treated_results_count == report.load_more_limit:
-                # Enough elements loaded. Only the one due to the +1 in the limit passed when computing aml_results is left.
-                # This element won't generate a line now, but we use it to know that we'll need to add a load_more line.
-                has_more = True
-                break
-
             new_line = self._get_aml_line(report, line_dict_id, options, aml_result, next_progress)
             lines.append(new_line)
             next_progress = init_load_more_progress(new_line)
-            treated_results_count += 1
 
         return {
             'lines': lines,
-            'offset_increment': treated_results_count,
+            'offset_increment': report.load_more_limit,
             'has_more': has_more,
             'progress': json.dumps(next_progress),
         }

@@ -115,7 +115,7 @@ odoo.define('timesheet_grid.TimerGridRenderer', function (require) {
             } else if (this.stateTimer.timerRunning && this.stateTimer.projectId) {
                 this.timesheetId = false;
                 this.stateTimer.readOnly = false;
-                this.stateTimer.projectId = false;
+                this.stateTimer.projectId = undefined;
                 this.stateTimer.taskId = undefined;
 
                 this.stateTimer.timerRunning = false;

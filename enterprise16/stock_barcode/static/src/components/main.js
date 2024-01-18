@@ -195,10 +195,10 @@ class MainComponent extends Component {
                 window.navigator.vibrate(100);
             }
         } else {
-            this.env.services.notification.notify({
-                type: 'warning',
-                message: this.env._t("Please, Scan again !"),
-            });
+            this.env.services.notification.add(
+                this.env._t("Please, Scan again !"),
+                {type: 'warning'}
+            );
         }
     }
 

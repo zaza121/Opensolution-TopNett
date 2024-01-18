@@ -38,7 +38,7 @@ const _t = core._t;
  * readonly input containing the uploaded file name.
  *
  */
-class YoutubeUploadField extends CharField {
+export class YoutubeUploadField extends CharField {
     setup() {
         super.setup();
         this.fileInputRef = useRef('fileInput');
@@ -178,7 +178,7 @@ class YoutubeUploadField extends CharField {
                     }
                 } else {
                     this._uploadFailed();
-                    this.props.update('');
+                    this._resetYoutubeVideoValues();
                 }
             },
         });
@@ -258,11 +258,19 @@ class YoutubeUploadField extends CharField {
                         },
                     });
                     this.uploadedVideoId = null;
-                    this.props.update('');
+                    this._resetYoutubeVideoValues();
             },
             cancel: () => {
-                this.props.update('');
+                this._resetYoutubeVideoValues();
             },
+        });
+    }
+
+    _resetYoutubeVideoValues() {
+        this.props.record.update({
+            youtube_video: false,
+            youtube_video_id: false,
+            youtube_video_category_id: false,
         });
     }
 

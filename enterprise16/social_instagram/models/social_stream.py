@@ -56,10 +56,12 @@ class SocialStreamInstagram(models.Model):
                 'stream_id': self.id,
             }
 
+            media_url = post.get('media_url')
             if values['instagram_post_id'] in existing_posts:
+                if media_url:
+                    values['stream_post_image_ids'] = [(5, 0, 0), (0, 0, {'image_url': media_url})]
                 existing_posts[values['instagram_post_id']].sudo().write(values)
             else:
-                media_url = post.get('media_url')
                 if media_url:
                     values['stream_post_image_ids'] = [(0, 0, {'image_url': media_url})]
                 posts_to_create.append(values)

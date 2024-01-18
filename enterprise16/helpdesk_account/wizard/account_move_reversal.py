@@ -10,7 +10,7 @@ class AccountMoveReversal(models.TransientModel):
 
     @api.model
     def _get_default_so_domain(self, ticket):
-        return [('partner_id', '=', ticket.partner_id.id), ('state', '=', 'sale')]
+        return [('partner_id', '=', ticket.partner_id.id), ('state', '=', 'sale'), ('invoice_ids.state', '=', 'posted'), ('invoice_ids.move_type', '=', 'out_invoice')]
 
     @api.model
     def default_get(self, fields):
@@ -50,7 +50,7 @@ class AccountMoveReversal(models.TransientModel):
             domain.append(('partner_id', 'child_of', self.helpdesk_ticket_id.partner_id.commercial_partner_id.id))
         if self.helpdesk_sale_order_id:
             domain.append(('id', 'in', self.helpdesk_sale_order_id.invoice_ids.ids))
-        if self.helpdesk_sale_order_id.invoice_ids.reversal_move_id.payment_state in ['paid', 'in_payment']:
+        if all(reversal_move.payment_state in ['paid', 'in_payment'] for reversal_move in self.helpdesk_sale_order_id.invoice_ids.reversal_move_id):
             domain.append(('reversal_move_id', '=', False))
         return domain
 

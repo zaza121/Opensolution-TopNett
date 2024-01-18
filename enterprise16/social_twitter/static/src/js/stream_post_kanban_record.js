@@ -18,20 +18,32 @@ patch(StreamPostKanbanRecord.prototype, 'social_twitter.StreamPostKanbanRecord',
     _onTwitterCommentsClick() {
         const postId = this.record.id.raw_value;
 
-        this.rpc('/social_twitter/get_comments', {
-            stream_post_id: postId,
-        }).then((result) => {
-            this.dialog.add(StreamPostCommentsTwitter, {
-                title: this.env._t('Twitter Comments'),
-                commentsCount: this.commentsCount,
-                accountId: this.record.account_id.raw_value,
-                originalPost: this.record,
-                postId: postId,
-                streamId: this.record.stream_id.raw_value,
-                allComments: result.comments,
-                comments: result.comments.slice(0, this.commentsCount),
+        const modalInfo = {
+            title: this.env._t("Twitter Comments"),
+            accountId: this.record.account_id.raw_value,
+            originalPost: this.record,
+            postId: postId,
+            streamId: this.record.stream_id.raw_value,
+        };
+
+        this.rpc("/social_twitter/get_comments", { stream_post_id: postId })
+            .then((result) => {
+                this.dialog.add(StreamPostCommentsTwitter, {
+                    ...modalInfo,
+                    commentsCount: this.commentsCount,
+                    allComments: result.comments,
+                    comments: result.comments.slice(0, this.commentsCount),
+                });
+            })
+            .catch((error) => {
+                this.dialog.add(StreamPostCommentsTwitter, {
+                    ...modalInfo,
+                    commentsCount: 0,
+                    allComments: [],
+                    comments: [],
+                    error: error.data.message,
+                });
             });
-        });
     },
 
     _onTwitterTweetLike() {

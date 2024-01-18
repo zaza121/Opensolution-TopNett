@@ -18,6 +18,11 @@ def _helpdesk_timesheet_post_init(cr, registry):
 
 def _helpdesk_timesheet_uninstall(cr, registry):
     env = api.Environment(cr, SUPERUSER_ID, {})
-    act_window = env.ref('project.open_view_project_all', raise_if_not_found=False)
-    if act_window and act_window.domain and 'helpdesk_team' in act_window.domain:
-        act_window.domain = [('is_internal_project', '=', False)]
+
+    def update_action_window(xmlid):
+        act_window = env.ref(xmlid, raise_if_not_found=False)
+        if act_window and act_window.domain and 'helpdesk_team' in act_window.domain:
+            act_window.domain = [('is_internal_project', '=', False)]
+
+    update_action_window('project.open_view_project_all')
+    update_action_window('project.open_view_project_all_group_stage')

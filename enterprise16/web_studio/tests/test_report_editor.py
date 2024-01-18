@@ -1,6 +1,8 @@
+import json
+from lxml import etree
 from odoo.addons.web_studio.controllers.main import WebStudioController
 from odoo.http import _request_stack
-from odoo.tests.common import TransactionCase
+from odoo.tests.common import HttpCase, TransactionCase
 from odoo.tools import DotDict
 
 
@@ -185,3 +187,54 @@ class TestReportEditor(TransactionCase):
     def tearDown(self):
         super(TestReportEditor, self).tearDown()
         _request_stack.pop()
+
+class TestReportTranslation(HttpCase):
+
+    def test_report_edit_keep_translation(self):
+        # Editing a report should keep the report translations
+        self.env['ir.actions.report'].create({
+            'name': 'test report translation',
+            'report_name': 'web_studio.test_report',
+            'model': 'res.users',
+        }).with_context(load_all_views=True)
+        view = self.env['ir.ui.view'].create({
+            'type': 'qweb',
+            'name': 'test_report_view',
+            'key': 'web_studio.test_report_view',
+            'arch': '<t t-name="web_studio.test_report_view"><div>hello test</div></t>',
+        })
+
+        # Create a translation for the report
+        self.env.ref('base.lang_fr').active = True
+        missing_translation = view._fields['arch_db'].get_trans_terms(view.arch_db)[0]
+        view.update_field_translations('arch_db', {'fr_FR': {missing_translation: 'bonjour test'}})
+
+        user = self.env.ref('base.user_admin')
+        user.lang = 'fr_FR'
+        self.authenticate('admin', 'admin')
+
+        # The report should be translated
+        res = self.url_open(
+            '/web_studio/get_report_views',
+            data=json.dumps({"params": {'report_name': 'web_studio.test_report_view', 'record_id': user.id}}),
+            headers={"Content-Type": "application/json"},
+        )
+        view_arch = etree.fromstring(json.loads(res.content.decode("utf-8"))['result']['views'][str(view.id)]['arch'])
+        div_node = view_arch.xpath('//div')
+        self.assertEqual(len(div_node), 1)
+        self.assertEqual(div_node[0].text, 'bonjour test', "The term should be translated")
+
+        # Edit the view, the response should be translated
+        res = self.url_open(
+            '/web_studio/edit_report_view_arch',
+            data=json.dumps({"params": {
+                'report_name': 'web_studio.test_report_view',
+                'record_id': user.id,
+                'view_id': view.id,
+                'view_arch': '<t t-name="web_studio.test_report_view"><div>hello test</div><div>hi test</div></t>'}}),
+            headers={"Content-Type": "application/json"},
+        )
+        view_arch = etree.fromstring(json.loads(res.content.decode("utf-8"))['result']['views'][str(view.id)]['arch'])
+        div_node = view_arch.xpath('//div')
+        self.assertEqual(len(div_node), 2)
+        self.assertEqual(div_node[0].text, 'bonjour test', "The term should be translated")

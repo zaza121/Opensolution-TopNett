@@ -132,6 +132,8 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
                 # Two products are invoiced
                 self.assertEqual(len(invoice.invoice_line_ids), 2, 'Two lines are invoiced')
                 self.assertEqual(self.subscription.next_invoice_date, datetime.date(2021, 2, 3), 'the next invoice date should be updated')
+                self.assertEqual(invoice.invoice_line_ids[0].name, 'month cheap - 1 Month\n01/03/2021 to 02/02/2021', 'Invoice line description must be based on order line description')
+                self.assertEqual(invoice.invoice_line_ids[1].name, 'month expensive - 1 Month\n01/03/2021 to 02/02/2021', 'Invoice line description must be based on order line description')
 
             with freeze_time("2021-02-03"):
                 self.env.invalidate_all()
@@ -319,6 +321,146 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
             self.assertEqual(self.subscription.next_invoice_date, datetime.date(2021, 2, 3), 'the next invoice date should be updated')
             self.assertEqual(self.subscription.invoice_count, 1)
 
+    def test_close_unpaid_contracts(self):
+        with freeze_time("2022-01-01"):
+
+            sub0 = self.env['sale.order'].create({
+                'name': 'Paid',
+                'partner_id': self.partner.id,
+                'recurrence_id': self.recurrence_year.id,
+                'payment_term_id': self.env.ref('account.account_payment_term_21days').id,
+                'sale_order_template_id': self.templ_5_days.id,
+            })
+            sub0._onchange_sale_order_template_id()
+            sub0.action_confirm() # we these subs alone because they will be paid
+            sub1 = sub0.copy(default={'name': 'Unpaid with simple date'})
+            sub2 = sub1.copy(default={
+                'name': "Partial",
+                'payment_term_id': self.env.ref('account.account_payment_term_advance_60days').id,
+                'sale_order_template_id': self.templ_60_days.id,
+            })
+            sub3 = sub1.copy(default={
+                'name': "Unpaid",
+                'payment_term_id': self.env.ref('account.account_payment_term_advance_60days').id
+            })
+            sub4 = self.env['sale.order'].create({
+                'name': 'Contract without template',
+                'is_subscription': True,
+                'recurrence_id': self.recurrence_year.id,
+                'partner_id': self.user_portal.partner_id.id,
+                'pricelist_id': self.company_data['default_pricelist'].id,
+                'order_line': [
+                    (0, 0, {
+                        'name': self.product.name,
+                        'product_id': self.product.id,
+                        'product_uom_qty': 1.0,
+                        'product_uom': self.product.uom_id.id,
+                    }),
+                    (0, 0, {
+                        'name': self.product2.name,
+                        'product_id': self.product2.id,
+                        'product_uom_qty': 1.0,
+                        'product_uom': self.product.uom_id.id,
+                    })
+                ]
+            })
+            all_subs = (sub1 | sub2 | sub3 | sub4).sorted('id')
+            all_subs.origin_order_id = False
+            for sub in all_subs - sub4:
+                sub._onchange_sale_order_template_id()
+            all_subs.action_confirm()
+            self.env['sale.order']._cron_recurring_create_invoice()
+            # Make sure, the account_moves order corresponds to the subscription order.
+            account_moves = sub1.invoice_ids | sub2.invoice_ids | sub3.invoice_ids | sub4.invoice_ids
+
+        with freeze_time("2022-02-01"):
+            self.env['account.payment.register'] \
+                .with_context(active_model='account.move', active_ids=sub1.invoice_ids.ids) \
+                .create({
+                'currency_id': sub1.currency_id.id,
+                'amount': 50,
+            })._create_payments()
+            self.assertEqual(sub1.invoice_ids.payment_state, 'partial')
+            self.env['account.payment.register'] \
+                .with_context(active_model='account.move',
+                              active_ids=sub0.invoice_ids.ids).create(
+                {
+                    'currency_id': sub0.currency_id.id,
+                    'amount': 400,
+                })._create_payments()
+
+            self.assertTrue(sub0.invoice_ids.payment_state in ['in_payment', 'paid'])
+            self.assertEqual(account_moves.mapped('payment_state'), ['partial', 'not_paid', 'not_paid', 'not_paid'])
+            template_limit = {account_moves[0].id: 5, account_moves[1].id: 60, account_moves[2].id: 5, account_moves[3].id: 15}
+            date_data = [(aml.date_maturity,
+                          aml.date_maturity + relativedelta(days=template_limit[aml.move_id.id]),
+                          aml.move_id.id,
+                          aml.move_id.invoice_line_ids.sale_line_ids.order_id.name) for aml in account_moves.line_ids.filtered('date_maturity')]
+            self.assertEqual(date_data, [
+                (datetime.date(2022, 1, 22), datetime.date(2022, 1, 27), account_moves[0].id, 'Unpaid with simple date'),
+                (datetime.date(2022, 1, 1), datetime.date(2022, 3, 2), account_moves[1].id, 'Partial'),
+                (datetime.date(2022, 3, 2), datetime.date(2022, 5, 1), account_moves[1].id, 'Partial'),
+                (datetime.date(2022, 1, 1), datetime.date(2022, 1, 6), account_moves[2].id, 'Unpaid'),
+                (datetime.date(2022, 3, 2), datetime.date(2022, 3, 7), account_moves[2].id, 'Unpaid'),
+                (datetime.date(2022, 1, 1), datetime.date(2022, 1, 16), account_moves[3].id, 'Contract without template'),
+            ])
+
+        with freeze_time("2022-02-01"):
+            self.env['sale.order'].sudo().cron_subscription_expiration()
+            self.assertEqual(all_subs.mapped('stage_category'), ['progress', 'progress', 'progress', 'closed'], "First and last invoices are never paid")
+
+        with freeze_time("2022-03-08"):
+            self.env['sale.order'].sudo().cron_subscription_expiration()
+            self.assertEqual(all_subs.mapped('stage_category'), ['progress', 'progress', 'closed', 'closed'],
+                             "Unpaid payment expire on 2022-03-02 +  5days = 2022-03-07")
+
+        with freeze_time("2022-05-02"):
+            self.env['sale.order'].sudo().cron_subscription_expiration()
+            self.assertEqual(account_moves.mapped('payment_state'), ['partial', 'not_paid', 'not_paid', 'not_paid'])
+            self.assertEqual(all_subs.mapped('stage_category'), ['progress', 'closed', 'closed', 'closed'])
+            self.assertEqual(sub0.stage_category, 'progress')
+
+        with freeze_time("2023-01-07"):
+            # No new invoice, we don't increment the next_invoice_date
+            self.env['sale.order'].sudo().cron_subscription_expiration()
+            self.assertEqual(sub0.stage_category, 'closed')
+
+    def test_close_unpaid_contracts_bis(self):
+        # We don't close the contract if the last invoice is paid but the invoice before was not paid
+        with freeze_time("2023-01-01"):
+
+            sub = self.env['sale.order'].create({
+                'name': 'Paid',
+                'partner_id': self.partner.id,
+                'recurrence_id': self.recurrence_year.id,
+                'payment_term_id': self.env.ref('account.account_payment_term_21days').id,
+                'sale_order_template_id': self.templ_5_days.id,
+            })
+            sub._onchange_sale_order_template_id()
+            sub.action_confirm()  # we these subs alone because they will be paid
+
+            # We don't pay tbis invoice to simulate bad historical data
+            self.env['sale.order']._cron_recurring_create_invoice()
+            invoice_to_skip = sub.invoice_ids
+        with freeze_time("2024-01-01"):
+            self.env['sale.order']._cron_recurring_create_invoice()
+            invoice_to_pay = sub.invoice_ids - invoice_to_skip
+            self.env['account.payment.register'] \
+                .with_context(active_model='account.move',
+                              active_ids=invoice_to_pay.ids).create(
+                {
+                    'currency_id': sub.currency_id.id,
+                    'amount': 300,
+                })._create_payments()
+        # If the last invoice is paid, we don't close the contract
+        with freeze_time("2025-01-02"):
+            self.env['sale.order'].sudo().cron_subscription_expiration()
+            self.assertEqual(sub.stage_category, 'progress')
+        # The contract is expired, the next invoice date is passed since 5 days, we close it
+        with freeze_time("2025-01-07"):
+            self.env['sale.order'].sudo().cron_subscription_expiration()
+            self.assertEqual(sub.stage_category, 'closed')
+
     def test_partial_payment(self):
         subscription = self.subscription
         subscription.action_confirm()
@@ -349,3 +491,56 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
             subscription.start_date, subscription.next_invoice_date,
             "The subscription next invoice date should not have been updated"
         )
+
+    def test_refund_next_invoice_date(self):
+        with freeze_time('2023-01-18'):
+            subscription = self.env['sale.order'].create({
+                'partner_id': self.partner.id,
+                'recurrence_id': self.recurrence_month.id,
+                'order_line': [
+                    (0, 0, {
+                        'name': self.product.name,
+                        'product_id': self.product.id,
+                        'product_uom_qty': 3.0,
+                        'product_uom': self.product.uom_id.id,
+                        'price_unit': 12,
+                    })],
+            })
+            subscription.action_confirm()
+            subscription._create_recurring_invoice(automatic=True)
+            self.assertEqual(subscription.next_invoice_date, datetime.date(2023, 2, 18), "The next invoice date is incremented")
+            subscription._get_invoiced()
+            inv = subscription.invoice_ids
+
+            test_payment_token = self.env['payment.token'].create({
+                'payment_details': 'Test',
+                'partner_id': subscription.partner_id.id,
+                'provider_id': self.dummy_provider.id,
+                'provider_ref': 'test'
+            })
+            payment_with_token = self.env['account.payment'].create({
+                'payment_type': 'inbound',
+                'partner_type': 'customer',
+                'amount': subscription.amount_total,
+                'date': subscription.date_order,
+                'currency_id': subscription.currency_id.id,
+                'partner_id': subscription.partner_id.id,
+                'payment_token_id': test_payment_token.id
+            })
+            transaction_ids = payment_with_token._create_payment_transaction()
+            transaction_ids._set_done()  # dummy transaction will always be successful
+            with freeze_time('2023-02-18'):
+                subscription._create_recurring_invoice(automatic=True)
+                self.assertEqual(subscription.next_invoice_date, datetime.date(2023, 3, 18), "The next invoice date is incremented")
+            # We refund the first invoice
+            refund_wizard = self.env['account.move.reversal'].with_context(
+                active_model="account.move",
+                active_ids=inv.ids).create({
+                'reason': 'Test refund tax repartition',
+                'refund_method': 'cancel',
+                'journal_id': inv.journal_id.id,
+            })
+            res = refund_wizard.reverse_moves()
+            refund_move = self.env['account.move'].browse(res['res_id'])
+            self.assertEqual(inv.reversal_move_id, refund_move, "The initial move should be reversed")
+            self.assertEqual(subscription.next_invoice_date, datetime.date(2023, 3, 18), "The next invoice date not incremented")

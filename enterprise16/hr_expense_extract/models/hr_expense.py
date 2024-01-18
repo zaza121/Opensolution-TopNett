@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from psycopg2 import IntegrityError, OperationalError
+
 from odoo.addons.iap.tools import iap_tools
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError
@@ -159,8 +161,13 @@ class HrExpense(models.Model):
 
     def action_submit_expenses(self, **kwargs):
         res = super(HrExpense, self).action_submit_expenses(**kwargs)
-        self.extract_state = 'to_validate'
-        self.env.ref('hr_expense_extract.ir_cron_ocr_validate')._trigger()
+
+        expenses_to_validate = self.filtered(lambda exp: exp.extract_state == 'waiting_validation')
+        expenses_to_validate.extract_state = 'to_validate'
+
+        if expenses_to_validate:
+            self.env.ref('hr_expense_extract.ir_cron_ocr_validate')._trigger()
+
         return res
 
     @api.model
@@ -212,7 +219,7 @@ class HrExpense(models.Model):
             self.extract_word_ids.unlink()
 
             description_ocr = ocr_results['description']['selected_value']['content'] if 'description' in ocr_results else ""
-            total_ocr = ocr_results['total']['selected_value']['content'] if 'total' in ocr_results else ""
+            total_ocr = ocr_results['total']['selected_value']['content'] if 'total' in ocr_results else 0.0
             date_ocr = ocr_results['date']['selected_value']['content'] if 'date' in ocr_results else ""
             currency_ocr = ocr_results['currency']['selected_value']['content'] if 'currency' in ocr_results else ""
             bill_reference_ocr = ocr_results['bill_reference']['selected_value']['content'] if 'bill_reference' in ocr_results else ""
@@ -289,8 +296,15 @@ class HrExpense(models.Model):
     @api.model
     def _cron_parse(self):
         for rec in self.search([('extract_state', '=', 'waiting_upload')]):
-            rec.retry_ocr()
-            rec.env.cr.commit()
+            try:
+                with self.env.cr.savepoint(flush=False):
+                    rec.with_company(rec.company_id).retry_ocr()
+                    # We handle the flush manually so that if an error occurs, e.g. a concurrent update error,
+                    # the savepoint will be rollbacked when exiting the context manager
+                    self.env.cr.flush()
+                self.env.cr.commit()
+            except (IntegrityError, OperationalError) as e:
+                _logger.error("Couldn't upload %s with id %d: %s", rec._name, rec.id, str(e))
 
     def retry_ocr(self):
         """Retry to contact iap to submit the first attachment in the chatter"""

@@ -79,7 +79,7 @@ tour.register('test_gs1_inventory_lot_serial', {test: true}, [
     //      - (30)5                 > quantity (5)
     {
         trigger: '.o_barcode_client_action',
-        run: 'scan 010011115555571710LOT-AAA\x1D305',
+        run: 'scan 010011115555571710LOT-AAA~305',
     },
     {
         trigger: '.o_barcode_line:contains("AAA")',
@@ -151,7 +151,7 @@ tour.register('test_gs1_inventory_lot_serial', {test: true}, [
     // line and create a new line).
     {
         trigger: '.o_barcode_client_action',
-        run: 'scan 3020\x1D10LOT-AAC',
+        run: 'scan 3020#10LOT-AAC',
     },
     {
         trigger: '.o_barcode_line.o_selected:contains("AAC")',
@@ -785,14 +785,13 @@ tour.register('test_gs1_receipt_lot_serial', {test: true}, [
     },
     // The following scanned barcode should be decomposed like that:
     //      - (01)00000076543210    > product barcode (76543210)
-    //      - (10)b1-b001           > lot (b1-b001)
     //      - (30)00000008          > quantity (8)
     {
         trigger: '.o_barcode_client_action',
-        run: 'scan 010000007654321010b1-b001\x1D3000000008',
+        run: 'scan 0100000076543210\x1D3000000008',
     },
     {
-        trigger: '.o_barcode_line:contains("b1-b001")',
+        trigger: '.o_barcode_line.o_selected',
         run: function () {
             helper.assertLinesCount(1);
             const $line = helper.getLine({barcode: '76543210'});
@@ -800,7 +799,25 @@ tour.register('test_gs1_receipt_lot_serial', {test: true}, [
             helper.assertLineQty($line, '8');
         }
     },
-    // Same barcode but for another lot and for only 4 qty. (will be scanned two times).
+    // Assign a lot to the previously scanned products:
+    //      - (10)b1-b001           > lot (b1-b001)
+    {
+        trigger: '.o_barcode_client_action',
+        run: 'scan 10b1-b001',
+    },
+    {
+        trigger: '.o_barcode_line:contains("b1-b001")',
+        run: function () {
+            helper.assertLinesCount(1);
+            const $line = helper.getLine({barcode: '76543210'});
+            helper.assert($line.find('.o_line_lot_name').text(), 'b1-b001');
+            helper.assertLineQty($line, '8');
+        }
+    },
+    // Scan the product, lot and quantity all at once:
+    //      - (01)00000076543210    > product barcode (76543210)
+    //      - (10)b1-b002           > lot (b1-b002)
+    //      - (30)00000004          > quantity (4)
     {
         trigger: '.o_barcode_client_action',
         run: 'scan 010000007654321010b1-b002\x1D3000000004',

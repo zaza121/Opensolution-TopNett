@@ -138,25 +138,27 @@ class AccountBatchPayment(models.Model):
 
         return super(AccountBatchPayment, self)._generate_export_file()
 
+    def _get_payment_vals(self, payment):
+
+        return {
+            'id' : payment.id,
+            'name': str(payment.id) + '-' + (payment.ref or 'SCT-' + self.journal_id.code + '-' + str(fields.Date.today())),
+            'payment_date' : payment.date,
+            'amount' : payment.amount,
+            'journal_id' : self.journal_id.id,
+            'currency_id' : payment.currency_id.id,
+            'payment_type' : payment.payment_type,
+            'ref' : payment.ref,
+            'partner_id' : payment.partner_id.id,
+            'partner_bank_id': payment.partner_bank_id.id,
+        }
+
     def _generate_payment_template(self, payments):
         payment_dicts = []
         for payment in payments:
             if not payment.partner_bank_id:
                 raise UserError(_('A bank account is not defined.'))
 
-            payment_dict = {
-                'id' : payment.id,
-                'name': str(payment.id) + '-' + (payment.ref or 'SCT-' + self.journal_id.code + '-' + str(fields.Date.today())),
-                'payment_date' : payment.date,
-                'amount' : payment.amount,
-                'journal_id' : self.journal_id.id,
-                'currency_id' : payment.currency_id.id,
-                'payment_type' : payment.payment_type,
-                'ref' : payment.ref,
-                'partner_id' : payment.partner_id.id,
-                'partner_bank_id': payment.partner_bank_id.id,
-            }
-
-            payment_dicts.append(payment_dict)
+            payment_dicts.append(self._get_payment_vals(payment))
 
         return payment_dicts

@@ -38,12 +38,8 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         template_vals = self._l10n_no_prepare_saft_report_values(report, options)
         content = self.env['ir.qweb']._render('l10n_no_saft.saft_template_inherit_l10n_no_saft', template_vals)
 
-        self.env['ir.attachment'].l10n_no_saft_validate_xml_from_attachment(content, 'xsd_no_saft.xsd')
+        self.env['ir.attachment'].l10n_no_saft_validate_xml_from_attachment(content)
 
-        xsd_attachment = self.env['ir.attachment'].search([('name', '=', 'xsd_cached_Norwegian_SAF-T_Financial_Schema_v_1_10_xsd')])
-        if xsd_attachment:
-            with io.BytesIO(base64.b64decode(xsd_attachment.with_context(bin_size=False).datas)) as xsd:
-                tools.xml_utils._check_with_xsd(content, xsd)
         return {
             'file_name': report.get_default_report_filename('xml'),
             'file_content': "\n".join(re.split(r'\n\s*\n', content)).encode(),

@@ -3,11 +3,13 @@
 import { makeView, setupViewRegistries } from "@web/../tests/views/helpers";
 import {
     getFixture,
+    editInput,
     patchWithCleanup,
     click,
     nextTick,
     makeDeferred,
 } from "@web/../tests/helpers/utils";
+import { createWebClient, doAction } from "@web/../tests/webclient/helpers";
 import { session } from "@web/session";
 import { registry } from "@web/core/registry";
 
@@ -46,6 +48,12 @@ QUnit.module("Studio Approval", (hooks) => {
                             display_name: "second record",
                             int_field: 27,
                             bar: true,
+                        },
+                        {
+                            id: 3,
+                            display_name: "another record",
+                            int_field: 21,
+                            bar: false,
                         },
                     ],
                 },
@@ -308,5 +316,256 @@ QUnit.module("Studio Approval", (hooks) => {
         await click(target, ".o_popover button.o_web_approval_cancel");
         await click(target, ".o_popover button.o_web_approval_reject");
         assert.verifySteps(["approve_rule", "delete_approval", "reject_rule"]);
+    });
+    QUnit.test("approval widget basic flow with domain rule", async function (assert) {
+        assert.expect(3);
+
+        serverData.views = {
+            "partner,false,form": `
+            <form>
+                <button type="object=" name="someMethod" string="Apply Method" studio_approval="True"/>
+            </form>`,
+            "partner,false,list": '<tree><field name="display_name"/></tree>',
+            "partner,false,search": "<search></search>",
+        };
+
+        serverData.actions = {
+            1: {
+                id: 1,
+                name: "Partner",
+                res_model: "partner",
+                type: "ir.actions.act_window",
+                views: [
+                    [false, "list"],
+                    [false, "form"],
+                ],
+            },
+        };
+
+        let index = 0;
+        const recordIds = [1, 2, 3];
+        const mockRPC = (route, args) => {
+            const rule = {
+                id: index,
+                group_id: [1, "Internal User"],
+                domain: false,
+                can_validate: true,
+                message: false,
+                exclusive_user: false,
+            };
+            if (args.method === "get_approval_spec") {
+                assert.strictEqual(recordIds[index++], args.kwargs.res_id);
+                const spec = {
+                    rules: [rule],
+                    entries: [],
+                    groups: [[1, "Internal User"]],
+                };
+                return Promise.resolve(spec);
+            }
+        };
+        const webClient = await createWebClient({ serverData, mockRPC });
+        await doAction(webClient, 1);
+        await click(target.querySelector(".o_data_row .o_data_cell"));
+        await click(target.querySelector(".o_pager_next"));
+        await click(target, 'button[name="someMethod"] .o_web_studio_approval');
+        await click(target.querySelector(".o_pager_next"));
+        await click(target, 'button[name="someMethod"] .o_web_studio_approval');
+    });
+
+    QUnit.test("approval on new record: save before check", async function (assert) {
+        serverData.actions = {
+            1: {
+                id: 1,
+                name: "Partner",
+                res_model: "partner",
+                type: "ir.actions.act_window",
+                views: [[false, "form"]],
+            },
+        };
+
+        const mockRPC = (route, args) => {
+            const rule = {
+                id: 1,
+                group_id: [1, "Internal User"],
+                domain: false,
+                can_validate: true,
+                message: false,
+                exclusive_user: false,
+            };
+            if (args.method === "create") {
+                assert.step("create");
+            }
+            if (args.method === "check_approval") {
+                assert.step(`check_approval: ${JSON.stringify(args.args)}`);
+
+                return Promise.resolve({
+                    approved: false,
+                    rules: [rule],
+                    entries: [],
+                });
+            }
+            if (args.method === "get_approval_spec") {
+                assert.step(
+                    `get_approval_spec: resId: ${args.kwargs.res_id} ; ${JSON.stringify(args.args)}`
+                );
+                const spec = {
+                    rules: [rule],
+                    entries: [],
+                    groups: [[1, "Internal User"]],
+                };
+                return Promise.resolve(spec);
+            }
+
+            if (args.method === "someMethod") {
+                assert.step("button method executed");
+            }
+        };
+
+        await makeView({
+            serverData,
+            mockRPC,
+            type: "form",
+            resModel: "partner",
+            arch: `<form>
+                <button type="object=" name="someMethod" string="Apply Method" studio_approval="True"/>
+            </form>`,
+        });
+
+        assert.verifySteps(['get_approval_spec: resId: false ; ["partner","someMethod",false]']);
+        await click(target, 'button[name="someMethod"]');
+        assert.verifySteps([
+            "create",
+            'check_approval: ["partner",4,"someMethod",false]',
+            'get_approval_spec: resId: 4 ; ["partner","someMethod",false]',
+        ]);
+    });
+
+    QUnit.test("approval on existing record: save before check", async function (assert) {
+        serverData.actions = {
+            1: {
+                id: 1,
+                name: "Partner",
+                res_model: "partner",
+                type: "ir.actions.act_window",
+                views: [[false, "form"]],
+            },
+        };
+
+        const mockRPC = (route, args) => {
+            const rule = {
+                id: 1,
+                group_id: [1, "Internal User"],
+                domain: false,
+                can_validate: true,
+                message: false,
+                exclusive_user: false,
+            };
+            if (args.method === "write") {
+                assert.step("write");
+            }
+            if (args.method === "check_approval") {
+                assert.step(`check_approval: ${JSON.stringify(args.args)}`);
+
+                return Promise.resolve({
+                    approved: false,
+                    rules: [rule],
+                    entries: [],
+                });
+            }
+            if (args.method === "get_approval_spec") {
+                assert.step(
+                    `get_approval_spec: resId: ${args.kwargs.res_id} ; ${JSON.stringify(args.args)}`
+                );
+                const spec = {
+                    rules: [rule],
+                    entries: [],
+                    groups: [[1, "Internal User"]],
+                };
+                return Promise.resolve(spec);
+            }
+
+            if (args.method === "someMethod") {
+                assert.step("button method executed");
+            }
+        };
+
+        await makeView({
+            serverData,
+            mockRPC,
+            type: "form",
+            resModel: "partner",
+            arch: `<form>
+                <button type="object=" name="someMethod" string="Apply Method" studio_approval="True"/>
+                <field name="int_field"/>
+            </form>`,
+            resId: 1,
+        });
+
+        await editInput(target, ".o_field_widget[name=int_field] input", "10");
+
+        assert.verifySteps(['get_approval_spec: resId: 1 ; ["partner","someMethod",false]']);
+        await click(target, 'button[name="someMethod"]');
+        assert.verifySteps([
+            "write",
+            'check_approval: ["partner",1,"someMethod",false]',
+            'get_approval_spec: resId: 1 ; ["partner","someMethod",false]',
+        ]);
+    });
+
+    QUnit.test("approval continues to sync after a component has been destroyed", async function (assert) {
+        /* This uses two exclusive buttons. When one is displayed, the other is not.
+        When clicking on the first button, this changes the int_field value which
+        then hides the first button and display the second one */
+        const mockRPC = (route, args) => {
+            const rule = {
+                id: 1,
+                group_id: [1, "Internal User"],
+                domain: false,
+                can_validate: true,
+                message: false,
+                exclusive_user: false,
+            };
+            if (args.method === "check_approval") {
+                return Promise.resolve({
+                    approved: true,
+                    rules: [rule],
+                    entries: [],
+                });
+            }
+            if (args.method === "get_approval_spec") {
+                const spec = {
+                    rules: [rule],
+                    entries: [],
+                    groups: [[1, "Internal User"]],
+                };
+                return Promise.resolve(spec);
+            }
+
+            if (args.method === "someMethod") {
+                serverData.models.partner.records[0].int_field = 1;
+                return true;
+            }
+
+            if (args.method === "otherMethod") {
+                return true;
+            }
+        };
+
+        await makeView({
+            serverData,
+            mockRPC,
+            type: "form",
+            resModel: "partner",
+            arch: `<form>
+                <button type="object" name="someMethod" string="Apply Method" attrs="{'invisible': [('int_field', '=', 1)]}" studio_approval="True"/>
+                <button type="object" name="otherMethod" string="Other Method" attrs="{'invisible': [('int_field', '!=', 1)]}" studio_approval="True"/>
+                <field name="int_field"/>
+            </form>`,
+            resId: 1,
+        });
+
+        await click(target, 'button[name="someMethod"]');
+        assert.containsNone(target, 'button[name="otherMethod"] .o_web_studio_approval .fa-circle-o-notch.fa-spin');
+        assert.containsOnce(target, 'button[name="otherMethod"] .o_web_studio_approval .o_web_studio_approval_avatar');
     });
 });

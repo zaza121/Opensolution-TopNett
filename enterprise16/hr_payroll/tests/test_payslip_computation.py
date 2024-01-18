@@ -63,7 +63,7 @@ class TestPayslipComputation(TestPayslipContractBase):
             'time_type': 'leave',
         })
 
-        work_entries = self.richard_emp.contract_ids._generate_work_entries(date(2016, 1, 1), date(2016, 2, 1))
+        self.richard_emp.contract_ids.generate_work_entries(date(2016, 1, 1), date(2016, 2, 1))
         self.richard_payslip._compute_worked_days_line_ids()
         # TBE: In master the Monetary field were not rounded because the currency_id wasn't computed yet.
         # The test was incorrect using the value 238.09, with 238.11 it is ok
@@ -91,7 +91,7 @@ class TestPayslipComputation(TestPayslipContractBase):
         })
 
         self._reset_work_entries(self.richard_payslip.contract_id)
-        work_entries = self.richard_emp.contract_ids._generate_work_entries(date(2016, 1, 1), date(2016, 2, 1))
+        work_entries = self.richard_emp.contract_ids.generate_work_entries(date(2016, 1, 1), date(2016, 2, 1))
         work_entries.action_validate()
 
         self.richard_payslip._compute_worked_days_line_ids()
@@ -127,7 +127,7 @@ class TestPayslipComputation(TestPayslipContractBase):
             })
 
         self._reset_work_entries(self.richard_payslip_quarter.contract_id)
-        work_entries = self.richard_emp.contract_ids._generate_work_entries(date(2016, 1, 1), date(2016, 3, 31))
+        work_entries = self.richard_emp.contract_ids.generate_work_entries(date(2016, 1, 1), date(2016, 3, 31))
         work_entries.action_validate()
 
         self.richard_payslip_quarter._compute_worked_days_line_ids()
@@ -158,7 +158,7 @@ class TestPayslipComputation(TestPayslipContractBase):
             })
         self._reset_work_entries(self.richard_payslip_quarter.contract_id)
 
-        work_entries = self.richard_emp.contract_ids._generate_work_entries(date(2016, 1, 1), date(2016, 3, 31))
+        work_entries = self.richard_emp.contract_ids.generate_work_entries(date(2016, 1, 1), date(2016, 3, 31))
         work_entries.action_validate()
 
         self.richard_payslip_quarter._compute_worked_days_line_ids()
@@ -189,7 +189,7 @@ class TestPayslipComputation(TestPayslipContractBase):
             })
 
         self._reset_work_entries(self.richard_payslip_quarter.contract_id)
-        work_entries = self.richard_emp.contract_ids._generate_work_entries(date(2016, 1, 1), date(2016, 3, 31))
+        work_entries = self.richard_emp.contract_ids.generate_work_entries(date(2016, 1, 1), date(2016, 3, 31))
         work_entries.action_validate()
 
         self.richard_payslip_quarter._compute_worked_days_line_ids()
@@ -220,7 +220,7 @@ class TestPayslipComputation(TestPayslipContractBase):
         # /!\ this is in the weekend (Sunday) => no calendar attendance at this time
         start = datetime(2015, 11, 1, 10, 0, 0)
         end = datetime(2015, 11, 1, 17, 0, 0)
-        work_entries = self.contract_cdd._generate_work_entries(start, end + relativedelta(days=2))
+        work_entries = self.contract_cdd.generate_work_entries(start.date(), (end + relativedelta(days=2)).date())
         work_entries.action_validate()
 
         work_entry = self.env['hr.work.entry'].create({
@@ -266,8 +266,8 @@ class TestPayslipComputation(TestPayslipContractBase):
             'date_start': datetime(2015, 11, 10, 21, 0),
             'date_stop': datetime(2015, 11, 11, 5, 0),
         }).action_validate()
-        self.contract_cdd._generate_work_entries(date(2015, 11, 10), date(2015, 11, 10))
-        hours = self.contract_cdd._get_work_hours(date(2015, 11, 10), date(2015, 11, 10))
+        self.contract_cdd.generate_work_entries(date(2015, 11, 10), date(2015, 11, 10))
+        hours = self.contract_cdd.get_work_hours(date(2015, 11, 10), date(2015, 11, 10))
         sum_hours = sum(v for k, v in hours.items() if k in self.env.ref('hr_work_entry.work_entry_type_attendance').ids)
         self.assertAlmostEqual(sum_hours, 18, delta=0.01, msg='It should count 18 attendance hours')  # 8h normal day + 7h morning + 3h night
 

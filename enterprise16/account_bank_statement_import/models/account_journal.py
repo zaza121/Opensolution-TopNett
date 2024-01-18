@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from odoo import models, _
+from odoo import models, tools, _
 from odoo.addons.base.models.res_bank import sanitize_account_number
 from odoo.exceptions import UserError, RedirectWarning
 
@@ -33,42 +32,55 @@ class AccountJournal(models.Model):
 
     def _import_bank_statement(self, attachments):
         """ Process the file chosen in the wizard, create bank statement(s) and go to reconciliation. """
+        if any(not a.raw for a in attachments):
+            raise UserError(_("You uploaded an invalid or empty file."))
+
         statement_ids_all = []
         notifications_all = {}
+        errors = {}
         # Let the appropriate implementation module parse the file and return the required data
         # The active_id is passed in context in case an implementation module requires information about the wizard state (see QIF)
         for attachment in attachments:
-            currency_code, account_number, stmts_vals = self._parse_bank_statement_file(attachment)
-            # Check raw data
-            self._check_parsed_data(stmts_vals, account_number)
-            # Try to find the currency and journal in odoo
-            journal = self._find_additional_data(currency_code, account_number)
-            # If no journal found, ask the user about creating one
-            if not journal.default_account_id:
-                raise UserError(_('You have to set a Default Account for the journal: %s') % (journal.name,))
-            # Prepare statement data to be used for bank statements creation
-            stmts_vals = self._complete_bank_statement_vals(stmts_vals, journal, account_number, attachment)
-            # Create the bank statements
-            statement_ids, statement_line_ids, notifications = self._create_bank_statements(stmts_vals)
-            statement_ids_all.extend(statement_ids)
+            try:
+                currency_code, account_number, stmts_vals = self._parse_bank_statement_file(attachment)
+                # Check raw data
+                self._check_parsed_data(stmts_vals, account_number)
+                # Try to find the currency and journal in odoo
+                journal = self._find_additional_data(currency_code, account_number)
+                # If no journal found, ask the user about creating one
+                if not journal.default_account_id:
+                    raise UserError(_('You have to set a Default Account for the journal: %s') % (journal.name,))
+                # Prepare statement data to be used for bank statements creation
+                stmts_vals = self._complete_bank_statement_vals(stmts_vals, journal, account_number, attachment)
+                # Create the bank statements
+                statement_ids, dummy, notifications = self._create_bank_statements(stmts_vals)
+                statement_ids_all.extend(statement_ids)
 
-            # Now that the import worked out, set it as the bank_statements_source of the journal
-            if journal.bank_statements_source != 'file_import':
-                # Use sudo() because only 'account.group_account_manager'
-                # has write access on 'account.journal', but 'account.group_account_user'
-                # must be able to import bank statement files
-                journal.sudo().bank_statements_source = 'file_import'
+                # Now that the import worked out, set it as the bank_statements_source of the journal
+                if journal.bank_statements_source != 'file_import':
+                    # Use sudo() because only 'account.group_account_manager'
+                    # has write access on 'account.journal', but 'account.group_account_user'
+                    # must be able to import bank statement files
+                    journal.sudo().bank_statements_source = 'file_import'
 
-            msg = ""
-            for notif in notifications:
-                msg += (
-                    f"{notif['message']}"
-                )
-            if notifications:
-                notifications_all[attachment.name] = msg
+                msg = ""
+                for notif in notifications:
+                    msg += (
+                        f"{notif['message']}"
+                    )
+                if notifications:
+                    notifications_all[attachment.name] = msg
+            except (UserError, RedirectWarning) as e:
+                errors[attachment.name] = e.args[0]
 
         statements = self.env['account.bank.statement'].browse(statement_ids_all)
-        return self.env['account.bank.statement.line']._action_open_bank_reconciliation_widget(
+        line_to_reconcile = statements.line_ids
+        if line_to_reconcile:
+            cron_limit_time = tools.config['limit_time_real_cron']  # default is -1
+            limit_time = cron_limit_time if 0 < cron_limit_time < 180 else 180
+            line_to_reconcile._cron_try_auto_reconcile_statement_lines(limit_time=limit_time)
+
+        result = self.env['account.bank.statement.line']._action_open_bank_reconciliation_widget(
             extra_domain=[('statement_id', 'in', statements.ids)],
             default_context={
                 'search_default_not_matched': True,
@@ -76,7 +88,15 @@ class AccountJournal(models.Model):
                 'notifications': notifications_all,
             },
         )
-
+        if errors:
+            error_msg = _("The following files could not be imported:\n")
+            error_msg += "\n".join([f"- {attachment_name}: {msg}" for attachment_name, msg in errors.items()])
+            if statements:
+                self.env.cr.commit()  # save the correctly uploaded statements to the db before raising the errors
+                raise RedirectWarning(error_msg, result, _('View successfully imported statements'))
+            else:
+                raise UserError(error_msg)
+        return result
 
     def _parse_bank_statement_file(self, attachment) -> tuple:
         """ Each module adding a file support must extends this method. It processes the file if it can, returns super otherwise, resulting in a chain of responsability.
@@ -180,7 +200,7 @@ class AccountJournal(models.Model):
 
         # If importing into an existing journal, its currency must be the same as the bank statement
         if journal:
-            journal_currency = journal.currency_id
+            journal_currency = journal.currency_id or journal.company_id.currency_id
             if currency is None:
                 currency = journal_currency
             if currency and currency != journal_currency:
@@ -229,9 +249,6 @@ class AccountJournal(models.Model):
         BankStatement = self.env['account.bank.statement']
         BankStatementLine = self.env['account.bank.statement.line']
 
-        ir_actions_report_sudo = self.env['ir.actions.report'].sudo()
-        statement_report = self.env.ref('account.action_report_account_statement').sudo()
-
         # Filter out already imported transactions and create statements
         statement_ids = []
         statement_line_ids = []
@@ -246,7 +263,7 @@ class AccountJournal(models.Model):
                     filtered_st_lines.append(line_vals)
                 else:
                     ignored_statement_lines_import_ids.append(line_vals['unique_import_id'])
-                    if 'balance_start' in st_vals:
+                    if st_vals.get('balance_start') is not None:
                         st_vals['balance_start'] += float(line_vals['amount'])
 
             if len(filtered_st_lines) > 0:
@@ -262,15 +279,7 @@ class AccountJournal(models.Model):
 
                 # Create the report.
                 if statement.is_complete:
-                    content, _content_type = ir_actions_report_sudo._render_qweb_pdf(statement_report, res_ids=statement.ids)
-                    statement.attachment_ids |= self.env['ir.attachment'].create({
-                        'name': _("Bank Statement %s.pdf", statement.name) if statement.name else _("Bank Statement.pdf"),
-                        'type': 'binary',
-                        'mimetype': 'application/pdf',
-                        'raw': content,
-                        'res_model': statement._name,
-                        'res_id': statement.id,
-                    })
+                    statement.action_generate_attachment()
 
         if len(statement_line_ids) == 0:
             raise UserError(_('You already have imported that file.'))

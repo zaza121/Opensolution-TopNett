@@ -82,3 +82,44 @@ class TestProjectProfitability(TestSubscriptionCommon, TestProjectProfitabilityC
                 }
             }
         )
+
+    def test_recurrent_fixed_service_only_in_subscription_section(self):
+        """
+        A recurrent service with prepaid/fixed invoicing should only be included in
+        the subscription section, not the "Fixed Hourly" cost. (because it is recurrent)
+        """
+        self.project.allow_billable = True
+        product_service_fixed_recurrent = self.product
+        product_service_fixed_recurrent.write({
+            'name': "Recurrent Service with Prepaid/Fixed Invoicing Policy",
+            'service_policy': 'ordered_prepaid',
+            'service_tracking': 'task_global_project',
+            'project_id': self.project.id,
+        })
+        sale_order = self.env['sale.order'].with_context(tracking_disable=True).create({
+            'partner_id': self.partner.id,
+            'partner_invoice_id': self.partner.id,
+            'partner_shipping_id': self.partner.id,
+            'is_subscription': True,
+            'recurrence_id': self.recurrence_month.id,
+            'analytic_account_id': self.project.analytic_account_id.id,
+        })
+        self.env['sale.order.line'].with_context(tracking_disable=True).create({
+            'product_id': product_service_fixed_recurrent.id,
+            'product_uom_qty': 10,
+            'order_id': sale_order.id,
+        })
+        sale_order.action_confirm()
+        # there should be only a subscription section, not the fixed/prepaid services section
+        self.assertDictEqual(
+            self.project._get_profitability_items(False)['revenues'],
+            {
+                'data': [{
+                    'id': 'subscriptions',
+                    'sequence': self.project._get_profitability_sequence_per_invoice_type()['subscriptions'],
+                    'to_invoice': sale_order.recurring_monthly,
+                    'invoiced': 0.0,
+                }],
+                'total': {'to_invoice': sale_order.recurring_monthly, 'invoiced': 0.0},
+            },
+        )

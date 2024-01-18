@@ -40,8 +40,8 @@ class LuxembourgAssetsReportTaxesTest(TestAccountReportsCommon):
             'name': 'test',
             'asset_type': 'purchase',
             'acquisition_date': datetime.today() - relativedelta(days=400),
-            'account_depreciation_id': self.company_data['default_account_expense'].id,
-            'account_depreciation_expense_id': self.company_data['default_account_assets'].id,
+            'account_depreciation_id': self.company_data['default_account_assets'].id,
+            'account_depreciation_expense_id': self.company_data['default_account_expense'].id,
             'journal_id': self.company_data['default_journal_purchase'].id,
             'original_value': 100.00,
         }).validate()
@@ -94,8 +94,8 @@ class LuxembourgAssetsReportTaxesTest(TestAccountReportsCommon):
         report = self.env.ref('account_asset.assets_report')
         # Assets must be in a state different from draft in order to be reported
         for asset in move.asset_ids:
-            asset.account_depreciation_id = self.company_data['default_account_expense']
-            asset.account_depreciation_expense_id = self.company_data['default_account_assets']
+            asset.account_depreciation_id = self.company_data['default_account_assets']
+            asset.account_depreciation_expense_id = self.company_data['default_account_expense']
             asset.validate()
         report, options = self._get_report_and_options(report, datetime.today() - relativedelta(days=365), datetime.today())
         data = report.l10n_lu_asset_report_get_xml_2_0_report_values(options)['forms'][0]['tables'][0]
@@ -119,8 +119,8 @@ class LuxembourgAssetsReportTaxesTest(TestAccountReportsCommon):
         asset_form._view['modifiers']['original_move_line_ids']['invisible'] = False
         for line in invoice_lines:
             asset_form.original_move_line_ids.add(line)
-        asset_form.account_depreciation_id = cls.company_data['default_account_expense']
-        asset_form.account_depreciation_expense_id = cls.company_data['default_account_assets']
+        asset_form.account_depreciation_id = cls.company_data['default_account_assets']
+        asset_form.account_depreciation_expense_id = cls.company_data['default_account_expense']
         asset_form.journal_id = cls.company_data['default_journal_purchase']
         asset_form = asset_form.save()
         asset_form.validate()

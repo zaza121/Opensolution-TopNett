@@ -62,7 +62,6 @@
         <field name="name">Unjustified Reason</field>
         <field name="code">LEAVE700</field>
         <field name="is_leave">True</field>
-        <field name="leave_type_ids" eval="[(6,0,[ref('hr_holidays.holiday_status_unpaid')])]"/>
         <field name="dmfa_code">30</field>
     </record>
 
@@ -90,7 +89,7 @@
         <field name="sdworx_code">T900</field>
     </record>
 
-     <record id="hr_work_entry_contract.work_entry_type_legal_leave" model="hr.work.entry.type">
+    <record id="hr_work_entry_contract.work_entry_type_legal_leave" model="hr.work.entry.type">
         <field name="dmfa_code">1</field>
         <field name="representation_fees">True</field>
         <field name="sdworx_code">T010</field>
@@ -200,7 +199,7 @@
         <field name="is_leave">True</field>
         <field name="color">5</field>
         <!-- 50, not 30 -->
-        <field name="dmfa_code">50</field> 
+        <field name="dmfa_code">50</field>
     </record>
 
     <record id="work_entry_type_breast_feeding" model="hr.work.entry.type">
@@ -252,10 +251,6 @@
         <field name="is_leave">True</field>
         <field name="color">5</field>
         <field name="dmfa_code">1</field>
-    </record>
-
-    <record id="hr_work_entry_contract.work_entry_type_legal_leave" model="hr.work.entry.type">
-        <field name="name" eval="'Annual Time Off '+time.strftime('%Y')"/>
     </record>
 
     <record id="work_entry_type_phc" model="hr.work.entry.type">

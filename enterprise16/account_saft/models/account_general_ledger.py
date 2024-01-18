@@ -82,6 +82,7 @@ class AccountGeneralLedger(models.AbstractModel):
                 account_move.create_date                    AS move_create_date,
                 account_move.invoice_date                   AS move_invoice_date,
                 account_move.invoice_origin                 AS move_invoice_origin,
+                account_move.statement_line_id              AS move_statement_line_id,
                 tax.id                                      AS tax_id,
                 {tax_name}                                  AS tax_name,
                 tax.amount                                  AS tax_amount,
@@ -132,6 +133,8 @@ class AccountGeneralLedger(models.AbstractModel):
                 'date': line_vals['date'],
                 'create_date': line_vals['move_create_date'],
                 'partner_id': line_vals['partner_id'],
+                'journal_type': line_vals['journal_type'],
+                'statement_line_id': line_vals['move_statement_line_id'],
                 'line_vals_list': [],
             }
             move_vals_map.setdefault(line_vals['move_id'], move_vals)
@@ -289,11 +292,21 @@ class AccountGeneralLedger(models.AbstractModel):
 
         for partner in all_partners:
             _track_address(partner, partner)
-            _track_contact(partner, partner)
-            for child in partner.child_ids:
-                if child.type == 'contact':
-                    _track_address(partner, child)
-                    _track_contact(partner, child)
+            # For individual partners, they are their own ContactPerson.
+            # For company partners, the child contact with lowest ID is the ContactPerson.
+            # For the current company, all child contacts are ContactPersons
+            # (to give users flexibility to indicate several ContactPersons).
+            if partner.is_company:
+                children = partner.child_ids.filtered(lambda p: p.type == 'contact' and p.active and not p.is_company).sorted('id')
+                if partner == values['company'].partner_id:
+                    if not children:
+                        raise UserError(_("Please define one or more Contacts belonging to your company."))
+                    for child in children:
+                        _track_contact(partner, child)
+                elif children:
+                    _track_contact(partner, children[0])
+            else:
+                _track_contact(partner, partner)
 
         no_partner_address = self.env['res.partner']
         for partner in all_partners:

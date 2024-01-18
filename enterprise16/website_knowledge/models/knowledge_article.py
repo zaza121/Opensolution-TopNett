@@ -14,6 +14,12 @@ class Article(models.Model):
         for record in self:
             record.website_url = record.article_url
 
+    def _get_read_domain(self):
+        return expression.OR([
+            super()._get_read_domain(),
+            [('website_published', '=', True)]
+        ])
+
     def get_backend_menu_id(self):
         return self.env.ref('knowledge.knowledge_menu_root').id
 

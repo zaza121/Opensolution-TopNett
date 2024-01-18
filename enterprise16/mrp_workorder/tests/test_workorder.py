@@ -9,10 +9,10 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-class TestWorkOrder(common.TestMrpCommon):
+class TestWorkOrderCommon(common.TestMrpCommon):
     @classmethod
     def setUpClass(cls):
-        super(TestWorkOrder, cls).setUpClass()
+        super(TestWorkOrderCommon, cls).setUpClass()
         # Products and lots
         cls.submarine_pod = cls.env['product.product'].create({
             'name': 'Submarine pod',
@@ -151,6 +151,7 @@ class TestWorkOrder(common.TestMrpCommon):
         Quant._update_available_quantity(cls.metal_cylinder, cls.location_1, 6.0, lot_id=cls.mc1)
         Quant._update_available_quantity(cls.trapped_child, cls.location_1, 36.0)
 
+class TestWorkOrder(TestWorkOrderCommon):
     def test_assign_1(self):
         unit = self.ref("uom.product_uom_unit")
         self.stock_location = self.env.ref('stock.stock_location_stock')
@@ -561,8 +562,7 @@ class TestWorkOrder(common.TestMrpCommon):
 
         production.workorder_ids[0].button_start()
         wo_form = Form(production.workorder_ids[0], view='mrp_workorder.mrp_workorder_view_form_tablet')
-        self.assertEqual(wo_form.qty_producing, 0, "Wrong quantity to produce")
-        wo_form.qty_producing = 1
+        self.assertEqual(wo_form.qty_producing, 1, "Wrong quantity to produce")
         wo = wo_form.save()
         qc_form = Form(wo.current_quality_check_id, view='mrp_workorder.quality_check_view_form_tablet')
         self.assertEqual(qc_form.component_id, self.elon_musk, "The component should be changed")
@@ -786,7 +786,7 @@ class TestWorkOrder(common.TestMrpCommon):
 
         sorted_workorder_ids[0].button_start()
         wo_form = Form(sorted_workorder_ids[0], view='mrp_workorder.mrp_workorder_view_form_tablet')
-        self.assertEqual(wo_form.qty_producing, 0, "Wrong quantity to produce")
+        self.assertEqual(wo_form.qty_producing, 2, "Wrong quantity to produce")
         wo_form.qty_producing = 1
         wo = wo_form.save()
         qc_form = Form(wo.current_quality_check_id, view='mrp_workorder.quality_check_view_form_tablet')
@@ -1554,6 +1554,8 @@ class TestWorkOrder(common.TestMrpCommon):
         compo = self.bom_4.bom_line_ids.product_id
 
         compo.type = 'product'
+        compo.uom_id = self.env.ref('uom.product_uom_kgm').id
+        self.bom_4.bom_line_ids.product_uom_id = compo.uom_id
         self.env['stock.quant']._update_available_quantity(finished, warehouse.lot_stock_id, 1.0)
         self.env['stock.quant']._update_available_quantity(compo, warehouse.lot_stock_id, 1.0)
 
@@ -1794,3 +1796,112 @@ class TestWorkOrder(common.TestMrpCommon):
         qc._next()
         wo.do_finish()
         mo01.button_mark_done()
+
+    def test_wo_another_lot_than_reserved_one_02(self):
+        """
+        Tracked-by-SN component C. MO that consumes 2 x C in one operation. SN01
+        and SN02 are reserved. For the first consumption, the user select SN02.
+        It should therefore updates the line that reserves SN02 instead of the
+        one for SN01
+        """
+        compo = self.bom_4.bom_line_ids.product_id
+        compo.write({
+            'type': 'product',
+            'tracking': 'serial',
+        })
+
+        self.bom_4.bom_line_ids.write({
+            'product_qty': 2,
+            'operation_id': self.bom_4.operation_ids,
+        })
+
+        sn01, sn02 = self.env['stock.lot'].create([{
+            'name': 'SN %s' % i,
+            'product_id': compo.id,
+            'company_id': self.env.company.id,
+        } for i in range(2)])
+        self.env['stock.quant']._update_available_quantity(compo, self.location_1, 1.0, lot_id=sn01)
+        self.env['stock.quant']._update_available_quantity(compo, self.location_1, 1.0, lot_id=sn02)
+
+        mo_form = Form(self.env['mrp.production'])
+        mo_form.bom_id = self.bom_4
+        mo_form.product_qty = 1
+        mo = mo_form.save()
+        mo.action_confirm()
+        mo.action_assign()
+
+        self.assertRecordValues(mo.move_raw_ids.move_line_ids, [
+            {'lot_id': sn01.id, 'reserved_uom_qty': 1.0, 'qty_done': 0.0, 'state': 'assigned'},
+            {'lot_id': sn02.id, 'reserved_uom_qty': 1.0, 'qty_done': 0.0, 'state': 'assigned'},
+        ])
+
+        wo = mo.workorder_ids
+        wo.button_start()
+        self.assertEqual(wo.lot_id, sn01, 'The first reserved SN should be the suggested one')
+
+        qc = wo.current_quality_check_id
+        qc.lot_id = sn02
+        qc.action_continue()
+        self.assertRecordValues(mo.move_raw_ids.move_line_ids, [
+            {'lot_id': sn01.id, 'reserved_uom_qty': 1.0, 'qty_done': 0.0, 'state': 'assigned'},
+            {'lot_id': sn02.id, 'reserved_uom_qty': 1.0, 'qty_done': 1.0, 'state': 'assigned'},
+        ])
+
+        qc = wo.current_quality_check_id
+        self.assertEqual(qc.lot_id, sn01, 'SN02 has been consumed with the first SML, so it should suggest SN01 again')
+        qc.action_next()
+        wo.do_finish()
+
+        self.assertRecordValues(mo.move_raw_ids.move_line_ids, [
+            {'lot_id': sn01.id, 'reserved_uom_qty': 1.0, 'qty_done': 1.0, 'state': 'assigned'},
+            {'lot_id': sn02.id, 'reserved_uom_qty': 1.0, 'qty_done': 1.0, 'state': 'assigned'},
+        ])
+
+    def test_split_mo_finished_wo_transition(self):
+        """ Check that if WOs are done out of order, then backordered/split WOs are not
+        started when they should not be started
+        """
+        simple_bom = self.env['mrp.bom'].create({
+            'product_tmpl_id': self.product_1.product_tmpl_id.id,
+            'product_qty': 1.0,
+            'operation_ids': [
+                (0, 0, {'name': 'OP1', 'workcenter_id': self.workcenter_1.id, 'time_cycle': 12, 'sequence': 1}),
+                (0, 0, {'name': 'OP2', 'workcenter_id': self.workcenter_2.id, 'time_cycle': 12, 'sequence': 1}),
+            ]})
+        mo_form = Form(self.env['mrp.production'])
+        mo_form.product_id = self.product_1
+        mo_form.bom_id = simple_bom
+        mo_form.product_qty = 2
+        mo = mo_form.save()
+        mo.action_confirm()
+
+        action = mo.action_split()
+        wizard = Form(self.env[action['res_model']].with_context(action['context']))
+        wizard.counter = 2
+        action = wizard.save().action_split()
+        # Should have 2 mos w/ 2 wos each
+        self.assertEqual(len(mo.procurement_group_id.mrp_production_ids), 2)
+        mo2 = mo.procurement_group_id.mrp_production_ids[1]
+        self.assertEqual(len(mo.workorder_ids), 2)
+        self.assertEqual(len(mo2.workorder_ids), 2)
+        self.assertEqual(mo.state, 'confirmed')
+        self.assertEqual(mo2.state, 'confirmed')
+        wo1_1, wo1_2 = mo.workorder_ids.sorted()
+        wo2_1, wo2_2 = mo2.workorder_ids.sorted()
+        self.assertEqual(wo1_1.state, 'ready')
+        self.assertEqual(wo1_2.state, 'pending')
+        self.assertEqual(wo2_1.state, 'ready')
+        self.assertEqual(wo2_2.state, 'pending')
+
+        wo1_1.qty_producing = 1
+        wo1_1.do_finish()
+        self.assertEqual(wo1_1.state, 'done')
+        self.assertEqual(wo1_2.state, 'ready')
+        self.assertEqual(wo2_1.state, 'progress', "Completion of first MO's WOs should auto-started second MO's first WO")
+        self.assertEqual(wo2_2.state, 'pending')
+        wo1_2.do_finish()
+        self.assertEqual(wo1_1.state, 'done')
+        self.assertEqual(wo1_2.state, 'done')
+        self.assertEqual(wo2_1.state, 'progress')
+        self.assertEqual(wo2_2.state, 'pending', "Completion of first MO's WOs should not affect backordered pending WO")
+        self.assertEqual(mo.state, 'to_close')

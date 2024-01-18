@@ -3,7 +3,7 @@
     <record id="account_financial_report_it_ce" model="account.report">
         <field name="name">Conto Economico</field>
         <field name="root_report_id" ref="account_reports.profit_and_loss"/>
-        <field name="filter_date_range" eval="False"/>
+        <field name="filter_date_range" eval="True"/>
         <field name="filter_analytic_groupby" eval="True"/>
         <field name="filter_unfold_all" eval="True"/>
         <field name="country_id" ref="base.it"/>
@@ -25,17 +25,17 @@
                             <record id="account_financial_report_line_it_ce_A_1_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">-(IT_CEA_1.it_cea_1_v_balance - IT_CEA_1.it_cea_1_r_balance)</field>
+                                <field name="formula">IT_CEA_1.it_cea_1_v_balance + IT_CEA_1.it_cea_1_r_balance</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_A_1_it_cea_1_r_balance" model="account.report.expression">
                                 <field name="label">it_cea_1_r_balance</field>
                                 <field name="engine">account_codes</field>
-                                <field name="formula">3110 + 3112 + 3111</field>
+                                <field name="formula">-3110 - 3112 - 3111</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_A_1_it_cea_1_v_balance" model="account.report.expression">
                                 <field name="label">it_cea_1_v_balance</field>
                                 <field name="engine">account_codes</field>
-                                <field name="formula">3102 + 3103 + 3105 + 3101 + 3104</field>
+                                <field name="formula">-3102 - 3103 - 3105 - 3101 - 3104</field>
                             </record>
                         </field>
                     </record>
@@ -46,17 +46,17 @@
                             <record id="account_financial_report_line_it_ce_A_2_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">IT_CEA_2.it_cea_2_v_balance - IT_CEA_2.it_cea_2_c_balance</field>
+                                <field name="formula">IT_CEA_2.it_cea_2_v_balance + IT_CEA_2.it_cea_2_c_balance</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_A_2_it_cea_2_v_balance" model="account.report.expression">
                                 <field name="label">it_cea_2_v_balance</field>
                                 <field name="engine">account_codes</field>
-                                <field name="formula">3130 + 3131 + 3132</field>
+                                <field name="formula">-3130 - 3131 - 3132</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_A_2_it_cea_2_c_balance" model="account.report.expression">
                                 <field name="label">it_cea_2_c_balance</field>
                                 <field name="engine">account_codes</field>
-                                <field name="formula">3125 + 3126 + 3121 + 3120 + 3122</field>
+                                <field name="formula">-3125 - 3126 - 3121 - 3120 - 3122</field>
                             </record>
                         </field>
                     </record>
@@ -67,17 +67,17 @@
                             <record id="account_financial_report_line_it_ce_A_3_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">IT_CEA_3.it_cea_3_v_balance - IT_CEA_3.it_cea_3_i_balance</field>
+                                <field name="formula">IT_CEA_3.it_cea_3_v_balance + IT_CEA_3.it_cea_3_i_balance</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_A_3_it_cea_3_v_balance" model="account.report.expression">
                                 <field name="label">it_cea_3_v_balance</field>
                                 <field name="engine">account_codes</field>
-                                <field name="formula">3141</field>
+                                <field name="formula">-3141</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_A_3_it_cea_3_i_balance" model="account.report.expression">
                                 <field name="label">it_cea_3_i_balance</field>
                                 <field name="engine">account_codes</field>
-                                <field name="formula">3140</field>
+                                <field name="formula">-3140</field>
                             </record>
                         </field>
                     </record>
@@ -86,14 +86,14 @@
                         <field name="code">IT_CEA_4</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">3151 + 3150</field>
+                        <field name="account_codes_formula">-3151 - 3150</field>
                     </record>
                     <record id="account_financial_report_line_it_ce_A_5" model="account.report.line">
                         <field name="name">5. Altri ricavi e proventi</field>
                         <field name="code">IT_CEA_5</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">32</field>
+                        <field name="account_codes_formula">-32</field>
                     </record>
                 </field>
             </record>
@@ -112,7 +112,7 @@
                             <record id="account_financial_report_line_it_ce_B_6_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">IT_CEB_6.b_6_v_balance - IT_CEB_6.b_6_r_balance</field>
+                                <field name="formula">IT_CEB_6.b_6_v_balance + IT_CEB_6.b_6_r_balance</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_B_6_b_6_v_balance" model="account.report.expression">
                                 <field name="label">b_6_v_balance</field>
@@ -274,7 +274,7 @@
                         <field name="code">IT_CEC_15</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">5101</field>
+                        <field name="account_codes_formula">-5101</field>
                     </record>
                     <record id="account_financial_report_line_it_ce_C_16" model="account.report.line">
                         <field name="name">16. Altri proventi finanziari</field>
@@ -293,7 +293,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5131 + 5130</field>
+                                        <field name="account_codes_formula">-5131 - 5130</field>
                                     </record>
                                     <record id="account_financial_report_line_it_ce_C_16_a_2" model="account.report.line">
                                         <field name="name">verso controllanti</field>
@@ -301,7 +301,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5132</field>
+                                        <field name="account_codes_formula">-5132</field>
                                     </record>
                                     <record id="account_financial_report_line_it_ce_C_16_a_3" model="account.report.line">
                                         <field name="name">verso imprese sottoposte al controllo delle controllanti</field>
@@ -309,7 +309,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5134</field>
+                                        <field name="account_codes_formula">-5134</field>
                                     </record>
                                 </field>
                             </record>
@@ -319,7 +319,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">5125 + 5120</field>
+                                <field name="account_codes_formula">-5125 - 5120</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_C_16_c" model="account.report.line">
                                 <field name="name">c. Da titoli iscritti nell'attivo circolante che non costituiscono partecipazioni</field>
@@ -327,7 +327,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">5161</field>
+                                <field name="account_codes_formula">-5161</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_C_16_d" model="account.report.line">
                                 <field name="name">d. Proventi diversi dai precedenti</field>
@@ -341,7 +341,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5170 + 5171</field>
+                                        <field name="account_codes_formula">-5170 - 5171</field>
                                     </record>
                                     <record id="account_financial_report_line_it_ce_C_16_d_2" model="account.report.line">
                                         <field name="name">verso controllanti</field>
@@ -349,7 +349,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5172</field>
+                                        <field name="account_codes_formula">-5172</field>
                                     </record>
                                     <record id="account_financial_report_line_it_ce_C_16_d_3" model="account.report.line">
                                         <field name="name">verso imprese sottoposte al controllo delle controllanti</field>
@@ -357,7 +357,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5173</field>
+                                        <field name="account_codes_formula">-5173</field>
                                     </record>
                                     <record id="account_financial_report_line_it_ce_C_16_d_4" model="account.report.line">
                                         <field name="name">verso altri</field>
@@ -365,7 +365,7 @@
                                         <field name="groupby">account_id</field>
                                         <field name="hide_if_zero" eval="True"/>
                                         <field name="foldable" eval="True"/>
-                                        <field name="account_codes_formula">5115 + 5116 + 514 + 5110</field>
+                                        <field name="account_codes_formula">-5115 - 5116 - 514 - 5110</field>
                                     </record>
                                 </field>
                             </record>
@@ -382,7 +382,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">5220 + 5221</field>
+                                <field name="account_codes_formula">-5220 - 5221</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_C_17_2" model="account.report.line">
                                 <field name="name">verso controllanti</field>
@@ -390,7 +390,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">522</field>
+                                <field name="account_codes_formula">-522</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_C_17_3" model="account.report.line">
                                 <field name="name">verso imprese sottoposte al controllo delle controllanti</field>
@@ -398,7 +398,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">5223</field>
+                                <field name="account_codes_formula">-5223</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_C_17_4" model="account.report.line">
                                 <field name="name">verso altri</field>
@@ -406,7 +406,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">520 + 524 + 521</field>
+                                <field name="account_codes_formula">-520 - 524 - 521</field>
                             </record>
                         </field>
                     </record>
@@ -415,14 +415,14 @@
                         <field name="code">IT_CEC_17_bis</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">529 + 519</field>
+                        <field name="account_codes_formula">-529 - 519</field>
                     </record>
                 </field>
             </record>
             <record id="account_financial_report_line_it_ce_C_TOT" model="account.report.line">
-                <field name="name">Totale Proventi e Oneri Finanziari (rif. 15 + 16 - 17 ± 17 bis)</field>
+                <field name="name">Totale Proventi e Oneri Finanziari</field>
                 <field name="code">IT_CEC</field>
-                <field name="aggregation_formula">IT_CEC_15.balance + IT_CEC_16.balance - IT_CEC_17.balance + IT_CEC_17_bis.balance</field>
+                <field name="aggregation_formula">IT_CEC_15.balance + IT_CEC_16.balance + IT_CEC_17.balance + IT_CEC_17_bis.balance</field>
             </record>
             <record id="account_financial_report_line_it_ce_D" model="account.report.line">
                 <field name="name">D. RETTIFICHE DI VALORE DI ATTIVITÀ E PASSIVITÀ FINANZIARIE</field>
@@ -438,7 +438,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6101</field>
+                                <field name="account_codes_formula">-6101</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_D_18_b" model="account.report.line">
                                 <field name="name">b. di immobilizzazioni finanziarie che non costituiscono partecipazioni</field>
@@ -446,7 +446,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6102</field>
+                                <field name="account_codes_formula">-6102</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_D_18_c" model="account.report.line">
                                 <field name="name">c. di titoli iscritti all'attivo circolante che non costituiscono partecipazioni</field>
@@ -454,7 +454,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6110</field>
+                                <field name="account_codes_formula">-6110</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_D_18_d" model="account.report.line">
                                 <field name="name">d. di strumenti finanziari derivati</field>
@@ -462,7 +462,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6115</field>
+                                <field name="account_codes_formula">-6115</field>
                             </record>
                         </field>
                     </record>
@@ -477,7 +477,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6201</field>
+                                <field name="account_codes_formula">-6201</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_D_19_b" model="account.report.line">
                                 <field name="name">b. di immobilizzazioni finanziarie che non costituiscono partecipazioni</field>
@@ -485,7 +485,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6202</field>
+                                <field name="account_codes_formula">-6202</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_D_19_c" model="account.report.line">
                                 <field name="name">c. di titoli iscritti all'attivo circolante che non costituiscono partecipazioni</field>
@@ -493,7 +493,7 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6210</field>
+                                <field name="account_codes_formula">-6210</field>
                             </record>
                             <record id="account_financial_report_line_it_ce_D_19_d" model="account.report.line">
                                 <field name="name">d. di strumenti finanziari derivati</field>
@@ -501,75 +501,49 @@
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="True"/>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">6215</field>
+                                <field name="account_codes_formula">-6215</field>
                             </record>
                         </field>
                     </record>
                 </field>
             </record>
             <record id="account_financial_report_line_it_ce_D_TOT" model="account.report.line">
-                <field name="name">Totale delle Rettifiche (rif. 18 - 19)</field>
+                <field name="name">Totale delle Rettifiche</field>
                 <field name="code">IT_CED</field>
-                <field name="aggregation_formula">IT_CED_18.balance - IT_CED_19.balance</field>
+                <field name="aggregation_formula">IT_CED_18.balance + IT_CED_19.balance</field>
             </record>
             <record id="account_financial_report_line_it_ce_RISULTATO_PRIMA_IMPOSTE" model="account.report.line">
-                <field name="name">RISULTATO PRIMA DELLE IT_CERis_20 (A - B ± C ± D)</field>
+                <field name="name">RISULTATO PRIMA DELLE IMPOSTE</field>
                 <field name="code">RISULTATO_PRIMA_IMPOSTE</field>
                 <field name="aggregation_formula">IT_CEA.balance - IT_CEB.balance + IT_CEC.balance + IT_CED.balance</field>
             </record>
-            <record id="account_financial_report_line_it_ce_E" model="account.report.line">
-                <field name="name">PROVENTI E ONERI STRAORDINAR</field>
+            <record id="account_financial_report_line_it_ce_E_22" model="account.report.line">
+                <field name="name">20. Imposte sul reddito dell'esercizio</field>
+                <field name="code">IT_CEE_22</field>
+                <field name="aggregation_formula">IT_CEE_22_a.balance + IT_CEE_22_b.balance</field>
                 <field name="children_ids">
-                    <record id="account_financial_report_line_it_ce_E_20" model="account.report.line">
-                        <field name="name">20. Proventi straordinari</field>
-                        <field name="code">IT_CEE_20</field>
+                    <record id="account_financial_report_line_it_ce_E_22_a" model="account.report.line">
+                        <field name="name">a. Imposte correnti</field>
+                        <field name="code">IT_CEE_22_a</field>
                         <field name="groupby">account_id</field>
                         <field name="hide_if_zero" eval="True"/>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">71</field>
+                        <field name="account_codes_formula">-8101</field>
                     </record>
-                    <record id="account_financial_report_line_it_ce_E_21" model="account.report.line">
-                        <field name="name">21. Oneri straordinari</field>
-                        <field name="code">IT_CEE_21</field>
+                    <record id="account_financial_report_line_it_ce_E_22_b" model="account.report.line">
+                        <field name="name">b. Imposte differite e anticipate</field>
+                        <field name="code">IT_CEE_22_b</field>
                         <field name="groupby">account_id</field>
                         <field name="hide_if_zero" eval="True"/>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">72</field>
-                    </record>
-                    <record id="account_financial_report_line_it_ce_E_22" model="account.report.line">
-                        <field name="name">22. Imposte sul reddito dell'esercizio</field>
-                        <field name="code">IT_CEE_22</field>
-                        <field name="aggregation_formula">IT_CEE_22_a.balance + IT_CEE_22_b.balance</field>
-                        <field name="children_ids">
-                            <record id="account_financial_report_line_it_ce_E_22_a" model="account.report.line">
-                                <field name="name">a. Imposte correnti</field>
-                                <field name="code">IT_CEE_22_a</field>
-                                <field name="groupby">account_id</field>
-                                <field name="hide_if_zero" eval="True"/>
-                                <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">8101</field>
-                            </record>
-                            <record id="account_financial_report_line_it_ce_E_22_b" model="account.report.line">
-                                <field name="name">b. Imposte differite e anticipate</field>
-                                <field name="code">IT_CEE_22_b</field>
-                                <field name="groupby">account_id</field>
-                                <field name="hide_if_zero" eval="True"/>
-                                <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">8102</field>
-                            </record>
-                        </field>
+                        <field name="account_codes_formula">-8102</field>
                     </record>
                 </field>
-            </record>
-            <record id="account_financial_report_line_it_ce_E_TOT" model="account.report.line">
-                <field name="name">Totale Proventi e Oneri straordinari</field>
-                <field name="code">IT_CEE_TOT</field>
-                <field name="aggregation_formula">IT_CEE_20.balance + IT_CEE_21.balance + IT_CEE_22.balance</field>
             </record>
             <record id="account_financial_report_line_it_ce_UTILE_PERDITA" model="account.report.line">
                 <field name="name">21. UTILE (PERDITA) DELL'ESERCIZIO</field>
                 <field name="code">UTILE_PERDITA</field>
-                <field name="aggregation_formula">RISULTATO_PRIMA_IMPOSTE.balance + IT_CEE_20.balance + IT_CEE_21.balance - IT_CEE_22.balance</field>
+                <field name="aggregation_formula">RISULTATO_PRIMA_IMPOSTE.balance + IT_CEE_22.balance</field>
             </record>
         </field>
     </record>

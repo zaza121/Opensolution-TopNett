@@ -46,9 +46,9 @@ export class AccountMoveLineListController extends ListController {
             return;
         }
         const attachments = insert(
-            accountMoveLineData.data.move_attachment_ids.records.map(
-                attachment => ({ id: attachment.resId, mimetype: attachment.data.mimetype }),
-            ),
+            accountMoveLineData.data.move_attachment_ids.records
+                .map(attachment => ({ id: attachment.resId, mimetype: attachment.data.mimetype }))
+                .filter(attachment => attachment.mimetype !== 'application/xml')
         );
         const messaging = await this.messaging.get();
         // As the real thread is AccountMove and the attachment are from AccountMove

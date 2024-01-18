@@ -4,7 +4,6 @@
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
-from math import floor
 from odoo import http, _, fields
 from odoo.http import request
 from .stat_types import STAT_TYPES, FORECAST_STAT_TYPES, compute_mrr_growth_values
@@ -71,10 +70,10 @@ class RevenueKPIsDashboard(http.Controller):
     @http.route('/sale_subscription_dashboard/get_default_values_forecast', type='json', auth='user')
     def get_default_values_forecast(self, forecast_type, end_date, filters):
 
-        end_date = fields.Date.from_string(end_date)
+        end_date_d = fields.Date.from_string(end_date)
 
-        net_new_mrr = compute_mrr_growth_values(end_date, end_date, filters)['net_new_mrr']
-        revenue_churn = self.compute_stat('revenue_churn', end_date, end_date, filters)
+        net_new_mrr = compute_mrr_growth_values(end_date, end_date_d, filters)['net_new_mrr']
+        revenue_churn = self.compute_stat('revenue_churn', end_date, end_date, filters=filters)[0][1]
 
         result = {
             'expon_growth': 15,
@@ -83,13 +82,13 @@ class RevenueKPIsDashboard(http.Controller):
         }
 
         if 'mrr' in forecast_type:
-            mrr = self.compute_stat('mrr', end_date, end_date, filters)
+            mrr = self.compute_stat('mrr', end_date, end_date, filters=filters)[0][1]
 
             result['starting_value'] = mrr
             result['linear_growth'] = net_new_mrr
         else:
-            arpu = self.compute_stat('arpu', end_date, end_date, filters)
-            nb_contracts = self.compute_stat('nb_contracts', end_date, end_date, filters)
+            arpu = self.compute_stat('arpu', end_date, end_date, filters=filters)[0][1]
+            nb_contracts = self.compute_stat('nb_contracts', end_date, end_date, filters=filters)[0][1]
 
             result['starting_value'] = nb_contracts
             result['linear_growth'] = 0 if arpu == 0 else net_new_mrr/arpu
@@ -108,7 +107,8 @@ class RevenueKPIsDashboard(http.Controller):
                 stat_type,
                 start_date - relativedelta(months=+delta),
                 end_date - relativedelta(months=+delta),
-                filters)
+                points_limit=2,
+                filters=filters)[-1][1]
 
         return results
 
@@ -132,9 +132,8 @@ class RevenueKPIsDashboard(http.Controller):
             if filters.get('company_ids'):
                 lines_domain.append(('company_id', 'in', filters.get('company_ids')))
             recurring_invoice_line_ids = request.env['account.move.line'].search(lines_domain)
-            specific_filters = dict(filters)  # create a copy to modify it
-            specific_filters.update({'template_ids': [template.id]})
-            value = self.compute_stat(stat_type, start_date, end_date, specific_filters)
+            specific_filters = {**filters, 'template_ids': [template.id]}
+            value = self.compute_stat(stat_type, start_date, end_date, points_limit=2, filters=specific_filters)[-1][1]
             results.append({
                 'name': template.name,
                 'recurrence': template.recurrence_id.name,
@@ -148,24 +147,15 @@ class RevenueKPIsDashboard(http.Controller):
 
     @http.route('/sale_subscription_dashboard/compute_graph_mrr_growth', type='json', auth='user')
     def compute_graph_mrr_growth(self, start_date, end_date, filters, points_limit=0):
-
-        # By default, points_limit = 0 mean every points
-
         start_date = fields.Date.from_string(start_date)
         end_date = fields.Date.from_string(end_date)
-        delta = end_date - start_date
-
-        ticks = self._get_pruned_tick_values(range(delta.days + 1), points_limit)
-
+        dates = self._get_range_dates(start_date, end_date, points_limit)
         results = defaultdict(list)
 
         # This is rolling month calculation
-        for i in ticks:
-            date = start_date + timedelta(days=i)
+        for date in dates:
             date_splitted = str(date).split(' ')[0]
-
             computed_values = compute_mrr_growth_values(date, date, filters)
-
             for k in ['new_mrr', 'churned_mrr', 'expansion_mrr', 'down_mrr', 'net_new_mrr']:
                 results[k].append({
                     '0': date_splitted,
@@ -175,7 +165,7 @@ class RevenueKPIsDashboard(http.Controller):
         return results
 
     @http.route('/sale_subscription_dashboard/compute_graph_and_stats', type='json', auth='user')
-    def compute_graph_and_stats(self, stat_type, start_date, end_date, filters, points_limit=30):
+    def compute_graph_and_stats(self, stat_type, start_date, end_date, filters, points_limit=0):
         """ Returns both the graph and the stats"""
 
         # This avoids to make 2 RPCs instead of one
@@ -188,27 +178,9 @@ class RevenueKPIsDashboard(http.Controller):
         }
 
     @http.route('/sale_subscription_dashboard/compute_graph', type='json', auth='user')
-    def compute_graph(self, stat_type, start_date, end_date, filters, points_limit=30):
+    def compute_graph(self, stat_type, start_date, end_date, filters, points_limit=0):
 
-        start_date = fields.Date.from_string(start_date)
-        end_date = fields.Date.from_string(end_date)
-        delta = end_date - start_date
-
-        ticks = self._get_pruned_tick_values(range(delta.days + 1), points_limit)
-
-        results = []
-        for i in ticks:
-            # METHOD NON-OPTIMIZED (could optimize it using SQL with generate_series)
-            date = start_date + timedelta(days=i)
-            value = self.compute_stat(stat_type, date, date, filters)
-
-            # format of results could be changed (we no longer use nvd3)
-            results.append({
-                '0': str(date).split(' ')[0],
-                '1': value,
-            })
-
-        return results
+        return self.compute_stat(stat_type, start_date, end_date, points_limit=points_limit, filters=filters)
 
     def _compute_stat_trend(self, stat_type, start_date, end_date, filters):
 
@@ -217,10 +189,12 @@ class RevenueKPIsDashboard(http.Controller):
         start_date_delta = start_date - relativedelta(months=+1)
         end_date_delta = end_date - relativedelta(months=+1)
 
-        last_month_value = self.compute_stat(stat_type, start_date_delta, end_date_delta, filters)
-        current_value = self.compute_stat(stat_type, start_date, end_date, filters)
+        dates = [start_date_delta, end_date_delta, start_date, end_date]
+        stats = self.compute_stat(stat_type, dates=dates, filters=filters)
+        last_month_value = stats[1][1]
+        current_value = stats[3][1]
+
         perc = 100 if not last_month_value else round(100 * (current_value - last_month_value) / float(last_month_value), 1)
-        perc = 0 if not last_month_value and not current_value else perc
 
         result = {
             'value_1': str(last_month_value),
@@ -230,20 +204,23 @@ class RevenueKPIsDashboard(http.Controller):
         return result
 
     @http.route('/sale_subscription_dashboard/compute_stat', type='json', auth='user')
-    def compute_stat(self, stat_type, start_date, end_date, filters):
+    def compute_stat(self, stat_type, start_date=None, end_date=None, points_limit=0, dates=None, filters=None):
+        # We add a day at the beginning with similar timedelta to have similar sized buckets
+        if not request.env.user.has_group('sales_team.group_sale_manager'):
+            return []
+        if not dates:
+            start_date = fields.Date.from_string(start_date)
+            end_date = end_date and fields.Date.from_string(end_date) or fields.Date.today()
+            dates = self._get_range_dates(start_date, end_date, points_limit)
+        if len(dates) < 2:
+            dates = [start_date-timedelta(days=1), start_date]
+        else:
+            dates = [dates[0] - (dates[1] - dates[0])] + dates
+        res = STAT_TYPES[stat_type]['compute'](dates, filters)
+        return [(str(line['date']), line['value']) for line in res][1:]
 
-        start_date = fields.Date.to_date(start_date)
-        end_date = fields.Date.to_date(end_date)
-
-        return STAT_TYPES[stat_type]['compute'](start_date, end_date, filters)
-
-    def _get_pruned_tick_values(self, ticks, nb_desired_ticks):
-        if nb_desired_ticks == 0:
-            return ticks
-
-        nb_values = len(ticks)
-        keep_one_of = max(1, floor(nb_values / float(nb_desired_ticks)))
-
-        ticks = [x for x in ticks if x % keep_one_of == 0]
-
-        return ticks
+    def _get_range_dates(self, start_date, end_date, points_limit=0):
+        n_days = (end_date - start_date).days
+        points_limit = points_limit and min(n_days, points_limit) or n_days
+        period = points_limit and n_days // points_limit
+        return [start_date + timedelta(days=period*x) for x in range(points_limit)]

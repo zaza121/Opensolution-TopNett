@@ -254,7 +254,7 @@ class DocumentFolder(models.Model):
             'type': 'ir.actions.act_window',
             'views': [(False, 'list'), (False, 'form')],
             'view_mode': 'tree,form',
-            'context': "{'default_folder_id': %s}" % self.id
+            'context': "{'searchpanel_default_folder_id': %s}" % self.id
         }
 
     def _get_inherited_settings_as_vals(self):

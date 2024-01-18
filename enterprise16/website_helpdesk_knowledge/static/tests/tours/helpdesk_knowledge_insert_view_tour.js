@@ -1,5 +1,6 @@
 /** @odoo-module */
 
+import { endKnowledgeTour } from '@knowledge/../tests/tours/knowledge_tour_utils';
 import tour from 'web_tour.tour';
 
 
@@ -23,7 +24,7 @@ tour.register('helpdesk_insert_graph_view_in_knowledge', {
 }, { // insert the view in an article
     trigger: '.o_favorite_menu .dropdown-item:contains("Insert view in article")',
 }, { // create a new article
-    trigger: '.modal-footer button:contains("Create")',
+    trigger: '.modal-footer button:contains("New")',
 }, { // wait for Knowledge to open
     trigger: '.o_knowledge_form_view',
 }, { // the user should be redirected to the new article
@@ -35,4 +36,5 @@ tour.register('helpdesk_insert_graph_view_in_knowledge', {
     trigger: '.o_knowledge_behavior_type_embedded_view .o_searchview .o_facet_value:contains("Urgent")',
 }, {
     trigger: '.o_knowledge_behavior_type_embedded_view .o_searchview .o_facet_value:contains("Team")',
-}]);
+}, ...endKnowledgeTour()
+]);

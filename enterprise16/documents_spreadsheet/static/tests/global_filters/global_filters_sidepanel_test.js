@@ -1138,6 +1138,49 @@ QUnit.module(
             assert.deepEqual(model.getters.getGlobalFilterValue("42"), [41, 37]);
         });
 
+        QUnit.test(
+            "Change all domains -> Set corresponding model should allow saving",
+            async function (assert) {
+                const serverData = getBasicServerData();
+                serverData.models["vehicle"] = {
+                    fields: {},
+                    records: [],
+                };
+                serverData.models["partner"].fields.vehicle_ids = {
+                    relation: "vehicle",
+                    string: "Vehicle",
+                    type: "many2many",
+                    searchable: true,
+                };
+                serverData.models["ir.model"].records.push({
+                    id: 34,
+                    name: "Vehicle",
+                    model: "vehicle",
+                });
+
+                const { model } = await createSpreadsheetFromPivotView({ serverData });
+                await openGlobalFilterSidePanel();
+                await clickCreateFilter("relation");
+                await selectModelForRelation("product");
+                await saveGlobalFilter();
+                await click(target, ".o-sidePanel .fa-cog");
+
+                assert.strictEqual(
+                    target.querySelector(".o_field_selector_value").innerText,
+                    "Product"
+                );
+
+                await click(target, ".o_field_selector");
+                await click(target, ".o_field_selector_prev_page");
+                await click(target.querySelectorAll(".o_field_selector_item")[3]);
+                await click(target, ".o_field_selector_close");
+                await selectModelForRelation("vehicle");
+                await editGlobalFilterLabel("test case");
+                await saveGlobalFilter();
+                assert.equal(model.getters.getGlobalFilters()[0].label, "test case");
+            }
+        );
+
         QUnit.test("Can clear a text filter values", async function (assert) {
             const { model } = await createSpreadsheetFromPivotView();
             await addGlobalFilter(model, {
@@ -1184,7 +1227,8 @@ QUnit.module(
             const year = pivots[0].querySelector(".pivot_filter_input input.o_datepicker_input");
             const this_year = luxon.DateTime.local().year;
             assert.equal(quarter.value, "empty");
-            assert.equal(year.value, "Select year...");
+            assert.strictEqual(year.value, "");
+            assert.strictEqual(year.placeholder, "Select year...");
             assert.containsOnce(target, "i.o_side_panel_filter_icon.fa-cog");
             // no default value
             assert.containsNone(target, "i.o_side_panel_filter_icon.fa-times");
@@ -1200,7 +1244,8 @@ QUnit.module(
             await click(target.querySelector("i.o_side_panel_filter_icon.fa-times"));
             assert.containsNone(target, "i.o_side_panel_filter_icon.fa-times");
             assert.equal(quarter.value, "empty");
-            assert.equal(year.value, "Select year...");
+            assert.strictEqual(year.value, "");
+            assert.strictEqual(year.placeholder, "Select year...");
         });
 
         QUnit.test("Can clear a relation filter values", async function (assert) {

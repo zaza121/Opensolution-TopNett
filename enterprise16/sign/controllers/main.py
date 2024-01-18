@@ -11,6 +11,7 @@ from PyPDF2 import PdfFileReader
 from odoo import http, models, tools, Command, _
 from odoo.http import request, content_disposition
 from odoo.addons.iap.tools import iap_tools
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger()
 
@@ -26,12 +27,17 @@ class Sign(http.Controller):
             return request.not_found()
 
         sign_item_types = http.request.env['sign.item.type'].sudo().search_read([])
+        if not sign_item_types:
+            raise UserError(_("Unable to sign the document due to missing required data. Please contact an administrator."))
 
         # Currently only Signature, Initials, Text are allowed to be added while signing
+        item_type_signature = request.env.ref('sign.sign_item_type_signature', raise_if_not_found=False)
+        item_type_initial = request.env.ref('sign.sign_item_type_initial', raise_if_not_found=False)
+        item_type_text = request.env.ref('sign.sign_item_type_text', raise_if_not_found=False)
         edit_while_signing_allowed_type_ids = {
-            request.env.ref('sign.sign_item_type_signature').id,
-            request.env.ref('sign.sign_item_type_initial').id,
-            request.env.ref('sign.sign_item_type_text').id,
+            item_type_signature and item_type_signature.id,
+            item_type_initial and item_type_initial.id,
+            item_type_text and item_type_text.id,
         }
         for item_type in sign_item_types:
             item_type['edit_while_signing_allowed'] = item_type['id'] in edit_while_signing_allowed_type_ids
@@ -97,6 +103,7 @@ class Sign(http.Controller):
             'sign_item_select_options': sign_request.template_id.sign_item_ids.mapped('option_ids'),
             'refusal_allowed': sign_request.refusal_allowed and sign_request.state == 'sent',
             'portal': post.get('portal'),
+            'company_id': (sign_request.communication_company_id or sign_request.create_uid.company_id).id,
         }
 
     # -------------
@@ -148,7 +155,7 @@ class Sign(http.Controller):
             pdf_content, __ = report_action._render_qweb_pdf(
                 'sign.action_sign_request_print_logs',
                 sign_request.id,
-                data={'format_date': tools.format_date}
+                data={'format_date': tools.format_date, 'company_id': sign_request.communication_company_id}
             )
             pdfhttpheaders = [
                 ('Content-Type', 'application/pdf'),

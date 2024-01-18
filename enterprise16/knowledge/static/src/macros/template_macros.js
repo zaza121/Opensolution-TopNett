@@ -10,15 +10,17 @@ export class SendAsMessageMacro extends AbstractMacro {
      */
     macroAction() {
         const action = super.macroAction();
+        let sendMessageLastClickedEl = null;
         action.steps.push({
             trigger: function() {
                 this.validatePage();
-                const el = this.getFirstVisibleElement('.o_ChatterTopbar_buttonSendMessage');
+                const el = this.getFirstVisibleElement('.o_ChatterTopbar_buttonSendMessage:not([disabled])');
                 if (el) {
                     if (el.classList.contains('o-active')) {
                         return el;
-                    } else {
+                    } else if (el !== sendMessageLastClickedEl) {
                         el.click();
+                        sendMessageLastClickedEl = el;
                     }
                 } else {
                     this.searchInXmlDocNotebookTab('.oe_chatter');
@@ -29,7 +31,7 @@ export class SendAsMessageMacro extends AbstractMacro {
         }, {
             trigger: function() {
                 this.validatePage();
-                return this.getFirstVisibleElement('.o_Composer_buttonFullComposer');
+                return this.getFirstVisibleElement('.o_Composer_buttonFullComposer:not([disabled])');
             }.bind(this),
             action: 'click',
         }, {
@@ -72,14 +74,20 @@ export class UseAsDescriptionMacro extends AbstractMacro {
             trigger: function () {
                 return this.getFirstVisibleElement('.o_form_editable');
             }.bind(this),
+            action: () => {},
         }, {
             trigger: function () {
                 this.validatePage();
-                const el = this.getFirstVisibleElement(`.o_field_html[name="${this.data.fieldName}"]`);
+                const el = this.getFirstVisibleElement(
+                    `.o_field_html[name="${this.data.fieldName}"]`,
+                    (element) => element.querySelector('.odoo-editor-editable'),
+                );
                 if (el) {
                     return el;
                 }
-                this.searchInXmlDocNotebookTab(`[name=${this.data.fieldName}`);
+                if (this.data.pageName) {
+                    this.searchInXmlDocNotebookTab(`page[name="${this.data.pageName}"]`);
+                }
                 return null;
             }.bind(this),
             action: 'click',

@@ -98,14 +98,16 @@ class RentalProcessingLine(models.TransientModel):
         :rtype: str
         """
         msg = self._generate_log_message()
+        now = fields.Datetime.now()
         for wizard_line in self:
             order_line = wizard_line.order_line_id
             if wizard_line.status == 'pickup' and wizard_line.qty_delivered > 0:
-                vals = {'qty_delivered': order_line.qty_delivered + wizard_line.qty_delivered}
-                if order_line.qty_delivered + wizard_line.qty_delivered > order_line.product_uom_qty:
-                    vals['product_uom_qty'] = order_line.qty_delivered + wizard_line.qty_delivered
-                if order_line.start_date > fields.Datetime.now():
-                    vals['start_date'] = fields.Datetime.now()
+                delivered_qty = order_line.qty_delivered + wizard_line.qty_delivered
+                vals = {'qty_delivered': delivered_qty}
+                if delivered_qty > order_line.product_uom_qty:
+                    vals['product_uom_qty'] = delivered_qty
+                if order_line.start_date > now:
+                    vals['start_date'] = now
                 order_line.update(vals)
 
             elif wizard_line.status == 'return' and wizard_line.qty_returned > 0:

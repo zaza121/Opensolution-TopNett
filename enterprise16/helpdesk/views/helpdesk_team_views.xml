@@ -129,7 +129,7 @@
                                     <div attrs="{'invisible': [('auto_assignment', '=', False)]}" class="mt16">
                                         <field name="assign_method" class="o_light_label" widget="radio"/>
                                         <div>
-                                            <field name="member_ids" widget="many2many_avatar_user"
+                                            <field name="member_ids" widget="many2many_avatar_user" attrs="{'required': [('auto_assignment', '=', True)]}"
                                             class="mt16" placeholder="Add team members..." options="{'no_quick_create': True}"/>
                                         </div>
                                     </div>
@@ -204,7 +204,7 @@
                             </div>
                             <div class="o_setting_right_pane">
                                 <label for="use_helpdesk_timesheet"/>
-                                <a href="https://www.odoo.com/documentation/16.0/applications/services/helpdesk/timesheet_and_invoice/invoice_time.html" title="Documentation" class="o_doc_link" target="_blank"></a>
+                                <a href="https://www.odoo.com/documentation/16.0/applications/services/helpdesk/advanced/track_and_bill.html" title="Documentation" class="o_doc_link" target="_blank"></a>
                                 <div class="text-muted">
                                     Track the time spent on tickets
                                 </div>
@@ -221,7 +221,7 @@
                             </div>
                             <div class="o_setting_right_pane">
                                 <label for="use_helpdesk_sale_timesheet"/>
-                                <a href="https://www.odoo.com/documentation/16.0/applications/services/helpdesk/timesheet_and_invoice/reinvoice_from_project.html" title="Documentation" class="o_doc_link" target="_blank"></a>
+                                <a href="https://www.odoo.com/documentation/16.0/applications/services/helpdesk/advanced/track_and_bill.html" title="Documentation" class="o_doc_link" target="_blank"></a>
                                 <div class="text-muted">
                                     Bill the time spent on your tickets to your customers
                                 </div>
@@ -241,7 +241,7 @@
                             </div>
                             <div class="o_setting_right_pane">
                                 <label for="use_sla"/>
-                                <a href="https://www.odoo.com/documentation/16.0/applications/services/helpdesk/overview/getting_started.html" title="Documentation" class="o_doc_link" target="_blank"></a>
+                                <a href="https://www.odoo.com/documentation/16.0/applications/services/helpdesk/overview/sla.html" title="Documentation" class="o_doc_link" target="_blank"></a>
                                 <div class="text-muted">
                                     Make sure tickets are handled on time
 
@@ -455,7 +455,7 @@
                 <field name="name"/>
                 <field name="member_ids"/>
                 <field name="company_id" groups="base.group_multi_company"/>
-                <filter string="My Teams" domain="[('member_ids', 'in', [uid])]" name="my_team"/>
+                <filter string="My Teams" domain="[('member_ids', 'in', [uid]), ('auto_assignment', '=', True)]" name="my_team"/>
                 <filter string="Followed Teams" domain="[('message_is_follower', '=', True)]" name="my_follow_team"/>
                 <separator/>
                 <filter string="Archived" domain="[('active', '=', False)]" name="archived"/>
@@ -519,7 +519,7 @@
                                                 </span>
                                             </a>
                                         </div>
-                                        <div class="mb4" groups="helpdesk.group_use_sla" attrs="{'invisible': [('use_sla', '=', False)]}">
+                                        <div class="mb4" groups="helpdesk.group_use_sla" attrs="{'invisible': ['|', ('use_sla', '=', False), ('success_rate', '&lt;', 0.0)]}">
                                             <a name="action_view_success_rate" type="object" title="Ratio of tickets whose SLA has successfully been reached on time compared to the total number of tickets closed in the past 7 days." class="justify-content-between flex-nowrap d-inline-flex w-100">
                                                 <span>Success Rate</span>
                                                 <span class="ms-3">
@@ -667,6 +667,26 @@
             <p>
                 Create teams to organize your tickets by expertise or geographical region, and define a different workflow for each team.
             </p>
+        </field>
+    </record>
+
+    <record id="helpdesk_team_view_kanban_mobile" model="ir.ui.view">
+        <field name="name">helpdesk.team.view.kanban.mobile</field>
+        <field name="model">helpdesk.team</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_content oe_kanban_global_click">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong><field name="name"/></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 

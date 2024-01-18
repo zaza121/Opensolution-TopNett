@@ -21,5 +21,8 @@ Contains advanced features for CRM such as new views
         'mail.assets_messaging': [
             'crm_enterprise/static/src/models/*.js',
         ],
+        'web.qunit_suite_tests': [
+            'crm_enterprise/static/tests/*.js',
+        ],
     }
 }

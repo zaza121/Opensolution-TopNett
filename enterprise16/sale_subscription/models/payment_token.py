@@ -7,18 +7,15 @@ class PaymentToken(models.Model):
     _name = 'payment.token'
     _inherit = 'payment.token'
 
-    def _handle_deactivation_request(self):
+    def _handle_archiving(self):
         """ Override of payment to void the token on linked subscriptions.
-
-        Note: self.ensure_one()
 
         :return: None
         """
-        super()._handle_deactivation_request()  # Called first in case an UserError is raised
-        linked_subscriptions = self.env['sale.order'].search(
-            [('payment_token_id', '=', self.id)]
-        )
-        linked_subscriptions.payment_token_id = False
+        super()._handle_archiving()
+
+        linked_subscriptions = self.env['sale.order'].search([('payment_token_id', 'in', self.ids)])
+        linked_subscriptions.write({'payment_token_id': None})
 
     def get_linked_records_info(self):
         """ Override of payment to add information about subscriptions linked to the current token.

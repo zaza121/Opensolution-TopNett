@@ -3,12 +3,11 @@ odoo.define('timesheet_grid.TimerHeaderM2O', function (require) {
 
 const config = require('web.config');
 const core = require('web.core');
-const relational_fields = require('web.relational_fields');
 const StandaloneFieldManagerMixin = require('web.StandaloneFieldManagerMixin');
 const Widget = require('web.Widget');
 const session = require('web.session');
 
-const Many2One = relational_fields.FieldMany2One;
+const TimesheetFieldMany2One = require('hr_timesheet.TimesheetFieldMany2one');
 const TaskWithHours = require('hr_timesheet.task_with_hours');
 const _t = core._t;
 
@@ -82,7 +81,7 @@ const TimerHeaderM2O = Widget.extend(StandaloneFieldManagerMixin, {
             placeholderProject = _t('Select a Project');
         }
         const projectRecord = this.model.get(this.project);
-        const projectMany2one = new Many2One(this, 'project_id', projectRecord, {
+        const projectMany2one = new TimesheetFieldMany2One(this, 'project_id', projectRecord, {
             attrs: {
                 string: _t('Project'),
                 placeholder: placeholderProject,

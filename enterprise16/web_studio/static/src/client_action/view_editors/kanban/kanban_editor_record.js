@@ -76,7 +76,7 @@ class SafeKanbanRecord extends KanbanRecord {
 }
 SafeKanbanRecord.template = "web_studio.SafeKanbanRecord";
 
-class _KanbanEditorRecord extends KanbanRecord {
+export class _KanbanEditorRecord extends KanbanRecord {
     setup() {
         super.setup();
         this.dialogService = useService("dialog");
@@ -144,6 +144,7 @@ class _KanbanEditorRecord extends KanbanRecord {
             return;
         }
         ev.stopPropagation();
+        ev.preventDefault();
     }
 
     isFieldValueEmpty(value) {
@@ -203,8 +204,9 @@ class _KanbanEditorRecord extends KanbanRecord {
 
     onAddPriority() {
         const fields = [];
+        const activeFields = Object.keys(this.props.record.activeFields);
         for (const [fName, field] of Object.entries(this.props.record.fields)) {
-            if (field.type === "selection") {
+            if (field.type === "selection" && !activeFields.includes(fName)) {
                 const _field = { ...field, name: fName };
                 fields.push(_field);
             }

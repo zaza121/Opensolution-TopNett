@@ -70,6 +70,7 @@ class AppointmentType(models.Model):
     message_confirmation = fields.Html('Confirmation Message', translate=True,
         help="Extra information provided once the appointment is booked.")
     message_intro = fields.Html('Introduction Message', translate=True,
+        sanitize_attributes=False,
         help="Small description of the appointment type.")
 
     country_ids = fields.Many2many(
@@ -158,6 +159,12 @@ class AppointmentType(models.Model):
         for record in self:
             record.staff_user_count = len(record.staff_user_ids)
 
+    @api.constrains('appointment_duration')
+    def _check_appointment_duration(self):
+        for record in self:
+            if not record.appointment_duration > 0.0:
+                raise ValidationError(_('Appointment Duration should be higher than 0.00.'))
+
     @api.constrains('category', 'staff_user_ids', 'slot_ids')
     def _check_staff_user_configuration(self):
         anytime_appointments = self.search([('category', '=', 'anytime')])
@@ -168,9 +175,9 @@ class AppointmentType(models.Model):
             if invalid_restricted_users:
                 raise ValidationError(_("The following users are in restricted slots but they are not part of the available staff: %s", ", ".join(invalid_restricted_users.mapped('name'))))
             if appointment_type.category == 'anytime':
-                duplicate = anytime_appointments.filtered(lambda apt_type: apt_type.staff_user_ids.ids in appointment_type.staff_user_ids.ids)
+                duplicate = anytime_appointments.filtered(lambda apt_type: bool(apt_type.staff_user_ids & appointment_type.staff_user_ids))
                 if appointment_type.ids:
-                    duplicate = anytime_appointments.filtered(lambda apt_type: apt_type.id not in appointment_type.ids)
+                    duplicate = duplicate.filtered(lambda apt_type: apt_type.id not in appointment_type.ids)
                 if duplicate:
                     raise ValidationError(_("Only one anytime appointment type is allowed for a specific user."))
 
@@ -284,7 +291,7 @@ class AppointmentType(models.Model):
 
     def _slots_generate(self, first_day, last_day, timezone, reference_date=None):
         """ Generate all appointment slots (in naive UTC, appointment timezone, and given (visitors) timezone)
-            between first_day and last_day (datetimes in appointment timezone)
+            between first_day and last_day
 
         :param datetime first_day: beginning of appointment check boundary. Timezoned to UTC;
         :param datetime last_day: end of appointment check boundary. Timezoned to UTC;
@@ -322,14 +329,20 @@ class AppointmentType(models.Model):
                                      )
                                 )
             )
+            # localized end time for the entire slot on that day
+            local_slot_end = appt_tz.localize(
+                day.replace(hour=0, minute=0, second=0) +
+                timedelta(hours=slot._convert_end_hour_24_format())
+            )
             # Adapt local start to not append slot in the past for today
             if local_start.date() == ref_tz_apt_type.date():
                 while local_start < ref_tz_apt_type + relativedelta(hours=self.min_schedule_hours):
                     local_start += relativedelta(hours=self.appointment_duration)
             local_end = local_start + relativedelta(hours=self.appointment_duration)
 
-            n_slot = int((slot._convert_end_hour_24_format() - (local_start.hour + local_start.minute / 60.0)) /
-                         self.appointment_duration)
+            # if local_start >= local_slot_end, no slot will be appended
+            end_start_delta = ((local_slot_end - local_start).total_seconds() / 3600)
+            n_slot = int(end_start_delta / self.appointment_duration)
             for _ in range(n_slot):
                 slots.append({
                     self.appointment_tz: (
@@ -354,8 +367,8 @@ class AppointmentType(models.Model):
             # Regular recurring slots (not a custom appointment), generate necessary slots using configuration rules
             slot_weekday = [int(weekday) - 1 for weekday in self.slot_ids.mapped('weekday')]
             for day in rrule.rrule(rrule.DAILY,
-                                dtstart=first_day.date(),
-                                until=last_day.date(),
+                                dtstart=first_day.astimezone(appt_tz).date(),
+                                until=last_day.astimezone(appt_tz).date(),
                                 byweekday=slot_weekday):
                 for slot in self.slot_ids.filtered(lambda x: int(x.weekday) == day.isoweekday()):
                     append_slot(day, slot)
@@ -520,7 +533,8 @@ class AppointmentType(models.Model):
             all_events = self.env['calendar.event'].search(
                 ['&',
                  ('partner_ids', 'in', related_partners.ids),
-                 '&',
+                 '&', '&',
+                 ('show_as', '=', 'busy'),
                  ('stop', '>', datetime.combine(start_dt, time.min)),
                  ('start', '<', datetime.combine(end_dt, time.max)),
                 ],
@@ -578,7 +592,6 @@ class AppointmentType(models.Model):
         if not reference_date:
             reference_date = datetime.utcnow()
 
-        appt_tz = pytz.timezone(self.appointment_tz)
         requested_tz = pytz.timezone(timezone)
 
         appointment_duration_days = self.max_schedule_days
@@ -597,8 +610,8 @@ class AppointmentType(models.Model):
 
         # Compute available slots (ordered)
         slots = self._slots_generate(
-            first_day.astimezone(appt_tz),
-            last_day.astimezone(appt_tz),
+            first_day.astimezone(pytz.utc),
+            last_day.astimezone(pytz.utc),
             timezone,
             reference_date=reference_date
         )
@@ -694,3 +707,46 @@ class AppointmentType(models.Model):
             nb_slots_previous_months = total_nb_slots - nb_slots_next_months
             start = start + relativedelta(months=1)
         return months
+
+    def _check_appointment_is_valid_slot(self, staff_user, timezone, start_dt, duration):
+        """
+        Given slot parameters check if it is still valid, based on employee
+        availability, slot boundaries, ...
+        :param (optional record) staff_user: the user for whom the appointment was booked for
+        :param str timezone: visitor's timezone
+        :param datetime start_dt: start datetime of the appointment (UTC)
+        :param float duration: the duration of the appointment in hours
+        :return: True if at least one slot is available, False if no slots were found
+        """
+        # the user can be a public/portal user that doesn't have read access to the appointment_type.
+        self_sudo = self.sudo()
+        end_dt = start_dt + relativedelta(hours=duration)
+        slots = self_sudo._slots_generate(start_dt, end_dt, timezone)
+        slots[:] = [slot for slot in slots if slot['UTC'] == (start_dt.replace(tzinfo=None), end_dt.replace(tzinfo=None))]
+        if slots and (not staff_user or staff_user in self_sudo.staff_user_ids):
+            self_sudo._slots_available(slots, start_dt, end_dt, staff_user)
+        return any([
+            slot for slot in slots
+            if slot.get("staff_user_id", False) == staff_user
+            and ((slot['slot'].sudo().slot_type == 'recurring' and self_sudo.appointment_duration == duration) or
+                 (slot['slot'].sudo().slot_type == 'unique' and slot['slot'].sudo().duration == duration))
+        ])
+
+    @api.model
+    def _get_clean_appointment_context(self):
+        whitelist_default_fields = list(map(
+            lambda field: f'default_{field}',
+            self._get_calendar_view_appointment_type_default_context_fields_whitelist()))
+        return {
+            key: value for key, value in self.env.context.items()
+            if key in whitelist_default_fields or not key.startswith('default_')
+        }
+
+    @api.model
+    def _get_calendar_view_appointment_type_default_context_fields_whitelist(self):
+        """ White list of fields that can be defaulted in the context of the
+        calendar routes creating appointment types.
+        This is mainly used in /appointment/appointment_type/create_custom.
+        This list of fields can be updated the fields in other sub-modules.
+        """
+        return []

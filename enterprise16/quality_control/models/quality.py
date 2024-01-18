@@ -134,8 +134,8 @@ class QualityCheck(models.Model):
     tolerance_max = fields.Float('Max Tolerance', related='point_id.tolerance_max', readonly=True)
     warning_message = fields.Text(compute='_compute_warning_message')
     norm_unit = fields.Char(related='point_id.norm_unit', readonly=True)
-    qty_to_test = fields.Float(compute="_compute_qty_to_test", string="Quantity to Test", help="Quantity of product to test within the lot")
-    qty_tested = fields.Float(string="Quantity Tested", help="Quantity of product tested within the lot")
+    qty_to_test = fields.Float(compute="_compute_qty_to_test", string="Quantity to Test", help="Quantity of product to test within the lot", digits='Product Unit of Measure')
+    qty_tested = fields.Float(string="Quantity Tested", help="Quantity of product tested within the lot", digits='Product Unit of Measure')
     measure_on = fields.Selection([
         ('operation', 'Operation'),
         ('product', 'Product'),
@@ -196,7 +196,7 @@ class QualityCheck(models.Model):
     def _compute_qty_to_test(self):
         for qc in self:
             if qc.is_lot_tested_fractionally:
-                qc.qty_to_test = float_round(qc.qty_line * qc.testing_percentage_within_lot / 100, precision_rounding=self.product_id.uom_id.rounding, rounding_method="UP")
+                qc.qty_to_test = float_round(qc.qty_line * qc.testing_percentage_within_lot / 100, precision_rounding=qc.product_id.uom_id.rounding or 0.01, rounding_method="UP")
             else:
                 qc.qty_to_test = qc.qty_line
 

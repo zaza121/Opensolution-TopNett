@@ -1148,4 +1148,218 @@ tour.register('web_studio_alter_field_existing_in_multiple_views_tour', {
     // check if the invisible option is checked
     trigger: "#invisible:checked",
 }]);
+
+tour.register(
+    "web_studio_test_create_one2many_lines_then_edit_name",
+    {
+        test: true,
+        sequence: 260
+    },
+    [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']"
+        },
+        {
+            extra_trigger: ".o_form_view",
+            trigger: ".o_web_studio_navbar_item a"
+        },
+        {
+            trigger: ".o_web_studio_sidebar .o_web_studio_new_fields .o_web_studio_field_lines",
+            run: "drag_and_drop (.o_web_studio_hook:eq(0))"
+        },
+        {
+            trigger: ".o_form_label",
+            extra_trigger: ".o_field_x2many_list",
+            timeout: 20000,
+        },
+        {
+            extra_trigger: ".o_web_studio_sidebar .o_web_studio_properties.active",
+            trigger: "input[name='string']",
+            run: "text new name",
+        },
+        {
+            trigger: ".o_web_studio_leave",
+            timeout: 20000,
+        },
+    ]
+);
+
+tour.register(
+    "web_studio_test_address_view_id_no_edit",
+    {
+        test: true,
+        sequence: 260
+    },
+    [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']"
+        },
+        {
+            extra_trigger: ".o_form_view",
+            trigger: ".o_address_format",
+            run: function() {
+                if (this.$anchor.find('[name=lang]').length || !this.$anchor.find('[name=street]').length) {
+                    throw new Error("The address view id set on the company country should be displayed");
+                };
+            }
+        },
+        {
+            trigger: ".o_web_studio_navbar_item a"
+        },
+        {
+            extra_trigger: ".o_web_studio_view_renderer",
+            trigger: ".o_address_format",
+            run: function() {
+                if (this.$anchor.find('[name=street]').length || !this.$anchor.find('[name=lang]').length) {
+                    throw new Error("The address view id set on the company country shouldn't be editable");
+                };
+            }
+        },
+        {
+            trigger: ".o_web_studio_leave"
+        },
+    ] 
+);
+
+tour.register(
+    "web_studio_test_create_new_model_from_existing_view",
+    {
+        test: true,
+        sequence: 260
+    },
+    [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']"
+        },
+        {
+            extra_trigger: ".o_kanban_view",
+            trigger: ".o_web_studio_navbar_item a"
+        },
+        {
+            trigger: ".o_web_create_new_model"
+        },
+        {
+            extra_trigger: ".modal-dialog",
+            trigger: "input[name='name']",
+            run: "text new model",
+        },
+        {
+            trigger: ".confirm_button",
+        },
+        {
+            trigger: ".o_web_studio_model_configurator_next"
+        },
+        {
+            trigger: ".o_form_view",
+        }
+    ]
+);
+
+tour.register(
+    "web_studio_test_create_model_with_clickable_stages",
+    {
+        test: true,
+        sequence: 260
+    },
+    [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']"
+        },
+        {
+            extra_trigger: ".o_form_view",
+            trigger: ".o_web_studio_navbar_item a"
+        },
+        {
+            trigger: ".o_web_create_new_model"
+        },
+        {
+            extra_trigger: ".modal-dialog",
+            trigger: "input[name='name']",
+            run: "text new model",
+        },
+        {
+            trigger: ".confirm_button",
+        },
+        {
+            trigger: "#use_stages"
+        },
+        {
+            trigger: ".o_web_studio_model_configurator_next"
+        },
+        {
+            trigger: ".o_web_studio_leave"
+        },
+        {
+            extra_trigger: ".o_form_view",
+            trigger: "input#x_name",
+            run: "text new record",
+        },
+        {
+            trigger: ".o_arrow_button:contains(In Progress)"
+        },
+        {
+            trigger: ".o_arrow_button_current:contains(In Progress)"
+        },
+        {
+            trigger: ".o_form_button_save"
+        },
+        {
+            trigger: ".o_back_button"
+        },
+        {
+            trigger: ".o_kanban_group:contains(In Progress) .o_kanban_record_details:contains(new record)"
+        }
+    ]
+);
+
+tour.register('web_studio_test_hide_page_of_notebook', {
+    test: true,
+}, [{
+    // open studio
+    trigger: '.o_main_navbar .o_web_studio_navbar_item a',
+    extra_trigger: ".o_home_menu_background",
+}, {
+    trigger: '.o_web_studio_new_app',
+}, {
+    // the next steps are here to create a new app
+    trigger: '.o_web_studio_app_creator_next',
+}, {
+    trigger: '.o_web_studio_app_creator_name > input',
+    run: 'text ' + (createdAppString = randomString(6)),
+}, {
+    trigger: '.o_web_studio_app_creator_next.is_ready',
+}, {
+    trigger: '.o_web_studio_app_creator_menu > input',
+    run: `text ${createdAppString}`,
+}, {
+    trigger: '.o_web_studio_app_creator_next.is_ready',
+}, {
+    trigger: 'input[name="lines"]'
+}, {
+    trigger: '.o_web_studio_model_configurator_next',
+}, {
+    // wait for studio to be loaded
+    extra_trigger: '.o_web_studio_sidebar',
+    // go to view
+    trigger: '.o_web_studio_view ',
+    timeout: 60000,
+}, {
+    // show invisible elements
+    trigger: 'label[for="show_invisible"]',
+}, {
+    // select the first page of the notebook
+    trigger: 'a[name="lines"]',
+}, {
+    // make it invisible
+    trigger: "#invisible",
+    run: "click",
+}, {
+    extra_trigger: ".o_web_studio_snackbar_icon.show.fa.fa-check",
+    // click again on the page to refresh the sidebar
+    trigger: 'a[name="lines"]',
+}, {
+    // invisible checkbox must be checked
+    trigger: "#invisible:checked",
+}]);
+
 });

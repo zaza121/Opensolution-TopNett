@@ -123,4 +123,7 @@ class PlanningRecurrency(models.Model):
     def _get_recurrence_last_datetime(self):
         self.ensure_one()
         end_datetime = self.env['planning.slot'].search_read([('recurrency_id', '=', self.id)], ['end_datetime'], order='end_datetime', limit=1)
-        return end_datetime[0]['end_datetime'] + get_timedelta(self.repeat_number * self.repeat_interval, self.repeat_unit)
+        timedelta = get_timedelta(self.repeat_number * self.repeat_interval, self.repeat_unit)
+        if timedelta.days > 999:
+            raise ValidationError(_('Recurring shifts cannot be planned further than 999 days in the future. If you need to schedule beyond this limit, please set the recurrence to repeat forever instead.'))
+        return end_datetime[0]['end_datetime'] + timedelta

@@ -20,6 +20,7 @@ class WorkflowActionRuleAccount(models.Model):
             for document in documents:
                 doc_res_id = document.res_id
                 doc_res_model = document.res_model
+                partner = self.partner_id or document.partner_id
                 if doc_res_model == 'account.move' and doc_res_id:
                     new_obj = self.env['account.move'].browse(document.res_id)
                     if new_obj.statement_line_id:
@@ -29,7 +30,6 @@ class WorkflowActionRuleAccount(models.Model):
                 new_obj = self.env['account.journal'].with_context(default_move_type=invoice_type)._create_document_from_attachment(attachment_ids=document.attachment_id.id)
                 if doc_res_model == 'account.move.line' and doc_res_id:
                     new_obj.document_request_line_id = doc_res_id
-                partner = self.partner_id or document.partner_id
                 if partner:
                     new_obj.partner_id = partner
                     new_obj._onchange_partner_id()

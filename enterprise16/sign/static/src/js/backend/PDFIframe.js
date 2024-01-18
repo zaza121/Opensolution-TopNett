@@ -193,15 +193,17 @@ PDFIframe.include({
       const $fieldTypeButtonItems = $fieldTypeButtons.children(
         ".o_sign_field_type_button"
       );
-      this.buttonsDraggableComponent = new SmoothScrollOnDrag(
-        this,
-        $fieldTypeButtonItems,
-        this.$("#viewerContainer"),
-        smoothScrollOptions
-      );
-      $fieldTypeButtonItems.each((i, el) => {
-        this.enableCustomBar($(el));
-      });
+      if ($fieldTypeButtonItems.length) {
+        this.buttonsDraggableComponent = new SmoothScrollOnDrag(
+          this,
+          $fieldTypeButtonItems,
+          this.$("#viewerContainer"),
+          smoothScrollOptions
+        );
+        $fieldTypeButtonItems.each((i, el) => {
+          this.enableCustomBar($(el));
+        });
+      }
 
       this.$(".page").droppable({
         accept: "*",

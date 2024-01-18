@@ -276,6 +276,27 @@ class TestKnowledgeArticleConstraints(KnowledgeCommon):
         with self.assertRaises(exceptions.AccessError):
             article_user2.move_to(parent_id=article_as2.id)
 
+        # Member should be allowed to move an editable article under its current
+        # parent even if the parent is readonly, and specifying the parent id
+        # should not throw an error even if unnecessary.
+        article_child1 = self.env['knowledge.article'].create({
+            'internal_permission': 'write',
+            'name': 'Ze Name',
+            'parent_id': article.id,
+            'sequence': 1,
+        })
+        article_child2 = self.env['knowledge.article'].create({
+            'internal_permission': 'write',
+            'name': 'Ze Name',
+            'parent_id': article.id,
+            'sequence': 2,
+        })
+        article_child2.invite_members(self.partner_employee2, 'write')
+        article_child2_as2 = article_child2.with_user(self.user_employee2)
+        article_child2_as2.move_to(parent_id=article.id, before_article_id=article_child1.id)
+        self.assertEqual(article_child2_as2.sequence, 1)
+        self.assertEqual(article_child1.sequence, 2)
+
     @mute_logger('odoo.addons.base.models.ir_rule')
     @users('employee')
     def test_article_private_management(self):

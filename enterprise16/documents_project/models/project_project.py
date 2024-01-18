@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from odoo import api, fields, models, _, _lt
 from odoo.exceptions import UserError
+from odoo.tools import frozendict
 
 
 class ProjectProject(models.Model):
@@ -159,7 +160,15 @@ class ProjectProject(models.Model):
 
     @api.returns('self', lambda value: value.id)
     def copy(self, default=None):
+        # We have to add no_create_folder=True to the context, otherwise a folder
+        # will be automatically created during the call to create.
+        # However, we cannot use with_context, as it intanciates a new recordset,
+        # and this copy would call itself infinitely.
+        previous_context = self.env.context
+        self.env.context = frozendict(self.env.context, no_create_folder=True)
         project = super().copy(default)
+        self.env.context = previous_context
+
         if not self.env.context.get('no_create_folder') and project.use_documents and self.documents_folder_id:
             project.documents_folder_id = self.documents_folder_id.copy({'name': project.name})
         return project

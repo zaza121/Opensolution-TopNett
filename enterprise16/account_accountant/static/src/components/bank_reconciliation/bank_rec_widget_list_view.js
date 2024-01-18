@@ -1,6 +1,8 @@
 /** @odoo-module */
 
 import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { View } from "@web/views/view";
 
@@ -12,15 +14,20 @@ const { Component, useSubEnv } = owl;
 class FormEmbeddedListView extends Component {
 
     setup() {
-        // little hack while better solution from framework js
-        // reset the config, especially the ControlPanel which was comming from a parent form view.
-        // it also reset the view switchers which was necessary to make them disapear
+        // Little hack while better solution from framework js.
+        // Reset the config, especially the ControlPanel which was coming from a parent form view.
+        // It also reset the view switchers which was necessary to make them disappear.
         useSubEnv({
             config: {},
         });
+
+        this.bankRecService = useService("bank_rec_widget");
     }
 
     get bankRecListViewProps() {
+        // retrieve the saved search state based on the res model and restore it to the embedded list view
+        let globalState = this.bankRecService.getSearchState(this.bankRecService.kanbanState.selectedStLineId, this.props.resModel);
+
         return {
             type: "list",
             display: { 
@@ -38,6 +45,7 @@ class FormEmbeddedListView extends Component {
             },
             allowSelectors: false,
             searchViewId: false, // little hack: force to load the search view info
+            globalState: globalState,
         }
     }
 }

@@ -25,7 +25,7 @@ patch(SocialPostFormatterMixin, 'social_facebook.SocialPostFormatterMixin', {
                 // See social.stream.post#_format_facebook_message for more information.
                 const REGEX_AT_FACEBOOK = /\B@\[([0-9]*)\]\s([\w\dÀ-ÿ-]+)/g;
                 value = value.replace(REGEX_AT_FACEBOOK,
-                    `<a href='/social_facebook/redirect_to_profile/` + accountId + `/$1?name=$2' target='_blank'>$2</a>`);
+                    `<a href='/social_facebook/redirect_to_profile/` + encodeURIComponent(accountId) + `/$1?name=$2' target='_blank'>$2</a>`);
             }
         }
         return value;

@@ -3,7 +3,7 @@
 
 import pytz
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from odoo import _, api, fields, models
 from odoo.osv import expression
@@ -87,20 +87,27 @@ class Forecast(models.Model):
     def _gantt_progress_bar_project_id(self, res_ids, start, stop):
         project_dict = {
             project.id: project.allocated_hours
-            for project in self.env['project.project'].search([('id', 'in', res_ids)])
+            for project in self.env['project.project'].sudo().search([('id', 'in', res_ids)])
         }
         planning_read_group = self.env['planning.slot']._read_group(
             [('project_id', 'in', res_ids), ('start_datetime', '<=', stop), ('end_datetime', '>=', start)],
             ['project_id', 'allocated_hours'],
             ['project_id'],
         )
-        return {
+        dict_values_per_project = {
             res['project_id'][0]: {
                 'value': res['allocated_hours'],
                 'max_value': project_dict.get(res['project_id'][0], 0)
             }
             for res in planning_read_group
         }
+        for project_id, allocated_hours in project_dict.items():
+            if project_id not in dict_values_per_project:
+                dict_values_per_project[project_id] = {
+                    'value': 0.0,
+                    'max_value': allocated_hours,
+                }
+        return dict_values_per_project
 
     def _gantt_progress_bar(self, field, res_ids, start, stop):
         if field == 'project_id':
@@ -130,15 +137,24 @@ class Forecast(models.Model):
 
         today = fields.Datetime.now()
         interval_per_employee = defaultdict(lambda: (today, datetime(1970, 1, 1)))
+        work_data_per_employee_id = defaultdict(list)
         for slot in slots:
-            start_datetime, end_datetime = interval_per_employee[slot.employee_id]
-            if start_datetime > slot.start_datetime:
-                start_datetime = slot.start_datetime
-            if end_datetime < slot.end_datetime:
-                end_datetime = slot.end_datetime if slot.end_datetime <= today else today
-            interval_per_employee[slot.employee_id] = (start_datetime, end_datetime)
+            if slot.resource_id and slot.resource_id.flexible_hours:
+                slot_duration = slot._calculate_slot_duration()
+                days_span = (slot.end_datetime - slot.start_datetime).days + 1
+                alloc_hours = slot_duration / days_span
+                for day_offset in range(days_span):
+                    work_data_per_employee_id[slot.employee_id.id].append(
+                        ((slot.start_datetime + timedelta(days=day_offset)).date(), alloc_hours)
+                    )
+            else:
+                start_datetime, end_datetime = interval_per_employee[slot.employee_id]
+                if start_datetime > slot.start_datetime:
+                    start_datetime = slot.start_datetime
+                if end_datetime < slot.end_datetime:
+                    end_datetime = slot.end_datetime if slot.end_datetime <= today else today
+                interval_per_employee[slot.employee_id] = (start_datetime, end_datetime)
 
-        work_data_per_employee_id = {}
         min_date, max_date = pytz.utc.localize(today), None
         for employee, (start_datetime, end_datetime) in interval_per_employee.items():
             employee_resource = employee.resource_id
@@ -156,7 +172,7 @@ class Forecast(models.Model):
             result = defaultdict(float)
             for start, stop, dummy in working_intervals:
                 result[start.date()] += (stop - start).total_seconds() / 3600
-            work_data_per_employee_id[employee.id] = sorted(result.items())
+            work_data_per_employee_id[employee.id].extend(sorted(result.items()))
             if working_intervals:
                 start_date = working_intervals._items[0][0]
                 end_date = working_intervals._items[-1][0]

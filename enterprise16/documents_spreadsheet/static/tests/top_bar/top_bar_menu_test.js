@@ -4,6 +4,8 @@ import spreadsheet from "@spreadsheet/o_spreadsheet/o_spreadsheet_extended";
 import { getBasicServerData } from "@spreadsheet/../tests/utils/data";
 import { click, mockDownload, nextTick } from "@web/../tests/helpers/utils";
 import { createSpreadsheet } from "../spreadsheet_test_utils";
+import { mockActionService } from "@documents_spreadsheet/../tests/spreadsheet_test_utils";
+import { UNTITLED_SPREADSHEET_NAME } from "@spreadsheet/helpers/constants";
 
 const { createEmptyWorkbookData, getMenuChildren } = spreadsheet.helpers;
 const { topbarMenuRegistry } = spreadsheet.registries;
@@ -36,6 +38,22 @@ QUnit.module("documents_spreadsheet > Topbar Menu Items", {}, function () {
         newSpreadsheet.action(env);
         assert.verifySteps(["create"]);
     });
+
+    QUnit.test(
+        "Action action_download_spreadsheet is correctly fired with topbar menu",
+        async function (assert) {
+            let actionParam;
+            const { env, model } = await createSpreadsheet();
+            mockActionService(env, (action) => (actionParam = action.params));
+            const file = topbarMenuRegistry.getAll().find((item) => item.id === "file");
+            const download = file.children.find((item) => item.id === "download");
+            await download.action(env);
+            assert.deepEqual(actionParam, {
+                xlsxData: model.exportXLSX(),
+                name: UNTITLED_SPREADSHEET_NAME,
+            });
+        }
+    );
 
     QUnit.test("Can download xlsx file", async function (assert) {
         mockDownload((options) => {
@@ -98,10 +116,10 @@ QUnit.module("documents_spreadsheet > Topbar Menu Items", {}, function () {
         });
         assert.verifySteps([]);
         const root = topbarMenuRegistry.getAll().find((item) => item.id === "format");
-        const numbers = getMenuChildren(root, env)
-            .find((item) => item.id === "format_number");
-        const customCurrencies = getMenuChildren(numbers, env)
-            .find((item) => item.id === "format_custom_currency");
+        const numbers = getMenuChildren(root, env).find((item) => item.id === "format_number");
+        const customCurrencies = getMenuChildren(numbers, env).find(
+            (item) => item.id === "format_custom_currency"
+        );
         await customCurrencies.action(env);
         await nextTick();
         await click(document.querySelector(".o-sidePanelClose"));

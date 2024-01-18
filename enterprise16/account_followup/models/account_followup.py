@@ -16,11 +16,11 @@ class FollowupLine(models.Model):
                                 "Can be negative if you want to send the reminder before the invoice due date.")
     company_id = fields.Many2one('res.company', 'Company', required=True, default=lambda self: self.env.company)
 
-    mail_template_id = fields.Many2one(comodel_name='mail.template')
+    mail_template_id = fields.Many2one(comodel_name='mail.template', domain="[('model', '=', 'res.partner')]")
     send_email = fields.Boolean('Send Email', default=True)
     join_invoices = fields.Boolean(string="Attach Invoices", default=True)
 
-    sms_template_id = fields.Many2one(comodel_name='sms.template')
+    sms_template_id = fields.Many2one(comodel_name='sms.template', domain="[('model', '=', 'res.partner')]")
     send_sms = fields.Boolean('Send SMS Message')
 
     create_activity = fields.Boolean(string='Schedule Activity')
@@ -34,7 +34,7 @@ class FollowupLine(models.Model):
                                                               "- Salesperson: Sales Person defined on the invoice\n"
                                                               "- Account Manager: Sales Person defined on the customer")
 
-    auto_execute = fields.Boolean(string="Automatic", default=True)
+    auto_execute = fields.Boolean(string="Automatic", default=False)
 
     _sql_constraints = [
         ('days_uniq', 'unique(company_id, delay)', 'Days of the follow-up lines must be different per company'),

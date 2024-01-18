@@ -27,6 +27,37 @@
                 </Resultado>
             </RespuestaDTE>
         </template>
+
+        <template id="receipt_dte">
+            <Recibo version="1.0" xmlns="http://www.sii.cl/SiiDte" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sii.cl/SiiDte Recibos_v10.xsd">
+                <DocumentoRecibo t-att-ID="doc_id">
+                    <TipoDoc t-esc="move.l10n_latam_document_type_id.code"/>
+                    <Folio t-esc="int(move.l10n_latam_document_number)"/>
+                    <FchEmis t-esc="move.invoice_date"/>
+                    <RUTEmisor t-esc="format_vat(move.partner_id.vat)"/>
+                    <RUTRecep t-esc="format_vat(move.company_id.vat)"/>
+                    <t t-set='rate' t-value="abs(move.amount_total_signed / move.amount_total)"/>
+                    <MntTotal t-esc="'{:.0f}'.format(move.currency_id.round(abs(move.amount_total_signed)))"/>
+                    <Recinto t-esc="rec_address"/>
+                    <RutFirma t-esc="signer_rut"/>
+                    <Declaracion t-esc="dte_glosa_status"/>
+                    <TmstFirmaRecibo t-esc="time_stamp"/>
+                </DocumentoRecibo>
+            </Recibo>
+        </template>
+
+        <template id="envio_receipt_dte">
+            <EnvioRecibos version="1.0" xmlns='http://www.sii.cl/SiiDte' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://www.sii.cl/SiiDte EnvioRecibos_v10.xsd'>
+                <SetRecibos ID="Odoo_receipt">
+                    <Caratula version="1.0">
+                        <RutResponde t-esc="format_vat(move.company_id.vat)"/>
+                        <RutRecibe t-esc="format_vat(move.partner_id.vat)"/>
+                        <TmstFirmaEnv t-esc="time_stamp"/>
+                    </Caratula>
+                    <t t-esc="receipt_section"/>
+                </SetRecibos>
+            </EnvioRecibos>
+        </template>
     </data>
 </odoo>
 

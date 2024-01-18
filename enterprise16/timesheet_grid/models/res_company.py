@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 class Company(models.Model):
     _inherit = 'res.company'
 
-    prevent_old_timesheets_encoding = fields.Boolean(string="Lock Dates")
+    prevent_old_timesheets_encoding = fields.Boolean(string="Lock Timesheets")
 
     # reminder for employees
     timesheet_mail_employee_allow = fields.Boolean("Employee Reminder", default=True)
@@ -45,9 +45,9 @@ class Company(models.Model):
         return result
 
     def _timesheet_postprocess(self, values):
-        if any(field_name in values for field_name in ['timesheet_mail_employee_delay', 'timesheet_mail_employee_interval']):
+        if any(field_name in values for field_name in ['timesheet_mail_employee_delay', 'timesheet_mail_employee_interval']) or values.get('timesheet_mail_employee_allow'):
             self._calculate_timesheet_mail_employee_nextdate()
-        if any(field_name in values for field_name in ['timesheet_mail_manager_delay', 'timesheet_mail_manager_interval']):
+        if any(field_name in values for field_name in ['timesheet_mail_manager_delay', 'timesheet_mail_manager_interval']) or values.get('timesheet_mail_manager_allow'):
             self._calculate_timesheet_mail_manager_nextdate()
 
     def _calculate_next_week_date(self, delay):

@@ -16,8 +16,8 @@ OptionalProductsModal.include({
         this._super.apply(this, arguments);
     },
 
-    _getRentingDates() {
-        const dates = this._super.apply(this, arguments);
+    _getSerializedRentingDates() {
+        const dates = this._super.apply(this, arguments) || {};
         if (this.context && !(dates.end_date || dates.start_date)) {
             dates.start_date = this.context.start_date;
             dates.end_date = this.context.end_date;

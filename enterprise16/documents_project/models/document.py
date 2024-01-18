@@ -78,9 +78,10 @@ class Document(models.Model):
         res_id = self._context.get('active_id')
         fields = ['display_name', 'description', 'parent_folder_id', 'has_write_access']
 
-        project = self.env['project.project'].browse(res_id) \
-            if res_model == 'project.project' \
-            else self.env['project.task'].browse(res_id).project_id
+        active_record = self.env[res_model].browse(res_id)
+        if not active_record.exists():
+            return super().search_panel_select_range(field_name, **kwargs)
+        project = active_record if res_model == 'project.project' else active_record.sudo().project_id
 
         document_read_group = self.env['documents.document']._read_group(kwargs.get('search_domain', []), ['folder_ids:array_agg(folder_id)'], [])
         folder_ids = (document_read_group[0]['folder_ids'] if document_read_group else []) or []

@@ -12,11 +12,11 @@
             <button name="action_paid" position="after">
                 <button name="action_open_sepa_wizard" type="object" string="Create Payment Report" attrs="{'invisible': ['|', ('state', 'not in', ['close', 'paid']), ('sepa_export', '=', False)]}"/>
             </button>
-            <field name="date_end" position="after">
-                <field name="sepa_export_date" attrs="{'invisible': [('sepa_export','=', False)]}" readonly="1"/>
+            <xpath expr="//div[hasclass('o_row')]" position="after">
                 <field name="sepa_export_filename" invisible="1"/>
-                <field name="sepa_export" filename="sepa_export_filename" attrs="{'invisible': [('sepa_export', '=', False)]}"/>
-            </field>
+                <field name="sepa_export" filename="sepa_export_filename" attrs="{'invisible': [('sepa_export', '=', False)]}" readonly="1"/>
+                <field name="sepa_export_date" attrs="{'invisible': [('sepa_export','=', False)]}" readonly="1"/>
+            </xpath>
         </field>
     </record>
 
@@ -33,9 +33,9 @@
             <notebook position="inside">
                 <page string="Exported File" name="exported_file" attrs="{'invisible': [('sepa_export','=', False)]}">
                     <group>
-                        <field name="sepa_export_date"/>
                         <field name="sepa_export_filename" invisible="1"/>
-                        <field name="sepa_export" filename="sepa_export_filename"/>
+                        <field name="sepa_export" filename="sepa_export_filename" readonly="1"/>
+                        <field name="sepa_export_date" readonly="1"/>
                     </group>
                 </page>
             </notebook>

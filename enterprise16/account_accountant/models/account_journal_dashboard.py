@@ -55,9 +55,11 @@ class account_journal(models.Model):
         if self.type in ('bank', 'cash') and not self._context.get('action_name'):
             self.ensure_one()
             return self.env['account.bank.statement.line']._action_open_bank_reconciliation_widget(
-                extra_domain=[('journal_id', '=', self.id), ('line_ids.account_id', '=', self.default_account_id.id)],
-                default_context={'default_journal_id': self.id},
-                kanban_first=False,
+                extra_domain=[('line_ids.account_id', '=', self.default_account_id.id)],
+                default_context={
+                    'default_journal_id': self.id,
+                    'search_default_journal_id': self.id,
+                },
             )
         return super().open_action()
 

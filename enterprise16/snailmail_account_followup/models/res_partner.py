@@ -20,5 +20,5 @@ class ResPartner(models.Model):
         # OVERRIDE account_followup/models/res_partner.py
         super()._send_followup(options)
         followup_line = options.get('followup_line')
-        if options.get('snailmail', followup_line.send_email):
+        if options.get('snailmail', followup_line.send_letter):
             self.send_followup_snailmail(options)

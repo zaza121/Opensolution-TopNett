@@ -23,7 +23,7 @@
                 <field name="show_rec_invoice_button" invisible="1"/>
                 <button name="action_invoice_subscription" string="Create Invoice"
                         id="create_recurring_invoice_primary" type="object" class="btn-primary" data-hotkey="q"
-                        attrs="{'invisible': ['|', ('show_rec_invoice_button', '=', False), ('invoice_status', '=', 'no')]}"
+                        attrs="{'invisible': ['|', '|', ('state', '=', 'done'), ('show_rec_invoice_button', '=', False), ('invoice_status', 'in', ['no', 'invoiced'])]}"
                 />
                 <button string="Upsell" name="prepare_upsell_order" type="object"
                         attrs="{'invisible': [
@@ -43,7 +43,7 @@
                         ]}"/>
                 <button name="action_invoice_subscription" string="Create Invoice"
                         id="create_recurring_invoice" type="object" data-hotkey="q"
-                        attrs="{'invisible': ['|', ('show_rec_invoice_button', '=', False),  ('invoice_status', '=', 'to invoice')]}"
+                        attrs="{'invisible': ['|', '|', ('state', '=', 'done'), ('show_rec_invoice_button', '=', False),  ('invoice_status', '=', 'to invoice')]}"
                 />
             </button>
             <button name="action_cancel" position="attributes">
@@ -51,8 +51,11 @@
                     {'invisible': [ '|',
                                     ('id', '=', False),
                                     '|',
-                                    '&amp;', ('is_subscription','=',True), ('state', 'not in', ['draft', 'sent']),
-                                    '&amp;', ('is_subscription','=',False), ('state', 'not in', ['draft', 'sent', 'sale'])]
+                                    '&amp;', ('is_subscription','=',False), ('state', 'not in', ['draft', 'sent', 'sale']),
+                                    '&amp;', ('is_subscription','=',True), 
+                                        '|',
+                                        '&amp;', ('stage_category', 'not in', ['closed']), ('state', 'not in', ['draft', 'sent']),
+                                        ('state', 'in', ['cancel'])]                            
                     }
                 </attribute>
             </button>
@@ -96,7 +99,7 @@
                          ('to_renew', '=', True),
                          ('is_upselling', '=', True),
                          ('renew_state', '!=', False),
-                         ('subscription_management', '!=', False)
+                         ('subscription_management', '!=', 'create')
                      ]}"
                 >Recurring
                 </div>
@@ -164,14 +167,17 @@
             <xpath expr="//field[@name='order_line']/tree/field[@name='price_total']" position='attributes'>
                 <attribute name="decoration-info">temporal_type == 'subscription'</attribute>
             </xpath>
+            <xpath expr="//field[@name='analytic_account_id']" position='attributes'>
+                <attribute name="attrs">{'readonly': [('invoice_count','!=',0),('state','=','sale'),('is_subscription','=',False)]}</attribute>
+            </xpath>
             <xpath expr="//notebook/page[@name='optional_products']/field/tree/field[@name='name']" position='after'>
             </xpath>
             <group name="sales_person" position='inside'>
                 <field name="start_date" groups="!sales_team.group_sale_manager"
-                       attrs="{'readonly': ['|', ('subscription_management', 'in', ['upsell', 'renew']),
+                       attrs="{'readonly': ['|', ('subscription_management', '=', 'renew'),
                                                  ('stage_category', 'in', ['progress', 'paused'])]}"/>
                 <field name="start_date" groups="sales_team.group_sale_manager"
-                       attrs="{'readonly': [('subscription_management', 'in', ['upsell', 'renew'])]}"/>
+                       attrs="{'readonly': [('subscription_management', '=', 'renew')]}"/>
                 <field name="to_renew" attrs="{'invisible': [('is_subscription', '=', False)]}"/>
             </group>
             <group name="sale_info" position='inside'>

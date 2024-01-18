@@ -375,7 +375,7 @@ class FecImportWizard(models.TransientModel):
         if credit < 0 or debit < 0:
             debit, credit = -credit, -debit
 
-        balance = currency.round(credit - debit)
+        balance = currency.round(debit - credit)
 
         return credit, debit, balance
 
@@ -466,6 +466,7 @@ class FecImportWizard(models.TransientModel):
                 "ref": piece_ref,
                 "account_id": account.id,
                 "fec_matching_number": matching or False,
+                "tax_ids": [],  # Avoid default taxes on the accounts to be set
             }
 
             # Save the matching number for eventual balance issues
@@ -481,12 +482,11 @@ class FecImportWizard(models.TransientModel):
                 line_data["partner_id"] = partner.id if partner else False
 
             # Currency
-            if currency_name in cache["res.currency"]:
+            if currency_name in cache["res.currency"] and amount_currency:
                 currency = cache["res.currency"][currency_name]
                 line_data.update({
                     "currency_id": currency.id,
                     "amount_currency": amount_currency,
-                    "amount_residual_currency": amount_currency,
                 })
             else:
                 currency = self.company_id.currency_id
@@ -496,6 +496,11 @@ class FecImportWizard(models.TransientModel):
             line_data["credit"] = credit
             line_data["debit"] = debit
             balance_data["balance"] = currency.round(balance_data["balance"] + balance)
+
+            # Montantdevise can be positive while the line is credited:
+            # => amount_currency and balance (debit - credit) should always have the same sign
+            if currency_name in cache["res.currency"] and amount_currency and line_data['amount_currency'] * balance < 0:
+                line_data["amount_currency"] *= -1
 
             # Append the move_line data to the move
             data["line_ids"].append(fields.Command.create(line_data))
@@ -672,8 +677,13 @@ class FecImportWizard(models.TransientModel):
         self.env.cr.execute(sql, (tuple(moves.ids), ))
         for record in self.env.cr.fetchall():
             matched_move_line_ids, account_id = record
-            self.env["account.account"].browse([account_id]).reconcile = True
-            self.env["account.move.line"].browse(matched_move_line_ids).with_context(no_exchange_difference=True).reconcile()
+            self.env["account.account"].browse(account_id).reconcile = True
+            lines = self.env["account.move.line"].browse(matched_move_line_ids)
+
+            # Since the accounts are now 'reconcile', we need to force the update of the residual amounts.
+            self.env.add_to_compute(lines._fields['amount_residual'], lines)
+
+            lines.with_context(no_exchange_difference=True, no_cash_basis=True).reconcile()
 
     def _post_process(self, journals, moves):
         """ Post-process the imported entities.

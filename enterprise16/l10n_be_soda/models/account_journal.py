@@ -1,6 +1,8 @@
 # -*- encoding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import re
+
 from odoo import models, _
 from odoo.exceptions import UserError
 from lxml import etree
@@ -34,14 +36,16 @@ class AccountJournal(models.Model):
         for attachment in attachments:
             parsed_attachment = etree.parse(io.BytesIO(attachment.raw))
             # The document VAT number must match the journal's company's VAT number
-            journal_company_vat = self.company_id.vat or self.browse(self.env.context.get('default_journal_id')).company_id.vat
-            if parsed_attachment.find('.//EntNum').text != journal_company_vat:
+            journal_company_vat = self.company_id.company_registry or self.company_id.vat and re.search(r'\d+', self.company_id.vat).group()
+            parsed_ent_num = parsed_attachment.find('.//EntNum')
+            ent_num = parsed_ent_num.text and re.search(r'\d+', parsed_ent_num.text).group()
+            if ent_num != journal_company_vat:
                 if len(attachments) == 1:
-                    message = _('The SODA Entry could not be created: \n'
-                                'The company VAT number found in the document doesn\'t match the one from the company\'s journal.')
+                    message = _('The Soda Entry could not be created: \n'
+                                'The imported document doesn\'t seem to correspond to this company\'s VAT number nor company id')
                 else:
                     message = _('The SODA Entry could not be created: \n'
-                                'The company VAT number found in at least one document doesn\'t match the one from the company\'s journal.')
+                                'The company VAT number found in at least one document doesn\'t seem to correspond to this company\'s VAT number nor company id')
                 raise UserError(message)
             # account.move.ref is SocialNumber+SequenceNumber : check that this move has not already been imported
             ref = "%s-%s" % (parsed_attachment.find('.//Source').text, parsed_attachment.find('.//SeqNumber').text)
@@ -58,19 +62,19 @@ class AccountJournal(models.Model):
                     lines_content[index][info] = float(elem.text)
             # Retrieve the account, create it if need be
             for index, account_code in enumerate(parsed_attachment.findall('.//Account')):
-                journal_company_id = self.browse(self.env.context.get('default_journal_id')).company_id.id
+                journal_company_id = self.company_id.id
                 account = self.env['account.account'].search([('code', '=', account_code.text), ('company_id', '=', journal_company_id)], limit=1)
                 if not account:
                     account = self.env['account.account'].create({
                         'code': account_code.text,
                         'name': '',
-                        'company_id': self.company_id.id or self.browse(self.env.context.get('default_journal_id')).company_id.id,
+                        'company_id': self.company_id.id,
                     })
                 lines_content[index]['Account'] = account
             # create the move
             move_vals = {
                 'move_type': 'entry',
-                'journal_id': self.id or self.browse(self.env.context.get('default_journal_id')).id,
+                'journal_id': self.id,
                 'ref': ref,
                 'line_ids': [(0, 0, {
                     'name': line['Label'],

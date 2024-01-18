@@ -38,7 +38,7 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
             'name': 'My timesheet 1',
             'project_id': self.project_customer.id,
             'task_id': self.task2.id,
-            'date': today,
+            'date': today - timedelta(days=1),
             'unit_amount': 2,
             'employee_id': self.empl_employee.id
         })
@@ -55,7 +55,7 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
             'name': 'My timesheet 4',
             'project_id': self.project_customer.id,
             'task_id': self.task1.id,
-            'date': today,
+            'date': today - timedelta(days=1),
             'unit_amount': 2,
             'employee_id': self.empl_employee3.id
         })
@@ -64,7 +64,7 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
             'name': 'My old timesheet',
             'project_id': self.project_customer.id,
             'task_id': self.task1.id,
-            'date': fields.Datetime.today() - timedelta(days=10),
+            'date': today - timedelta(days=10),
             'unit_amount': 2,
             'employee_id': self.empl_employee3.id,
         })
@@ -73,7 +73,7 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
             'name': 'My old timesheet 2',
             'project_id': self.project_customer.id,
             'task_id': self.task1.id,
-            'date': fields.Datetime.today() - timedelta(days=10),
+            'date': today - timedelta(days=10),
             'unit_amount': 2,
             'employee_id': self.empl_employee2.id,
         })
@@ -92,7 +92,7 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
             'name': 'Timesheet Approver2',
             'project_id': self.project_customer.id,
             'task_id': self.task1.id,
-            'date': today,
+            'date': today - timedelta(days=1),
             'unit_amount': 1,
             'employee_id': self.empl_approver2.id
         })
@@ -318,11 +318,12 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
         self.assertFalse(self.empl_employee3.last_validated_timesheet_date)
 
         # User can create timesheet with any date if timesheet.employee_id.last_validated_timesheet_date = False
+        yesterday = fields.Date.today() - timedelta(days=1)
         timesheet1 = self.env['account.analytic.line'].with_user(self.user_employee3).create({
             'name': 'timesheet 1',
             'project_id': self.project_customer.id,
             'task_id': self.task1.id,
-            'date': fields.Datetime.today(),
+            'date': yesterday,
             'unit_amount': 2,
             'employee_id': self.empl_employee3.id,
         })
@@ -362,10 +363,74 @@ class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
             })
 
         timesheet.with_user(self.user_approver).action_validate_timesheet()
-        self.assertEqual(self.empl_employee3.last_validated_timesheet_date, max([self.timesheet3.date, self.timesheet2.date, timesheet.date]))
+        self.assertEqual(self.empl_employee3.last_validated_timesheet_date, yesterday)
 
         (timesheet + self.timesheet2 + self.timesheet4).with_user(self.user_approver).action_invalidate_timesheet()
         self.assertEqual(self.empl_employee3.last_validated_timesheet_date, self.timesheet3.date)
 
         self.timesheet3.with_user(self.user_approver).action_invalidate_timesheet()
         self.assertFalse(self.empl_employee3.last_validated_timesheet_date)
+
+    def test_old_timesheet(self):
+        """ Check that an employee cannot start a timesheet with date <= last_validated_timesheet_date
+            and that validating a timesheet interrupts the potential running older timesheet
+        """
+        self.empl_employee3.company_id.prevent_old_timesheets_encoding = True
+        today = fields.Date.today()
+        timesheet1, timesheet2, timesheet3, timesheet4 = self.env['account.analytic.line'].with_user(self.user_employee3).create([
+            {
+                'name': 'Timesheet1',
+                'project_id': self.project_customer.id,
+                'task_id': self.task1.id,
+                'date': today - timedelta(days=3),
+                'unit_amount': 2,
+                'employee_id': self.empl_employee3.id,
+            }, {
+                'name': 'Timesheet2',
+                'project_id': self.project_customer.id,
+                'task_id': self.task1.id,
+                'date': today - timedelta(days=2),
+                'unit_amount': 2,
+                'employee_id': self.empl_employee3.id,
+            }, {
+                'name': 'Timesheet3',
+                'project_id': self.project_customer.id,
+                'task_id': self.task1.id,
+                'date': today - timedelta(days=1),
+                'unit_amount': 2,
+                'employee_id': self.empl_employee3.id,
+            }, {
+                'name': 'Timesheet4',
+                'project_id': self.project_customer.id,
+                'task_id': self.task1.id,
+                'date': today,
+                'unit_amount': 2,
+                'employee_id': self.empl_employee3.id,
+            },
+        ])
+
+        # The validation of a timesheet interrupts the timer of the running older timesheet
+        timesheet1.with_user(self.user_employee3).action_timer_start()
+        self.assertTrue(timesheet1.is_timer_running)
+        timesheet2.with_user(self.user_approver).action_validate_timesheet()
+        self.assertFalse(timesheet1.is_timer_running)
+
+        # Starting the timer of a timesheet older than the last validated timesheet doesn't start
+        # the timesheet timer but creates a new timesheet for the same task at the current date
+        timesheet1.with_user(self.user_employee3).action_timer_start()
+        self.assertFalse(timesheet1.is_timer_running)
+        timesheet5 = self.env['account.analytic.line'].search([('employee_id', '=', self.empl_employee3.id), ('is_timer_running', '=', True)])
+        self.assertEqual(len(timesheet5), 1)
+        self.assertEqual(timesheet5.project_id, self.project_customer)
+        self.assertEqual(timesheet5.task_id, self.task1)
+        self.assertEqual(timesheet5.date, today)
+
+        # The employee can interrupt the new timesheet timer
+        timesheet5.with_user(self.user_employee3).action_timer_stop()
+        self.assertFalse(timesheet5.is_timer_running)
+
+        # The validation of a timesheet doesn't interrupt the timer of a more recent timesheet
+        timesheet4.with_user(self.user_employee3).action_timer_start()
+        self.assertTrue(timesheet4.is_timer_running)
+        timesheet3.with_user(self.user_approver).action_validate_timesheet()
+        self.assertTrue(timesheet4.is_timer_running)

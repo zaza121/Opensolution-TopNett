@@ -24,7 +24,7 @@ class KnowledgePerformanceHttpCase(KnowledgeCommonWData, HttpCase):
     @warmup
     def test_article_tree_panel(self):
         self.authenticate('employee', 'employee')
-        with self.assertQueryCount(employee=15):
+        with self.assertQueryCount(employee=16):
             data = self._prepare_json_rpc_data(
                 active_article_id=self.wkspace_grand_children[0].id,
                 unfolded_articles_ids=[self.article_shared.id],
@@ -46,7 +46,7 @@ class KnowledgePerformanceHttpCase(KnowledgeCommonWData, HttpCase):
             'article_id': article_id
         } for article_id in (self.workspace_children | self.wkspace_grand_children).ids])
 
-        with self.assertQueryCount(employee=16):
+        with self.assertQueryCount(employee=17):
             data = self._prepare_json_rpc_data(
                 active_article_id=self.wkspace_grand_children[0].id,
                 unfolded_articles_ids=[self.article_shared.id],

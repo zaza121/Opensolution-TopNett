@@ -167,7 +167,7 @@ class WebsiteAppointment(AppointmentController):
         """
             Find the country from the geoip lib or fallback on the user or the visitor
         """
-        country = super()._get_customer_country()
+        country = AppointmentController._get_customer_country()
         if not country:
             visitor = request.env['website.visitor']._get_visitor_from_request()
             country = visitor.country_id

@@ -32,12 +32,16 @@ class ProjectTask(models.Model):
         is_portal_user = self.user_has_groups('base.group_portal')
         timesheets_per_task = None
         if is_portal_user:
-            subtasks_per_task = {task.id: task.sudo().with_context(active_test=False)._get_all_subtasks() for task in self}
-            all_task_ids = [t.id for subtasks in subtasks_per_task.values() for t in subtasks] + self.ids
+            subtask_ids_per_task_id = self.sudo().with_context(active_test=False)._get_subtask_ids_per_task_id()
+            # Say `self.ids` is [1, 2, 3] and `_get_subtask_ids_per_task_id()` returns {1: [2, 4], 2: [4], 3: []}.
+            # We want to merge all subtask ids and add `self.ids` to it.
+            # Unpacking `subtask_ids_per_task_id` values in `set.union` seems to be the appropriate method:
+            # >>> set.union({}, [2, 4], [4], [], [1, 2, 3]) = {2, 4, 1, 3}
+            all_task_ids = set.union(set(), *subtask_ids_per_task_id.values(), self.ids)
             timesheet_read_group = self.env['account.analytic.line']._read_group(
                 [
                     ('project_id', '!=', False),
-                    ('task_id', 'in', all_task_ids),
+                    ('task_id', 'in', list(all_task_ids)),
                     ('validated', 'in', [True, self.env['ir.config_parameter'].sudo().get_param('sale.invoiced_timesheet', DEFAULT_INVOICED_TIMESHEET) == 'approved'])
                 ],
                 ['task_id', 'unit_amount'],
@@ -54,7 +58,7 @@ class ProjectTask(models.Model):
                 progress = task.progress
             elif timesheets_per_task:
                 effective_hours = timesheets_per_task.get(task.id, 0.0)
-                subtask_effective_hours = sum(timesheets_per_task.get(subtask.id, 0.0) for subtask in subtasks_per_task.get(task.id, self.env['project.task']))
+                subtask_effective_hours = sum(timesheets_per_task.get(subtask_id, 0.0) for subtask_id in subtask_ids_per_task_id.get(task.id, []))
                 total_hours_spent = effective_hours + subtask_effective_hours
                 remaining_hours = task.planned_hours - total_hours_spent
                 if task.planned_hours > 0:

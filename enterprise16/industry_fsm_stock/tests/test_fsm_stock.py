@@ -836,3 +836,103 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
         # check that there is a change only for the sale order which concerns the field service
         self.assertEqual(sale_order_field_service.user_id, self.project_user, 'The salesperson must have been updated')
         self.assertEqual(sale_order_other_service.user_id, self.env.user, 'The salesperson must not have been updated')
+
+    def test_fsm_task_and_tracked_products_reservation(self):
+        """
+        2-steps delivery
+        3 tracked products (2 SN, 1 Lot)
+        Ensure that the reserved lots are the ones selected in the 'fsm.stock.tracking'
+        """
+        self.warehouse.delivery_steps = 'pick_ship'
+        self.task.write({'partner_id': self.partner_1.id})
+        self.task._fsm_ensure_sale_order()
+
+        product_01_sn, product_02_sn, product_03_lot = self.env['product.product'].create([{
+            'name': 'Product SN 01',
+            'type': 'product',
+            'tracking': 'serial',
+        }, {
+            'name': 'Product SN 02',
+            'type': 'product',
+            'tracking': 'serial',
+        }, {
+            'name': 'Product LOT',
+            'type': 'product',
+            'tracking': 'lot',
+        }]).with_context({'fsm_task_id': self.task.id})
+
+        p01sn01, p01sn02, p01sn03, p02sn01, p03lot01, p03lot02 = self.env['stock.lot'].create([{
+            'name': str(i),
+            'product_id': p.id,
+            'company_id': self.env.company.id,
+        } for i, p in enumerate([product_01_sn, product_01_sn, product_01_sn, product_02_sn, product_03_lot, product_03_lot])])
+
+        self.env['stock.quant']._update_available_quantity(product_01_sn, self.warehouse.lot_stock_id, 1, lot_id=p01sn01)
+        self.env['stock.quant']._update_available_quantity(product_01_sn, self.warehouse.lot_stock_id, 1, lot_id=p01sn02)
+        self.env['stock.quant']._update_available_quantity(product_01_sn, self.warehouse.lot_stock_id, 1, lot_id=p01sn03)
+        self.env['stock.quant']._update_available_quantity(product_02_sn, self.warehouse.lot_stock_id, 1, lot_id=p02sn01)
+        self.env['stock.quant']._update_available_quantity(product_03_lot, self.warehouse.lot_stock_id, 10, lot_id=p03lot01)
+        self.env['stock.quant']._update_available_quantity(product_03_lot, self.warehouse.lot_stock_id, 10, lot_id=p03lot02)
+
+        # Add 2 x P01 (1 x SN01 and 1 x SN03)
+        action = product_01_sn.action_assign_serial()
+        wizard = self.env['fsm.stock.tracking'].browse(action['res_id'])
+        wizard.tracking_line_ids = [
+            (0, 0, {'lot_id': p01sn01.id, 'quantity': 1.0}),
+            (0, 0, {'lot_id': p01sn03.id, 'quantity': 1.0}),
+        ]
+        wizard.generate_lot()
+
+        # Add 1 x P02 (1 x SN01)
+        action = product_02_sn.action_assign_serial()
+        wizard = self.env['fsm.stock.tracking'].browse(action['res_id'])
+        wizard.tracking_line_ids = [
+            (0, 0, {'lot_id': p02sn01.id, 'quantity': 1.0}),
+        ]
+        wizard.generate_lot()
+
+        # Add 7 x P01 (3 x L01 and 4 x L02)
+        action = product_03_lot.action_assign_serial()
+        wizard = self.env['fsm.stock.tracking'].browse(action['res_id'])
+        wizard.tracking_line_ids = [
+            (0, 0, {'lot_id': p03lot01.id, 'quantity': 3.0}),
+            (0, 0, {'lot_id': p03lot02.id, 'quantity': 4.0}),
+        ]
+        wizard.generate_lot()
+
+        so = self.task.sale_order_id
+        so.action_confirm()
+        picking, delivery = so.picking_ids
+
+        self.assertRecordValues(picking.move_ids.move_line_ids, [
+            {'product_id': product_01_sn.id, 'lot_id': p01sn01.id, 'reserved_uom_qty': 1.0},
+            {'product_id': product_01_sn.id, 'lot_id': p01sn03.id, 'reserved_uom_qty': 1.0},
+            {'product_id': product_02_sn.id, 'lot_id': p02sn01.id, 'reserved_uom_qty': 1.0},
+            {'product_id': product_03_lot.id, 'lot_id': p03lot01.id, 'reserved_uom_qty': 3.0},
+            {'product_id': product_03_lot.id, 'lot_id': p03lot02.id, 'reserved_uom_qty': 4.0},
+        ])
+
+        action = picking.button_validate()
+        wizard = Form(self.env[action['res_model']].with_context(action['context'])).save()
+        wizard.process()
+
+        self.assertRecordValues(delivery.move_ids.move_line_ids, [
+            {'product_id': product_01_sn.id, 'lot_id': p01sn01.id, 'reserved_uom_qty': 1.0},
+            {'product_id': product_01_sn.id, 'lot_id': p01sn03.id, 'reserved_uom_qty': 1.0},
+            {'product_id': product_02_sn.id, 'lot_id': p02sn01.id, 'reserved_uom_qty': 1.0},
+            {'product_id': product_03_lot.id, 'lot_id': p03lot01.id, 'reserved_uom_qty': 3.0},
+            {'product_id': product_03_lot.id, 'lot_id': p03lot02.id, 'reserved_uom_qty': 4.0},
+        ])
+
+    def test_mark_as_done_with_report_enable_and_multi_step(self):
+        """ This test ensure that when the 'report' setting is enabled for the inventory app, it does not prevent the correct use case of 'mark as done' for
+        an fsm task """
+
+        self.project_user.groups_id += self.env.ref('stock.group_reception_report')
+        self.warehouse.delivery_steps = 'pick_pack_ship'
+        self.task.partner_id = self.partner_1.id
+        self.consu_product_ordered.with_user(self.project_user).with_context({'fsm_task_id': self.task.id}).fsm_add_quantity()
+        self.task.with_user(self.project_user).action_fsm_validate()
+
+        self.assertTrue(self.project_user.has_group('stock.group_reception_report'))
+        self.assertTrue(all(self.task.sale_order_id.picking_ids.mapped(lambda p: p.state == 'done')), "Pickings should be set as done")

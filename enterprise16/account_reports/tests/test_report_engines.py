@@ -142,14 +142,19 @@ class TestReportEngines(TestAccountReportsCommon):
     def _prepare_test_expression_custom(self, formula, **kwargs):
         return self._prepare_test_expression(engine='custom', formula=formula, **kwargs)
 
-    def _prepare_test_expression_aggregation(self, formula, subformula=None, column='balance'):
+    def _prepare_test_expression_aggregation(self, formula, subformula=None, column='balance', date_scope=None):
+        expression_values = {
+            'label': column,
+            'engine': 'aggregation',
+            'formula': formula,
+            'subformula': subformula,
+        }
+
+        if date_scope:
+            expression_values['date_scope'] = date_scope
+
         return {
-            'expression_values': {
-                'label': column,
-                'engine': 'aggregation',
-                'formula': formula,
-                'subformula': subformula,
-            },
+            'expression_values': expression_values,
         }
 
     def _prepare_test_report_line(self, *expression_generators, **kwargs):
@@ -188,7 +193,6 @@ class TestReportEngines(TestAccountReportsCommon):
             'line_ids': [
                 Command.create({
                     'name': f"test_line_{i}",
-                    'code': f"test_line_{i}",
                     **test_report_line_values['report_line_values'],
                     'sequence': i,
                 })
@@ -366,6 +370,27 @@ class TestReportEngines(TestAccountReportsCommon):
                 self.assertEqual(move.line_ids.filtered_domain(action_dict['domain']), expected_amls)
 
     def test_engine_account_codes(self):
+        # Create test account tags
+        account_tags = self.env['account.account.tag']._load_records([
+            {
+                'xml_id': 'account_reports.account_codes_engine_test_tag1',
+                'noupdate': True,
+                'values': {
+                    'name': "account_codes test tag 1",
+                    'applicability': 'accounts',
+                },
+            },
+
+            {
+                'xml_id': 'account_reports.account_codes_engine_test_tag2',
+                'noupdate': True,
+                'values': {
+                    'name': "account_codes test tag 2",
+                    'applicability': 'accounts',
+                },
+            },
+        ])
+
         # Create the report.
         test_line_1 = self._prepare_test_report_line(
             self._prepare_test_expression_account_codes('1'),
@@ -415,10 +440,26 @@ class TestReportEngines(TestAccountReportsCommon):
             self._prepare_test_expression_account_codes(r'345D\()C'),
             groupby='account_id',
         )
+        test_line_13 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes(rf'tag(account_reports.account_codes_engine_test_tag1) + tag({account_tags[1].id})'),
+            groupby='account_id',
+        )
+        test_line_14 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes(r'tag(account_reports.account_codes_engine_test_tag1)D'),
+            groupby='account_id',
+        )
+        test_line_15 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes(r'tag(account_reports.account_codes_engine_test_tag1)C'),
+            groupby='account_id',
+        )
+        test_line_16 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes(rf'tag(account_reports.account_codes_engine_test_tag1)\(101)D + 101003 + tag({account_tags[1].id})\(101)C'),
+            groupby='account_id',
+        )
 
         report = self._create_report([
             test_line_1, test_line_2, test_line_3, test_line_4, test_line_5, test_line_6, test_line_7, test_line_8,
-            test_line_9, test_line_10, test_line_11, test_line_12,
+            test_line_9, test_line_10, test_line_11, test_line_12, test_line_13, test_line_14, test_line_15, test_line_16
         ])
 
         # Create the journal entries.
@@ -430,6 +471,10 @@ class TestReportEngines(TestAccountReportsCommon):
             self._prepare_test_account_move_line(10000.0, account_code='10.20.0'),
             self._prepare_test_account_move_line(10.0, account_code='345D'),
         ])
+
+        # Setup tags on accounts
+        self.env['account.account'].search([('code', 'in', ('100001', '101001'))]).tag_ids = account_tags[0]
+        self.env['account.account'].search([('code', 'in', ('10.20.0', '101002'))]).tag_ids = account_tags[1]
 
         # Check the values.
         options = self._generate_options(report, '2020-01-01', '2020-01-01', default_options={'unfold_all': True})
@@ -476,6 +521,18 @@ class TestReportEngines(TestAccountReportsCommon):
                 ('test_line_11',         10.0),
                 ('345D 345D',            10.0),
                 ('test_line_12',           ''),
+                ('test_line_13',      12700.0),
+                ('10.20.0 10.20.0',   10000.0),
+                ('100001 100001',      1000.0),
+                ('101001 101001',      2000.0),
+                ('101002 101002',      -300.0),
+                ('test_line_14',       3000.0),
+                ('100001 100001',      1000.0),
+                ('101001 101001',      2000.0),
+                ('test_line_15',           ''),
+                ('test_line_16',        400.0),
+                ('100001 100001',      1000.0),
+                ('101003 101003',      -600.0),
             ],
         )
 
@@ -674,7 +731,9 @@ class TestReportEngines(TestAccountReportsCommon):
             self._prepare_test_expression_tax_tags('11', label='tax_tags'),
             self._prepare_test_expression_domain([('account_id.code', '=', '101002')], 'sum', label='domain'),
             self._prepare_test_expression_external('sum', [self._prepare_test_external_values(100.0, '2020-01-01')], label='external'),
+            self._prepare_test_expression_aggregation('test1.tax_tags + test1.domain', column='aggregation'),
             self._prepare_test_expression_aggregation('test1.tax_tags / 0'),
+            self._prepare_test_expression_external('sum', [self._prepare_test_external_values(100.47, '2020-01-01')], label='external_decimal'),
             name='test1', code='test1',
         )
 
@@ -743,10 +802,91 @@ class TestReportEngines(TestAccountReportsCommon):
             name='test7', code='test7',
         )
 
+        # Test exponential notation
+        test9 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation(
+                '(test1.tax_tags + (2 * test1.domain) + 100.0 + 1.752e-17) / (9999.account_codes)'
+            ),
+            name='test9', code='test9',
+        )
+
+        # Test 'round' subformula
+        test10_1 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external_decimal', subformula='round(0)'),
+            name='test10_1', code='test10_1',
+        )
+        test10_2 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external_decimal', subformula='round(1)'),
+            name='test10_2', code='test10_2',
+        )
+        test10_3 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external_decimal', subformula='round(3)'),
+            name='test10_3', code='test10_3',
+        )
+
+        # Test if_other_expr_above / if_other_expr_below
+        test11_1 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external', subformula='if_other_expr_above(test1.tax_tags, USD(3000.0))'),
+            name='test11_1', code='test11_1',
+        )
+        test11_2 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external', subformula='if_other_expr_below(test1.tax_tags, USD(3000.0))'),
+            name='test11_2', code='test11_2',
+        )
+        test11_3 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external', subformula='if_other_expr_above(test1.tax_tags, USD(1000.0))'),
+            name='test11_3', code='test11_3',
+        )
+        test11_4 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external', subformula='if_other_expr_below(test1.tax_tags, USD(1000.0))'),
+            name='test11_4', code='test11_4',
+        )
+        # Test with an aggregation in the condition
+        test11_5 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external', subformula='if_other_expr_above(test1.aggregation, USD(1000.0))'),
+            name='test11_5', code='test11_5',
+        )
+        test11_6 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.external', subformula='if_other_expr_below(test1.aggregation, USD(1000.0))'),
+            name='test11_6', code='test11_6',
+        )
+
+        # Test sum_children formula (parent_id relationship is populated below)
+        test_12_1 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('sum_children'),
+            name='test12_1', code='test12_1',
+        )
+        test_12_2 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.tax_tags'),
+            name='test12_2', code='test12_2',
+        )
+        test_12_3 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('test1.domain'),
+            name='test12_3', code='test12_3',
+        )
+        test_12_4 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('sum_children'),
+            name='test12_4', code='test12_4',
+        )
+        test_12_5 = self._prepare_test_report_line(
+            self._prepare_test_expression_domain([('account_id.code', '=', '101003')], 'sum'),
+            name='test12_5', # No code on purpose to check a different case of sum_children
+        )
+
         report = self._create_report(
-            [test1, test2_1, test2_2, test2_3, test2_4, test3_1, test3_2, test3_3, test4_1, test4_2, test5, test6, test7],
+            [
+                test1, test2_1, test2_2, test2_3, test2_4, test3_1, test3_2, test3_3, test4_1, test4_2,
+                test5, test6, test7, test9, test10_1, test10_2, test10_3, test11_1, test11_2, test11_3, test11_4,
+                test11_5, test11_6, test_12_1, test_12_2, test_12_3, test_12_4, test_12_5,
+            ],
             country_id=self.fake_country.id,
         )
+
+        # Set parent link properly for sum_children test, now that all lines are created:
+        line_12_1 = self.env['account.report.line'].search([('code', '=', 'test12_1')])
+        self.env['account.report.line'].search([('code', 'in', ('test12_2', 'test12_3', 'test12_4'))]).parent_id = line_12_1
+        line_12_4 = self.env['account.report.line'].search([('code', '=', 'test12_4')])
+        self.env['account.report.line'].search([('name', '=', 'test12_5')]).parent_id = line_12_4
 
         # Create the journal entries.
         moves = self._create_test_account_moves([
@@ -777,6 +917,21 @@ class TestReportEngines(TestAccountReportsCommon):
                 ('9999',               3500.0),
                 ('test6',                 1.0),
                 ('test7',            100000.0),
+                ('test9',                 1.0),
+                ('test10_1',            100.0),
+                ('test10_2',            100.5),
+                ('test10_3',            100.47),
+                ('test11_1',               ''),
+                ('test11_2',            100.0),
+                ('test11_3',            100.0),
+                ('test11_4',               ''),
+                ('test11_5',            100.0),
+                ('test11_6',               ''),
+                ('test12_1',           3200.0),
+                ('test12_2',           2000.0),
+                ('test12_3',           -300.0),
+                ('test12_4',           1500.0),
+                ('test12_5',           1500.0),
             ],
         )
 
@@ -784,6 +939,7 @@ class TestReportEngines(TestAccountReportsCommon):
         expected_amls_to_test = [
             ('9999', moves[1].line_ids[0] + moves[1].line_ids[2]),
             ('test7', moves[0].line_ids[0]),
+            ('test12_1', moves[1].line_ids[:3]),
         ]
         for report_line_name, expected_amls in expected_amls_to_test:
             report_line = report.line_ids.filtered(lambda x: x.name == report_line_name)
@@ -791,3 +947,229 @@ class TestReportEngines(TestAccountReportsCommon):
             with self.subTest(report_line=report_line.name):
                 action_dict = report.action_audit_cell(options, self._get_audit_params_from_report_line(options, report_line, report_line_dict))
                 self.assertEqual(moves.line_ids.filtered_domain(action_dict['domain']), expected_amls)
+
+    def test_engine_aggregation_cross_report(self):
+        self._create_test_account_moves([
+            self._prepare_test_account_move_line(1.0, account_code='100000', date='2020-01-01'),
+            self._prepare_test_account_move_line(2.0, account_code='100000', date='2021-01-01'),
+            self._prepare_test_account_move_line(3.0, account_code='200000', date='2020-01-01'),
+            self._prepare_test_account_move_line(4.0, account_code='200000', date='2021-01-01'),
+            self._prepare_test_account_move_line(5.0, account_code='300000', date='2021-01-01'),
+        ])
+
+        # Other report
+        other_report_line_1 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes('1'),
+            name='other_report_line_1', code='other_report_line_1',
+        )
+
+        other_report_line_2 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes('2'),
+            name='other_report_line_2', code='other_report_line_2',
+        )
+
+        other_report_line_3 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('other_report_line_1.balance + other_report_line_2.balance'),
+            name='other_report_line_3', code='other_report_line_3',
+        )
+
+        other_report_line_4 = self._prepare_test_report_line(
+            self._prepare_test_expression_account_codes('3'),
+            name='other_report_line_4', code='other_report_line_4',
+        )
+
+        other_report = self._create_report([other_report_line_1, other_report_line_2, other_report_line_3, other_report_line_4])
+
+        # Main report
+        main_report_line_1 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('other_report_line_2.balance', subformula='cross_report', date_scope='strict_range'),
+            name='main_report_line_1', code='main_report_line_1',
+        )
+
+        main_report_line_2 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('other_report_line_2.balance', subformula='cross_report', date_scope='from_beginning'),
+            name='main_report_line_2', code='main_report_line_2',
+        )
+
+        main_report_line_3 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('other_report_line_3.balance', subformula='cross_report', date_scope='strict_range'),
+            name='main_report_line_3', code='main_report_line_3',
+        )
+
+        main_report_line_4 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation('other_report_line_3.balance', subformula='cross_report', date_scope='from_beginning'),
+            name='main_report_line_4', code='main_report_line_4',
+        )
+
+        main_report_line_5 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation(
+                'main_report_line_1.balance + main_report_line_2.balance + main_report_line_3.balance + main_report_line_4.balance',
+            ),
+            name='main_report_line_5', code='main_report_line_5',
+        )
+
+        main_report_line_6 = self._prepare_test_report_line(
+            self._prepare_test_expression_aggregation(
+                'main_report_line_1.balance + main_report_line_2.balance + main_report_line_3.balance + main_report_line_4.balance',
+            ),
+            name='main_report_line_6', code='main_report_line_6',
+        )
+
+        main_report = self._create_report([main_report_line_1, main_report_line_2, main_report_line_3, main_report_line_4, main_report_line_5, main_report_line_6])
+
+        # First check other_report
+        self.assertLinesValues(
+            # pylint: disable=bad-whitespace
+            other_report._get_lines(self._generate_options(other_report, '2021-01-01', '2021-01-01')),
+            [   0,                                      1],
+            [
+                ('other_report_line_1',               2.0),
+                ('other_report_line_2',               4.0),
+                ('other_report_line_3',               6.0),
+                ('other_report_line_4',               5.0),
+            ],
+        )
+
+        # Check main_report
+        self.assertLinesValues(
+            # pylint: disable=bad-whitespace
+            main_report._get_lines(self._generate_options(main_report, '2021-01-01', '2021-01-01')),
+            [   0,                                      1],
+            [
+                ('main_report_line_1',                4.0),
+                ('main_report_line_2',                7.0),
+                ('main_report_line_3',                6.0),
+                ('main_report_line_4',               10.0),
+                ('main_report_line_5',               27.0),
+                ('main_report_line_6',               27.0),
+            ],
+        )
+
+    def test_engine_aggregation_expansion(self):
+        report = self._create_report([
+            self._prepare_test_report_line(
+                self._prepare_test_expression_tax_tags('42'),
+                code='TAG_1',
+            ),
+            self._prepare_test_report_line(
+                self._prepare_test_expression_tax_tags('221292'),
+                code='TAG_2',
+            ),
+            self._prepare_test_report_line(
+                self._prepare_test_expression_tax_tags('777'),
+                code='TAG_3',
+            ),
+            self._prepare_test_report_line(
+                self._prepare_test_expression_aggregation('TAG_1.balance + TAG_2.balance'),
+                code='SIMPLE_AGG',
+            ),
+            self._prepare_test_report_line(
+                self._prepare_test_expression_aggregation('SIMPLE_AGG.balance + TAG_3.balance'),
+                code='COMPLEX_AGG',
+            ),
+            self._prepare_test_report_line(
+                self._prepare_test_expression_aggregation('TAG_1.balance + TAG_2.balance', subformula='if_other_expr_above(TAG_3.balance, EUR(13))'),
+                code='BOUNDED_AGG',
+            ),
+            self._prepare_test_report_line(
+                self._prepare_test_expression_tax_tags('3333'),
+            ),
+        ])
+
+        other_report = self._create_report([
+            self._prepare_test_report_line(
+                self._prepare_test_expression_aggregation('SIMPLE_AGG.balance + BOUNDED_AGG.balance', subformula='cross_report'),
+                code='CROSS_REPORT_AGG',
+            ),
+        ])
+
+        expr_map = {expression.report_line_id.code: expression for expression in (report + other_report).line_ids.expression_ids}
+
+        self.assertEqual(
+            expr_map['SIMPLE_AGG']._expand_aggregations(),
+            expr_map['SIMPLE_AGG'] + expr_map['TAG_1'] + expr_map['TAG_2'],
+        )
+
+        self.assertEqual(
+            expr_map['COMPLEX_AGG']._expand_aggregations(),
+            expr_map['COMPLEX_AGG'] + expr_map['SIMPLE_AGG'] + expr_map['TAG_1'] + expr_map['TAG_2'] + expr_map['TAG_3'],
+        )
+
+        self.assertEqual(
+            expr_map['BOUNDED_AGG']._expand_aggregations(),
+            expr_map['BOUNDED_AGG'] + expr_map['TAG_1'] + expr_map['TAG_2'] + expr_map['TAG_3'],
+        )
+
+        self.assertEqual(
+            expr_map['CROSS_REPORT_AGG']._expand_aggregations(),
+            expr_map['CROSS_REPORT_AGG'] + expr_map['SIMPLE_AGG'] + expr_map['BOUNDED_AGG'] + expr_map['TAG_1'] + expr_map['TAG_2'] + expr_map['TAG_3'],
+        )
+
+    def test_load_more(self):
+        partner_a, partner_b, partner_c = self.env['res.partner'].create([
+            {'name': 'Partner A'},
+            {'name': 'Partner B'},
+            {'name': 'Partner C'},
+        ])
+
+        self._create_test_account_moves([
+            self._prepare_test_account_move_line(1000.0, partner_id=partner_a.id, date='2020-01-01'),
+            self._prepare_test_account_move_line(2000.0, partner_id=partner_b.id, date='2020-01-01'),
+            self._prepare_test_account_move_line(3000.0, partner_id=partner_c.id, date='2020-01-01'),
+        ])
+
+        report = self._create_report(
+            test_report_line_values_list=[self._prepare_test_report_line(
+                self._prepare_test_expression_domain([('partner_id', '!=', False)], 'sum'),
+                groupby='partner_id',
+            )],
+            load_more_limit=2,
+        )
+
+        options = self._generate_options(report, '2020-01-01', '2020-01-31')
+        lines = report._get_lines(options)
+
+        self.assertLinesValues(
+            # pylint: disable=bad-whitespace
+            lines,
+            [   0,                                1],
+            [
+                ('test_line_1',     '$ 6,000.00'),
+                ('Partner A',       '$ 1,000.00'),
+                ('Partner B',       '$ 2,000.00'),
+                ('Load more...',                 ''),
+            ]
+        )
+
+        load_more_line = lines[-1]
+        load_more_res = report._get_custom_report_function(load_more_line['expand_function'], 'expand_unfoldable_line')(
+            load_more_line['id'],
+            load_more_line['groupby'],
+            options,
+            load_more_line['progress'],
+            load_more_line['offset']
+        )['lines']
+
+        self.assertLinesValues(
+            # pylint: disable=bad-whitespace
+            load_more_res,
+            [   0,                                1],
+            [
+                ('Partner C',       '$ 3,000.00'),
+            ]
+        )
+
+    def test_change_expression_engine_to_tax_tags(self):
+        """
+        Ensure that tax tags are created when switching the expression engine to tax tags if formula is unchanged.
+        """
+        formula = 'dudu'
+        test_line_1 = self._prepare_test_report_line(
+            self._prepare_test_expression_external(formula, [self._prepare_test_external_values(100.0, '2020-01-01')], label='external'),
+        )
+        report = self._create_report([test_line_1], country_id=self.fake_country.id)
+        tags = self.env['account.account.tag']._get_tax_tags(formula, self.fake_country.id)
+        self.assertEqual(len(tags), 0)
+        report.line_ids[0].expression_ids[0].engine = 'tax_tags'
+        tags = self.env['account.account.tag']._get_tax_tags(formula, self.fake_country.id)
+        self.assertEqual(tags.mapped('name'), ['-' + formula, '+' + formula])

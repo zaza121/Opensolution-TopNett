@@ -83,7 +83,7 @@ class AccountEdiFormat(models.Model):
                     'IMP_2': (
                         abs((rec.amount_currency or rec.balance) * 100 / 15)
                         if rec.tax_line_id.l10n_co_edi_type.code == '05' else
-                        _convert(rec.company_id.currency_id, rec.tax_base_amount, rec.currency_id, rec.company_id, rec.move_id.invoice_date)
+                        abs(_convert(rec.company_id.currency_id, rec.tax_base_amount, rec.currency_id, rec.company_id, rec.move_id.invoice_date))
                     ),
                     'IMP_3': invoice_currency.name,
                     'IMP_4': abs(rec.amount_currency or rec.balance),
@@ -91,7 +91,7 @@ class AccountEdiFormat(models.Model):
                 }
                 if rec.tax_line_id.amount_type == 'fixed':
                     imp.update({
-                        'IMP_6': '',
+                        'IMP_6': 0,
                         'IMP_7': 1,
                         'IMP_8': 'BO' if rec.tax_line_id.l10n_co_edi_type.code == '22' else '94',
                         'IMP_9': rec.tax_line_id.amount,
@@ -268,7 +268,7 @@ class AccountEdiFormat(models.Model):
             for tax, detail in tax_detail.get('tax_details').items():
                 if not detail.get('tax_amount'):
                     for grouped_tax in detail.get('group_tax_details'):
-                        tax = grouped_tax.get('tax_id')
+                        tax = tax.get('tax')
                         zero_tax_details[tax.l10n_co_edi_type.code] += abs(grouped_tax.get('base_amount'))
         retention_taxes_new = self._l10n_co_edi_prepare_tim_sections(retention_lines_listdict, invoice.currency_id, True)
         regular_taxes_new = self._l10n_co_edi_prepare_tim_sections(regular_lines_listdict, invoice.currency_id, False, zero_tax_details)
@@ -453,8 +453,8 @@ class AccountEdiFormat(models.Model):
         now = fields.Datetime.now()
         oldest_date = now - timedelta(days=5)
         newest_date = now + timedelta(days=10)
-        if not company.l10n_co_edi_username or not company.l10n_co_edi_password or not company.l10n_co_edi_company or \
-           not company.l10n_co_edi_account:
+        if not company.sudo().l10n_co_edi_username or not company.sudo().l10n_co_edi_password or not company.l10n_co_edi_company or \
+           not company.sudo().l10n_co_edi_account:
             edi_result.append(_("Carvajal credentials are not set on the company, please go to Accounting Settings and set the credentials."))
         if (move.move_type != 'out_refund' and not move.debit_origin_id) and \
            (not journal.l10n_co_edi_dian_authorization_number or not journal.l10n_co_edi_dian_authorization_date or not journal.l10n_co_edi_dian_authorization_end_date):
@@ -463,6 +463,8 @@ class AccountEdiFormat(models.Model):
             edi_result.append(_("You can not validate an invoice that has a partner without VAT number."))
         if not move.company_id.partner_id.l10n_co_edi_obligation_type_ids:
             edi_result.append(_("'Obligaciones y Responsabilidades' on the Customer Fiscal Data section needs to be set for the partner %s.", move.company_id.partner_id.display_name))
+        if not move.amount_total:
+            edi_result.append(_("You cannot send Documents in Carvajal without an amount."))
         if not move.partner_id.commercial_partner_id.l10n_co_edi_obligation_type_ids:
             edi_result.append(_("'Obligaciones y Responsabilidades' on the Customer Fiscal Data section needs to be set for the partner %s.", move.partner_id.commercial_partner_id.display_name))
         if (move.l10n_co_edi_type == '2' and \

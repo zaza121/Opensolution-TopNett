@@ -12,8 +12,8 @@ odoo.define('pos_iot.ProductScreen', function(require) {
             }
             async _onScaleNotAvailable() {
                 await Gui.showPopup('ErrorPopup', {
-                    title: this._env._t('No Scale Detected'),
-                    body: this._env._t(
+                    title: this.env._t('No Scale Detected'),
+                    body: this.env._t(
                         'It seems that no scale was detected.\nMake sure that the scale is connected and visible in the IoT app.'
                     ),
                 });

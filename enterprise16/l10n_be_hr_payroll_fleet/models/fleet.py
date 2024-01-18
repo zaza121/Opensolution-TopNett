@@ -73,7 +73,10 @@ class FleetVehicle(models.Model):
         (self - be_vehicles).tax_deduction = 0
         coefficients = self.env['hr.rule.parameter'].sudo()._get_parameter_from_code('tax_deduction_fuel_coefficients', raise_if_not_found=False) if be_vehicles else None
         for vehicle in be_vehicles:
-            vehicle.tax_deduction = vehicle._get_tax_deduction(vehicle.co2, vehicle.fuel_type, coefficients, vehicle.horsepower)
+            if vehicle.vehicle_type == "bike":
+                vehicle.tax_deduction = 1
+            else:
+                vehicle.tax_deduction = vehicle._get_tax_deduction(vehicle.co2, vehicle.fuel_type, coefficients, vehicle.horsepower)
 
     def _get_co2_fee(self, co2, fuel_type):
         # Reference: https://www.socialsecurity.be/employer/instructions/dmfa/fr/latest/instructions/special_contributions/companycar.html
@@ -126,6 +129,7 @@ class FleetVehicle(models.Model):
                     'recurring_cost_amount_depreciated': vehicle.model_id.default_recurring_cost_amount_depreciated,
                     'purchaser_id': vehicle.driver_id.id,
                     'company_id': vehicle.company_id.id,
+                    'user_id': vehicle.manager_id.id if vehicle.manager_id else self.env.user.id
                 })
         self.env['fleet.vehicle.log.contract'].create(contracts_vals_list)
         return vehicles
@@ -249,8 +253,11 @@ class FleetVehicleModel(models.Model):
     def _compute_tax_deduction(self):
         coefficients = self.env['hr.rule.parameter'].sudo()._get_parameter_from_code('tax_deduction_fuel_coefficients', raise_if_not_found=False)
         for model in self:
-            model.tax_deduction = self.env['fleet.vehicle']._get_tax_deduction(
-                model.default_co2, model.default_fuel_type, coefficients, model.horsepower)
+            if model.vehicle_type == "bike":
+                model.tax_deduction = 1
+            else:
+                model.tax_deduction = self.env['fleet.vehicle']._get_tax_deduction(
+                    model.default_co2, model.default_fuel_type, coefficients, model.horsepower)
 
     @api.depends_context('uid')
     def _compute_current_country_code(self):

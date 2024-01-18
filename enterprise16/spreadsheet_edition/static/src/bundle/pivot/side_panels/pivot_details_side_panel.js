@@ -15,14 +15,12 @@ export default class PivotDetailsSidePanel extends Component {
         this.dialog = useService("dialog");
         /** @type {import("@spreadsheet/pivot/pivot_data_source").default} */
         this.dataSource = undefined;
-        const loadData = async () => {
-            this.dataSource = await this.env.model.getters.getAsyncPivotDataSource(
-                this.props.pivotId
-            );
+        const loadData = async (pivotId) => {
+            this.dataSource = await this.env.model.getters.getAsyncPivotDataSource(pivotId);
             this.modelDisplayName = await this.dataSource.getModelLabel();
         };
-        onWillStart(loadData);
-        onWillUpdateProps(loadData);
+        onWillStart(() => loadData(this.props.pivotId));
+        onWillUpdateProps((nextProps) => loadData(nextProps.pivotId));
     }
 
     get pivotDefinition() {

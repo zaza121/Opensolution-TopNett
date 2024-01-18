@@ -28,7 +28,7 @@ class QualityCheck(models.Model):
     def do_measure(self):
         self.ensure_one()
         res = super().do_measure()
-        return self.workorder_id._change_quality_check(position='next') if self.workorder_id else res
+        return self._next() if self.workorder_id else res
 
 
     def _next(self, continue_production=False):

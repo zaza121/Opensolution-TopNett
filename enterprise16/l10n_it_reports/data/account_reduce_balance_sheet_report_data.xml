@@ -24,7 +24,7 @@
                         <field name="aggregation_formula">ITR_ATT_B_I.balance + ITR_ATT_B_II.balance + ITR_ATT_B_III.balance</field>
                         <field name="children_ids">
                             <record id="account_financial_report_line_it_sp_reduce_ATT_B_I" model="account.report.line">
-                                <field name="name">I. Immobilizzazioni immaterial</field>
+                                <field name="name">I. Immobilizzazioni immateriali</field>
                                 <field name="code">ITR_ATT_B_I</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
@@ -101,7 +101,7 @@
                                 <field name="code">ITR_PASS_A_I</field>
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
-                                <field name="account_codes_formula">-2104 - 2101 - 2105</field>
+                                <field name="account_codes_formula">- 2101 - 2105</field>
                             </record>
                             <record id="account_financial_report_line_it_sp_reduce_PASS_A_II" model="account.report.line">
                                 <field name="name">II. Riserva da sovrapprezzo azioni</field>
@@ -137,6 +137,13 @@
                                 <field name="groupby">account_id</field>
                                 <field name="foldable" eval="True"/>
                                 <field name="account_codes_formula">-2110</field>
+                            </record>
+                            <record id="account_financial_report_line_it_sp_reduce_PASS_A_VII" model="account.report.line">
+                                <field name="name">VII. Riserva per operazioni di copertura dei flussi finanziari attesi</field>
+                                <field name="code">ITR_PASS_A_VII</field>
+                                <field name="groupby">account_id</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="account_codes_formula">-2111</field>
                             </record>
                             <record id="account_financial_report_line_it_sp_reduce_PASS_A_VIII" model="account.report.line">
                                 <field name="name">VIII. Utili (perdite) portati a nuovo</field>
@@ -196,7 +203,7 @@
                         <field name="code">ITR_PASS_D</field>
                         <field name="groupby">account_id</field>
                         <field name="foldable" eval="True"/>
-                        <field name="account_codes_formula">-26 - 25 - 27 - 24</field>
+                        <field name="account_codes_formula">-26 - 25 - 27 - 28 - 24</field>
                     </record>
                 </field>
             </record>

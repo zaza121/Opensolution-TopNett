@@ -48,7 +48,7 @@ class HelpdeskTeam(models.Model):
     active = fields.Boolean(default=True)
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     sequence = fields.Integer("Sequence", default=10)
-    color = fields.Integer('Color Index', default=1)
+    color = fields.Integer('Color Index', default=0)
     ticket_properties = fields.PropertiesDefinition('Ticket Properties')
 
     stage_ids = fields.Many2many(
@@ -189,25 +189,33 @@ class HelpdeskTeam(models.Model):
 
     def _compute_success_rate(self):
         dt = datetime.datetime.combine(datetime.date.today() - relativedelta.relativedelta(days=6), datetime.time.min)
-        tickets_read = self.env['helpdesk.ticket'].search_read([
-            ('team_id.use_sla', '=', True),
-            '|',
-            ('stage_id.fold', '=', True),
-            ('close_date', '>=', dt)],
-            ['team_id', 'sla_deadline', 'sla_reached_late']
-        )
-        is_failed_tickets_per_team = defaultdict(list)  # key: helpdesk_team_id and value: list of bool (True if ticket is failed)
+        sla_teams = self.filtered('use_sla')
+        domain = [
+            ('team_id', 'in', sla_teams.ids),
+            '|', ('stage_id.fold', '=', True), ('close_date', '>=', dt)
+        ]
+        sla_tickets_and_failed_tickets_per_team = defaultdict(lambda: [0, 0])
         today = fields.Datetime.now()
-        for res in tickets_read:
-            deadline = res.get('sla_deadline', False)
-            is_failed_tickets_per_team[res['team_id'][0]].append(
-                (deadline and today > deadline) or res.get('sla_reached_late', False)
-            )
-        for team in self:
-            is_failed_tickets = is_failed_tickets_per_team.get(team.id, [])
-            success_count = len([ticket for ticket in is_failed_tickets if not ticket])
-            total_count = len(is_failed_tickets)
+        tickets_sla_count = self.env['helpdesk.ticket']._read_group(domain + [
+            '|', ('sla_reached', '=', True), ('sla_reached_late', '=', True)],
+            ['id:min'], ['team_id']
+        )
+        tickets_success_count = self.env['helpdesk.ticket']._read_group(domain + [
+            '|', ('sla_deadline', '<', today), ('sla_reached_late', '=', True)],
+            ['id:min'], ['team_id']
+        )
+        for group in tickets_sla_count:
+            sla_tickets_and_failed_tickets_per_team[group['team_id'][0]][0] = group['team_id_count']
+        for group in tickets_success_count:
+            sla_tickets_and_failed_tickets_per_team[group['team_id'][0]][1] = group['team_id_count']
+        for team in sla_teams:
+            if not sla_tickets_and_failed_tickets_per_team.get(team.id):
+                team.success_rate = -1
+                continue
+            total_count = sla_tickets_and_failed_tickets_per_team[team.id][0]
+            success_count = total_count - sla_tickets_and_failed_tickets_per_team[team.id][1]
             team.success_rate = float_round(success_count * 100 / total_count, 2) if total_count else 0.0
+        (self - sla_teams).success_rate = -1
 
     def _compute_urgent_ticket(self):
         ticket_data = self.env['helpdesk.ticket'].read_group([
@@ -521,8 +529,10 @@ class HelpdeskTeam(models.Model):
             group_fields.insert(1, 'sla_deadline:year')
             group_fields.insert(2, 'sla_deadline:hour')
             group_fields.insert(3, 'sla_reached_late')
+            group_fields.insert(4, 'sla_reached')
             list_fields.insert(1, 'sla_deadline')
             list_fields.insert(2, 'sla_reached_late')
+            list_fields.insert(3, 'sla_reached')
 
         HelpdeskTicket = self.env['helpdesk.ticket']
         show_demo = not bool(HelpdeskTicket.search([], limit=1))
@@ -530,8 +540,8 @@ class HelpdeskTeam(models.Model):
             'helpdesk_target_closed': self.env.user.helpdesk_target_closed,
             'helpdesk_target_rating': self.env.user.helpdesk_target_rating,
             'helpdesk_target_success': self.env.user.helpdesk_target_success,
-            'today': {'count': 0, 'rating': 0, 'success': 0},
-            '7days': {'count': 0, 'rating': 0, 'success': 0},
+            'today': {'sla_ticket_count': 0, 'count': 0, 'rating': 0, 'success': 0},
+            '7days': {'sla_ticket_count': 0, 'count': 0, 'rating': 0, 'success': 0},
             'my_all': {'count': 0, 'hours': 0, 'failed': 0},
             'my_high': {'count': 0, 'hours': 0, 'failed': 0},
             'my_urgent': {'count': 0, 'hours': 0, 'failed': 0},
@@ -582,18 +592,22 @@ class HelpdeskTeam(models.Model):
         tickets = HelpdeskTicket.read_group(domain + [('stage_id.fold', '=', True), ('close_date', '>=', dt)], list_fields, group_fields, lazy=False)
         for ticket in tickets:
             result['today']['count'] += ticket['__count']
-            if not _is_sla_failed(ticket):
-                result['today']['success'] += ticket['__count']
+            if ticket.get('sla_reached', False) or ticket.get('sla_reached_late', False):
+                result['today']['sla_ticket_count'] += ticket['__count']
+                if not _is_sla_failed(ticket):
+                    result['today']['success'] += ticket['__count']
 
         dt = fields.Datetime.to_string((datetime.date.today() - relativedelta.relativedelta(days=6)))
         tickets = HelpdeskTicket.read_group(domain + [('stage_id.fold', '=', True), ('close_date', '>=', dt)], list_fields, group_fields, lazy=False)
         for ticket in tickets:
             result['7days']['count'] += ticket['__count']
-            if not _is_sla_failed(ticket):
-                result['7days']['success'] += ticket['__count']
+            if ticket.get('sla_reached', False) or ticket.get('sla_reached_late', False):
+                result['7days']['sla_ticket_count'] += ticket['__count']
+                if not _is_sla_failed(ticket):
+                    result['7days']['success'] += ticket['__count']
 
-        result['today']['success'] = fields.Float.round(result['today']['success'] * 100 / (result['today']['count'] or 1), 2)
-        result['7days']['success'] = fields.Float.round(result['7days']['success'] * 100 / (result['7days']['count'] or 1), 2)
+        result['today']['success'] = fields.Float.round(result['today']['success'] * 100 / (result['today']['sla_ticket_count'] or 1), 2)
+        result['7days']['success'] = fields.Float.round(result['7days']['success'] * 100 / (result['7days']['sla_ticket_count'] or 1), 2)
         result['my_all']['hours'] = fields.Float.round(result['my_all']['hours'] / (result['my_all']['count'] or 1), 2)
         result['my_high']['hours'] = fields.Float.round(result['my_high']['hours'] / (result['my_high']['count'] or 1), 2)
         result['my_urgent']['hours'] = fields.Float.round(result['my_urgent']['hours'] / (result['my_urgent']['count'] or 1), 2)
@@ -677,9 +691,8 @@ class HelpdeskTeam(models.Model):
             :param is_ticket_closed: Boolean if True, then we want to see the tickets closed in last 7 days
             :returns dict containing the params to update into the action.
         """
-        is_ticket_closed_domain_operator = '|' if is_ticket_closed else '&'
         domain = [
-            is_ticket_closed_domain_operator,
+            '&',
             ('stage_id.fold', '=', is_ticket_closed),
             ('team_id', 'in', self.ids),
         ]

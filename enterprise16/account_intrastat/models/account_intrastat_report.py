@@ -36,7 +36,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
         # dict of the form {move_id: {column_group_key: {expression_label: value}}}
         move_info_dict = {}
 
-        # dict of the form {column_group_key: total_value}
+        # dict of the form {column_group_key: {expression_label: total_value}}
         total_values_dict = {}
 
         # Build query
@@ -61,8 +61,8 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             current_move_info[column_group_key] = result
             current_move_info['name'] = result['name']
 
-            total_values_dict.setdefault(column_group_key, 0)
-            total_values_dict[column_group_key] += result['value']
+            total_values_dict.setdefault(column_group_key, {'value': 0})
+            total_values_dict[column_group_key]['value'] += result['value']
 
         # Create lines
         lines = []
@@ -130,6 +130,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
                         col['expression_label'] = 'country_code'
                     elif col['expression_label'] == 'intrastat_product_origin_country_name':
                         col['expression_label'] = 'intrastat_product_origin_country_code'
+        options['columns'] = new_columns
 
         # Only pick Sale/Purchase journals (+ divider)
         report._init_options_journals(options, previous_options=previous_options, additional_journals_domain=[('type', 'in', ('sale', 'purchase'))])
@@ -288,7 +289,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
                 CASE WHEN account_move.move_type IN ('in_invoice', 'out_refund') THEN 'Arrival' ELSE 'Dispatch' END AS type,
                 partner.vat as partner_vat,
                 ROUND(
-                    prod.weight * account_move_line.quantity / (
+                    COALESCE(prod.weight, 0) * account_move_line.quantity / (
                         CASE WHEN inv_line_uom.category_id IS NULL OR inv_line_uom.category_id = prod_uom.category_id
                         THEN inv_line_uom.factor ELSE 1 END
                     ) * (
@@ -354,10 +355,12 @@ class IntrastatReportCustomHandler(models.AbstractModel):
         where = f"""
             WHERE
                 {where_clause}
+                AND account_move_line.display_type = 'product'
                 AND (account_move_line.price_subtotal != 0 OR account_move_line.price_unit * account_move_line.quantity != 0)
                 AND company_country.id != country.id
                 AND country.intrastat = TRUE AND (country.code != 'GB' OR account_move.date < '2021-01-01')
                 AND prodt.type != 'service'
+                AND ref_weight_uom.active
         """
         order = "ORDER BY account_move.invoice_date DESC, account_move_line.id"
 

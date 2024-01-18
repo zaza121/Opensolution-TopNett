@@ -8,7 +8,7 @@ import { KanbanRenderer } from '@web/views/kanban/kanban_renderer';
 
 import session from 'web.session';
 
-const { useState, onWillStart } = owl;
+const { onWillStart } = owl;
 
 export class ReferralKanbanRenderer extends KanbanRenderer {
     setup() {
@@ -16,13 +16,11 @@ export class ReferralKanbanRenderer extends KanbanRenderer {
 
         this.orm = useService('orm');
         this.companyId = session.user_context.allowed_company_ids[0];
-        this.state = useState({
-            showGrass: true
-        });
+        this.showGrass = true;
 
         onWillStart(async () => {
             const referralData = await this.orm.call('hr.applicant', 'retrieve_referral_data');
-            this.state.showGrass = referralData.show_grass || true;
+            this.showGrass = referralData.show_grass || true;
         });
     }
 }

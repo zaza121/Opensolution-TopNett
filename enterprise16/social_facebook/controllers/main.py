@@ -23,8 +23,8 @@ class SocialFacebookController(SocialController):
     # ACCOUNTS MANAGEMENT
     # ========================================================
 
-    @fragment_to_query_string
     @http.route(['/social_facebook/callback'], type='http', auth='user')
+    @fragment_to_query_string
     def social_facebook_account_callback(self, access_token=None, is_extended_token=False, **kw):
         """ Facebook returns to the callback URL with all its own arguments as hash parameters.
         We use this very handy 'fragment_to_query_string' decorator to convert them to server readable parameters. """
@@ -67,21 +67,21 @@ class SocialFacebookController(SocialController):
 
         if comment_id and is_edit:
             result = stream_post._facebook_comment_post(
-                url_join(request.env['social.media']._FACEBOOK_ENDPOINT, "/v10.0/%s" % comment_id),
+                url_join(request.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, comment_id),
                 message,
                 existing_attachment_id=existing_attachment_id,
                 attachment=attachment
             )
         elif comment_id:
             result = stream_post._facebook_comment_post(
-                url_join(request.env['social.media']._FACEBOOK_ENDPOINT, "/v10.0/%s/comments" % (comment_id)),
+                url_join(request.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, "%s/comments" % (comment_id)),
                 message,
                 existing_attachment_id=existing_attachment_id,
                 attachment=attachment
             )
         else:
             result = stream_post._facebook_comment_post(
-                url_join(request.env['social.media']._FACEBOOK_ENDPOINT, "/v10.0/%s/comments" % (stream_post.facebook_post_id)),
+                url_join(request.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, "%s/comments" % (stream_post.facebook_post_id)),
                 message,
                 existing_attachment_id=existing_attachment_id,
                 attachment=attachment
@@ -124,7 +124,7 @@ class SocialFacebookController(SocialController):
         account = request.env['social.account'].browse(account_id)
 
         json_response = requests.get(
-            url_join(request.env['social.media']._FACEBOOK_ENDPOINT, f'/v10.0/{facebook_user_id}'),
+            url_join(request.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, facebook_user_id),
             params={
                 'fields': 'name,link',
                 'access_token': account.facebook_access_token
@@ -219,7 +219,7 @@ class SocialFacebookController(SocialController):
         return extended_token_request.json().get('access_token')
 
     def _facebook_get_profile_image(self, account_id):
-        profile_image_url = url_join(request.env['social.media']._FACEBOOK_ENDPOINT, '/v10.0/%s/picture?height=300' % account_id)
+        profile_image_url = url_join(request.env['social.media']._FACEBOOK_ENDPOINT_VERSIONED, '%s/picture?height=300' % account_id)
         return base64.b64encode(requests.get(profile_image_url, timeout=10).content)
 
     def _facebook_get_existing_accounts(self, media_id, json_response):

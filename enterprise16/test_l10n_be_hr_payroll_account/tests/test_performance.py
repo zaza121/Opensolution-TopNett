@@ -38,7 +38,6 @@ class TestPayslipValidation(AccountTestInvoicingCommon):
 
         cls.company.write({
             'documents_hr_settings': True,
-            'documents_payroll_folder_id': cls.env.ref('documents_hr_payroll.documents_payroll_folder').id,
         })
 
         admin = cls.env['res.users'].search([('login', '=', 'admin')])

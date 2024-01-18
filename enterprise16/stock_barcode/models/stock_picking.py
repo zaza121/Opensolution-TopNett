@@ -60,7 +60,10 @@ class StockPicking(models.Model):
         self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id("stock_barcode.stock_barcode_picking_client_action")
         action = dict(action, target='fullscreen')
-        action['context'] = {'active_id': self.id}
+        action['context'] = {
+            'active_id': self.id,
+            'precision': self.env['decimal.precision'].precision_get('Product Unit of Measure')
+        }
         return action
 
     def action_print_barcode_pdf(self):

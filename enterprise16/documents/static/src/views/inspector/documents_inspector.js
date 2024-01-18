@@ -284,10 +284,23 @@ export class DocumentsInspector extends Component {
     }
 
     onDownload() {
-        if (!this.props.selection.length) {
+        const documents = this.props.selection.filter((rec) => rec.data.type !== "empty");
+        if (!documents.length) {
             return;
         }
-        this.download(this.props.selection);
+        const linkDocuments = documents.filter(el => el.data.type === 'url');
+        const noLinkDocuments = documents.filter(el => el.data.type !== 'url');
+        // Manage link documents
+        if (documents.length === 1 && linkDocuments.length) {
+            // Redirect to the link
+            let url = linkDocuments[0].data.url;
+            url = /^(https?|ftp):\/\//.test(url) ? url : "http://" + url;
+            window.open(url, "_blank");
+        }
+        else if (noLinkDocuments.length) {
+            // Download all documents which are not links
+            this.download(noLinkDocuments);
+        }
     }
 
     // Override during tests.
@@ -321,11 +334,13 @@ export class DocumentsInspector extends Component {
         if (!ev.target.files.length) {
             return;
         }
-        const record = this.props.selection[0];
+        const index = Number(ev.target.getAttribute("data-index"));
+        const record = this.props.selection[index];
+
         await this.env.documentsView.bus.trigger("documents-upload-files", {
             files: ev.target.files,
             folderId: this.env.searchModel.getSelectedFolderId() || (record.data.folder_id && record.data.folder_id[0]),
-            recordId: this.props.selection[0].resId,
+            recordId: record.resId,
             tagIds: this.env.searchModel.getSelectedTagIds(),
         });
         ev.target.value = "";
@@ -345,6 +360,7 @@ export class DocumentsInspector extends Component {
         await toggleArchive(record.model, record.resModel, this.resIds, state);
         await record.model.load();
         await record.model.notify();
+        await this.env.documentsView.bus.trigger("documents-close-preview");
     }
 
     async onArchive() {
@@ -357,6 +373,7 @@ export class DocumentsInspector extends Component {
 
     async onDelete() {
         await this.props.selection[0].model.root.deleteRecords(this.props.selection);
+        await this.env.documentsView.bus.trigger("documents-close-preview");
     }
 
     getFieldProps(fieldName, additionalProps) {
@@ -512,12 +529,16 @@ export class DocumentsInspector extends Component {
             return;
         }
         const documents = this.props.selection.filter(rec => rec.isViewable());
+        if (!documents.length) {
+            return;
+        }
         this.env.documentsView.bus.trigger("documents-open-preview", {
             documents: documents,
             mainDocument: mainDocument || documents[0],
             isPdfSplit,
             rules: this.getCommonRules(),
             hasPdfSplit: !this.isLocked && !this.isEditDisabled,
+            selection: documents,
         });
     }
 

@@ -18,10 +18,6 @@ class L10nLuGenerateXML(models.TransientModel):
     report_data = fields.Binary('Report file', readonly=True, attachment=False)
     filename = fields.Char(string='Filename', size=256, readonly=True)
 
-    def _lu_validate_xml_content(self, content):
-        self.env['ir.attachment'].l10n_lu_reports_validate_xml_from_attachment(content, 'xsd_lu_eCDF.xsd')
-        return True
-
     def get_xml(self, lu_annual_report=False):
         """
         Generates the XML report.
@@ -136,10 +132,10 @@ class L10nLuGenerateXML(models.TransientModel):
         rendered_content = self.env['ir.qweb']._render('l10n_lu_reports.l10n_lu_electronic_report_template_2_0', lu_template_values, minimal_qcontext=True)
 
         content = "\n".join(re.split(r'\n\s*\n', rendered_content))
-        self._lu_validate_xml_content(content)
+        self.env['ir.attachment'].l10n_lu_reports_validate_xml_from_attachment(content, 'ecdf')
         self.env['l10n_lu.report.handler']._validate_ecdf_prefix()
         vals = {
-            'report_data': base64.b64encode(bytes(content, 'utf-8')),
+            'report_data': base64.b64encode(bytes("<?xml version='1.0' encoding='UTF-8'?>" + content, 'utf-8')),
             'filename': filename + '.xml'
         }
         if lu_annual_report:

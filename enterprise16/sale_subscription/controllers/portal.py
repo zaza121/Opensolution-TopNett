@@ -208,7 +208,6 @@ class CustomerPortal(payment_portal.PaymentPortal):
             if kw.get('closing_text'):
                 order_sudo.message_post(body=_('Closing text: %s', kw.get('closing_text')))
             order_sudo.set_close()
-            order_sudo.end_date = datetime.date.today().strftime('%Y-%m-%d')
         return request.redirect('/my/home')
 
     @http.route(['/my/subscription/<int:order_id>/renew'], type='http', methods=["GET"], auth="public", website=True)
@@ -216,17 +215,13 @@ class CustomerPortal(payment_portal.PaymentPortal):
         order_sudo, redirection = self._get_subscription(access_token, order_id)
         if redirection:
             return redirection
-        message = ""
-        if not order_sudo.to_renew or not order_sudo.end_date or order_sudo.sale_order_template_id.recurring_rule_boundary == 'unlimited':
-            message = _("This Subscription is already running. There is no need to renew it.")
+
+        if order_sudo.stage_category != 'progress':
+            order_sudo.set_open()
+            new_end_date = format_date(request.env, order_sudo.end_date, lang_code=order_sudo.partner_id.lang)
+            message = _("Your subscription has been renewed until %s.", new_end_date)
         else:
-            unit = order_sudo.sale_order_template_id.recurring_rule_type
-            duration = order_sudo.sale_order_template_id.recurring_rule_count
-            if unit and duration and order_sudo.end_date:
-                new_end_date = order_sudo.end_date + get_timedelta(duration, unit)
-                order_sudo.write({'end_date': new_end_date, 'to_renew': False})
-                new_end_date = format_date(request.env, new_end_date, lang_code=order_sudo.partner_id.lang)
-                message = _("Your subscription has been renewed until %s.", new_end_date)
+            message = _("This Subscription is already running. There is no need to renew it.")
         subscription_url = f'/my/subscription/{order_sudo.id}/{order_sudo.access_token}?message={message}&message_class=alert-success'
         return request.redirect(subscription_url)
 

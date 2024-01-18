@@ -61,7 +61,7 @@ class HrAppraisal(models.Model):
     manager_ids = fields.Many2many(
         'hr.employee', 'appraisal_manager_rel', 'hr_appraisal_id',
         context={'active_test': False},
-        domain="[('active', '=', 'True'), '|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+        domain="[('id', '!=', employee_id), ('active', '=', 'True'), '|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     manager_user_ids = fields.Many2many('res.users', string="Manager Users", compute='_compute_user_manager_rights')
     meeting_ids = fields.Many2many('calendar.event', string='Meetings')
     meeting_count_display = fields.Char(string='Meeting Count', compute='_compute_meeting_count')
@@ -107,12 +107,10 @@ class HrAppraisal(models.Model):
             appraisal.manager_user_ids = appraisal.manager_ids.mapped('user_id')
         is_appraisal_manager = self.user_has_groups('hr_appraisal.group_hr_appraisal_user')
         self.is_appraisal_manager = is_appraisal_manager
+        self.employee_autocomplete_ids = self.env.user.get_employee_autocomplete_ids()
         if is_appraisal_manager:
             self.is_implicit_manager = False
-            self.employee_autocomplete_ids = self.env['hr.employee'].search([('company_id', '=', self.env.company.id)])
         else:
-            child_ids = self.env.user.employee_id.child_ids
-            self.employee_autocomplete_ids = child_ids + self.env.user.employee_id
             self.is_implicit_manager = len(self.employee_autocomplete_ids) > 1
 
     @api.depends_context('uid')
@@ -192,7 +190,8 @@ class HrAppraisal(models.Model):
     def _onchange_employee_id(self):
         self = self.sudo()  # fields are not on the employee public
         if self.employee_id:
-            self.manager_ids = self.employee_id.parent_id
+            manager = self.employee_id.parent_id
+            self.manager_ids = manager if manager != self.employee_id else False
 
     def subscribe_employees(self):
         for appraisal in self:
@@ -295,18 +294,16 @@ class HrAppraisal(models.Model):
             vals['employee_feedback_published'] = True
             vals['manager_feedback_published'] = True
             self.activity_feedback(['mail.mail_activity_data_meeting', 'mail.mail_activity_data_todo'])
-            vals['date_close'] = current_date
             self._appraisal_plan_post()
             body = _("The appraisal's status has been set to Done by %s", self.env.user.name)
             self.env['mail.thread'].message_notify(
-                subject=_("Appraisal reopened"),
+                subject=_("Your Appraisal has been completed"),
                 body=body,
                 partner_ids=appraisal.message_partner_ids.ids)
             appraisal.message_post(body=body)
         if 'state' in vals and vals['state'] == 'cancel':
             self.meeting_ids.unlink()
             self.activity_unlink(['mail.mail_activity_data_meeting', 'mail.mail_activity_data_todo'])
-            vals['date_close'] = current_date
         previous_managers = {}
         if 'manager_ids' in vals:
             previous_managers = {x: y for x, y in self.mapped(lambda a: (a.id, a.manager_ids))}
@@ -405,10 +402,10 @@ class HrAppraisal(models.Model):
         return action
 
     def action_confirm(self):
-        self.write({'state': 'pending'})
+        self.state = 'pending'
 
     def action_done(self):
-        self.write({'state': 'done'})
+        self.state = 'done'
 
     def action_back(self):
         self.action_confirm()

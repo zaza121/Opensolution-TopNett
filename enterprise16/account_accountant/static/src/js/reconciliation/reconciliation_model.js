@@ -429,7 +429,7 @@ var ManualModel = BasicModel.extend({
         if ('amount' in values) {
             prop.base_amount = values.amount;
         }
-        if ('name' in values || 'force_tax_included' in values || 'amount' in values || 'account_id' in values || 'analytic_account_id' in values) {
+        if ('name' in values || 'force_tax_included' in values || 'amount' in values || 'account_id' in values || 'analytic_account_id' in values || 'date' in values) {
             prop.__tax_to_recompute = true;
         }
         line.createForm = _.pick(prop, this.quickCreateFields);

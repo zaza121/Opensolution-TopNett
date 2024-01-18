@@ -70,10 +70,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
         move.action_post()
         move.line_ids.flush_recordset()
 
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[8], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertEqual(2, len(data), "csv should have 2 lines")
         self.assertIn(['238,00', 's', 'EUR', '34000000', str(move.partner_id.id + 700000000),
                        self.tax_19.l10n_de_datev_code, '112', move.name, move.name], data)
@@ -103,10 +104,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
         move.action_post()
         move.line_ids.flush_recordset()
 
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[8], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertEqual(1, len(data), "csv should have 1 line")
         self.assertIn(['119,00', 'h', 'EUR', '49800000', str(move.partner_id.id + 100000000),
                       self.tax_19.l10n_de_datev_code, '112', move.name, move.name], data)
@@ -142,10 +144,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
         move.action_post()
         move.line_ids.flush_recordset()
 
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertEqual(1, len(data), "csv should have 1 lines")
         self.assertIn(['100,00', 'h', 'EUR', '34000000', '49800000', '112', move.name, move.name], data)
 
@@ -179,8 +182,52 @@ class TestDatevCSV(AccountTestInvoicingCommon):
 
         debit_account_code = str(self.env.company.account_journal_payment_debit_account_id.code).ljust(8, '0')
 
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
+        reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
+        data = [[x[0], x[1], x[2], x[6], x[7], x[8], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
+        self.assertEqual(2, len(data), "csv should have 2 lines")
+        self.assertIn(['119,00', 'h', 'EUR', '49800000', str(move.partner_id.id + 100000000),
+                       self.tax_19.l10n_de_datev_code, '112', move.name, move.name], data)
+        self.assertIn(['119,00', 'h', 'EUR', str(move.partner_id.id + 100000000), debit_account_code, '', '312',
+                       pay.name, pay.name], data)
+
+    def test_datev_out_invoice_payment_same_account_counteraccount(self):
+        report = self.env.ref('account_reports.general_ledger_report')
+        options = report._get_options()
+        options['date'].update({
+            'date_from': '2020-01-01',
+            'date_to': '2020-12-31',
+        })
+
+        move = self.env['account.move'].create([{
+            'move_type': 'out_invoice',
+            'partner_id': self.env['res.partner'].create({'name': 'Res Partner 12'}).id,
+            'invoice_date': fields.Date.to_date('2020-12-01'),
+            'invoice_line_ids': [
+                (0, None, {
+                    'price_unit': 100,
+                    'account_id': self.account_4980.id,
+                    'tax_ids': [(6, 0, self.tax_19.ids)],
+                }),
+            ]
+        }])
+        move.action_post()
+
+        # set counter account = account
+        bank_journal = self.company_data['default_journal_bank']
+        bank_journal.inbound_payment_method_line_ids.payment_account_id = bank_journal.default_account_id
+
+        pay = self.env['account.payment.register'].with_context(active_model='account.move', active_ids=move.ids).create({
+            'payment_date': fields.Date.to_date('2020-12-03'),
+        })._create_payments()
+
+        debit_account_code = str(bank_journal.default_account_id.code).ljust(8, '0')
+
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        self.addCleanup(zf.close)
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[8], x[9], x[10], x[13]] for x in reader][2:]
         self.assertEqual(2, len(data), "csv should have 2 lines")
@@ -219,10 +266,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
         self.env.flush_all()
 
         credit_account_code = str(self.env.company.account_journal_payment_credit_account_id.code).ljust(8, '0')
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[8], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertEqual(2, len(data), "csv should have 2 lines")
         self.assertIn(['119,00', 's', 'EUR', '49800000', str(move.partner_id.id + 700000000),
                        self.tax_19.l10n_de_datev_code, '112', move.name, move.name], data)
@@ -253,10 +301,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
         suspense_account_code = str(self.env.company.account_journal_suspense_account_id.code).ljust(8, '0')
         bank_account_code = str(self.env.company.bank_journal_ids.default_account_id.code).ljust(8, '0')
 
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertIn(['100,00', 'h', 'EUR', suspense_account_code, bank_account_code, '101',
                        statement.line_ids[0].name, statement.line_ids[0].name], data)
 
@@ -303,10 +352,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
 
         self.env.flush_all()
         file_dict = self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)
-        with zipfile.ZipFile(BytesIO(file_dict['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(file_dict['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertEqual(2, len(data), "csv should have 2 lines")
         self.assertIn(['100,00', 'h', 'EUR', str(self.company_data['default_account_revenue'].code).ljust(8, '0'),
                        str(100000000 + move.partner_id.id), '112', move.name, move.name], data)
@@ -357,10 +407,11 @@ class TestDatevCSV(AccountTestInvoicingCommon):
         move.action_post()
         move.line_ids.flush_recordset()
 
-        with zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r') as zf:
-            csv = zf.open('EXTF_accounting_entries.csv')
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
         reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
         data = [[x[0], x[1], x[2], x[6], x[7], x[8], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
         self.assertEqual(3, len(data), "csv should have 3 line")
         self.assertIn(['1190,00', 's', 'EUR', '49800000', str(move.partner_id.id + 100000000),
                        self.tax_19.l10n_de_datev_code, '112', move.name, move.name], data)
@@ -368,3 +419,92 @@ class TestDatevCSV(AccountTestInvoicingCommon):
                        self.tax_7.l10n_de_datev_code, '112', move.name, move.name], data)
         self.assertIn(['3570,00', 'h', 'EUR', '34000000', str(move.partner_id.id + 100000000),
                        self.tax_19.l10n_de_datev_code, '112', move.name, move.name], data)
+
+    def test_datev_miscellaneous_several_line_same_account(self):
+        """
+            Tests that if we have only a single account to the debit, we have a contra-account that is this account, and
+            we can put all the credit lines against this account
+        """
+        report = self.env.ref('account_reports.general_ledger_report')
+        options = report._get_options()
+        options['date'].update({
+            'date_from': '2020-01-01',
+            'date_to': '2020-12-31',
+        })
+
+        account_1600 = self.env['account.account'].search(
+            [('code', '=', 1600), ('company_id', '=', self.company_data['company'].id), ], limit=1)
+
+        move = self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '2020-12-01',
+            'journal_id': self.company_data['default_journal_misc'].id,
+            'line_ids': [
+                (0, 0, {
+                    'debit': 100,
+                    'credit': 0,
+                    'partner_id': self.partner_a.id,
+                    'account_id': self.account_4980.id,
+                }),
+                (0, 0, {
+                    'debit': 100,
+                    'credit': 0,
+                    'partner_id': self.partner_a.id,
+                    'account_id': self.account_4980.id,
+                }),
+                (0, 0, {
+                    'debit': 0,
+                    'credit': 100,
+                    'partner_id': self.partner_a.id,
+                    'account_id': account_1600.id,
+                }),
+                (0, 0, {
+                    'debit': 0,
+                    'credit': 100,
+                    'partner_id': self.partner_a.id,
+                    'account_id': self.account_1500.id,
+                }),
+            ]
+        })
+        move.action_post()
+
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        csv = zf.open('EXTF_accounting_entries.csv')
+        reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
+        data = [[x[0], x[1], x[2], x[6], x[7], x[9], x[10], x[13]] for x in reader][2:]
+        self.addCleanup(zf.close)
+        self.assertEqual(2, len(data), "csv should have 2 lines")
+        self.assertIn(['100,00', 'h', 'EUR', '16000000', '49800000', '112', move.name, move.name], data)
+        self.assertIn(['100,00', 'h', 'EUR', '15000000', '49800000', '112', move.name, move.name], data)
+
+    def test_datev_all_aml_present(self):
+        report = self.env.ref('account_reports.general_ledger_report')
+        report.load_more_limit = 3
+        options = report._get_options()
+        options['date'].update({
+            'date_from': '2020-01-01',
+            'date_to': '2020-12-31',
+        })
+
+        for _dummy in range(5):
+            move = self.env['account.move'].create([{
+                'move_type': 'out_invoice',
+                'partner_id': self.env['res.partner'].create({'name': 'Res Partner 12'}).id,
+                'invoice_date': fields.Date.to_date('2020-12-01'),
+                'invoice_line_ids': [
+                    (0, None, {
+                        'price_unit': 100,
+                        'account_id': self.account_4980.id,
+                        'tax_ids': [(6, 0, self.tax_19.ids)],
+                    }),
+                ]
+            }])
+            move.action_post()
+
+        self.env.flush_all()
+        zf = zipfile.ZipFile(BytesIO(self.env[report.custom_handler_model_name].l10n_de_datev_export_to_zip(options)['file_content']), 'r')
+        self.addCleanup(zf.close)
+        csv = zf.open('EXTF_accounting_entries.csv')
+        reader = pycompat.csv_reader(csv, delimiter=';', quotechar='"', quoting=2)
+        data = [line for line in reader]
+        self.assertEqual(7, len(data), "csv should have 5 (+2 header) lines")

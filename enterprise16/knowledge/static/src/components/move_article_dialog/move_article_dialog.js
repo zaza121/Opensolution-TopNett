@@ -74,6 +74,7 @@ class MoveArticleDialog extends Component {
                 data: term => {
                     return { term };
                 },
+                quietMillis: 500,
                 /**
                  * @param {Object} params - parameters
                  */

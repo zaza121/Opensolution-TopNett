@@ -33,7 +33,7 @@ class StockMoveLine(models.Model):
 
     def write(self, vals):
         if self._create_quality_check_at_write(vals):
-            self.filtered(lambda ml: not ml.qty_done)._create_check()
+            self.filtered(lambda ml: not ml.qty_done and not ml.sudo().check_ids)._create_check()
         return super().write(vals)
 
     def unlink(self):

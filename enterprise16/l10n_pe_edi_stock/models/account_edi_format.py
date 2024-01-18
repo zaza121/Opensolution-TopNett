@@ -27,7 +27,7 @@ class AccountEdiFormat(models.Model):
         else:
             res.update({
                 'wsdl': 'https://e-guiaremision.sunat.gob.pe/ol-ti-itemision-guia-gem/billService?wsdl',
-                'token': UsernameToken(company.l10n_pe_edi_provider_username, company.l10n_pe_edi_provider_password),
+                'token': UsernameToken(company.sudo().l10n_pe_edi_provider_username, company.sudo().l10n_pe_edi_provider_password),
             })
         return res
 

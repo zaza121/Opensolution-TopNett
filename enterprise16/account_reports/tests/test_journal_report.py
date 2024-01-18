@@ -138,7 +138,7 @@ class TestJournalAuditReport(TestAccountReportsCommon):
                 Command.create({'repartition_type': 'base'}),
                 Command.create({
                     'repartition_type': 'tax',
-                    'tag_ids': [Command.link(cls.tax_report.line_ids[0].expression_ids[0]._get_matching_tags().filtered(lambda x: not x.tax_negate).id)],
+                    'tag_ids': [Command.link(cls.tax_report.line_ids.expression_ids._get_matching_tags("+").id)],
                 })]
         })
         # Invoice in 2017 for company_1, with taxes
@@ -160,7 +160,7 @@ class TestJournalAuditReport(TestAccountReportsCommon):
     def test_report_journal_sale_journal(self):
         report = self.env.ref('account_reports.journal_report')
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-01-31'))
-        options['unfolded_lines'] = ['-account.journal-%s' % self.company_data['default_journal_sale'].id]
+        options['unfolded_lines'] = [report._get_generic_line_id('account.journal', self.company_data['default_journal_sale'].id)]
 
         self.assertLinesValues(
             report._get_lines(options),
@@ -190,10 +190,10 @@ class TestJournalAuditReport(TestAccountReportsCommon):
 
     def test_report_journal_sale_journal_multicurrency_disabled(self):
         # Repeat the previous test, but without multicurrency support. Ensure that we do not display the multicurrency lines.
-        self.env['res.currency'].search([('id', '!=', self.company_data['currency'].id)]).active = False
+        self.env['res.currency'].search([('id', '!=', self.company_data['currency'].id)]).with_context(force_deactivate=True).active = False
         report = self.env.ref('account_reports.journal_report')
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-01-31'))
-        options['unfolded_lines'] = ['-account.journal-%s' % self.company_data['default_journal_sale'].id]
+        options['unfolded_lines'] = [report._get_generic_line_id('account.journal', self.company_data['default_journal_sale'].id)]
 
         self.assertLinesValues(
             report._get_lines(options),
@@ -220,7 +220,7 @@ class TestJournalAuditReport(TestAccountReportsCommon):
 
     def test_report_journal_bank_journal(self):
         report = self.env.ref('account_reports.journal_report')
-        line_id = '-account.journal-%s' % self.company_data['default_journal_bank'].id
+        line_id = report._get_generic_line_id('account.journal', self.company_data['default_journal_bank'].id)
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-01-31'))
         options['unfolded_lines'] = [line_id]
 
@@ -240,7 +240,7 @@ class TestJournalAuditReport(TestAccountReportsCommon):
 
     def test_report_journal_bank_journal_multicurrency(self):
         report = self.env.ref('account_reports.journal_report')
-        line_id = '-account.journal-%s' % self.company_data['default_journal_bank'].id
+        line_id = report._get_generic_line_id('account.journal', self.company_data['default_journal_bank'].id)
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-01-31'))
         options['unfolded_lines'] = [line_id]
 
@@ -284,9 +284,9 @@ class TestJournalAuditReport(TestAccountReportsCommon):
 
     def test_report_journal_bank_journal_multicurrency_disabled(self):
         # Repeat the previous test, but without multicurrency support. Ensure that we do not display the multicurrency column.
-        self.env['res.currency'].search([('id', '!=', self.company_data['currency'].id)]).active = False
+        self.env['res.currency'].search([('id', '!=', self.company_data['currency'].id)]).with_context(force_deactivate=True).active = False
         report = self.env.ref('account_reports.journal_report')
-        line_id = '-account.journal-%s' % self.company_data['default_journal_bank'].id
+        line_id = report._get_generic_line_id('account.journal', self.company_data['default_journal_bank'].id)
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-01-31'))
         options['unfolded_lines'] = [line_id]
 
@@ -339,8 +339,12 @@ class TestJournalAuditReport(TestAccountReportsCommon):
         report = self.env.ref('account_reports.journal_report')
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-03-31'))
         options['group_by_months'] = True
-        journal_line_id = '-account.journal-%s' % self.company_data['default_journal_sale'].id
-        options['unfolded_lines'] = [journal_line_id, f'{journal_line_id}|month_line 2017 1--', f'{journal_line_id}|month_line 2017 2--']
+        journal_line_id = report._get_generic_line_id('account.journal', self.company_data['default_journal_sale'].id)
+        options['unfolded_lines'] = [
+            journal_line_id,
+            report._get_generic_line_id(None, None, markup=f'{journal_line_id}|month_line 2017 1'),
+            report._get_generic_line_id(None, None, markup=f'{journal_line_id}|month_line 2017 2'),
+        ]
 
         self.assertLinesValues(
             report._get_lines(options),
@@ -407,7 +411,7 @@ class TestJournalAuditReport(TestAccountReportsCommon):
         report = self.env.ref('account_reports.journal_report')
         options = self._generate_options(report, fields.Date.from_string('2017-01-01'), fields.Date.from_string('2017-03-31'))
         options['sort_by_date'] = True
-        options['unfolded_lines'] = ['-account.journal-%s' % self.company_data['default_journal_sale'].id]
+        options['unfolded_lines'] = [report._get_generic_line_id('account.journal', self.company_data['default_journal_sale'].id)]
 
         # Inv 6 will be before Inv 5 because inv 5 is later in terms of date
         self.assertLinesValues(

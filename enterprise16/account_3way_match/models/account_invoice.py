@@ -93,7 +93,7 @@ class AccountMoveLine(models.Model):
         return super()._auto_init()
 
 
-    @api.depends('purchase_line_id.qty_received', 'purchase_line_id.qty_invoiced', 'purchase_line_id.product_qty')
+    @api.depends('purchase_line_id.qty_received', 'purchase_line_id.qty_invoiced', 'purchase_line_id.product_qty', 'price_unit')
     def _can_be_paid(self):
         """ Computes the 'release to pay' status of an invoice line, depending on
         the invoicing policy of the product linked to it, by calling the dedicated

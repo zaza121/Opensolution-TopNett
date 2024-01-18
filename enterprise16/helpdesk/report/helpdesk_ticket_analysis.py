@@ -50,7 +50,7 @@ class HelpdeskTicketReport(models.Model):
                    T.sla_deadline AS ticket_deadline,
                    NULLIF(T.sla_deadline_hours, 0) AS ticket_deadline_hours,
                    NULLIF(T.close_hours, 0) AS ticket_close_hours,
-                   EXTRACT(HOUR FROM (COALESCE(T.assign_date, NOW()) - T.create_date)) AS ticket_open_hours,
+                   EXTRACT(EPOCH FROM (COALESCE(T.assign_date, NOW() AT TIME ZONE 'UTC') - T.create_date)) / 3600 AS ticket_open_hours,
                    NULLIF(T.assign_hours, 0) AS ticket_assignation_hours,
                    T.close_date AS close_date,
                    T.assign_date AS assign_date,

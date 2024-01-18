@@ -93,6 +93,163 @@ class TestEdiResults(TestMxEdiCommon):
 
             self.assertXmlTreeEqual(current_etree, expected_etree)
 
+    def test_invoice_cfdi_mixed_tax_breakdown(self):
+        with freeze_time(self.frozen_today), \
+                mute_logger('py.warnings'), \
+                patch(
+                    'odoo.addons.l10n_mx_edi.models.account_edi_format.AccountEdiFormat._l10n_mx_edi_post_invoice_pac',
+                    new=mocked_l10n_mx_edi_pac):
+            invoice = self.env['account.move'].create({
+                'move_type': 'out_invoice',
+                'partner_id': self.partner_a.id,
+                'invoice_date': '2017-01-01',
+                'date': '2017-01-01',
+                'invoice_date_due': '2017-01-01',
+                'invoice_payment_term_id': False,
+                'currency_id': self.company_data['currency'].id,
+                'invoice_incoterm_id': self.env.ref('account.incoterm_FCA').id,
+                'invoice_line_ids': [
+                    (0, 0, {
+                        'product_id': self.product.id,
+                        'price_unit': 100.0,
+                        'quantity': 1,
+                        'tax_ids': [(6, 0, self.tax_16.ids)],
+                    }),
+                    (0, 0, {
+                        'product_id': self.product.id,
+                        'price_unit': 100.0,
+                        'quantity': 1,
+                        'tax_ids': [],
+                    }),
+                    (0, 0, {
+                        'product_id': self.product.id,
+                        'price_unit': 100.0,
+                        'quantity': 1,
+                        'tax_ids': [(6, 0, self.tax_16.ids)],
+                        'discount': 100,
+                    }),
+                ]
+            })
+
+            invoice.commercial_partner_id.l10n_mx_edi_no_tax_breakdown = False
+            invoice.action_post()
+
+            generated_files = self._process_documents_web_services(invoice, {'cfdi_3_3'})
+            self.assertTrue(generated_files)
+            cfdi = generated_files[0]
+
+            current_etree = self.get_xml_tree_from_string(cfdi)
+            expected_etree = self.with_applied_xpath(
+                self.get_xml_tree_from_string(self.expected_invoice_cfdi_values),
+                '''
+                    <xpath expr="//Comprobante" position="attributes">
+                        <attribute name="Moneda">MXN</attribute>
+                        <attribute name="Folio">2</attribute>
+                        <attribute name="Descuento">100.00</attribute>
+                        <attribute name="SubTotal">300.00</attribute>
+                        <attribute name="Total">216.00</attribute>
+                        <attribute name="TipoCambio" delete="true"/>
+                    </xpath>
+                    <xpath expr="//Concepto" position="replace">
+                        <Concepto
+                            Cantidad="1.000000"
+                            ClaveUnidad="KGM"
+                            Unidad="KG"
+                            ClaveProdServ="01010101"
+                            Descripcion="product_mx"
+                            ObjetoImp="02"
+                            Importe="100.00"
+                            ValorUnitario="100.00">
+                            <Impuestos>
+                                <Traslados>
+                                    <Traslado
+                                        Base="100.00"
+                                        Importe="16.00"
+                                        TasaOCuota="0.160000"
+                                        TipoFactor="Tasa"/>
+                                </Traslados>
+                            </Impuestos>
+                        </Concepto>
+                        <Concepto
+                            Cantidad="1.000000"
+                            ClaveUnidad="KGM"
+                            Unidad="KG"
+                            ClaveProdServ="01010101"
+                            Descripcion="product_mx"
+                            ObjetoImp="01"
+                            Importe="100.00"
+                            ValorUnitario="100.00">
+                        </Concepto>
+                        <Concepto
+                            Cantidad="1.000000"
+                            ClaveUnidad="KGM"
+                            Unidad="KG"
+                            ClaveProdServ="01010101"
+                            Descripcion="product_mx"
+                            ObjetoImp="01"
+                            Importe="100.00"
+                            Descuento="100.00"
+                            ValorUnitario="100.00">
+                        </Concepto>
+                    </xpath>
+                    <xpath expr="/Comprobante/Impuestos" position="replace">
+                        <Impuestos
+                            TotalImpuestosTrasladados="16.00">
+                            <Traslados>
+                                <Traslado
+                                    Base="100.00"
+                                    Importe="16.00"
+                                    TasaOCuota="0.160000"
+                                    TipoFactor="Tasa"/>
+                            </Traslados>
+                        </Impuestos>
+                    </xpath>
+                ''',
+            )
+            self.assertXmlTreeEqual(current_etree, expected_etree)
+
+            invoice.commercial_partner_id.l10n_mx_edi_no_tax_breakdown = True
+            invoice_2 = invoice.copy({
+                'invoice_date': '2017-01-01',
+                'date': '2017-01-01',
+            })
+            invoice_2.action_post()
+
+            generated_files = self._process_documents_web_services(invoice_2, {'cfdi_3_3'})
+            self.assertTrue(generated_files)
+            cfdi = generated_files[0]
+
+            current_etree = self.get_xml_tree_from_string(cfdi)
+            expected_etree = self.with_applied_xpath(
+                expected_etree,
+                '''
+                    <xpath expr="//Comprobante" position="attributes">
+                        <attribute name="Moneda">MXN</attribute>
+                        <attribute name="Folio">3</attribute>
+                        <attribute name="Descuento">100.00</attribute>
+                        <attribute name="SubTotal">316.00</attribute>
+                        <attribute name="Total">216.00</attribute>
+                        <attribute name="TipoCambio" delete="true"/>
+                    </xpath>
+                    <xpath expr="(//Concepto)[1]" position="attributes">
+                        <attribute name="ObjetoImp">03</attribute>
+                        <attribute name="Importe">116.00</attribute>
+                        <attribute name="ValorUnitario">116.00</attribute>
+                    </xpath>
+                    <xpath expr="(//Concepto)[1]/Impuestos" position="replace">
+                    </xpath>
+                    <xpath expr="(//Concepto)[2]" position="attributes">
+                        <attribute name="ObjetoImp">01</attribute>
+                    </xpath>
+                    <xpath expr="(//Concepto)[2]" position="attributes">
+                        <attribute name="ObjetoImp">01</attribute>
+                    </xpath>
+                    <xpath expr="/Comprobante/Impuestos" position="replace">
+                    </xpath>
+                '''
+            )
+            self.assertXmlTreeEqual(current_etree, expected_etree)
+
     def test_invoice_cfdi_group_of_taxes(self):
         # company = MXN, invoice = Gol
         with freeze_time(self.frozen_today), \
@@ -860,7 +1017,7 @@ class TestEdiResults(TestMxEdiCommon):
                                         ImpSaldoAnt="750.000"
                                         ImpSaldoInsoluto="550.000"
                                         MonedaDR="Gol"
-                                        EquivalenciaDR="2.000000"
+                                        EquivalenciaDR="2.0000000000"
                                         NumParcialidad="1"
                                         ObjetoImpDR="03"
                                         Serie="INV/2016/"/>

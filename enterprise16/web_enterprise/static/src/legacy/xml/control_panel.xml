@@ -102,6 +102,7 @@
                         t-att-class="{ show: state.showViewSwitcher }" role="toolbar" aria-label="View switcher"
                         >
                         <button type="button" class="btn btn-link"
+                            t-ref="viewSwitcherTogglerRef"
                             t-attf-aria-expanded="{{ state.showViewSwitcher ? 'true' : 'false' }}"
                             t-on-click="() => state.showViewSwitcher = !state.showViewSwitcher"
                             >
@@ -109,6 +110,7 @@
                         </button>
                         <ul t-if="state.showViewSwitcher" class="dropdown-menu dropdown-menu-end list-inline"
                             t-att-class="{ show: state.showViewSwitcher }"
+                            t-ref="viewSwitcherMenuRef"
                             >
                             <li t-foreach="props.views" t-as="view" t-key="view.type">
                                 <t t-call="web.ViewSwitcherButton"/>

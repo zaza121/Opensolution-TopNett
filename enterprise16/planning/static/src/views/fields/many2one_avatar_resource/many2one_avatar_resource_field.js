@@ -11,3 +11,8 @@ Many2OneAvatarResourceField.fieldDependencies = {
 Many2OneAvatarResourceField.additionalClasses = ["o_field_many2one_avatar"];
 
 registry.category("fields").add("many2one_avatar_resource", Many2OneAvatarResourceField);
+
+export class KanbanMany2OneAvatarResourceField extends Many2OneAvatarResourceField {}
+KanbanMany2OneAvatarResourceField.template = "planning.KanbanMany2OneAvatarResourceField";
+
+registry.category("fields").add("kanban.many2one_avatar_resource", KanbanMany2OneAvatarResourceField);

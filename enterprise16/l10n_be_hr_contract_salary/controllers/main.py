@@ -96,8 +96,10 @@ class HrContractSalary(main.HrContractSalary):
                 ('private_car_reimbursed_amount', round(request.env['hr.contract']._get_private_car_reimbursed_amount(float(new_value)), 2)  if advantages['contract']['fold_private_car_reimbursed_amount'] else 0),
             ]
         if advantage_field == 'public_transport_reimbursed_amount':
+            new_value = new_value if new_value else 0
             res['new_value'] = round(request.env['hr.contract']._get_public_transport_reimbursed_amount(float(new_value)), 2)
         elif advantage_field == 'train_transport_reimbursed_amount':
+            new_value = new_value if new_value else 0
             res['new_value'] = round(request.env['hr.contract']._get_train_transport_reimbursed_amount(float(new_value)), 2)
         elif advantage_field == 'private_car_reimbursed_amount':
             new_value = new_value if new_value else 0
@@ -191,6 +193,7 @@ class HrContractSalary(main.HrContractSalary):
         if int(force_car):
             force_car_id = request.env['fleet.vehicle'].sudo().browse(int(force_car))
             available_cars |= force_car_id
+            contract.car_id = force_car_id
 
         def generate_dropdown_group_data(available, can_be_requested, only_new, allow_new_cars, vehicle_type='Car'):
             # Creates the necessary data for the dropdown group, looks like this
@@ -201,7 +204,7 @@ class HrContractSalary(main.HrContractSalary):
             #     ],
             #     'other_category': ...
             # }
-            model_categories = (available.model_id.category_id | can_be_requested.category_id)
+            model_categories = (available.category_id | available.model_id.category_id | can_be_requested.category_id)
             model_categories_ids = model_categories.sorted(key=lambda c: (c.sequence, c.id)).ids
             model_categories_ids.append(0) # Case when no category
             result = OrderedDict()
@@ -209,9 +212,21 @@ class HrContractSalary(main.HrContractSalary):
                 category_id = model_categories.filtered(lambda c: c.id == category)
                 car_values = []
                 if not only_new:
-                    cars = available.filtered_domain([
-                        ('model_id.category_id', '=', category),
-                    ])
+                    if not category:  # "No Category"
+                        domain = [
+                            ('category_id', '=', False),
+                            ('model_id.category_id', '=', False),
+                        ]
+                    else:
+                        domain = [
+                            '|',
+                                ('category_id', '=', category),
+                                '&',
+                                    ('category_id', '=', False),
+                                    ('model_id.category_id', '=', category),
+                        ]
+
+                    cars = available.filtered_domain(domain)
                     car_values.extend([(
                         'old-%s' % (car.id),
                         '%s/%s \u2022 %s € \u2022 %s%s%s' % (
@@ -350,6 +365,10 @@ class HrContractSalary(main.HrContractSalary):
         for field_to_copy in fields_to_copy:
             if field_to_copy in contract:
                 res[field_to_copy] = contract[field_to_copy]
+        field_ids_to_copy = ['time_credit_type_id']
+        for field_id_to_copy in field_ids_to_copy:
+            if field_id_to_copy in contract:
+                res[field_id_to_copy] = contract[field_id_to_copy].id
         res['has_hospital_insurance'] = float(advantages['has_hospital_insurance_radio']) == 1.0 if 'has_hospital_insurance_radio' in advantages else False
         res['l10n_be_has_ambulatory_insurance'] = float(advantages['l10n_be_has_ambulatory_insurance_radio']) == 1.0 if 'l10n_be_has_ambulatory_insurance_radio' in advantages else False
         res['l10n_be_canteen_cost'] = advantages['l10n_be_canteen_cost']
@@ -430,6 +449,11 @@ class HrContractSalary(main.HrContractSalary):
             payslip.input_line_ids = [(0, 0, {
                 'input_type_id': request.env.ref('l10n_be_hr_payroll.input_fixed_commission').id,
                 'amount': new_contract.commission_on_target,
+            })]
+        if new_contract.l10n_be_bicyle_cost:
+            payslip.input_line_ids = [(0, 0, {
+                'input_type_id': request.env.ref('l10n_be_hr_payroll.cp200_input_cycle_transportation').id,
+                'amount': 4,  # Considers cycling one day per week
             })]
         return payslip
 

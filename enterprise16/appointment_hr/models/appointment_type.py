@@ -5,6 +5,7 @@ import pytz
 
 from datetime import timedelta
 from odoo import api, fields, models
+from odoo.tools import groupby
 
 
 class AppointmentType(models.Model):
@@ -136,11 +137,23 @@ class AppointmentType(models.Model):
 
         calendar_to_employees = {}
 
-        # Compute work schedules for users having employees with a resource.calendar
+        # mapping user -> employee
+        users_to_employees = dict(groupby(staff_users.sudo().employee_id, lambda employee: employee.user_id))
+        users_with_no_employees = staff_users.sudo().filtered(lambda user: user not in users_to_employees.keys())
+        # if the user doesn't have an employee, we look if he has an employee in any company
+        if users_with_no_employees:
+            users_to_employees.update(
+                groupby(
+                    self.env['hr.employee'].with_context(
+                        allowed_company_ids=self.env['res.company'].sudo().search([]).ids
+                    ).sudo().search([('user_id', 'in', users_with_no_employees.ids)]),
+                    lambda employee: employee.user_id,
+                )
+            )
         available_employees_tz = [
-            user.employee_id.with_context(tz=user.tz)
-            for user in staff_users.sudo()
-            if user.employee_id and user.employee_id.resource_id.calendar_id
+            employees[0].with_context(tz=user.tz)
+            for user, employees in users_to_employees.items()
+            if employees and employees[0].resource_calendar_id
         ]
 
         for employee in available_employees_tz:

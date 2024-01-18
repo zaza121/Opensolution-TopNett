@@ -7,7 +7,10 @@ export class MrpWorkorderKanbanController extends KanbanController {
 
     setup() {
         super.setup();
-        this.context = {};
+        this.context = {
+            'from_manufacturing_order': this.props.context.from_manufacturing_order,
+            'from_production_order': this.props.context.from_production_order,
+        };
         this.orm = useService('orm');
     }
 

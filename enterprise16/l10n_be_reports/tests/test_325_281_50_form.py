@@ -98,9 +98,11 @@ class TestResPartner(AccountTestInvoicingCommon):
     def pay_bill(cls, bill, amount, date, currency=None):
         if not currency:
             currency = bill.currency_id
+        assert amount
+        payment_type = 'outbound' if amount > 0 else 'inbound'
         payment = cls.env['account.payment'].create({
-            'payment_type': 'outbound',
-            'amount': amount,
+            'payment_type': payment_type,
+            'amount': abs(amount),
             'currency_id': currency.id,
             'journal_id': cls.company_data['default_journal_bank'].id,
             'date': fields.Date.from_string(date),
@@ -986,3 +988,94 @@ class TestResPartner(AccountTestInvoicingCommon):
             'form_281_50_total_amount': 500.0,
             'form_281_50_ids': form_281_50_from_form_325_ids.ids,
         }])
+
+    def test_281_50_vendor_bill_and_credit_note_without_payment(self):
+        """ Ensure form 281.50 handles correctly credit note in its computation """
+        bill = self.create_and_post_bill(partner_id=self.partner_b, product_id=self.product_b, amount=1000.0, date='2000-05-12')
+
+        credit_note = bill._reverse_moves([{'invoice_date': '2000-05-12'}])
+        credit_note.action_post()
+
+        form_325 = self.create_325_form(ref_year=2000)
+        self.assertRecordValues(form_325.form_281_50_ids.filtered(lambda x: x.partner_id.id == self.partner_b.id), [
+            {
+                'partner_id': self.partner_b.id,
+                'commissions': 0.0,
+                'atn': 0.0,
+                'fees': 0.0,
+                'exposed_expenses': 0.0,
+                'total_remuneration': 0.0,
+                'paid_amount': 0.0,
+            }
+        ])
+
+    def test_281_50_vendor_bill_and_credit_note_with_payment(self):
+        """ Ensure form 281.50 handles correctly credit note and their payments in its computation """
+        bill = self.create_and_post_bill(partner_id=self.partner_b, product_id=self.product_b, amount=1000.0, date='2000-05-12')
+        self.pay_bill(bill=bill, amount=1000.0, date='2000-05-12')
+
+        credit_note = bill._reverse_moves([{'invoice_date': '2000-05-12'}])
+        credit_note.action_post()
+        self.pay_bill(bill=credit_note, amount=-1000.0, date='2000-05-12')
+
+        form_325 = self.create_325_form(ref_year=2000)
+        self.assertRecordValues(form_325.form_281_50_ids.filtered(lambda x: x.partner_id.id == self.partner_b.id), [
+            {
+                'partner_id': self.partner_b.id,
+                'commissions': 0.0,
+                'atn': 0.0,
+                'fees': 0.0,
+                'exposed_expenses': 0.0,
+                'total_remuneration': 0.0,
+                'paid_amount': 0.0,
+            }
+        ])
+
+    def test_281_50_positive_and_negative_line_should_compensate(self):
+        """Ensure form 281.50 handles negative lines put on the same account"""
+        partner_id = self.partner_b
+        product_id = self.product_b
+        bill = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'partner_id': partner_id.id,
+            'invoice_payment_term_id': False,
+            'invoice_date': fields.Date.from_string('2000-05-12'),
+            'currency_id': self.currency_data['currency'].id,
+            'invoice_line_ids': [
+                Command.create({
+                    'product_id': product_id.id,
+                    'account_id': product_id.property_account_expense_id.id,
+                    'partner_id': partner_id.id,
+                    'product_uom_id': product_id.uom_id.id,
+                    'quantity': 1.0,
+                    'discount': 0.0,
+                    'price_unit': 1000,
+                    'tax_ids': [],
+                }),
+                Command.create({
+                    'product_id': product_id.id,
+                    'account_id': product_id.property_account_expense_id.id,
+                    'partner_id': partner_id.id,
+                    'product_uom_id': product_id.uom_id.id,
+                    'quantity': 1.0,
+                    'discount': 0.0,
+                    'price_unit': -100,
+                    'tax_ids': [],
+                }),
+            ]
+        })
+        bill.action_post()
+        self.pay_bill(bill=bill, amount=900.0, date='2000-05-12')
+
+        form_325 = self.create_325_form(ref_year=2000)
+        self.assertRecordValues(form_325.form_281_50_ids.filtered(lambda x: x.partner_id.id == self.partner_b.id), [
+            {
+                'partner_id': self.partner_b.id,
+                'commissions': 0.0,
+                'atn': 0.0,
+                'fees': 900.0,
+                'exposed_expenses': 0.0,
+                'total_remuneration': 900.0,
+                'paid_amount': 900.0,
+            }
+        ])

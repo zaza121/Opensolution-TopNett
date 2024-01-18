@@ -6,7 +6,18 @@ import { kanbanView } from "@web/views/kanban/kanban_view";
 import { patch } from "@web/core/utils/patch";
 import { registry } from "@web/core/registry";
 
-export class KnowledgeArticleItemsKanbanController extends KanbanController {}
+export class KnowledgeArticleItemsKanbanController extends KanbanController {
+    /**
+     * @override
+     * Item creation is not allowed if the user can not edit the parent article
+     */
+    get canCreate() { 
+        if (!this.env.knowledgeArticleUserCanWrite) {
+            return false;
+        }
+        return super.canCreate;
+    }
+}
 
 patch(KnowledgeArticleItemsKanbanController.prototype, 'knowledge_embedded_kanban_controller', EmbeddedControllersPatch);
 

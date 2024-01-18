@@ -29,9 +29,12 @@ class Task(models.Model):
     # Project Sharing fields
     portal_quotation_count = fields.Integer(compute='_compute_portal_quotation_count')
     portal_invoice_count = fields.Integer('Invoice Count', compute='_compute_portal_invoice_count')
-    sale_line_id = fields.Many2one('sale.order.line', domain="[('company_id', '=', company_id),\
-            '|', ('order_partner_id', '=?', partner_id), ('order_id.partner_shipping_id', '=?', partner_id), \
-            ('is_service', '=', True), ('order_partner_id', '=?', partner_id), ('is_expense', '=', False), ('state', 'in', ['sale', 'done'])]")
+    sale_line_id = fields.Many2one('sale.order.line', domain="""[
+        ('company_id', '=', company_id),
+        '|', '|', ('order_partner_id', 'child_of', partner_id if partner_id else []), ('order_id.partner_shipping_id', 'child_of', partner_id if partner_id else []),
+             '|', ('order_partner_id', '=?', partner_id), ('order_id.partner_shipping_id', '=?', partner_id),
+        ('is_service', '=', True), ('is_expense', '=', False), ('state', 'in', ['sale', 'done'])
+    ]""")
 
     @property
     def SELF_READABLE_FIELDS(self):
@@ -166,6 +169,21 @@ class Task(models.Model):
             available_invoices = set(self.env['account.move'].search([('id', 'in', sale_orders_sudo.invoice_ids.ids)]).ids)
         for task in self:
             task.portal_invoice_count = len(invoices_by_so.get(task.sale_order_id.id, set()).intersection(available_invoices)) if is_portal_user else task.invoice_count
+
+    def _compute_sale_order_id(self):
+        fsm_tasks = self.filtered('is_fsm')
+        fsm_task_to_sale_order = {task.id: task.sale_order_id for task in fsm_tasks}
+        super(Task, self)._compute_sale_order_id()
+        for task in fsm_tasks:
+            sale_order_id = fsm_task_to_sale_order.get(task.id, False)
+            # the super call will remove the sale order from the task,
+            # if the partner on the task is not the same as the partner on the sale order.
+            # But for fsm tasks, the partner on the task could be the delivery address,
+            # so we redo the integrity check but with the shipping partner in mind
+            if sale_order_id and task.commercial_partner_id in (
+                    sale_order_id.partner_id.commercial_partner_id +
+                    sale_order_id.partner_shipping_id.commercial_partner_id):
+                task.sale_order_id = sale_order_id
 
     def action_create_invoice(self):
         # ensure the SO exists before invoicing, then confirm it

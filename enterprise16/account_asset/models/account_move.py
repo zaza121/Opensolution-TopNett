@@ -37,29 +37,37 @@ class AccountMove(models.Model):
     # -------------------------------------------------------------------------
     @api.depends('asset_id', 'depreciation_value', 'asset_id.total_depreciable_value', 'asset_id.already_depreciated_amount_import')
     def _compute_depreciation_cumulative_value(self):
-        for asset in self.asset_id:
-            depreciated = 0
-            remaining = asset.total_depreciable_value - asset.already_depreciated_amount_import
-            for move in asset.depreciation_move_ids.sorted(lambda mv: (mv.date, mv._origin.id)):
-                remaining -= move.depreciation_value
-                depreciated += move.depreciation_value
-                move.asset_remaining_value = remaining
-                move.asset_depreciated_value = depreciated
+        self.asset_depreciated_value = 0
+        self.asset_remaining_value = 0
+
+        # make sure to protect all the records being assigned, because the
+        # assignments invoke method write() on non-protected records, which may
+        # cause an infinite recursion in case method write() needs to read one
+        # of these fields (like in case of a base automation)
+        fields = [type(self).asset_remaining_value, type(self).asset_depreciated_value]
+        with self.env.protecting(fields, self.asset_id.depreciation_move_ids):
+            for asset in self.asset_id:
+                depreciated = 0
+                remaining = asset.total_depreciable_value - asset.already_depreciated_amount_import
+                for move in asset.depreciation_move_ids.sorted(lambda mv: (mv.date, mv._origin.id)):
+                    remaining -= move.depreciation_value
+                    depreciated += move.depreciation_value
+                    move.asset_remaining_value = remaining
+                    move.asset_depreciated_value = depreciated
 
     @api.depends('line_ids.balance')
     def _compute_depreciation_value(self):
         for move in self:
             asset = move.asset_id or move.reversed_entry_id.asset_id  # reversed moves are created before being assigned to the asset
             if asset:
-                account = asset.account_depreciation_expense_id if asset.asset_type != 'sale' else asset.account_depreciation_id
+                account_internal_group = 'income' if asset.asset_type == 'sale' else 'expense'
                 asset_depreciation = sum(
-                    move.line_ids.filtered(lambda l: l.account_id == account).mapped('balance')
-                )
-                if asset.asset_type == 'sale':
-                    asset_depreciation *= -1
+                    move.line_ids.filtered(lambda l: l.account_id.internal_group == account_internal_group or l.account_id == asset.account_depreciation_expense_id).mapped('balance')
+                ) * (-1 if asset.asset_type == 'sale' else 1)
                 # Special case of closing entry - only disposed assets of type 'purchase' should match this condition
                 if any(
-                    (line.account_id, -line.balance) == (asset.account_asset_id, asset.original_value)
+                    line.account_id == asset.account_asset_id
+                    and float_compare(-line.balance, asset.original_value, precision_rounding=asset.currency_id.rounding) == 0
                     for line in move.line_ids
                 ):
                     account = asset.account_depreciation_id
@@ -110,9 +118,7 @@ class AccountMove(models.Model):
 
         # look for any asset to create, in case we just posted a bill on an account
         # configured to automatically create assets
-        posted._auto_create_asset()
-        # check if we are reversing a move and delete assets of original move if it's the case
-        posted._delete_reversed_entry_assets()
+        posted.sudo()._auto_create_asset()
 
         # close deferred expense/revenue if all their depreciation moves are posted
         posted._close_assets()
@@ -148,6 +154,7 @@ class AccountMove(models.Model):
                 move.asset_id.message_post(body=msg)
                 default_values['asset_id'] = move.asset_id.id
                 default_values['asset_number_days'] = -move.asset_number_days
+                default_values['asset_depreciation_beginning_date'] = default_values.get('date', move.date)
 
         return super(AccountMove, self)._reverse_moves(default_values_list, cancel)
 
@@ -204,7 +211,7 @@ class AccountMove(models.Model):
                         'analytic_distribution': move_line.analytic_distribution,
                         'original_move_line_ids': [(6, False, move_line.ids)],
                         'state': 'draft',
-                        'acquisition_date': move.invoice_date,
+                        'acquisition_date': move.invoice_date if not move.reversed_entry_id else move.reversed_entry_id.invoice_date,
                     }
                     model_id = move_line.account_id.asset_model
                     if model_id:
@@ -218,7 +225,7 @@ class AccountMove(models.Model):
                             vals['name'] = move_line.name + _(" (%s of %s)", i, units_quantity)
                         create_list.extend([vals.copy()])
 
-        assets = self.env['account.asset'].create(create_list)
+        assets = self.env['account.asset'].with_context({}).create(create_list)
         for asset, vals, invoice, validate in zip(assets, create_list, invoice_list, auto_validate):
             if 'model_id' in vals:
                 asset._onchange_model_id()
@@ -301,6 +308,7 @@ class AccountMove(models.Model):
     def action_open_asset_ids(self):
         return self.asset_ids.open_asset(['tree', 'form'])
 
+    # DEPRECATED - to be removed in master
     def _delete_reversed_entry_assets(self):
         ReverseKey = namedtuple('ReverseKey', ['product_id', 'price_unit', 'quantity'])
 
@@ -359,6 +367,11 @@ class AccountMoveLine(models.Model):
 
     asset_ids = fields.Many2many('account.asset', 'asset_move_line_rel', 'line_id', 'asset_id', string='Related Assets', copy=False)
     non_deductible_tax_value = fields.Monetary(compute='_compute_non_deductible_tax_value', currency_field='company_currency_id')
+
+    def _get_computed_taxes(self):
+        if self.move_id.asset_id:
+            return self.tax_ids
+        return super()._get_computed_taxes()
 
     def _turn_as_asset(self, asset_type, view_name, view):
         ctx = self.env.context.copy()

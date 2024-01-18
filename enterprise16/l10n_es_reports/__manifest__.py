@@ -38,7 +38,6 @@
         'data/mod349.xml',
         'wizard/aeat_boe_export_wizards.xml',
     ],
-    'post_init_hook': '_setup_mod_sequences',
     'installable': True,
     'auto_install': ['l10n_es', 'account_reports'],
     'license': 'OEEL-1',

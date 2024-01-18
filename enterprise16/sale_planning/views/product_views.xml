@@ -8,8 +8,8 @@
         <field name="priority">10</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='product_tooltip']" position="after">
-                <label for="planning_enabled" attrs="{'invisible': [('type', '!=', 'service')]}"/>
-                <div attrs="{'invisible': [('type', '!=', 'service')]}">
+                <label for="planning_enabled" attrs="{'invisible': ['|', ('sale_ok', '=', False), ('type', '!=', 'service')]}"/>
+                <div attrs="{'invisible': ['|', ('sale_ok', '=', False), ('type', '!=', 'service')]}">
                     <field name="planning_enabled" class="oe_inline"/>
                     <span attrs="{'invisible': [('planning_enabled', '=', False)]}" class="oe_inline me-2">
                         as

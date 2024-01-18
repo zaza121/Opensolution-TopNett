@@ -19,15 +19,18 @@ export class AppointmentOnboardingLinkFormRenderer extends FormRenderer {
         ev.preventDefault();
         ev.stopImmediatePropagation();
         const { bookUrl, wasFirstValidation } = await this._getInviteURL();
-        setTimeout(async () => await browser.navigator.clipboard.writeText(bookUrl));
-        this.notification.add(
-            this.env._t("Link copied to clipboard."),
-            {type: "success"}
-        );
-        this.env.dialogData.close();
-        if (wasFirstValidation){
-            window.location.reload();
-        }
+        const self = this;
+        setTimeout(async () => {
+            await browser.navigator.clipboard.writeText(bookUrl);
+            self.notification.add(
+                self.env._t("Link copied to clipboard."),
+                {type: "success"}
+            );
+            self.env.dialogData.close();
+            if (wasFirstValidation){
+                window.location.reload();
+            }
+        });
     }
     /**
      *

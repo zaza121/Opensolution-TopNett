@@ -5,6 +5,7 @@
 # Translators:
 # Éder Brito <britoederr@gmail.com>, 2022
 # Martin Trigaux, 2022
+# Layna Nascimento, 2023
 # 
 msgid ""
 msgstr ""
@@ -12,8 +13,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-09-20 09:48+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Portuguese (Brazil) (https://www.transifex.com/odoo/teams/41243/pt_BR/)\n"
+"Last-Translator: Layna Nascimento, 2023\n"
+"Language-Team: Portuguese (Brazil) (https://app.transifex.com/odoo/teams/41243/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -31,6 +32,8 @@ msgid ""
 "<i title=\"Import/update TICs from TaxCloud\" role=\"img\" aria-"
 "label=\"Import/update TICs from TaxCloud\" class=\"fa fa-refresh fa-fw\"/>"
 msgstr ""
+"<i title=\"Import/update TICs from TaxCloud\" role=\"img\" aria-"
+"label=\"Import/update TICs from TaxCloud\" class=\"fa fa-refresh fa-fw\"/>"
 
 #. module: account_taxcloud
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.res_config_settings_view_form
@@ -65,7 +68,7 @@ msgstr "Criado em"
 #. module: account_taxcloud
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.res_config_settings_view_form
 msgid "Default Category"
-msgstr ""
+msgstr "Categoria padrão"
 
 #. module: account_taxcloud
 #: model:ir.model.fields,field_description:account_taxcloud.field_res_company__tic_category_id
@@ -84,6 +87,8 @@ msgid ""
 "Enable <b>Detect Automatically</b> to automatically use TaxCloud when "
 "selling to American customers."
 msgstr ""
+"Ative <b>Detectar automaticamente</b> para usar automaticamente o TaxCloud "
+"ao vender para clientes americanos."
 
 #. module: account_taxcloud
 #: model:ir.model,name:account_taxcloud.model_account_fiscal_position
@@ -94,7 +99,7 @@ msgstr "Posição Fiscal"
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.account_position_taxcloud_inherit_from_view
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.invoice_form_inherit
 msgid "Go to Settings."
-msgstr "Ir para Definições."
+msgstr "Acesse as definições."
 
 #. module: account_taxcloud
 #: model:ir.model.fields,field_description:account_taxcloud.field_product_tic_category__id
@@ -142,6 +147,8 @@ msgid ""
 "Please configure taxcloud credentials on the current company or use a "
 "different fiscal position"
 msgstr ""
+"Configure as credenciais do Taxcloud na empresa atual ou use uma posição "
+"fiscal diferente"
 
 #. module: account_taxcloud
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.account_position_taxcloud_inherit_from_view
@@ -170,7 +177,7 @@ msgstr "Categorias de Produto TIC"
 #. module: account_taxcloud
 #: model:ir.model,name:account_taxcloud.model_product_tic_category
 msgid "Product TIC Category"
-msgstr ""
+msgstr "Categoria TIC do produto"
 
 #. module: account_taxcloud
 #: model:ir.model.fields,help:account_taxcloud.field_res_company__tic_category_id
@@ -182,6 +189,11 @@ msgid ""
 "By default, TaxCloud relies on the TIC *[0] Uncategorized* default referring"
 " to general goods and services."
 msgstr ""
+"Os TICs (Códigos de Informações de Tributação) permitem obter alíquotas de "
+"impostos específicas para cada tipo de produto. Esse valor padrão se aplica "
+"se nenhum produto for usado no pedido/fatura ou se nenhum TIC for definido "
+"no produto ou em sua categoria de produto. Por padrão, a TaxCloud se baseia "
+"no padrão TIC *[0] Uncategorized* referente a bens e serviços gerais."
 
 #. module: account_taxcloud
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.account_taxcloud_tic_category_tree
@@ -225,7 +237,7 @@ msgstr "Chave API TaxCloud"
 #: model:ir.actions.act_window,name:account_taxcloud.account_taxcloud_tic_category_action
 #: model:ir.ui.menu,name:account_taxcloud.menu_taxcloud_tic_category_action
 msgid "TaxCloud Categories"
-msgstr ""
+msgstr "Categorias TaxCloud"
 
 #. module: account_taxcloud
 #: model:ir.model.fields,field_description:account_taxcloud.field_product_product__tic_category_id
@@ -233,7 +245,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.product_category_view_form_inherit_account_taxcloud
 #: model_terms:ir.ui.view,arch_db:account_taxcloud.product_template_taxcloud_inherit_form
 msgid "TaxCloud Category"
-msgstr ""
+msgstr "Categoria TaxCloud"
 
 #. module: account_taxcloud
 #: model:ir.model,name:account_taxcloud.model_account_fiscal_position_template
@@ -241,11 +253,20 @@ msgid "Template for Fiscal Position"
 msgstr "Modelo para Posição Fiscal"
 
 #. module: account_taxcloud
+#. odoo-python
+#: code:addons/account_taxcloud/models/product.py:0
+#, python-format
+msgid "The Taxcloud Category must be integer."
+msgstr "A categoria do Taxcloud deve ser um número inteiro."
+
+#. module: account_taxcloud
 #: code:addons/account_taxcloud/models/account_invoice.py:0
 #, python-format
 msgid ""
 "The tax rates have been updated, you may want to check it before validation"
 msgstr ""
+"As alíquotas de impostos foram atualizadas, talvez seja necessário verificá-"
+"las antes da validação"
 
 #. module: account_taxcloud
 #: model:ir.model.fields,help:account_taxcloud.field_product_product__tic_category_id
@@ -255,6 +276,10 @@ msgid ""
 "TaxCloud to compute specific tax rates for each product type. The value set "
 "here prevails over the one set on the product category."
 msgstr ""
+"Refere-se aos TICs (Códigos de Informações de Tributação), que são usados "
+"pela TaxCloud para calcular alíquotas de impostos específicas para cada tipo"
+" de produto. O valor definido aqui prevalece sobre o valor definido na "
+"categoria do produto."
 
 #. module: account_taxcloud
 #: model:ir.model.fields,help:account_taxcloud.field_product_category__tic_category_id
@@ -306,6 +331,9 @@ msgid ""
 "You need to issue a refund (credit note) for it instead.\n"
 "This way the tax entries will be cancelled in TaxCloud."
 msgstr ""
+"Não é possível cancelar uma fatura enviada ao TaxCloud.\n"
+"Em vez disso, você precisa emitir um reembolso (nota de crédito) para ela.\n"
+"Dessa forma, os lançamentos de impostos serão cancelados no TaxCloud."
 
 #. module: account_taxcloud
 #: code:addons/account_taxcloud/models/product.py:0

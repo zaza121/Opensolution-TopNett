@@ -24,7 +24,7 @@ class TestSaleSubscriptionAvalara(TestSaleSubscriptionAvalaraCommon, TestAccount
             invoices = self.subscription.with_context(auto_commit=False)._create_recurring_invoice(automatic=True)
 
         self.assertEqual(
-            capture.val and capture.val['json']['referenceCode'],
+            capture.val and capture.val['json']['createTransactionModel']['referenceCode'],
             invoices[0].name,
             'Should have queried avatax for the right taxes on the new invoice.'
         )
@@ -44,7 +44,7 @@ class TestSaleSubscriptionAvalara(TestSaleSubscriptionAvalaraCommon, TestAccount
             self.subscription._do_payment(payment_method, new_invoice)
 
         self.assertEqual(
-            capture.val and capture.val['json']['referenceCode'],
+            capture.val and capture.val['json']['createTransactionModel']['referenceCode'],
             new_invoice.name,
             'Should have queried avatax before initiating the payment transaction.'
         )

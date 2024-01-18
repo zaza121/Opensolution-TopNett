@@ -62,9 +62,11 @@ class ConsolidationChart(models.Model):
         default['name'] = self.name + ' (copy)'
         default['color'] = ((self.color if self.color else 0) + 1) % 12
         default['group_ids'] = [group.copy().id for group in self.group_ids if not group.parent_id]  # This will copy parent groups, which will automatically copy child groups.
+        # Copy accounts not linked to a group. Accounts linked to a group are handled in the group copy.
+        default['account_ids'] = [account.copy().id for account in self.account_ids if not account.group_id]
         res = super().copy(default)
         # Link the automatically copied children to the new chart.
-        res.group_ids.child_ids.chart_id = res.id
+        res.group_ids.child_ids._init_recursive_group_chart(res.id)
         # We copied the groups, which copied the accounts. We still need to link the new accounts with the chart.
         res.group_ids.account_ids.chart_id = res.id
         return res
@@ -341,3 +343,8 @@ class ConsolidationGroup(models.Model):
     def _compute_sign(self):
         for group in self:
             group.sign = (-1 if group.invert_sign else 1) * (group.parent_id or group.chart_id).sign
+
+    def _init_recursive_group_chart(self, chart_id):
+        for record in self:
+            record.chart_id = chart_id
+            record.child_ids._init_recursive_group_chart(chart_id)

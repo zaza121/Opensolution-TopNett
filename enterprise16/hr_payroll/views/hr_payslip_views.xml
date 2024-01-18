@@ -215,7 +215,7 @@
                             <group name="accounting">
                                 <field name="has_negative_net_to_report"/>
                                 <field name="negative_net_to_report_display" invisible="1"/>
-                                <field name="paid"/>
+                                <field name="paid" invisible="1"/>
                             </group>
                         </group>
                         <div colspan="4">
@@ -243,6 +243,7 @@
                 <field name="date_from"/>
                 <field name="contract_id"/>
                 <field name="payslip_run_id"/>
+                <field name="struct_id"/>
                 <filter string="To Compute" name="draft" domain="[('state', '=', 'draft')]" help="Draft Slip"/>
                 <filter string="To Confirm" name="draft" domain="[('state', '=', 'verify')]" help="Slips to Confirm"/>
                 <filter string="Done" name="done" domain="[('state', '=', 'done')]" help="Done Slip"/>
@@ -322,7 +323,7 @@
         <field name="state">code</field>
         <field name="code">
             if records:
-                records.action_payslip_done()
+                records.with_context(payslip_generate_pdf=True).action_payslip_done()
         </field>
     </record>
 

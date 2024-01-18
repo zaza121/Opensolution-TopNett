@@ -12,6 +12,7 @@ var RelationalFields = require('web.relational_fields');
 var StandaloneFieldManagerMixin = require('web.StandaloneFieldManagerMixin');
 var { WarningDialog } = require("@web/legacy/js/_deprecated/crash_manager_warning_dialog");
 var Widget = require('web.Widget');
+var AccountReportControlPanel = require('account_reports.AccountReportControlPanel');
 
 var QWeb = core.qweb;
 var _t = core._t;
@@ -116,6 +117,9 @@ var M2MFilters = Widget.extend(StandaloneFieldManagerMixin, {
 
 var accountReportsWidget = AbstractAction.extend({
     hasControlPanel: true,
+    config: {
+        ControlPanel: AccountReportControlPanel,
+    },
 
     events: {
         'input .o_searchview_input': 'filter_search_bar',
@@ -169,7 +173,7 @@ var accountReportsWidget = AbstractAction.extend({
         this.actionManager = parent;
         this.odoo_context = action.context;
         this.report_options = action.params && action.params.options;
-        this.root_account_report_id = this.report_options.report_id || action.context.report_id;
+        this.root_account_report_id = action.context.report_id || this.report_options.report_id;
         this.ignore_session = action.params && action.params.ignore_session;
         if ((this.ignore_session === 'read' || this.ignore_session === 'both') !== true) {
             var persist_key = this.get_persist_options_key()
@@ -243,11 +247,6 @@ var accountReportsWidget = AbstractAction.extend({
                 })
             }
         });
-
-        // A default value has been set for the filter accounts.
-        // Apply the filter to take this value into account.
-        if("default_filter_accounts" in (this.odoo_context || {}))
-            this.$('.o_account_reports_filter_input').val(this.odoo_context.default_filter_accounts).trigger("input");
     },
     parse_report_informations: function(values) {
         this.report_options = values.options;
@@ -392,7 +391,7 @@ var accountReportsWidget = AbstractAction.extend({
                         self._rpc({
                             model: 'account.report.expression',
                             method: 'action_view_carryover_lines',
-                            args: [$(event.target).data('expression-id'), self.report_options],
+                            args: [$(event.target).data('expression-id'), self.report_options, $(event.target).data('column-group-key')],
                             context: self.odoo_context,
                         })
                         .then(function(result){
@@ -430,15 +429,12 @@ var accountReportsWidget = AbstractAction.extend({
         var self = this;
         var query = e.target.value.trim().toLowerCase();
         this.filterOn = false;
-        this.$('.o_account_searchable_line').each(function(index, el) {
-            var $accountReportLineFoldable = $(el);
-            var line_id = $accountReportLineFoldable.find('.o_account_report_line').data('id');
-            if (line_id.endsWith("total--")) { //continue on the line with total in the id
-                return;
-            }
-            var $childs = self.$('tr[data-parent-id="'+$.escapeSelector(String(line_id))+'"]');
-
-            const lineNameEl = $accountReportLineFoldable.find('.account_report_line_name')[0];
+        const reportLines = this.el.querySelectorAll('.o_account_reports_table tbody tr');
+        let lastKnownParent = null;
+        let isLastParentHidden = null;
+        reportLines.forEach(reportLine => {
+            if (reportLine.classList.length == 0) return;
+            const lineNameEl = reportLine.querySelector('.account_report_line_name');
             // Only the direct text node, not text situated in other child nodes
             const displayName = lineNameEl.childNodes[0].nodeValue.trim().toLowerCase();
 
@@ -451,25 +447,34 @@ var accountReportsWidget = AbstractAction.extend({
                 queryFound = displayName.includes(query);
             }
 
-            $accountReportLineFoldable.toggleClass('o_account_reports_filtered_lines', !queryFound);
-            $childs.toggleClass('o_account_reports_filtered_lines', !queryFound);
+            if (reportLine.classList.contains('o_account_searchable_line')){
+                reportLine.classList.toggle('o_account_reports_filtered_lines', !queryFound);
+                lastKnownParent = reportLine.querySelector('.o_account_report_line').dataset.id;
+                isLastParentHidden = !queryFound;
+            }
+            else if (reportLine.getAttribute('data-parent-id') == lastKnownParent){
+                reportLine.classList.toggle('o_account_reports_filtered_lines', isLastParentHidden);
+            }
 
             if (!queryFound) {
                 self.filterOn = true;
             }
         });
+
         // Make sure all ancestors are displayed.
-        const $matchingChilds = this.$('tr[data-parent-id]:not(.o_account_reports_filtered_lines)');
+        const $matchingChilds = this.$('tr[data-parent-id]:not(.o_account_reports_filtered_lines):visible');
         $($matchingChilds.get().reverse()).each(function(index, el) {
             const id = $.escapeSelector(String(el.dataset.parentId));
             const $parent = self.$('.o_account_report_line[data-id="' + id + '"]');
-            $parent.closest('tr').toggleClass('o_account_reports_filtered_lines', false);
+            $parent.closest('tr').removeClass('o_account_reports_filtered_lines');
+            if ($parent.hasClass('folded')) {
+                $(el).addClass('o_account_reports_filtered_lines');
+            }
         });
         if (this.filterOn) {
-            this.$('.o_account_reports_level1.total').hide();
-        }
-        else {
-            this.$('.o_account_reports_level1.total').show();
+            this.$('.o_account_reports_level1.total').addClass('o_account_reports_filtered_lines');
+        } else {
+            this.$('.o_account_reports_level1.total').removeClass('o_account_reports_filtered_lines');
         }
         this.report_options['filter_search_bar'] = query;
         this.render_footnotes();
@@ -490,9 +495,9 @@ var accountReportsWidget = AbstractAction.extend({
     },
     _onChangeExpectedDate: function (event) {
         var self = this;
-        var split_target = $(event.target).attr('data-id').split("-");
+        var split_target = $(event.target).attr('data-id').split("~");
         var targetID = parseInt(split_target[split_target.length - 1]);
-        var split_parent = $(event.target).attr('parent-id').split("-");
+        var split_parent = $(event.target).attr('parent-id').split("~");
         var parentID = parseInt(split_parent[split_parent.length - 1]);
         var $content = $(QWeb.render("paymentDateForm", {target_id: targetID}));
         var paymentDatePicker = new datepicker.DateWidget(this);
@@ -1020,7 +1025,7 @@ var accountReportsWidget = AbstractAction.extend({
             }
 
             $line.find('.fa-caret-down').toggleClass('fa-caret-right fa-caret-down');
-            $line.toggleClass('folded');
+            $line.addClass('folded');
             $line.parent('tr').removeClass('o_js_account_report_parent_row_unfolded');
             parent_ids.set($line.data('id'), $line);
             var index = this.report_options.unfolded_lines.indexOf($line.data('id'));
@@ -1028,19 +1033,21 @@ var accountReportsWidget = AbstractAction.extend({
                 this.report_options.unfolded_lines.splice(index, 1);
             }
         });
-        var rows = this.$el.find('tr');
+
+        var rows = this.$el.find('tr[data-parent-id]');
         var children = rows.map((it, row) => {
             let $row = $(row);
             if (parent_ids.has($row.data('parent-id'))) {
                 parent_ids.get($row.data('parent-id'))[0].dataset.unfolded = 'False';
                 $row.find('.js_account_report_line_footnote').addClass('folded');
-                $row.hide();
+                $row.addClass('o_account_reports_filtered_lines');
                 var child = $row.find('[data-id]:first');
                 if (child) {
                     return child;
                 }
             }
         });
+
         if (children.length > 0) {
             this.batch_fold(children);
         }
@@ -1071,7 +1078,7 @@ var accountReportsWidget = AbstractAction.extend({
         var $lines_to_hide = this.$el.find('tr[data-parent-id="'+$.escapeSelector(String(line_id))+'"]');
         if ($lines_to_hide.length > 0) {
             $lines_to_hide.find('.js_account_report_line_footnote').addClass('folded');
-            $lines_to_hide.hide();
+            $lines_to_hide.addClass('o_account_reports_filtered_lines');
             _.each($lines_to_hide, function(el){
                 var child = $(el).find('[data-id]:first');
                 if (child) {
@@ -1084,7 +1091,7 @@ var accountReportsWidget = AbstractAction.extend({
     unfold: function(line) {
         var self = this;
         var line_id = line.data('id');
-        line.toggleClass('folded');
+        line.removeClass('folded');
         self.report_options.unfolded_lines.push(line_id);
         var $lines_in_dom = this.$el.find('tr[data-parent-id="'+$.escapeSelector(String(line_id))+'"]');
         let $total_lines = $lines_in_dom.filter('.total');
@@ -1099,16 +1106,15 @@ var accountReportsWidget = AbstractAction.extend({
                 }
             });
             $lines_in_dom.find('.js_account_report_line_footnote').removeClass('folded');
-            $lines_in_dom.show();
+            $lines_in_dom.removeClass('o_account_reports_filtered_lines');
             line.find('.o_account_reports_caret_icon .fa-caret-right').toggleClass('fa-caret-right fa-caret-down');
             line[0].dataset.unfolded = 'True';
             this._add_line_classes();
             return true;
-        }
-        else {
+        } else if ( line.data('expandFunction') ) {
             // Display the total lines (for 'totals below section' option)
             if ($total_lines.length > 0) {
-                $total_lines.show();
+                $lines_in_dom.removeClass('o_account_reports_filtered_lines');
             }
 
             // Change the caret icon
@@ -1123,15 +1129,19 @@ var accountReportsWidget = AbstractAction.extend({
                 })
                 .then(function(result){
                     line[0].dataset.unfolded = 'True';
-                    $(line).parent('tr').after(result);
-                    self._add_line_classes();
-                    var displayed_table = $('.o_account_reports_table:not(#table_header_clone)')
-                    displayed_table.find('.js_account_report_foldable').each(function() {
+
+                    let $result = $(result)
+                    $(line).parent('tr').after($result);
+                    $result.find('.js_account_report_foldable').each(function() {
                         if(!$(this).data('unfolded')) {
-                            self.fold($(this));
+                            self.batch_fold($(this));
                         }
                     });
+
+                    self._add_line_classes();
                 });
+        } else {
+            line[0].dataset.unfolded = 'True';
         }
     },
     load_more: function (ev) {
@@ -1201,6 +1211,6 @@ var accountReportsWidget = AbstractAction.extend({
 
 core.action_registry.add('account_report', accountReportsWidget);
 
-return accountReportsWidget;
+return {accountReportsWidget, M2MFilters};
 
 });

@@ -40,7 +40,6 @@ class RentalOrderLine(models.Model):
             'forecast_expected_date': False,
             'free_qty_today': 0.0,
             'qty_available_today': False,
-            'warehouse_id': False
         }
         for (from_date, to_date, warehouse_id), line_ids in rented_product_lines._partition_so_lines_by_rental_period():
             lines = self.env['sale.order.line'].browse(line_ids)
@@ -112,6 +111,7 @@ class RentalOrderLine(models.Model):
         # can we ascertain the warehouse_id.lot_stock_id of a sale.order doesn't change???
 
         for sol in lines:
+            sol = sol.with_company(sol.company_id)
             rented_location = sol.company_id.rental_loc_id
             stock_location = sol.order_id.warehouse_id.lot_stock_id
             if sol.product_id.tracking == 'serial' and (vals.get('pickedup_lot_ids', False) or vals.get('returned_lot_ids', False)):
@@ -126,7 +126,7 @@ class RentalOrderLine(models.Model):
                     removed_returned_lots = old_vals[sol.id][1] - sol.returned_lot_ids
                     sol._move_serials(returned_lots, rented_location, stock_location)
                     sol._return_serials(removed_returned_lots, stock_location, rented_location)
-            elif sol.product_id.tracking != 'serial' and (vals.get('qty_delivered', False) or vals.get('qty_returned', False)):
+            elif sol.product_id.tracking != 'serial' and any(k in vals for k in ('qty_delivered', 'qty_returned')):
                 # for products not tracked : move quantities
                 qty_delivered_change = sol.qty_delivered - old_vals[sol.id][0]
                 qty_returned_change = sol.qty_returned - old_vals[sol.id][1]

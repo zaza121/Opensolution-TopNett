@@ -1,6 +1,7 @@
 /** @odoo-module */
 
 import spreadsheet from "@spreadsheet/o_spreadsheet/o_spreadsheet_extended";
+import { containsReferences } from "../helpers";
 
 const { Component } = owl;
 const { autofillModifiersRegistry, autofillRulesRegistry } = spreadsheet.registries;
@@ -17,7 +18,11 @@ AutofillTooltip.template = "spreadsheet_edition.AutofillTooltip";
 
 autofillRulesRegistry
     .add("autofill_pivot", {
-        condition: (cell) => cell && cell.isFormula() && cell.content.match(/=\s*ODOO\.PIVOT/),
+        condition: (cell) =>
+            cell &&
+            cell.isFormula() &&
+            cell.content.match(/=\s*ODOO\.PIVOT/) &&
+            !containsReferences(cell),
         generateRule: (cell, cells) => {
             const increment = cells.filter(
                 (cell) => cell && cell.isFormula() && cell.content.match(/=\s*ODOO\.PIVOT/)
@@ -84,7 +89,7 @@ autofillModifiersRegistry
             return {
                 cellData: {
                     style: undefined,
-                    format: undefined,
+                    format: data.cell && data.cell.format,
                     border: undefined,
                     content,
                 },

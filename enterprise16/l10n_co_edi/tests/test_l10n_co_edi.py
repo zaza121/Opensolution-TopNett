@@ -50,3 +50,19 @@ class TestColombianInvoice(TestCoEdiCommon):
                 })],
             })
             self.l10n_co_assert_generated_file_equal(self.invoice, self.expected_invoice_xml)
+
+    def test_debit_note_creation_wizard(self):
+        """ Test debit note is create succesfully """
+
+        self.invoice.action_post()
+
+        wizard = self.env['account.debit.note'].with_context(active_model="account.move", active_ids=self.invoice.ids).create({
+            'l10n_co_edi_description_code_debit': '1',
+            'copy_lines': True,
+        })
+        wizard.create_debit()
+
+        debit_note = self.env['account.move'].search([
+            ('debit_origin_id', '=', self.invoice.id),
+        ])
+        self.assertRecordValues(debit_note, [{'amount_total': 48750.0}])

@@ -17,13 +17,41 @@ class AssetReportCustomHandler(models.AbstractModel):
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals):
         report = self._with_context_company2code2account(report)
 
+        lines, totals_by_column_group = self._generate_report_lines_without_grouping(report, options)
+        # add the groups by account
+        if options['assets_groupby_account']:
+            lines = self._group_by_account(report, lines, options)
+        else:
+            lines = report._regroup_lines_by_name_prefix(options, lines, '_report_expand_unfoldable_line_assets_report_prefix_group', 0)
+
+        # add the total line
+        total_columns = []
+        for column_data in options['columns']:
+            col_value = totals_by_column_group[column_data['column_group_key']].get(column_data['expression_label'])
+            if column_data.get('figure_type') == 'monetary':
+                total_columns.append({'name': report.format_value(col_value, self.env.company.currency_id, figure_type='monetary', blank_if_zero=column_data['blank_if_zero']), 'no_format': col_value})
+            else:
+                total_columns.append({})
+
+        lines.append({
+            'id': report._get_generic_line_id(None, None, markup='total'),
+            'level': 1,
+            'class': 'total',
+            'name': _('Total'),
+            'columns': total_columns,
+            'unfoldable': False,
+            'unfolded': False,
+        })
+        return [(0, line) for line in lines]
+
+    def _generate_report_lines_without_grouping(self, report, options, prefix_to_match=None, parent_id=None, forced_account_id=None):
         # construct a dictionary:
         #   {(account_id, asset_id): {col_group_key: {expression_label_1: value, expression_label_2: value, ...}}}
         all_asset_ids = set()
         all_lines_data = {}
         for column_group_key, column_group_options in report._split_options_per_column_group(options).items():
             # the lines returned are already sorted by account_id !
-            lines_query_results = self._query_lines(column_group_options)
+            lines_query_results = self._query_lines(column_group_options, prefix_to_match=prefix_to_match, forced_account_id=forced_account_id)
             for account_id, asset_id, cols_by_expr_label in lines_query_results:
                 line_id = (account_id, asset_id)
                 all_asset_ids.add(asset_id)
@@ -57,7 +85,7 @@ class AssetReportCustomHandler(models.AbstractModel):
                     all_columns.append({})
                 elif column_data['figure_type'] == 'monetary':
                     all_columns.append({
-                        'name': report.format_value(col_value, company_currency, figure_type='monetary'),
+                        'name': report.format_value(col_value, company_currency, figure_type='monetary', blank_if_zero=column_data['blank_if_zero']),
                         'no_format': col_value,
                     })
                 else:
@@ -69,43 +97,23 @@ class AssetReportCustomHandler(models.AbstractModel):
 
             name = assets_cache[asset_id].name
             line = {
-                'id': report._get_generic_line_id('account.asset', asset_id),
-                'level': 1,
+                'id': report._get_generic_line_id('account.asset', asset_id, parent_line_id=parent_id),
+                'level': 2,
                 'name': name,
                 'columns': all_columns,
                 'unfoldable': False,
                 'unfolded': False,
                 'caret_options': 'account_asset_line',
-                'class': 'o_account_asset_column_contrast',
                 'assets_account_id': account_id,
+                'class': 'o_account_asset_contrast_inner',
             }
+            if parent_id:
+                line['parent_id'] = parent_id
             if len(name) >= MAX_NAME_LENGTH:
                 line['title_hover'] = name
             lines.append(line)
 
-        # add the groups by account
-        if options['assets_groupby_account']:
-            lines = self._group_by_account(report, lines, options)
-
-        # add the total line
-        total_columns = []
-        for column_data in options['columns']:
-            col_value = totals_by_column_group[column_data['column_group_key']].get(column_data['expression_label'])
-            if column_data.get('figure_type') == 'monetary':
-                total_columns.append({'name': report.format_value(col_value, company_currency, figure_type='monetary')})
-            else:
-                total_columns.append({})
-
-        lines.append({
-            'id': report._get_generic_line_id(None, None, markup='total'),
-            'level': 1,
-            'class': 'total',
-            'name': _('Total'),
-            'columns': total_columns,
-            'unfoldable': False,
-            'unfolded': False,
-        })
-        return [(0, line) for line in lines]
+        return lines, totals_by_column_group
 
     def _caret_options_initializer(self):
         # Use 'caret_option_open_record_form' defined in account_reports rather than a custom function
@@ -136,16 +144,22 @@ class AssetReportCustomHandler(models.AbstractModel):
             {"name": _("Book Value"), "colspan": 1}
         ]
 
-        # Unfold all by default
-        options['unfold_all'] = (previous_options or {}).get('unfold_all', True)
-
         # Group by account by default
         groupby_activated = (previous_options or {}).get('assets_groupby_account', True)
         options['assets_groupby_account'] = groupby_activated
         # If group by account is activated, activate the hierarchy (which will group by account group as well) if
         # the company has at least one account group, otherwise only group by account
         has_account_group = self.env['account.group'].search_count([('company_id', '=', self.env.company.id)], limit=1)
-        options['hierarchy'] = has_account_group and groupby_activated or False
+        hierarchy_activated = (previous_options or {}).get('hierarchy', True)
+        options['hierarchy'] = has_account_group and hierarchy_activated or False
+
+        prefix_group_parameter_name = 'account_reports.assets_report.groupby_prefix_groups_threshold'
+        prefix_groups_threshold = int(self.env['ir.config_parameter'].sudo().get_param(prefix_group_parameter_name, 0))
+        if prefix_groups_threshold:
+            options['groupby_prefix_groups_threshold'] = prefix_groups_threshold
+
+        # Automatically unfold the report when printing it or not using prefix groups, unless some specific lines have been unfolded
+        options['unfold_all'] = (self._context.get('print_mode') and not options.get('unfolded_lines')) or (report.filter_unfold_all and (previous_options or {}).get('unfold_all', not prefix_groups_threshold))
 
     def _with_context_company2code2account(self, report):
         if self.env.context.get('company2code2account') is not None:
@@ -157,12 +171,12 @@ class AssetReportCustomHandler(models.AbstractModel):
 
         return report.with_context(company2code2account=company2code2account)
 
-    def _query_lines(self, options):
+    def _query_lines(self, options, prefix_to_match=None, forced_account_id=None):
         """
         Returns a list of tuples: [(asset_id, account_id, [{expression_label: value}])]
         """
         lines = []
-        asset_lines = self._query_values(options)
+        asset_lines = self._query_values(options, prefix_to_match=prefix_to_match, forced_account_id=forced_account_id)
 
         # Assign the gross increases sub assets to their main asset (parent)
         parent_lines = []
@@ -212,9 +226,10 @@ class AssetReportCustomHandler(models.AbstractModel):
             # Compute the closing values
             asset_closing = asset_opening + asset_add - asset_minus
             depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
+            al_currency = self.env['res.currency'].browse(al['asset_currency_id'])
 
             # Manage the closing of the asset
-            if al['asset_state'] == 'close' and al['asset_disposal_date'] and al['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to']):
+            if al['asset_state'] == 'close' and al['asset_disposal_date'] and al['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to']) and al_currency.compare_amounts(depreciation_closing, asset_closing) == 0:
                 depreciation_minus += depreciation_closing
                 depreciation_closing = 0.0
                 asset_minus += asset_closing
@@ -254,66 +269,111 @@ class AssetReportCustomHandler(models.AbstractModel):
         if not lines:
             return lines
 
-        rslt_lines = []
-        idx_monetary_columns = [idx_col for idx_col, col in enumerate(options['columns']) if col['figure_type'] == 'monetary']
-        # while iterating, we compare the 'parent_account_id' with the 'current_account_id' of each line,
-        # and sum the monetary amounts into 'group_total', the lines belonging to the same account.account.id are
-        # added to 'group_lines'
-        parent_account_id = lines[0].get('assets_account_id')  # get parent id name
-        group_total = [0] * len(idx_monetary_columns)
-        group_lines = []
+        line_vals_per_account_id = {}
+        for line in lines:
+            parent_account_id = line.get('assets_account_id')
 
-        dummy_extra_line = {'id': '-account.account-1', 'columns': [{'name': 0, 'no_format': 0}] * len(options['columns'])}
-        for line in lines + [dummy_extra_line]:
-            line_amounts = [line['columns'][idx].get('no_format', 0) for idx in idx_monetary_columns]
-            current_parent_account_id = line.get('assets_account_id')
+            model, res_id = report._get_model_info_from_id(line['id'])
+            assert model == 'account.asset'
+
             # replace the line['id'] to add the account.account.id
             line['id'] = report._build_line_id([
-                (None, 'account.account', current_parent_account_id),
-                (None, 'account.asset', report._get_model_info_from_id(line['id'])[-1])
+                (None, 'account.account', parent_account_id),
+                (None, 'account.asset', res_id)
             ])
-            # if True, the current lines belongs to another account.account.id, we know the preceding group is complete
-            # so we can add the grouping line of the preceding group (corresponding to the parent_account_id).
-            if current_parent_account_id != parent_account_id:
-                account = self.env['account.account'].browse(parent_account_id)
-                columns = []
-                for idx_col in range(len(options['columns'])):
-                    if idx_col in idx_monetary_columns:
-                        tot_val = group_total.pop(0)
-                        columns.append({
-                            'name': report.format_value(tot_val, self.env.company.currency_id, figure_type='monetary'),
-                            'no_format': tot_val
-                        })
-                    else:
-                        columns.append({})
-                new_line = {
-                    'id': report._build_line_id([(None, 'account.account', parent_account_id)]),
-                    'name': f"{account.code} {account.name}",
-                    'unfoldable': True,
-                    'unfolded': options.get('unfold_all', False),
-                    'level': 1,
-                    'columns': columns,
-                    'class': 'o_account_asset_column_contrast',
-                }
-                rslt_lines += [new_line] + group_lines
-                # Reset the control variables
-                parent_account_id = current_parent_account_id
-                group_total = [0] * len(idx_monetary_columns)
-                group_lines = []
-            # Add the line amount to the current group_total, set the line's parent_id and add the line to the
-            # current group of lines
-            group_total = [x + y for x, y in zip(group_total, line_amounts)]
-            line['parent_id'] = report._build_line_id([(None, 'account.account', parent_account_id)])
-            group_lines.append(line)
+
+            line_vals_per_account_id.setdefault(parent_account_id, {
+                # We don't assign a name to the line yet, so that we can batch the browsing of account.account objects
+                'id': report._build_line_id([(None, 'account.account', parent_account_id)]),
+                'columns': [], # Filled later
+                'unfoldable': True,
+                'unfolded': options.get('unfold_all', False),
+                'level': 1,
+                'class': 'o_account_asset_contrast',
+
+                # This value is stored here for convenience; it will be removed from the result
+                'group_lines': [],
+            })['group_lines'].append(line)
+
+        # Generate the result
+        idx_monetary_columns = [idx_col for idx_col, col in enumerate(options['columns']) if col['figure_type'] == 'monetary']
+        accounts = self.env['account.account'].browse(line_vals_per_account_id.keys())
+        rslt_lines = []
+        for account in accounts:
+            account_line_vals = line_vals_per_account_id[account.id]
+            account_line_vals['name'] = f"{account.code} {account.name}"
+
+            rslt_lines.append(account_line_vals)
+
+            group_totals = {column_index: 0 for column_index in idx_monetary_columns}
+            group_lines = report._regroup_lines_by_name_prefix(
+                options,
+                account_line_vals.pop('group_lines'),
+                '_report_expand_unfoldable_line_assets_report_prefix_group',
+                account_line_vals['level'],
+                parent_line_dict_id=account_line_vals['id'],
+            )
+
+            for account_subline in group_lines:
+                # Add this line to the group totals
+                for column_index in idx_monetary_columns:
+                    group_totals[column_index] += account_subline['columns'][column_index].get('no_format', 0)
+
+                # Setup the parent and add the line to the result
+                account_subline['parent_id'] = account_line_vals['id']
+                rslt_lines.append(account_subline)
+
+            # Add totals (columns) to the account line
+            for column_index in range(len(options['columns'])):
+                tot_val = group_totals.get(column_index)
+                if tot_val is None:
+                    account_line_vals['columns'].append({})
+                else:
+                    account_line_vals['columns'].append({
+                        'name': report.format_value(tot_val, self.env.company.currency_id, figure_type='monetary', blank_if_zero=options['columns'][column_index]['blank_if_zero']),
+                        'no_format': tot_val,
+                    })
+
         return rslt_lines
 
-    def _query_values(self, options):
+    def _query_values(self, options, prefix_to_match=None, forced_account_id=None):
         "Get the data from the database"
 
         self.env['account.move.line'].check_access_rights('read')
         self.env['account.asset'].check_access_rights('read')
 
         move_filter = f"""move.state {"!= 'cancel'" if options.get('all_entries') else "= 'posted'"}"""
+
+        if options.get('multi_company', False):
+            company_ids = tuple(self.env.companies.ids)
+        else:
+            company_ids = tuple(self.env.company.ids)
+
+        query_params = {
+            'date_to': options['date']['date_to'],
+            'date_from': options['date']['date_from'],
+            'company_ids': company_ids,
+        }
+
+        prefix_query = ''
+        if prefix_to_match:
+            prefix_query = "AND asset.name ILIKE %(prefix_to_match)s"
+            query_params['prefix_to_match'] = f"{prefix_to_match}%"
+
+        account_query = ''
+        if forced_account_id:
+            account_query = "AND account.id = %(forced_account_id)s"
+            query_params['forced_account_id'] = forced_account_id
+
+        analytical_query = ''
+        analytic_account_ids = []
+        if options.get('analytic_accounts') and not any(x in options.get('analytic_accounts_list', []) for x in options['analytic_accounts']):
+            analytic_account_ids += [[str(account_id) for account_id in options['analytic_accounts']]]
+        if options.get('analytic_accounts_list'):
+            analytic_account_ids += [[str(account_id) for account_id in options.get('analytic_accounts_list')]]
+        if analytic_account_ids:
+            analytical_query = 'AND asset.analytic_distribution ?| array[%(analytic_account_ids)s]'
+            query_params['analytic_account_ids'] = analytic_account_ids
 
         sql = f"""
             SELECT asset.id AS asset_id,
@@ -346,22 +406,51 @@ class AssetReportCustomHandler(models.AbstractModel):
                AND asset.asset_type = 'purchase'
                AND asset.active = 't'
                AND reversal.id IS NULL
+               {prefix_query}
+               {account_query}
+               {analytical_query}
           GROUP BY asset.id, account.id
           ORDER BY account.code, asset.acquisition_date;
         """
 
-        if options.get('multi_company', False):
-            company_ids = tuple(self.env.companies.ids)
-        else:
-            company_ids = tuple(self.env.company.ids)
-
-        self._cr.execute(sql, {
-            'date_to': options['date']['date_to'],
-            'date_from': options['date']['date_from'],
-            'company_ids': company_ids,
-        })
+        self._cr.execute(sql, query_params)
         results = self._cr.dictfetchall()
         return results
+
+    def _report_expand_unfoldable_line_assets_report_prefix_group(self, line_dict_id, groupby, options, progress, offset, unfold_all_batch_data=None):
+        matched_prefix = self.env['account.report']._get_prefix_groups_matched_prefix_from_line_id(line_dict_id)
+        report = self.env['account.report'].browse(options['report_id'])
+
+        lines, _totals_by_column_group = self._generate_report_lines_without_grouping(
+            report,
+            options,
+            prefix_to_match=matched_prefix,
+            parent_id=line_dict_id,
+            forced_account_id=self.env['account.report']._get_res_id_from_line_id(line_dict_id, 'account.account'),
+        )
+
+        lines = report._regroup_lines_by_name_prefix(
+            options,
+            lines,
+            '_report_expand_unfoldable_line_assets_report_prefix_group',
+            len(matched_prefix),
+            matched_prefix=matched_prefix,
+            parent_line_dict_id=line_dict_id,
+        )
+
+        return {
+            'lines': lines,
+            'offset_increment': len(lines),
+            'has_more': False,
+        }
+
+    def _custom_line_postprocessor(self, report, options, lines):
+        for line in lines:
+            for column in line['columns']:
+                if 'no_format' in column and column['no_format'] == 0:
+                    column_class = column.get('class') or ''
+                    column['class'] = column_class + ' o_asset_blank_if_zero_value'
+        return lines
 
 
 class AssetsReport(models.Model):

@@ -62,9 +62,14 @@ QUnit.module('SalePlanning > GanttView', {
                     [{ false: [
                                 ["2021-10-12 08:00:00", "2022-10-12 12:00:00"],
                             ],
+                        }, {
+                        false: false,
                         },
                     ]
                 );
+            }
+            if (args.method === "gantt_company_hours_per_day") {
+                return Promise.resolve(8);
             }
             return this._super.apply(this, arguments);
         };

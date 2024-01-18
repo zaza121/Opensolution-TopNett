@@ -76,6 +76,12 @@
             <field name="bom_id" ref="mrp.mrp_bom_desk"/>
         </record>
 
+        <function model="mrp.routing.workcenter" name="write">
+            <value model="mrp.bom" eval="obj().env.ref('mrp.mrp_bom_desk').with_context(active_test=False).operation_ids.ids"/>
+            <value eval="{
+                'active': True
+            }"/>
+        </function>
         <function model="mrp.production" name="action_confirm" eval="[ref('purchase_mrp_workorder_quality.mrp_production')]"/>
         <function model="mrp.production" name="action_assign" eval="[ref('purchase_mrp_workorder_quality.mrp_production')]"/>
         <function model="mrp.production" name="button_plan" eval="[ref('purchase_mrp_workorder_quality.mrp_production')]"/>

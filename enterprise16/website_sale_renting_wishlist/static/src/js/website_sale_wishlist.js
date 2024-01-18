@@ -19,7 +19,7 @@ publicWidget.registry.ProductWishlist.include({
         const tr = this.el.querySelector(`tr[data-product-id="${productId}"]`);
         const isRental = tr && tr.querySelector('input[name=is_rental]');
         if (isRental && isRental.value) {
-            Object.assign(params, this._getRentingDates($(tr)));
+            Object.assign(params, this._getSerializedRentingDates($(tr)));
         }
         return params;
     },

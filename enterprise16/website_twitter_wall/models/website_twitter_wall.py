@@ -24,7 +24,7 @@ class WebsiteTwitterWall(models.Model):
 
 
     name = fields.Char(required=True, translate=True)
-    description = fields.Html(translate=True)
+    description = fields.Html(translate=True, sanitize_attributes=False)
     is_live = fields.Boolean(help="Is live mode on/off", default=True)
     active = fields.Boolean(default=True)
     search_pattern = fields.Char('Search string',

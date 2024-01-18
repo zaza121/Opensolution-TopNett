@@ -583,7 +583,7 @@ class CAMT:
             ))
 
     _get_partner_name = partial(_generic_get,
-        xpath='.//ns:RltdPties/ns:{placeholder}/ns:Nm/text()')
+        xpath='.//ns:RltdPties/ns:{placeholder}/ns:Nm/text() | .//ns:RltdPties/ns:{placeholder}/ns:Pty/ns:Nm/text()')
 
     _get_account_number = partial(_generic_get,
         xpath=('.//ns:RltdPties/ns:{placeholder}Acct/ns:Id/ns:IBAN/text()'

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError, ValidationError, RedirectWarning
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
@@ -58,7 +58,9 @@ class AccountJournal(models.Model):
                     # for cron jobs it is usually recommended committing after each iteration,
                     # so that a later error or job timeout doesn't discard previous work
                     self.env.cr.commit()
-                except UserError:
+                except (UserError, RedirectWarning):
+                    # We need to rollback here otherwise the next iteration will still have the error when trying to commit
+                    self.env.cr.rollback()
                     pass
 
     def manual_sync(self):

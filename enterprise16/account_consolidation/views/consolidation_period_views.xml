@@ -59,7 +59,7 @@
                         </div>
                         <group>
                             <group>
-                                <field name="chart_id" attrs="{'readonly': [('state','=','closed')]}" invisible="context.get('default_chart_id', False)"/>
+                                <field name="chart_id" attrs="{'readonly': [('state','=','closed')]}" invisible="context.get('default_chart_id', False)" options="{'no_quick_create': True}"/>
                                 <field name="chart_currency_id" readonly="1"/>
                             </group>
                             <group>
@@ -327,7 +327,7 @@
                     <sheet>
                         <group>
                             <field name="company_id"/>
-                            <field name="period_id" invisible="context.get('from_analysis_period', False)" required="not context.get('from_analysis_period', True)"/>
+                            <field name="period_id"/>
                         </group>
                         <notebook>
                             <page string="Settings" name="settings">

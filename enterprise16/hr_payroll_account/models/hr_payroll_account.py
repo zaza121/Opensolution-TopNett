@@ -56,7 +56,7 @@ class HrPayslip(models.Model):
         # {'journal_id': {'month': [slip_ids]}}
         slip_mapped_data = defaultdict(lambda: defaultdict(lambda: self.env['hr.payslip']))
         for slip in payslips_to_post:
-            slip_mapped_data[slip.struct_id.journal_id.id][fields.Date().end_of(slip.date_to, 'month')] |= slip
+            slip_mapped_data[slip.struct_id.journal_id.id][slip.date or fields.Date().end_of(slip.date_to, 'month')] |= slip
         for journal_id in slip_mapped_data: # For each journal_id.
             for slip_date in slip_mapped_data[journal_id]: # For each month.
                 line_ids = []
@@ -65,7 +65,7 @@ class HrPayslip(models.Model):
                 date = slip_date
                 move_dict = {
                     'narration': '',
-                    'ref': date.strftime('%B %Y'),
+                    'ref': fields.Date().end_of(slip.date_to, 'month').strftime('%B %Y'),
                     'journal_id': journal_id,
                     'date': date,
                 }
@@ -188,8 +188,8 @@ class HrPayslip(models.Model):
                         not line.salary_rule_id.analytic_account_id.id and
                         not line.slip_id.contract_id.analytic_account_id.id
                     )
-                    or line.salary_rule_id.analytic_account_id.id in line_id['analytic_distribution']
-                    or line.slip_id.contract_id.analytic_account_id.id in line_id['analytic_distribution']
+                    or line_id['analytic_distribution'] and line.salary_rule_id.analytic_account_id.id in line_id['analytic_distribution']
+                    or line_id['analytic_distribution'] and line.slip_id.contract_id.analytic_account_id.id in line_id['analytic_distribution']
 
                 )
         )

@@ -33,6 +33,7 @@ This module allows the creation of the EDI documents and the communication with 
         'data/l10n_mx_edi_payment_method_data.xml',
         'data/ir_cron.xml',
         'data/res_currency_data.xml',
+        'data/l10n_mx_uom_unspsc.xml',
 
         'views/account_bank_statement_view.xml',
         'views/account_journal_view.xml',

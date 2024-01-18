@@ -53,14 +53,15 @@ class IrActionsReport(models.Model):
 
     def associated_view(self):
         action_data = super(IrActionsReport, self).associated_view()
-        domain = expression.normalize_domain(action_data['domain'])
+        if action_data is not False:
+            domain = expression.normalize_domain(action_data['domain'])
 
-        view_name = self.report_name.split('.')[1].split('_copy_')[0]
+            view_name = self.report_name.split('.')[1].split('_copy_')[0]
 
-        domain = expression.OR([
-            domain,
-            ['&', ('name', 'ilike', view_name), ('type', '=', 'qweb')]
-        ])
+            domain = expression.OR([
+                domain,
+                ['&', ('name', 'ilike', view_name), ('type', '=', 'qweb')]
+            ])
 
-        action_data['domain'] = domain
+            action_data['domain'] = domain
         return action_data

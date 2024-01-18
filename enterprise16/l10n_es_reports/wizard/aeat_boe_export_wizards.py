@@ -100,6 +100,23 @@ class Mod303BOEWizard(models.TransientModel):
     MODELO_NUMBER = 303
 
     monthly_return = fields.Boolean(string="In Monthly Return Register")
+    declaration_type = fields.Selection(
+        selection_add=[
+            ('U', 'U - Direct Debit of the Income in CCC'),
+            ('G', 'G - Tributaria Current Account - Income'),
+            ('N', 'N - No Activity / Zero Result'),
+            ('C', 'C - Compensation Request'),
+            ('D', 'D - Return'),
+            ('V', 'V - Tributaria Current Account - Return'),
+            ('X', 'X - Return by Transfer Abroad (Only for Periods 3T, 4T and 07 to 12)'),
+        ],
+        ondelete={
+            'C': 'cascade',
+            'D': 'cascade',
+            'V': 'cascade',
+            'X': 'cascade',
+        },
+    )
     using_sii = fields.Boolean(string="Using SII Voluntarily", default=False)
     exempted_from_mod_390 = fields.Boolean(string="Exempted From Modelo 390", default=False)
     exempted_from_mod_390_available = fields.Boolean(compute='_compute_show_exempted_from_mod_390', help="Technical field used to only make exempted_from_mod_390 avilable in the last period (12 or 4T)")

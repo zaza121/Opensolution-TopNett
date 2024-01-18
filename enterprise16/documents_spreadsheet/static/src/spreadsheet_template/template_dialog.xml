@@ -23,8 +23,10 @@
                 <div class="o-templates-container">
                     <div class="o-template o-blank-template">
                         <img
+                            class="o-template-image"
                             tabindex="0"
                             t-on-focus="() => this._selectTemplate(null)"
+                            t-on-dblclick="_createSpreadsheet"
                             t-att-class="_isSelected(null) ? 'o-template-selected': ''"
                             src="spreadsheet/static/img/spreadsheet.svg"
                             t-att-title="Blank"/>
@@ -34,14 +36,20 @@
                         t-foreach="state.templates" t-as="template"
                         t-key="template.id"
                         class="o-template">
-                        <img
+                        <div
+                            class="o-template-image"
                             tabindex="0"
                             t-att-class="_isSelected(template.id) ? 'o-template-selected': ''"
                             t-on-focus="() => this._selectTemplate(template.id)"
-                            t-attf-src="/web/image?model=spreadsheet.template&amp;id={{template.id}}&amp;field=thumbnail"
-                            t-att-title="template.name"/>
+                            t-on-dblclick="_createSpreadsheet">
+                            <img
+                                t-attf-src="/web/image?model=spreadsheet.template&amp;id={{template.id}}&amp;field=thumbnail"
+                                t-att-title="template.name"/>
+                        </div>
                         <div class="o-template-item-name" t-esc="template.name"/>
                     </div>
+                    <!-- ghost items are used to properly space last elements. -->
+                    <div t-foreach="Array(limit)" t-as="i" t-key="i_index" class="o-template o-template-ghost-item mh-0" />
                 </div>
                 <t t-set-slot="footer">
                     <button

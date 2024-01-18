@@ -936,6 +936,38 @@ tour.register('test_delivery_using_buttons', {test: true}, [
     },
 ]);
 
+tour.register('test_remaining_decimal_accuracy', {test: true}, [
+    {
+        trigger: '.o_barcode_client_action',
+        run: function() {
+            helper.assertLinesCount(1);
+            helper.assertScanMessage('scan_product');
+            helper.assertValidateVisible(true);
+            helper.assertValidateIsHighlighted(false);
+            helper.assertValidateEnabled(true);
+            helper.assertLineQuantityOnReservedQty(0, '0 / 4');
+            helper.assertButtonIsVisible($('.o_barcode_line').eq(0), 'add_quantity');
+        }
+    },
+
+    // Goes on the form view and add 2.2 .
+    { trigger: '.o_barcode_line:first-child .o_edit' },
+    {
+        trigger: 'input.o_input[id=qty_done_1]',
+        run: 'text 2.2',
+    },
+    { trigger: '.o_save' },
+    {
+        trigger: '.o_barcode_lines',
+        run: function() {
+            helper.assertButtonIsVisible($('.o_barcode_line').eq(0), 'add_quantity');
+            helper.assertLineQuantityOnReservedQty(0, '2.2 / 4');
+            const buttonAddQty = document.querySelector(".o_add_quantity");
+            helper.assert(buttonAddQty.innerText, "+1.8", "Something wrong with the quantities");
+        }
+    },
+]);
+
 tour.register('test_receipt_from_scratch_with_lots_1', {test: true}, [
     {
         trigger: '.o_barcode_client_action',
@@ -1162,6 +1194,16 @@ tour.register('test_delivery_from_scratch_with_lots_1', {test: true}, [
     {
         trigger: '.o_field_widget[name="product_id"]',
     },
+    ...tour.stepUtils.discardBarcodeForm(),
+]);
+
+tour.register('test_delivery_from_scratch_with_incompatible_lot', {test: true}, [
+    {
+        trigger: '.o_barcode_client_action',
+        run: 'scan 0000000001',
+    },
+    tour.stepUtils.confirmAddingUnreservedProduct(),
+    { trigger: '.o_barcode_line:first-child .o_edit' },
     ...tour.stepUtils.discardBarcodeForm(),
 ]);
 
@@ -3032,6 +3074,75 @@ tour.register('test_receipt_delete_button', {test: true}, [
     },
 ]);
 
+tour.register('test_scrap', {test: true}, [
+    // Opens the receipt and checks we can't scrap if not done.
+    { trigger: ".o_stock_barcode_main_menu", run: "scan receipt_scrap_test" },
+    { trigger: ".o_barcode_actions" },
+    {
+        trigger: ".o_barcode_settings",
+        run: function() {
+            const scrapButton = document.querySelector("button.o_scrap");
+            helper.assert(Boolean(scrapButton), false, "Scrap button shouldn't be displayed");
+        },
+    },
+    { trigger: "button.o_close" },
+    { trigger: ".o_barcode_lines", run: "scan O-BTN.scrap" },
+    { trigger: ".o_notification.border-warning:contains('You can\\'t register scrap')" },
+    // Process the receipt then re-opens it again.
+    { trigger: ".o_line_button.o_add_quantity" },
+    { trigger: ".o_validate_page.btn-success" },
+    { trigger: ".o_stock_barcode_main_menu", run: "scan receipt_scrap_test" },
+    {
+        trigger: ".o_scan_message.o_picking_already_done",
+        run: "scan O-BTN.scrap",
+    },
+    {
+        extra_trigger: ".modal-title:contains('Scrap')",
+        trigger: ".btn[special='cancel']",
+    },
+    { trigger: ".o_barcode_actions" },
+    {
+        trigger: ".o_barcode_settings",
+        run: function() {
+            const scrapButton = document.querySelector("button.o_scrap");
+            helper.assert(Boolean(scrapButton), true, "Scrap button should be displayed");
+        },
+    },
+    // Exits the receipt and opens the delivery.
+    { trigger: "button.o_exit" },
+    { extra_trigger: ".o_barcode_lines_header", trigger: "button.o_exit" },
+    { trigger: ".o_stock_barcode_main_menu", run: "scan delivery_scrap_test" },
+    // Checks we can scrap for a delivery.
+    { trigger: ".o_barcode_actions" },
+    {
+        trigger: ".o_barcode_settings",
+        run: function() {
+            const scrapButton = document.querySelector("button.o_scrap");
+            helper.assert(Boolean(scrapButton), true, "Scrap button should be displayed");
+        },
+    },
+    { trigger: "button.o_close" },
+    { trigger: ".o_barcode_lines", run: "scan O-BTN.scrap" },
+    {
+        extra_trigger: ".modal-title:contains('Scrap')",
+        trigger: ".btn[special='cancel']",
+    },
+    // Process the delivery then re-opens it again.
+    { trigger: ".o_line_button.o_add_quantity" },
+    { trigger: ".o_validate_page.btn-success" },
+    { trigger: ".o_stock_barcode_main_menu", run: "scan delivery_scrap_test" },
+    { trigger: ".o_barcode_lines_header", run: "scan O-BTN.scrap" },
+    { trigger: ".o_notification.border-warning:contains('You can\\'t register scrap')" },
+    { trigger: ".o_barcode_actions" },
+    {
+        trigger: ".o_barcode_settings",
+        run: function() {
+            const scrapButton = document.querySelector("button.o_scrap");
+            helper.assert(Boolean(scrapButton), false, "Scrap button shouldn't be displayed");
+        },
+    },
+]);
+
 tour.register('test_show_entire_package', {test: true}, [
     { trigger: 'button.button_operations' },
     { trigger: '.o_kanban_record:contains(Delivery Orders)' },
@@ -3123,6 +3234,24 @@ tour.register('test_define_the_destination_package', {test: true}, [
     {
         trigger: '.o_notification.border-success',
     },
+]);
+
+tour.register('stock_barcode_package_with_lot', {test: true}, [
+    {
+        trigger: "[data-menu-xmlid='stock_barcode.stock_barcode_menu']", // open barcode app
+    },
+    {
+        trigger: ".button_inventory",
+    },
+    {
+        trigger: '.o_barcode_client_action',
+        run: 'scan Lot-test' // scan lot on a new location
+    },
+    {
+        extra_trigger: '.o_barcode_line .package:contains(Package-test)', // verify it takes the right quantity
+        trigger: '.o_apply_page',
+    },
+    { trigger: '.o_notification.border-success' },
 ]);
 
 tour.register('test_avoid_useless_line_creation', {test: true}, [

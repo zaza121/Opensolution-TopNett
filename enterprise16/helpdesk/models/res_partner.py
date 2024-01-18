@@ -35,5 +35,5 @@ class ResPartner(models.Model):
         action = self.env["ir.actions.actions"]._for_xml_id("helpdesk.helpdesk_ticket_action_main_tree")
         action['context'] = {}
         all_child = self.with_context(active_test=False).search([('id', 'child_of', self.ids)])
-        action['domain'] = ['|', ('partner_id', '=', self.ids), ('partner_id', 'in', all_child.ids)]
+        action['domain'] = ['|', ('partner_id', 'in', self.ids), ('partner_id', 'in', all_child.ids)]
         return action

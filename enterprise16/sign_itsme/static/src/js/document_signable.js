@@ -11,6 +11,26 @@ function deleteQueryParamFromURL(param) {
     window.history.replaceState(null, '', url);
 }
 
+/**
+ * Processes special errors from the IAP server
+ * @param { String } errorMessage
+ * @returns { [String, Boolean] } error message, title or false
+ */
+function processErrorMessage(errorMessage) {
+    const defaultTitle = false;
+    const errorMap = {
+        "err_connection_odoo_instance": [
+            _t("The itsme® identification data could not be forwarded to Odoo, the signature could not be saved."),
+            defaultTitle
+        ],
+        "access_denied": [
+            _t("You have rejected the identification request or took too long to process it. You can try again to finalize your signature."),
+            _t("Identification refused")
+        ]
+    };
+    return errorMap[errorMessage] ? errorMap[errorMessage] : [ errorMessage, defaultTitle ]
+}
+
 const ItsmeDialog = SignInfoDialog.extend({
     template: "sign_itsme.itsme_dialog",
     events: {
@@ -71,9 +91,10 @@ SignableDocument.include({
         this.showThankYouDialog = this.$("#o_sign_show_thank_you_dialog").length > 0;
         this.errorMessage = this.$("#o_sign_show_error_message").val();
         if (this.errorMessage) {
-            this.openErrorDialog(this.errorMessage, () => {
+            const [errorMessage, title] = processErrorMessage(this.errorMessage);
+            this.openErrorDialog(errorMessage, () => {
                 deleteQueryParamFromURL('error_message');
-            })
+            }, title);
         }
         if (this.showThankYouDialog) {
             this.openThankYouDialog();

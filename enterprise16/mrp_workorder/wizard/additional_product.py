@@ -57,7 +57,7 @@ class MrpWorkorderAdditionalProduct(models.TransientModel):
                 )
             )
 
-        move = move._action_confirm()
+        move._action_confirm(merge=False)
         check = {
             'workorder_id': wo.id,
             'component_id': self.product_id.id,

@@ -4,7 +4,7 @@
 from odoo import models, _
 from odoo.tools import format_date, date_utils, get_lang
 from collections import defaultdict
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, RedirectWarning
 
 import json
 import datetime
@@ -35,7 +35,7 @@ class JournalReportCustomHandler(models.AbstractModel):
             if column['expression_label'] in ['name', 'account', 'label']:
                 column['class'] = 'o_account_report_line_ellipsis'
             elif column['expression_label'] == 'additional_col_2':
-                column['class'] = 'text-right'
+                column['class'] = 'text-end'
         # Initialise the custom options for this report.
         custom_filters = {
             'sort_by_date': False,
@@ -152,14 +152,30 @@ class JournalReportCustomHandler(models.AbstractModel):
 
         report = self.env.ref('account_reports.journal_report')
 
+        treated_amls_count = 0
         for move_key, move_line_vals_list in line_dict_grouped.items():
             # All move lines for a move will share static values, like if the move is multicurrency, the journal,..
             # These can be fetched using any column groups or lines for this move.
             first_move_line = move_line_vals_list[0]
             general_line_vals = next(col_group_val for col_group_val in first_move_line.values())
-            if report.load_more_limit and len(move_line_vals_list) + len(lines) > report.load_more_limit:
+            if report.load_more_limit and len(move_line_vals_list) + treated_amls_count > report.load_more_limit and not self._context.get('print_mode'):
                 # This element won't generate a line now, but we use it to know that we'll need to add a load_more line.
                 has_more_lines = True
+                if treated_amls_count == 0:
+                    # A single move lines count exceed the load more limit, we need to raise to inform the user
+                    msg = _("The 'load more limit' setting of this report is too low to display all the lines of the entry you're trying to show.")
+                    if self.env.user.has_group('account.group_account_manager'):
+                        action = {
+                            "view_mode": "form",
+                            "res_model": "account.report",
+                            "type": "ir.actions.act_window",
+                            "res_id" : report.id,
+                            "views": [[self.env.ref("account_reports.account_report_form").id, "form"]],
+                        }
+                        title = _('Go to report configuration')
+
+                        raise RedirectWarning(msg, action, title)
+                    raise UserError(msg)
                 break
             is_unreconciled_payment = journal.type == 'bank' and not any(line for line in move_line_vals_list if next(col_group_val for col_group_val in line.values())['account_type'] in ('liability_credit_card', 'asset_cash'))
             if journal.type == 'bank':
@@ -171,6 +187,7 @@ class JournalReportCustomHandler(models.AbstractModel):
                 continue
             # Create the first line separately, as we want to give it some specific behavior and styling
             lines.append(self._get_first_move_line(options, parent_line_id, move_key, first_move_line, is_unreconciled_payment))
+            treated_amls_count += len(move_line_vals_list)
             treated_results_count += 1
             for line_index, move_line_vals in enumerate(move_line_vals_list[1:]):
                 if journal.type == 'bank':
@@ -204,31 +221,35 @@ class JournalReportCustomHandler(models.AbstractModel):
                     }
         # If we have no offsets, check if we can create a tax line: This line will contain two tables, one for the tax summary and one for the tax grid summary.
         if offset == 0:
-            tax_data = {
-                'date_from': options.get('date', {}).get('date_from'),
-                'date_to': options.get('date', {}).get('date_to'),
-                'journal_id': journal.id,
-                'journal_type': journal.type,
-            }
-            # This is a special line with a special template to render it.
-            # It will contain two tables, which are the tax report and tax grid summary sections.
-            tax_report_lines = self._get_generic_tax_summary_for_sections(options, tax_data)
-            tax_grid_summary_lines = self._get_tax_grids_summary(options, tax_data)
-            if tax_report_lines or tax_grid_summary_lines:
-                after_load_more_lines.append({
-                    'id': report._get_generic_line_id(False, False, parent_line_id=parent_line_id, markup='tax_report_section'),
-                    'name': '',
-                    'parent_id': parent_line_id,
+            # It is faster to first check that we need a tax section; this avoids computing a tax report for nothing.
+            journal_has_tax = bool(self.env['account.move.line'].search_count([('journal_id', '=', journal.id), ('tax_ids', '!=', False)], limit=1))
+            if journal_has_tax:
+                tax_data = {
+                    'date_from': options.get('date', {}).get('date_from'),
+                    'date_to': options.get('date', {}).get('date_to'),
                     'journal_id': journal.id,
-                    'is_tax_section_line': True,
-                    'tax_report_lines': tax_report_lines,
-                    'tax_grid_summary_lines': tax_grid_summary_lines,
-                    'date_from': tax_data['date_from'],
-                    'date_to': tax_data['date_to'],
-                    'columns': [],
-                    'colspan': len(options['columns']) + 1,
-                    'level': 3,
-                })
+                    'journal_type': journal.type,
+                }
+                # This is a special line with a special template to render it.
+                # It will contain two tables, which are the tax report and tax grid summary sections.
+                tax_report_lines = self._get_generic_tax_summary_for_sections(options, tax_data)
+                tax_grid_summary_lines = self._get_tax_grids_summary(options, tax_data)
+                if tax_report_lines or tax_grid_summary_lines:
+                    after_load_more_lines.append({
+                        'id': report._get_generic_line_id(False, False, parent_line_id=parent_line_id, markup='tax_report_section'),
+                        'name': '',
+                        'parent_id': parent_line_id,
+                        'journal_id': journal.id,
+                        'is_tax_section_line': True,
+                        'tax_report_lines': tax_report_lines,
+                        'tax_grid_summary_lines': tax_grid_summary_lines,
+                        'date_from': tax_data['date_from'],
+                        'date_to': tax_data['date_to'],
+                        'columns': [],
+                        'colspan': len(options['columns']) + 1,
+                        'level': 3,
+                        'class': 'o_account_reports_ja_subtable',
+                    })
 
         return lines, after_load_more_lines, has_more_lines, treated_results_count, next_progress, current_balances
 
@@ -253,13 +274,13 @@ class JournalReportCustomHandler(models.AbstractModel):
             # The system needs to always have the same column amount. This is hacky, but it works.
             if journal_type in ['sale', 'purchase']:
                 columns.extend([
-                    {'name': _('Taxes'), 'class': 'text-left'},
+                    {'name': _('Taxes'), 'class': 'text-start'},
                     {'name': _('Tax Grids')},
                 ])
             elif journal_type == 'bank':
                 columns.extend([
                     {'name': _('Balance'), 'class': 'number'},
-                    {'name': ''} if not has_multicurrency else {'name': _('Amount In Currency'), 'class': 'text-right number'},
+                    {'name': ''} if not has_multicurrency else {'name': _('Amount In Currency'), 'class': 'text-end number'},
                 ])
             else:
                 columns.extend([
@@ -431,7 +452,7 @@ class JournalReportCustomHandler(models.AbstractModel):
                 line_columns.append({})
 
         return {
-            'id': report._get_generic_line_id(None, None, parent_line_id=parent_line_id, markup='initial'),
+            'id': report._get_generic_line_id(None, None, parent_line_id=parent_line_id, markup='initial' if is_starting_balance else 'final'),
             'class': 'o_account_reports_initial_balance',
             'name': '',
             'parent_id': parent_line_id,
@@ -470,6 +491,7 @@ class JournalReportCustomHandler(models.AbstractModel):
             'columns': columns,
             'parent_id': parent_key,
             'move_id': values['move_id'],
+            'class': 'o_account_reports_ja_move_line',
         }
 
     def _get_aml_line(self, options, parent_key, eval_dict, line_index, journal, is_unreconciled_payment):
@@ -529,7 +551,9 @@ class JournalReportCustomHandler(models.AbstractModel):
             else:
                 amount_currency_name = _('Amount in currency: %s', self.env['account.report'].format_value(values[column_group_key]['amount_currency_total'], currency=self.env['res.currency'].browse(values[column_group_key]['move_currency']), blank_if_zero=False, figure_type='monetary'))
             if line_index == 0:
-                return values[column_group_key]['reference'] or amount_currency_name
+                res = values[column_group_key]['reference'] or amount_currency_name
+                # if the invoice ref equals the payment ref then let's not repeat the information
+                return res if res != values[column_group_key]['move_name'] else ''
             elif line_index == 1:
                 return values[column_group_key]['reference'] and amount_currency_name or ''
             elif line_index == -1:  # Only when we create a line just for the amount currency. It's the only time we always want the amount.
@@ -561,7 +585,7 @@ class JournalReportCustomHandler(models.AbstractModel):
                 tax_val = _('B: %s', report.format_value(values['tax_base_amount'], blank_if_zero=False, figure_type='monetary'))
             values['tax_grids'] = values['tax_grids']
             additional_col = [
-                {'name': tax_val, 'class': 'text-left'},
+                {'name': tax_val, 'class': 'text-start'},
                 {'name': ', '.join(values['tax_grids'])},
             ]
         elif values['journal_type'] == 'bank':
@@ -600,6 +624,7 @@ class JournalReportCustomHandler(models.AbstractModel):
             'report_id': generix_tax_report.id,
             'date_from': data.get('date_from'),
             'date_to': data.get('date_to'),
+            'disable_archived_tag_test': True,
         })
         tax_report_options = generix_tax_report._get_options(previous_option)
         # Even though it doesn't have a journal selector, we can force a journal in the options to only get the lines for a specific journal.
@@ -643,7 +668,10 @@ class JournalReportCustomHandler(models.AbstractModel):
             sort_by_date = options_group.get('sort_by_date')
             params.append(column_group_key)
             params += where_params
-            params += [report.load_more_limit + 1, offset]
+
+            limit_to_load = report.load_more_limit + 1 if report.load_more_limit and not self._context.get('print_mode') else None
+
+            params += [limit_to_load, offset]
             queries.append(f"""
                 SELECT
                     %s AS column_group_key,

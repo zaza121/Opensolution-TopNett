@@ -144,7 +144,7 @@ class AnalyticLine(models.Model):
 
         grid_anchor, last_week = self._get_last_week()
         domain_search = [
-            ('project_id', '!=', False),
+            ('project_id.allow_timesheets', '=', True),
             '|',
                 ('task_id.active', '=', True),
                 ('task_id', '=', False),
@@ -234,7 +234,7 @@ class AnalyticLine(models.Model):
                 return False
 
         if 'project_id' in domain_project_task:
-            project_ids = self.env['project.project'].search(domain_project_task['project_id'])
+            project_ids = self.env['project.project'].search(expression.AND([domain_project_task['project_id'], [('allow_timesheets', '=', True)]]))
             for project_id in project_ids:
                 record = {
                     row_field: read_row_fake_value(row_field, project_id, False)
@@ -252,7 +252,7 @@ class AnalyticLine(models.Model):
                         add_record(False, key, {'values': record, 'domain': domain})
 
         if 'task_id' in domain_project_task:
-            task_ids = self.env['project.task'].search(domain_project_task['task_id'] + [('project_id', '!=', False)])
+            task_ids = self.env['project.task'].search(domain_project_task['task_id'] + [('allow_timesheets', '=', True)])
             for task_id in task_ids:
                 record = {
                     row_field: read_row_fake_value(row_field, False, task_id)
@@ -442,7 +442,7 @@ class AnalyticLine(models.Model):
         analytic_lines = self.filtered_domain(self._get_domain_for_validation_timesheets())
         if not analytic_lines:
             notification['params'].update({
-                'title': _("You cannot validate the timesheets from employees that are not part of your team or there are no timesheets to validate."),
+                'title': _("You cannot validate the selected timesheets as they either belong to employees who are not part of your team or are not in a state that can be validated. This may be due to the fact that they are dated in the future."),
                 'type': 'danger',
             })
             return notification
@@ -450,8 +450,21 @@ class AnalyticLine(models.Model):
         analytic_lines._stop_all_users_timer()
 
         analytic_lines.sudo().write({'validated': True})
-        analytic_lines.filtered(lambda t: t.employee_id.sudo().company_id.prevent_old_timesheets_encoding) \
-                      ._update_last_validated_timesheet_date()
+
+        # For timesheets in a company with `prevent_old_timesheets_encoding` setting enabled
+        analytic_lines = analytic_lines.filtered(lambda t: t.employee_id.sudo().company_id.prevent_old_timesheets_encoding)
+        if analytic_lines:
+            analytic_lines._update_last_validated_timesheet_date()
+            # Interrupt the timesheet with a timer running that is before the last validated date for each employee
+            running_analytic_lines = self.env['account.analytic.line'].search([
+                ('company_id', 'in',
+                 analytic_lines.employee_id.sudo().company_id.filtered('prevent_old_timesheets_encoding').ids),
+                ('employee_id', 'in', analytic_lines.employee_id.ids),
+                ('date', '<', max(analytic_lines.employee_id.sudo().mapped('last_validated_timesheet_date'))),
+                ('is_timer_running', '=', True),
+            ])
+            running_analytic_lines.filtered(lambda aal: aal.date < aal.employee_id.last_validated_timesheet_date)._stop_all_users_timer()
+
         if self.env.context.get('use_notification', True):
             notification['params'].update({
                 'title': _("The timesheets have successfully been validated."),
@@ -515,12 +528,15 @@ class AnalyticLine(models.Model):
                 employee = line.employee_id
                 company = line.company_id
                 last_validated_timesheet_date = employee.sudo().last_validated_timesheet_date
+                def is_wrong_date(date):
+                    return date != fields.Date.today() and date <= last_validated_timesheet_date
+
                 # When an user having this group tries to modify the timesheets of another user in his own team, we shouldn't raise any validation error
                 if not is_timesheet_approver or employee not in employees:
                     if line.is_timesheet and company.prevent_old_timesheets_encoding and last_validated_timesheet_date:
-                        if action == "modify" and fields.Date.to_date(str(vals['date'])) <= last_validated_timesheet_date:
+                        if action == "modify" and is_wrong_date(fields.Date.to_date(str(vals['date']))):
                             show_access_error = True
-                        elif line.date <= last_validated_timesheet_date:
+                        elif is_wrong_date(line.date):
                             show_access_error = True
 
                 if show_access_error:
@@ -609,6 +625,9 @@ class AnalyticLine(models.Model):
         domain = expression.AND([new_row_domain, additionnal_domain])
         line = self.search(domain)
 
+        if line.project_id and not line.project_id.allow_timesheets:
+            raise UserError(_("You cannot adjust the time of the timesheet for a project with timesheets disabled."))
+
         day = column_value.split('/')[0]
         if len(line) > 1 or len(line) == 1 and line.validated:  # copy the last line as adjustment
             line[0].copy(self._prepare_duplicate_timesheet_line_values(
@@ -654,59 +673,8 @@ class AnalyticLine(models.Model):
         return [('date', '=', day)]
 
     def _group_expand_project_ids(self, projects, domain, order):
-        """ Group expand by project_ids in grid view
-
-            This group expand allow to add some record grouped by project,
-            where the current user (= the current employee) has been
-            timesheeted in the past 7 days.
-
-            We keep the actual domain and modify it to enforce its validity
-            concerning the dates, while keeping the restrictions about other
-            fields.
-            Example: Filter timesheet from my team this week:
-            [['project_id', '!=', False],
-             '|',
-                 ['employee_id.timesheet_manager_id', '=', 2],
-                 '|',
-                     ['employee_id.parent_id.user_id', '=', 2],
-                     '|',
-                         ['project_id.user_id', '=', 2],
-                         ['user_id', '=', 2]]
-             '&',
-                 ['date', '>=', '2020-06-01'],
-                 ['date', '<=', '2020-06-07']
-
-            Becomes:
-            [('project_id', '!=', False),
-             ('date', '>=', datetime.date(2020, 5, 28)),
-             ('date', '<=', '2020-06-04'),
-             ['project_id', '!=', False],
-             '|',
-                 ['employee_id.timesheet_manager_id', '=', 2],
-                 '|',
-                    ['employee_id.parent_id.user_id', '=', 2],
-                    '|',
-                        ['project_id.user_id', '=', 2],
-                        ['user_id', '=', 2]]
-             '&',
-                 ['date', '>=', '1970-01-01'],
-                 ['date', '<=', '2250-01-01']
-        """
-
-        domain_search = []
-        # We force the date rules to be always met
-        for rule in domain:
-            if len(rule) == 3 and rule[0] == 'date':
-                name, operator, _rule = rule
-                if operator == '=':
-                    operator = '<='
-                domain_search.append((name, operator, '2250-01-01' if operator in ['<', '<='] else '1970-01-01'))
-            else:
-                domain_search.append(rule)
-
-        grid_anchor, last_week = self._get_last_week()
-        domain_search = expression.AND([[('date', '>=', last_week), ('date', '<=', grid_anchor)], domain_search])
-        return self.search(domain_search).project_id
+        # deprecated, will be removed in master
+        return self.env['project.project']
 
     def _group_expand_employee_ids(self, employees, domain, order):
         """ Group expand by employee_ids in grid view
@@ -758,7 +726,10 @@ class AnalyticLine(models.Model):
         domain_search = expression.AND([
             [('project_id', '!=', False),
              ('date', '>=', last_week),
-             ('date', '<=', grid_anchor)
+             ('date', '<=', grid_anchor),
+             '|',
+                ('task_id.active', '=', True),
+                ('task_id', '=', False),
             ], domain_search])
 
         group_order = self.env['hr.employee']._order
@@ -787,7 +758,9 @@ class AnalyticLine(models.Model):
         """
         if self.validated:
             raise UserError(_('You cannot use the timer on validated timesheets.'))
-        if not self.user_timer_id.timer_start and self.display_timer:
+        if self.employee_id.company_id.prevent_old_timesheets_encoding and self.employee_id.sudo().last_validated_timesheet_date and self.date < self.employee_id.sudo().last_validated_timesheet_date:
+            self.create([{'project_id': self.project_id.id, 'task_id': self.task_id.id}]).action_timer_start()
+        elif not self.user_timer_id.timer_start and self.display_timer:
             super(AnalyticLine, self).action_timer_start()
 
     def _get_last_timesheet_domain(self):
@@ -1007,6 +980,11 @@ class AnalyticLine(models.Model):
             2. Manager (Administrator): with this access right, the user can validate all timesheets.
         """
         domain = [('is_timesheet', '=', True), ('validated', '=', validated)]
+        if not validated:
+            domain = expression.AND([
+                domain,
+                [("date", "<=", fields.Date.today())],
+            ])
 
         if not self.user_has_groups('hr_timesheet.group_timesheet_manager'):
             return expression.AND([domain, ['|', ('employee_id.timesheet_manager_id', '=', self.env.user.id),

@@ -31,6 +31,13 @@ class TestLtSaftReport(TestAccountReportsCommon):
             'vat': 'LT949170611'
         })
 
+        cls.env['res.partner'].create({
+            'name': 'Mr Big CEO',
+            'is_company': False,
+            'phone': '+370 11 11 12 34',
+            'parent_id': cls.company_data['company'].partner_id.id,
+        })
+
         cls.product_a.default_code = 'PA'
         cls.product_b.default_code = 'PB'
 

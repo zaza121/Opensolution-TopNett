@@ -27,7 +27,7 @@ QUnit.module("timesheet_grid", (hooks) => {
     async function _testTimesheetTimerFloatTimerField(timerRunning, assert) {
         const env = await makeTestEnv();
         const props = {
-            value: 12 + 34 / 60 + 56 / 3600,
+            value: 12 + 34 / 60 + (timerRunning ? 56 / 3600 : 0),
             timerRunning,
             record: {
                 isInvalid: () => false,

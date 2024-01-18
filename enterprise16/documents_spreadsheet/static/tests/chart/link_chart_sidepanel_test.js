@@ -6,6 +6,7 @@ import {
     getFixture,
     nextTick,
     patchWithCleanup,
+    triggerEvent,
 } from "@web/../tests/helpers/utils";
 import { session } from "@web/session";
 import { createSpreadsheet } from "../spreadsheet_test_utils";
@@ -28,16 +29,14 @@ const chartId = "uuid1";
  * able to interact with it.
  */
 async function showChartMenu() {
-    const chartMenu = target.querySelector(".o-chart-menu");
-    chartMenu.style.display = "flex";
-    await nextTick();
+    const chart = target.querySelector(".o-chart-container");
+    const { x, y } = chart.getBoundingClientRect();
+    await triggerEvent(chart, null, "contextmenu", { clientX: x, clientY: y });
 }
 
 /** Open the chart side panel of the first chart found in the page*/
 async function openChartSidePanel() {
     await showChartMenu();
-    const chartMenuItem = target.querySelector(".o-chart-menu-item:not(.o-chart-external-link)");
-    await click(chartMenuItem);
     await click(target, ".o-menu-item[title='Edit']");
 }
 

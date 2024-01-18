@@ -4,12 +4,13 @@
 from odoo import models, api, fields, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.models import MAGIC_COLUMNS
-from odoo.osv.expression import OR
+from odoo.osv.expression import FALSE_DOMAIN, OR, expression
 from odoo.tools import get_lang
 from odoo.tools.misc import format_datetime, format_date, partition as tools_partition
 from collections.abc import Iterable
 
 from datetime import datetime, date
+from psycopg2.extensions import quote_ident
 import psycopg2
 import itertools
 import ast
@@ -65,53 +66,99 @@ class DataMergeRecord(models.Model):
         """
         if operator not in ALLOWED_COMPANY_OPERATORS:
             raise NotImplementedError()
+
+        cr = self._cr
+        restrict_model_ids = self.env.context.get('data_merge_model_ids')
+        if restrict_model_ids:
+            cr.execute(
+                """
+                SELECT m.res_model_name,
+                       m.res_model_id
+                  FROM data_merge_model m
+                 WHERE m.id IN %s
+                """,
+                [restrict_model_ids],
+            )
+        else:
+            # SELECT DISTINCT res_model_name FROM data_merge_record
+            # is 7 times slower for 5 millions of data.merge.record
+            cr.execute(
+                """
+                SELECT m.res_model_name,
+                       m.res_model_id
+                  FROM data_merge_model m
+                 WHERE m.id IN (SELECT r.model_id FROM data_merge_record r)
+                """
+            )
+        models_info = cr.fetchall()
         # Initial select id query to apply ir.rules and build Query object.
         query = self.env['data_merge.record'].with_context(active_test=False)._search([])
-        self._cr.execute("""SELECT DISTINCT res_model_name FROM data_merge_record""")
-        res_model_names_w_company_field, res_model_names_wo_company_field = tools_partition(
-            lambda name: self.env[name]._fields.get('company_id'),
-            (name for (name,) in self._cr.fetchall())
-        )
-        if not res_model_names_w_company_field and not res_model_names_wo_company_field:
+        if not models_info:
+            # no models => return all records
             return [('id', 'in', query)]
-        subquery = """({} OR {})"""
-        no_company_field_query_part, company_field_query_part = "", ""
-        no_company_field_query_params, company_field_query_params = [], []
-        if res_model_names_wo_company_field:
-            no_company_field_query_part = """(res_model_name IN %s AND %s)"""
-            # Check if we should return all records for res_model_names without a company_id field.
-            if (operator in ('not ilike', 'not like') or (operator in ('=', 'ilike', 'like') and not value) or (operator == '!=' and value)
-                    or (isinstance(value, Iterable) and ((operator == 'in' and False in value) or (operator == 'not in' and False not in value)))):
-                no_company_field_query_params += [tuple(res_model_names_wo_company_field), True]
-            else:
-                no_company_field_query_params += [tuple(res_model_names_wo_company_field), False]
-        if res_model_names_w_company_field:
-            company_field_query_part = """
-                    data_merge_record.id IN (
-                    SELECT data_merge_record.id
-                    FROM data_merge_record
-                    WHERE {}
-                )
-            """
-            where_conditions = []
-            for res_model_name in res_model_names_w_company_field:
-                res_model_query, res_model_query_params = self.env[res_model_name].with_context(active_test=False)._search(
-                    [('company_id', operator, value)], order='id asc'
-                ).select()
-                # Optimization when _search returns [].
-                if not res_model_query:
-                    continue
-                where_conditions.append("""
-                    (data_merge_record.res_model_name = %s AND data_merge_record.res_id IN ({}))
-                    """.format(res_model_query)
-                )
-                company_field_query_params.extend([res_model_name] + res_model_query_params)
-            company_field_query_part = company_field_query_part.format(" OR ".join(where_conditions))
-        query.add_where(
-            subquery.format(no_company_field_query_part or "FALSE", company_field_query_part or "FALSE"),
-            no_company_field_query_params + company_field_query_params
+
+        models_with_company, models_no_company = tools_partition(
+            lambda r: self.env[r[0]]._fields.get('company_id'),
+            models_info,
         )
-        return [('id', 'in', query)]
+
+        # Whether a domain leaf (False, operator, value) should be considered as True
+        false_company_domain_is_true = (
+            (operator in ('not ilike', 'not like')) or
+            (operator in ('=', 'ilike', 'like') and not value) or
+            (operator == '!=' and value) or
+            (
+                isinstance(value, Iterable) and
+                (
+                    (operator == 'in' and False in value) or
+                    (operator == 'not in' and False not in value)
+                )
+            )
+        )
+
+        subqueries = []
+        if models_no_company and false_company_domain_is_true:
+            subqueries.append(
+                cr.mogrify(
+                    "SELECT id FROM data_merge_record WHERE res_model_id IN %s",
+                    [tuple(r[1] for r in models_no_company)],
+                ).decode(),
+            )
+
+        template_query = """
+        SELECT dmr.id
+          FROM data_merge_record dmr
+     LEFT JOIN "{model_table}"
+            ON dmr.res_id = "{model_table}".id
+            {extra_joins}
+         WHERE ({where_clause})
+           AND dmr.res_model_id = %s
+        """
+        for model_name, model_id in models_with_company:
+            Model = self.env[model_name]
+            # Adapt operator and value for direct SQL query
+            exp = expression([('company_id', operator, value)], Model)
+            from_clause, where_clause, where_params = exp.query.get_sql()
+            assert from_clause.startswith(f'"{Model._table}"')
+
+            subqueries.append(
+                cr.mogrify(
+                    template_query.format(
+                        model_table=Model._table,
+                        where_clause=where_clause,
+                        extra_joins=from_clause[len(f'"{Model._table}"'):]
+                    ),
+                    where_params + [model_id],
+                ).decode(),
+            )
+        if subqueries:
+            query.add_where("data_merge_record.id IN ({})".format("\nUNION\n".join(subqueries)), [])
+            return [('id', 'in', query)]
+        else:
+            # there was a nonempty models_info but no subqueries
+            # it means that nothing satisfies the domain
+            return FALSE_DOMAIN
+
 
     #############
     ### Computes
@@ -132,8 +179,10 @@ class DataMergeRecord(models.Model):
         field_description = lambda key: IrField(key)['field_description']
 
         # Hide fields with an attr 'groups' defined or from the blacklisted fields
+        model_fields = self.env[self.res_model_name]._fields
         hidden_field = lambda key: key in MAGIC_COLUMNS or \
-            self.env[self.res_model_name]._fields[key].groups or \
+            key not in model_fields or \
+            model_fields[key].groups or \
             IrField(key)['ttype'] == 'binary'
 
         record = self._original_records()
@@ -260,7 +309,7 @@ class DataMergeRecord(models.Model):
 
     def _original_records(self):
         if not self:
-            return
+            return []
 
         model_name = set(self.mapped('res_model_name')) or {}
 
@@ -332,20 +381,37 @@ class DataMergeRecord(models.Model):
                 }
 
                 # Query to check the number of columns in the referencing table
-                query = """SELECT COUNT(column_name) FROM information_schema.columns WHERE table_name ILIKE %s"""
-                self._cr.execute(query, (table, ))
+                query = psycopg2.sql.SQL(
+                    """
+                    SELECT COUNT({column_name})
+                    FROM {table}
+                    WHERE {table_name} ILIKE %s
+                    """
+                ).format(
+                    table=psycopg2.sql.Identifier('information_schema', 'columns'),
+                    table_name=psycopg2.sql.Identifier('table_name'),
+                    column_name=psycopg2.sql.Identifier('column_name')
+                )
+                self._cr.execute(query, (query_dict['table'],))
                 column_count = self._cr.fetchone()[0]
 
                 ## Relation table for M2M
                 if column_count == 2:
                     # Retrieve the "other" column
-                    query = """
-                        SELECT column_name
-                        FROM information_schema.columns
+                    query = psycopg2.sql.SQL(
+                        """
+                        SELECT {column_name}
+                        FROM {table}
                         WHERE
-                            table_name LIKE '%s'
-                        AND column_name <> '%s'""" % (table, column)
-                    self._cr.execute(query, ())
+                            {table_name} LIKE %s
+                        AND {column_name} <> %s
+                        """
+                    ).format(
+                        table=psycopg2.sql.Identifier('information_schema', 'columns'),
+                        table_name=psycopg2.sql.Identifier('table_name'),
+                        column_name=psycopg2.sql.Identifier('column_name')
+                    )
+                    self._cr.execute(query, (query_dict['table'], query_dict['column']))
                     othercol = self._cr.fetchone()[0]
                     query_dict.update({'othercol': othercol})
 
@@ -353,17 +419,22 @@ class DataMergeRecord(models.Model):
                         # This query will filter out existing records
                         # e.g. if the record to merge has tags A, B, C and the master record has tags C, D, E
                         #      we only need to add tags A, B
-                        query = """
-                            UPDATE %(table)s o
-                            SET %(column)s = %%(destination_id)s            --- master record
-                            WHERE %(column)s = %%(record_id)s         --- record to merge
+                        query = psycopg2.sql.SQL(
+                            """
+                            UPDATE {table} o
+                            SET {column} =  %(destination_id)s            --- master record
+                            WHERE {column} = %(record_id)s         --- record to merge
                             AND NOT EXISTS (
-                                SELECT 1
-                                FROM %(table)s i
-                                WHERE %(column)s = %%(destination_id)s
-                                AND i.%(othercol)s = o.%(othercol)s
-                            )""" % query_dict
-
+                            SELECT 1
+                            FROM  {table} i
+                            WHERE {column} = %(destination_id)s
+                            AND i.{othercol} = o.{othercol}
+                            )
+                            """).format(
+                            table=psycopg2.sql.Identifier(query_dict['table']),
+                            column=psycopg2.sql.Identifier(query_dict['column']),
+                            othercol=psycopg2.sql.Identifier(query_dict['othercol']),
+                        )
                         params = {
                             'destination_id': destination.id,
                             'record_id': rec_id,
@@ -371,11 +442,15 @@ class DataMergeRecord(models.Model):
                         }
                         self._cr.execute(query, params)
                 else:
-                    query = """
-                        UPDATE %(table)s o
-                        SET %(column)s = %%(destination_id)s            --- master record
-                        WHERE %(column)s = %%(record_id)s          --- record to merge
-                    """ % query_dict
+                    query = psycopg2.sql.SQL(
+                        """
+                        UPDATE {table} o
+                        SET {column}  = %(destination_id)s            --- master record
+                        WHERE {column} = %(record_id)s         --- record to merge
+                        """).format(
+                        table=psycopg2.sql.Identifier(query_dict['table']),
+                        column=psycopg2.sql.Identifier(query_dict['column']),
+                    )
                     for rec_id in source_ids:
                         try:
                             with self._cr.savepoint():

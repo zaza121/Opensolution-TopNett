@@ -67,6 +67,21 @@ class SaleOrder(models.Model):
 
         return res
 
+    def _compute_amounts(self):
+        """ This overrides the standard values for orders using Avatax.
+        The round_globally option doesn't work with Avatax hence the
+        tax (amount_tax field) on sale.order won't be correct in
+        case of (partial) exemptions. As always we should rely purely
+        on the values Avatax returns, not the values Odoo computes.
+        """
+        avatax_orders = self.filtered(lambda so: so.fiscal_position_id.is_avatax)
+        for order in avatax_orders:
+            order_lines = order.order_line.filtered(lambda x: not x.display_type)
+            order.amount_untaxed = sum(order_lines.mapped('price_subtotal'))
+            order.amount_tax = sum(order_lines.mapped('price_tax'))
+            order.amount_total = order.amount_untaxed + order.amount_tax
+        super(SaleOrder, self - avatax_orders)._compute_amounts()
+
     def _get_avatax_invoice_lines(self):
         return [
             self._get_avatax_invoice_line(

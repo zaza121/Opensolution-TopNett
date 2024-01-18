@@ -85,5 +85,7 @@ class ApprovalProductLine(models.Model):
             'origin': self.approval_request_id.name,
             'partner_id': vendor.id,
             'company_id': self.company_id.id,
+            'payment_term_id': vendor.property_supplier_payment_term_id.id,
+            'fiscal_position_id':self.env['account.fiscal.position']._get_fiscal_position(vendor).id,
         }
         return vals

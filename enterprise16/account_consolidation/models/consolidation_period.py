@@ -169,10 +169,13 @@ class ConsolidationPeriod(models.Model):
             # Since he has the rights to be here, we can go sudo from here
             record = record.sudo()
             # unlink everything (only the ones auto-generated)
-            record.journal_ids.search([
+            journals_to_unlink = record.journal_ids.search([
                 ('auto_generated', '=', True),
                 ('period_id', '=', record.id)
-            ]).unlink()
+            ])
+
+            journals_to_unlink.line_ids.with_context(allow_unlink=True).unlink()
+            journals_to_unlink.unlink()
 
             # (re)generate
             # 1 journal = 1 company
@@ -437,6 +440,7 @@ class ConsolidationPeriodComposition(models.Model):
             ('composition_id', '=', self.id),
             ('period_id', '=', self.using_period_id.id)
         ])
+        journals.line_ids.with_context(allow_unlink=True).unlink()
         journals.unlink()
         # update composed analysis period journals (recursive)
         self.composed_period_id.action_generate_journals()
@@ -689,7 +693,7 @@ class ConsolidationCompanyPeriod(models.Model):
         """
         self.ensure_one()
         return [
-            ('move_id.state', '=', 'posted'),
+            ('parent_state', '=', 'posted'),
             ('company_id', '=', self.company_id.id),
             ('journal_id', 'not in', self.mapped('exclude_journal_ids.id')),
             ('account_id.consolidation_account_ids', '=', consolidation_account.id),

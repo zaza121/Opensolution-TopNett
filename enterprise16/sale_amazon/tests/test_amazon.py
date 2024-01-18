@@ -134,6 +134,7 @@ class TestAmazon(common.TestAmazonCommon):
                 msg="The unitary price should be the quotient of the item price (tax excluded) "
                     "divided by the quantity.",
             )
+            self.assertEqual(product_line.discount, 5)  # 5% discount.
             self.assertEqual(product_line.product_uom_qty, 2.0)
             self.assertEqual(product_line.amazon_item_ref, '987654321')
             self.assertTrue(product_line.amazon_offer_id)
@@ -142,6 +143,7 @@ class TestAmazon(common.TestAmazonCommon):
                 lambda l: l.product_id.default_code == 'SHIPPING-CODE'
             )
             self.assertEqual(shipping_line.price_unit, 12.5)
+            self.assertEqual(shipping_line.discount, 20)  # 2.5/12.5*100
             self.assertEqual(shipping_line.product_uom_qty, 1.0)
             self.assertFalse(shipping_line.amazon_item_ref)
             self.assertFalse(shipping_line.amazon_offer_id)

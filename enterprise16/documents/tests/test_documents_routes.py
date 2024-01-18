@@ -3,7 +3,7 @@
 import io
 import zipfile
 
-from odoo import http
+from odoo import http, fields
 from odoo.tests.common import HttpCase
 
 
@@ -49,3 +49,30 @@ class TestDocumentsRoutes(HttpCase):
         response = self.url_open('/web/image/%s?model=documents.document' % document_gif.id)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, raw_gif)
+
+    def test_documents_share_expired_link(self):
+        self.authenticate('admin', 'admin')
+        # Test on available link
+        tomorrow = fields.Date.from_string(fields.Date.add(fields.Date.today(), days=1))
+        vals = {
+            'document_ids': [(6, 0, [self.document_txt.id])],
+            'folder_id': self.folder_a.id,
+            'date_deadline': tomorrow,
+            'type': 'ids',
+        }
+        self.result_share_documents_act = self.env['documents.share'].create(vals)
+        response = self.url_open(self.result_share_documents_act.full_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'TEST', "Failed route test on available link")
+
+        # Test on expired link
+        vals = {
+            'document_ids': [(6, 0, [self.document_txt.id])],
+            'folder_id': self.folder_a.id,
+            'date_deadline': '2001-11-05',
+            'type': 'ids',
+        }
+        self.result_share_documents_act = self.env['documents.share'].create(vals)
+        response = self.url_open(self.result_share_documents_act.full_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(b'This link has expired' in response.content, "Failed route test on expired link")

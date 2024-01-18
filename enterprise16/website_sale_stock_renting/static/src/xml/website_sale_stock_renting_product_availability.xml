@@ -2,6 +2,9 @@
 
 <templates>
     <t t-extend="website_sale_stock.product_availability">
+        <t t-jquery="div#out_of_stock_message" t-operation="attributes">
+            <attribute name="t-if">!is_rental</attribute>
+        </t>
         <t t-jquery="div#threshold_message" t-operation="attributes">
             <attribute name="t-elif">show_availability and free_qty lte available_threshold and !is_rental</attribute>
         </t>

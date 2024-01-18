@@ -219,10 +219,7 @@
                     <label for="mode">Default Display Mode</label>
                     <select id="mode" name="mode">
                         <option></option>
-                        <option t-att-selected="widget.state.attrs.mode === 'day' ? 'selected' : undefined" value="day">day</option>
-                        <option t-att-selected="widget.state.attrs.mode === 'week' ? 'selected' : undefined" value="week">week</option>
-                        <option t-att-selected="widget.state.attrs.mode === 'month' ? 'selected' : undefined" value="month">month</option>
-                        <option t-att-selected="widget.state.attrs.mode === 'year' ? 'selected' : undefined" value="year">year</option>
+                        <option t-foreach="widget._getCalendarModesFromScales()" t-as="mode" t-att-selected="widget.state.attrs.mode === mode ? 'selected' : undefined" t-att-value="mode" t-esc="mode_value" />
                     </select>
                 </div>
             </t>
@@ -568,7 +565,7 @@
         <t t-set="attrs_invisible" t-value="widget.state.attrs.modifiers.invisible and widget.state.attrs.modifiers.invisible !== true"/>
         <div t-attf-class="form-check{{attrs_invisible ? ' o_web_studio_checkbox_inactive' : ''}}">
             <input type="checkbox" id="invisible" name="invisible" class="form-check-input" data-type="attributes"
-                t-att-checked="widget.state.attrs.invisible ? 'checked' : undefined"/>
+                t-att-checked="widget.state.attrs.modifiers.invisible or widget.state.attrs.invisible ? 'checked' : undefined"/>
             <label for="invisible" class="form-check-label">Invisible</label>
             <a role="button" href="#" data-type="invisible" class="btn btn-link o_web_studio_attrs">Conditional</a>
         </div>
@@ -611,7 +608,7 @@
         <div t-if="widget.view_type === 'kanban'" class="o_web_studio_sidebar_checkbox">
             <div class="form-check">
                 <input type="checkbox" id="bold" name="bold" class="form-check-input" data-type="attributes"
-                    data-leave-empty="unchecked" t-att-checked="widget.state.attrs.bold ? 'checked' : undefined"/>
+                    data-leave-empty="unchecked" t-att-checked="widget.state.node.attrs.bold ? 'checked' : undefined"/>
                 <label for="bold" class="form-check-label">Bold</label>
             </div>
         </div>
@@ -870,13 +867,14 @@
     <t t-if="widget.showRainbowMan">
         <h3>Rainbow Man</h3>
         <t t-set="rainbow" t-value="widget.state.attrs.effect"/>
+        <t t-set="hasRainbow" t-value="rainbow and rainbow !== 'False'" />
         <div class="o_web_studio_sidebar_checkbox">
             <div class="form-check">
-                <input type="checkbox" id="rainbow" name="rainbow" class="form-check-input" t-att-checked="rainbow ? 'checked' : undefined"/>
+                <input type="checkbox" id="rainbow" name="rainbow" class="form-check-input" t-att-checked="hasRainbow ? 'checked' : undefined"/>
                 <label for="rainbow" class="form-check-label">Rainbow Effect</label>
             </div>
         </div>
-        <t t-if="rainbow">
+        <t t-if="hasRainbow">
             <div class="o_web_studio_sidebar_text">
                 <label for="rainbow_message">Message</label>
                 <input id="rainbow_message" name="rainbow_message" type="text" t-att-value="rainbow.message or 'Well Done!'"/>

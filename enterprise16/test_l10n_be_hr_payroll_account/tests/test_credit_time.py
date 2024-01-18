@@ -118,7 +118,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
         # Generate Work Entries
         date_start = datetime.date(2020, 3, 1)
         date_stop = datetime.date(2020, 3, 31)
-        work_entries = (self.original_contract | new_contract)._generate_work_entries(date_start, date_stop)
+        work_entries = (self.original_contract | new_contract).generate_work_entries(date_start, date_stop)
         # The work entries are generated until today, so only take those from march
         work_entries = work_entries.filtered(lambda w: w.date_start.month == 3)
 
@@ -247,7 +247,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
         # Generate Work Entries
         date_start = datetime.date(2020, 3, 1)
         date_stop = datetime.date(2020, 3, 31)
-        work_entries = (self.original_contract | new_contract)._generate_work_entries(date_start, date_stop)
+        work_entries = (self.original_contract | new_contract).generate_work_entries(date_start, date_stop)
         # The work entries are generated until today, so only take those from march
         work_entries = work_entries.filtered(lambda w: w.date_start.month == 3)
 

@@ -116,6 +116,32 @@ class TestSaleAvalara(TestAccountAvataxCommon):
             order.button_update_avatax()
             self.assertOrder(order)
 
+    def test_tax_round_globally(self):
+        """The total amount of sale orders elligible for Avatax should never be computed with
+        the 'round_globally' option but should instead use the 'round_per_line' mechanism"""
+        self.env.company.sudo().tax_calculation_rounding_method = 'round_globally'
+        order = self.env['sale.order'].create({
+            'user_id': self.sales_user.id,
+            'partner_id': self.partner.id,
+            'fiscal_position_id': self.fp_avatax.id,
+            'date_order': '2021-01-01',
+            'order_line': [
+                (0, 0, {
+                    'product_id': self.product.id,
+                    'product_uom_qty': 1,
+                    'price_unit': 1.48,
+                    'tax_id': self.tax_with_diff_amount.ids,
+                }),
+                (0, 0, {
+                    'product_id': self.product.id,
+                    'product_uom_qty': 1,
+                    'price_unit': 1.48,
+                    'tax_id': self.tax_with_diff_amount.ids,
+                }),
+            ],
+        })
+        self.assertEqual(order.amount_total, 2.98)
+
 
 @tagged("-at_install", "post_install")
 class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
@@ -148,57 +174,57 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
                 ]
             })
             cls.sale_order.button_update_avatax()
-        cls.captured_arguments = capture.val
+        cls.captured_arguments = capture.val['json']['createTransactionModel']
         return res
 
     def test_item_code(self):
         """Identify customer code (number, ID) to pass to the AvaTax service."""
-        line_model, line_id = self.captured_arguments['json']['lines'][0]['number'].split(',')
+        line_model, line_id = self.captured_arguments['lines'][0]['number'].split(',')
         self.assertEqual(self.sale_order.order_line, self.env[line_model].browse(int(line_id)))
 
     def test_item_description(self):
         """Identify item/service/charge description to pass to the AvaTax service with a
         human-readable description or item name.
         """
-        line_description = self.captured_arguments['json']['lines'][0]['description']
+        line_description = self.captured_arguments['lines'][0]['description']
         self.assertEqual(self.sale_order.order_line.name, line_description)
 
     def test_tax_code_mapping(self):
         """Association of an item or item group to an AvaTax Tax Code to describe the taxability
         (e.g. Clothing-Shirts – B-to-C).
         """
-        tax_code = self.captured_arguments['json']['lines'][0]['taxCode']
+        tax_code = self.captured_arguments['lines'][0]['taxCode']
         self.assertEqual(self.product.avatax_category_id.code, tax_code)
 
     def test_doc_code(self):
         """Values that can come across to AvaTax as the DocCode."""
-        code = self.captured_arguments['json']['code']
+        code = self.captured_arguments['code']
         sent_so = self.env['sale.order'].search([('avatax_unique_code', '=', code)])
         self.assertEqual(self.sale_order, sent_so)
 
     def test_customer_code(self):
         """Values that can come across to AvaTax as the Customer Code."""
-        customer_code = self.captured_arguments['json']['customerCode']
+        customer_code = self.captured_arguments['customerCode']
         self.assertEqual(self.sale_order.partner_id.avalara_partner_code, customer_code)
 
     def test_doc_date(self):
         """Value that comes across to AvaTax as the DocDate."""
-        doc_date = self.captured_arguments['json']['date']  # didn't find anything with "DocDate"
+        doc_date = self.captured_arguments['date']  # didn't find anything with "DocDate"
         self.assertEqual(self.sale_order.date_order.date(), fields.Date.to_date(doc_date))
 
     def test_calculation_date(self):
         """Value that is used for Tax Calculation Date in AvaTax."""
-        tax_date = self.captured_arguments['json']['taxOverride']['taxDate']
+        tax_date = self.captured_arguments['taxOverride']['taxDate']
         self.assertEqual(self.sale_order.date_order.date(), fields.Date.to_date(tax_date))
 
     def test_doc_type(self):
         """DocType used for varying stages of the transaction life cycle."""
-        doc_type = self.captured_arguments['json']['type']
+        doc_type = self.captured_arguments['type']
         self.assertEqual('SalesOrder', doc_type)
 
     def test_header_level_destination_address(self):
         """Value that is sent to AvaTax for Destination Address at the header level."""
-        destination_address = self.captured_arguments['json']['addresses']['shipTo']
+        destination_address = self.captured_arguments['addresses']['shipTo']
         self.assertEqual(destination_address, {
             'city': 'Columbus',
             'country': 'US',
@@ -209,7 +235,7 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
 
     def test_header_level_origin_address(self):
         """Value that is sent to AvaTax for Origin Address at the header level."""
-        origin_address = self.captured_arguments['json']['addresses']['shipFrom']
+        origin_address = self.captured_arguments['addresses']['shipFrom']
         self.assertEqual(origin_address, {
             'city': 'San Francisco',
             'country': 'US',
@@ -220,32 +246,32 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
 
     def test_quantity(self):
         """Value that is sent to AvaTax for the Quantity."""
-        quantity = self.captured_arguments['json']['lines'][0]['quantity']
+        quantity = self.captured_arguments['lines'][0]['quantity']
         self.assertEqual(self.sale_order.order_line.product_uom_qty, quantity)
 
     def test_amount(self):
         """Value that is sent to AvaTax for the Amount."""
-        amount = self.captured_arguments['json']['lines'][0]['amount']
+        amount = self.captured_arguments['lines'][0]['amount']
         self.assertEqual(self.sale_order.order_line.price_subtotal, amount)
 
     def test_tax_code(self):
         """Value that is sent to AvaTax for the Tax Code."""
-        tax_code = self.captured_arguments['json']['lines'][0]['taxCode']
+        tax_code = self.captured_arguments['lines'][0]['taxCode']
         self.assertEqual(self.sale_order.order_line.product_id.avatax_category_id.code, tax_code)
 
     def test_sales_order(self):
         """Ensure that invoices are processed through a logical document lifecycle."""
-        self.assertEqual(self.captured_arguments['json']['type'], 'SalesOrder')
+        self.assertEqual(self.captured_arguments['type'], 'SalesOrder')
         with self._capture_request({'lines': [], 'summary': []}) as capture:
             self.sale_order.action_quotation_send()
             self.sale_order.action_confirm()
             invoice = self.sale_order._create_invoices()
             invoice.button_update_avatax()
-        self.assertEqual(capture.val['json']['type'], 'SalesInvoice')
+        self.assertEqual(capture.val['json']['createTransactionModel']['type'], 'SalesInvoice')
 
         with self._capture_request({'lines': [], 'summary': []}) as capture:
             invoice.action_post()
-        self.assertTrue(capture.val['json']['commit'])
+        self.assertTrue(capture.val['json']['createTransactionModel']['commit'])
 
     def test_commit_tax(self):
         """Ensure that invoices are committed/posted for reporting appropriately."""
@@ -254,7 +280,7 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
             self.sale_order.action_confirm()
             invoice = self.sale_order._create_invoices()
             invoice.action_post()
-        self.assertTrue(capture.val['json']['commit'])
+        self.assertTrue(capture.val['json']['createTransactionModel']['commit'])
 
     def test_merge_sale_orders(self):
         """Ensure sale orders with different shipping partner are not merged

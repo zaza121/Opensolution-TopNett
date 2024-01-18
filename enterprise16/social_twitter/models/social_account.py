@@ -31,7 +31,7 @@ class SocialAccountTwitter(models.Model):
 
             if account_stats and last_tweets_stats:
                 account.write({
-                    'audience': account_stats.get('followers_count'),
+                    'audience': account_stats.get('data', [{}])[0].get('public_metrics', {}).get('followers_count'),
                     'engagement': last_tweets_stats['engagement'],
                     'stories': last_tweets_stats['stories'],
                 })
@@ -50,22 +50,40 @@ class SocialAccountTwitter(models.Model):
         return res
 
     def twitter_search_users(self, query):
-        """ Used to autocomplete the 'follow' stream user search """
+        """Search a user based on his username (e.g: "fpodoo").
 
-        user_search_endpoint = url_join(self.env['social.media']._TWITTER_ENDPOINT, "/1.1/users/search.json")
-        params = {'count': 5, 'q': query}
+        Can not search by name, can only get user by their usernames
+        See: https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference
+
+        TODO: in master, return a single dict instead of a list
+        """
+        user_search_endpoint = url_join(
+            self.env['social.media']._TWITTER_ENDPOINT,
+            '/2/users/by/username/%s' % query)
+        params = {'user.fields': 'id,name,username,description,profile_image_url'}
         headers = self._get_twitter_oauth_header(
             user_search_endpoint,
             params=params,
             method='GET'
         )
-        result = requests.get(
+        response = requests.get(
             user_search_endpoint,
             params=params,
             headers=headers,
             timeout=5
         )
-        return result.json()
+        if response.ok and response.json().get('data'):
+            result = response.json()['data']
+            return [{
+                # TODO: in master, use same format as the API
+                'id_str': result['id'],
+                'name': result['name'],
+                'screen_name': result['username'],
+                'description': result['description'],
+                # TODO: in master, rename "profile_image_url_https" into "profile_image_url"
+                'profile_image_url_https': result['profile_image_url'],
+            }]
+        return []
 
     def _create_default_stream_twitter(self):
         """ This will create a stream of type 'Twitter Follow' for each added accounts.
@@ -96,16 +114,18 @@ class SocialAccountTwitter(models.Model):
 
         self.ensure_one()
 
-        twitter_account_info_url = url_join(self.env['social.media']._TWITTER_ENDPOINT, "/1.1/users/show.json")
+        twitter_account_info_url = url_join(self.env['social.media']._TWITTER_ENDPOINT, '/2/users/by')
+        params = {'user.fields': 'public_metrics', 'usernames': self.social_account_handle}
+
         headers = self._get_twitter_oauth_header(
             twitter_account_info_url,
-            params={'screen_name': self.social_account_handle},
-            method='GET'
+            params=params,
+            method='GET',
         )
 
         result = requests.get(
             twitter_account_info_url,
-            params={'screen_name': self.social_account_handle},
+            params=params,
             headers=headers,
             timeout=5
         )
@@ -120,15 +140,17 @@ class SocialAccountTwitter(models.Model):
         """ To properly retrieve statistics and trends, we would need an Enterprise 'Engagement API' access.
         See: https://developer.twitter.com/en/docs/metrics/get-tweet-engagement/overview
 
-        Since we don't have access, we use the last 200 user tweets (max for one request) to aggregate
+        Since we don't have access, we use the last 100 user tweets (max for one request) to aggregate
         the data we are able to retrieve. """
 
         self.ensure_one()
 
-        tweets_endpoint_url = url_join(self.env['social.media']._TWITTER_ENDPOINT, "/1.1/statuses/user_timeline.json")
+        tweets_endpoint_url = url_join(
+            self.env['social.media']._TWITTER_ENDPOINT,
+            '/2/users/%s/tweets' % self.twitter_user_id)
         params = {
-            'count': 200,
-            'user_id': self.twitter_user_id
+            'max_results': 100,
+            'tweet.fields': 'public_metrics',
         }
         headers = self._get_twitter_oauth_header(
             tweets_endpoint_url,
@@ -138,7 +160,8 @@ class SocialAccountTwitter(models.Model):
         result = requests.get(
             tweets_endpoint_url,
             params,
-            headers=headers
+            headers=headers,
+            timeout=10,
         )
 
         if isinstance(result.json(), dict) and result.json().get('errors'):
@@ -149,10 +172,10 @@ class SocialAccountTwitter(models.Model):
             'engagement': 0,
             'stories': 0
         }
-        for tweet in result.json():
-            last_tweets_stats['engagement'] += tweet.get('favorite_count')
-            last_tweets_stats['stories'] += tweet.get('retweet_count')
-
+        for tweet in result.json().get('data', []):
+            public_metrics = tweet.get('public_metrics', {})
+            last_tweets_stats['engagement'] += public_metrics.get('like_count', 0)
+            last_tweets_stats['stories'] += public_metrics.get('retweet_count', 0)
         return last_tweets_stats
 
     def _get_twitter_oauth_header(self, url, headers={}, params={}, method='POST'):
@@ -171,8 +194,8 @@ class SocialAccountTwitter(models.Model):
         } for image in image_ids])
 
     def _format_bytes_to_images_twitter(self, attachment):
-        bytes_data = attachment.read()
-        return self._format_images_twitter([{'bytes': bytes_data, 'file_size': len(bytes_data), 'mimetype': attachment.content_type}])
+        # TODO: remove in master
+        return []
 
     def _format_images_twitter(self, image_ids):
         """ Twitter needs a special kind of uploading to process images.
@@ -216,9 +239,9 @@ class SocialAccountTwitter(models.Model):
         )
         if not result.ok:
             # unfortunately Twitter does not return a proper error code so we have to rely on the error message
-            # last known max file size for the API is 5MB
+            # last known max file size for the API is 20MB
             generic_api_error = result.json().get('error', '')
-            raise UserError(_("We could not upload your image, try reducing its size and posting it again (error: %s).", generic_api_error))
+            raise UserError(_("We could not upload your image, it may be corrupted, it may exceed size limit or API may have send improper response (error: %s).", generic_api_error))
 
         return result.json().get('media_id_string')
 

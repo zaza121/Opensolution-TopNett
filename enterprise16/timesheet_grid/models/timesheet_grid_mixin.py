@@ -18,7 +18,7 @@ class TimesheetGridMixin(models.AbstractModel):
         company = self.env.company
         uom = company.timesheet_encode_uom_id
         day_uom = self.env.ref('uom.product_uom_day')
-        rounding = len(str(company.timesheet_encode_uom_id.rounding).split('.')[1])
+        rounding = len(str(format(company.timesheet_encode_uom_id.rounding, 'f')).split('.')[1].split('1')[0]) + 1
         hours_per_day = company.resource_calendar_id.hours_per_day
         def convert_hours_to_company_uom(hours):
             return float_round(hours / hours_per_day, precision_digits=rounding) if uom == day_uom else hours

@@ -327,7 +327,8 @@ class TestAccountBankStatementImportCamt(AccountTestInvoicingCommon):
         )
 
         self.assertEqual(error_catcher.exception.args[0], (
-            "Please set the IBAN account on your bank journal.\n\n"
+            "The following files could not be imported:\n"
+            "- test_camt.xml: Please set the IBAN account on your bank journal.\n\n"
             "This CAMT file is targeting several IBAN accounts but none match the current journal."
         ))
 
@@ -365,3 +366,30 @@ class TestAccountBankStatementImportCamt(AccountTestInvoicingCommon):
         usd_currency = self.env.ref('base.USD')
         self.assertEqual(self.env.company.currency_id.id, usd_currency.id)
         self._test_minimal_camt_file_import('camt_053_minimal_charges_02.xml', usd_currency)
+
+    def test_import_already_fully_imported_catm_without_opening_balance(self):
+        """
+        Test the scenario when you have a CAMT file where one statement does not
+        have an opening balance, and you try to import it twice
+        """
+        bank_journal = self.env['account.journal'].create({
+            'name': 'Bank 123456',
+            'code': 'BNK67',
+            'type': 'bank',
+            'bank_acc_number': '112233',
+            'currency_id': self.env.ref('base.USD').id,
+        })
+
+        camt_file_path = 'account_bank_statement_import_camt/test_camt_file/test_camt_no_opening_balance.xml'
+
+        def import_file():
+            with file_open(camt_file_path, 'rb') as camt_file:
+                bank_journal.create_document_from_attachment(self.env['ir.attachment'].create({
+                    'mimetype': 'application/xml',
+                    'name': 'test_camt_no_opening_balance.xml',
+                    'raw': camt_file.read(),
+                }).ids)
+
+        import_file()
+        with self.assertRaises(UserError, msg='You already have imported that file.'):
+            import_file()

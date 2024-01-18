@@ -19,9 +19,9 @@ class AccountAnalyticLine(models.Model):
         grids = super()._apply_grid_grouped_expand(grid_domain, row_fields, built_grids,
             section_field=section_field, group_expand_section_values=group_expand_section_values)
 
-        employee = self.env.user.employee_id if self._context.get('my_timesheet_display_timer') else False
+        employee = self.env.user.employee_id
         valid_row_fields = list(set(['project_id', 'employee_id']) & set(row_fields))
-        if not employee or not valid_row_fields:
+        if not employee or not valid_row_fields or any(isinstance(term, (list, tuple)) and term[0] == 'employee_id' for term in grid_domain):
             return grids
         slots = self.env['planning.slot'].read_group(
             self._get_planning_domain(employee.id),
@@ -101,8 +101,8 @@ class AccountAnalyticLine(models.Model):
 
     def _group_expand_employee_ids(self, employees, domain, order):
         res = super()._group_expand_employee_ids(employees, domain, order)
-        employee = self.env.user.employee_id  if self._context.get('my_timesheet_display_timer') else False
-        if not employee:
+        employee = self.env.user.employee_id
+        if not employee or any(isinstance(term, (list, tuple)) and term[0] == 'employee_id' for term in domain):
             return res
 
         slot_id = self.env['planning.slot']._search(
@@ -125,7 +125,7 @@ class AccountAnalyticLine(models.Model):
         planning_domain = [
             ('employee_id', '=', employee_id),
             ('state', '=', 'published'),
-            ('project_id', '!=', False),
+            ('project_id.allow_timesheets', '=', True),
             ('start_datetime', '<', period_end),
             ('end_datetime', '>', period_start),
         ]

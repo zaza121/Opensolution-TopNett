@@ -352,11 +352,12 @@ class MarketingActivity(models.Model):
 
         # Filter traces not fitting the activity filter and whose record has been deleted
         if self.domain:
-            rec_domain = expression.AND([literal_eval(self.campaign_id.domain), literal_eval(self.domain)])
+            rec_domain = literal_eval(self.domain)
         else:
-            rec_domain = literal_eval(self.campaign_id.filter)
+            rec_domain = literal_eval(self.campaign_id.domain or '[]')
         if rec_domain:
-            rec_valid = self.env[self.model_name].search(rec_domain)
+            user_id = self.campaign_id.user_id or self.env.user
+            rec_valid = self.env[self.model_name].with_context(lang=user_id.lang).search(rec_domain)
             rec_ids_domain = set(rec_valid.ids)
 
             traces_allowed = traces.filtered(lambda trace: trace.res_id in rec_ids_domain or trace.is_test)

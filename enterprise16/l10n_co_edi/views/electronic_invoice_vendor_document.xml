@@ -38,9 +38,9 @@
                     <TAC_1 t-out="';'.join(invoice_partner.commercial_partner_id.l10n_co_edi_obligation_type_ids.mapped('name'))"/>
                 </TAC>
 
-                <GTE t-if="tax_types">
-                    <GTE_1 t-out="tax_types[0].code"/>
-                    <GTE_2 t-out="tax_types[0].name"/>
+                <GTE>
+                    <GTE_1 t-out="invoice_partner._l10n_co_edi_get_fiscal_regimen_code()"/>
+                    <GTE_2 t-out="invoice_partner._l10n_co_edi_get_fiscal_regimen_name()"/>
                 </GTE>
             </EMI>
             <ADQ>
@@ -51,8 +51,6 @@
                 <ADQ_5/>
                 <ADQ_6/>
                 <ADQ_7/>
-                <ADQ_8/>
-                <ADQ_9/>
                 <ADQ_10/>
                 <ADQ_11 t-out="company_partner._get_vat_without_verification_code()"/>
                 <ADQ_12 t-out="company_partner._get_vat_verification_code()"/>
@@ -63,9 +61,9 @@
                     <TCR_1><t t-out="';'.join(company_partner.l10n_co_edi_obligation_type_ids.mapped('name'))"/></TCR_1>
                 </TCR>
 
-                <GTA t-if="tax_types">
-                    <GTA_1 t-out="tax_types[0].code"/>
-                    <GTA_2 t-out="tax_types[0].name"/>
+                <GTA>
+                    <GTA_1 t-out="company_partner._l10n_co_edi_get_fiscal_regimen_code()"/>
+                    <GTA_2 t-out="company_partner._l10n_co_edi_get_fiscal_regimen_name()"/>
                 </GTA>
             </ADQ>
             <TOT>

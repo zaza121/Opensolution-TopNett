@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
+
 
 class Cover(models.Model):
     _name = "knowledge.cover"
@@ -33,6 +35,11 @@ class Cover(models.Model):
             cover.attachment_id.write({'res_model': 'knowledge.cover', 'res_id': cover.id, })
 
         return covers
+
+    @api.model
+    def name_create(self, name):
+        # prevent to create a Knowledge Cover from string
+        raise UserError(_("You cannot create a new Knowledge Cover from here."))
 
     @api.autovacuum
     def _gc_unused_covers(self):

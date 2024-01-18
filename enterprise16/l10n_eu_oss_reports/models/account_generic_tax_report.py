@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 
 from collections import defaultdict
 from lxml import etree, objectify
+from dateutil.relativedelta import relativedelta
 
 
 class OSSTaxReportCustomHandlerOss(models.AbstractModel):
@@ -107,54 +108,98 @@ class OSSTaxReportCustomHandlerOss(models.AbstractModel):
             })
 
     def export_to_xml(self, options):
+        def get_period():
+            """ Compute the values (Year, Quarter, Month) required for the 'Period' node.
+            This node is used either at the XML root or inside the 'CorrectionsInfo' node.
+            There are two possible cases for the latter:
+                1. The total tax amount for the country is negative:
+                --> We declare the corrections for the previous period.
+                2. The country has at least one tax rate with a negative amount but its total is positive:
+                --> We declare the corrections in the current period.
+            """
+            month = None
+            quarter = None
+            date_to = fields.Date.from_string(options['date']['date_to'])
+
+            if options['date']['period_type'] == 'month':
+                if previous_period:
+                    date_to -= relativedelta(months=1)
+                month = date_to.month
+            elif options['date']['period_type'] == 'quarter':
+                if previous_period:
+                    date_to -= relativedelta(months=3)
+                quarter = (int(date_to.month) - 1) // 3 + 1
+            else:
+                raise UserError(_('Choose a month or quarter to export the OSS report'))
+
+            return date_to.year, quarter, month
+
+        def get_line_data():
+            year, quarter, month = get_period()
+            return {
+                'tax': tax,
+                'net_amt': 0.0 if corrections_amount else line_net_amt,
+                'tax_amt': 0.0 if corrections_amount else line_tax_amt,
+                'corr_amt': corrections_amount,
+                'corr_year': year,
+                'corr_quarter': quarter,
+                'corr_month': month,
+                'currency': sender_company.currency_id,
+                'supply_type': tax_scopes[tax.tax_scope].upper() if tax.tax_scope else 'GOODS',
+                'rate_type': 'STANDARD' if tax.amount == eu_standard_rates[current_country.code] else 'REDUCED',
+            }
+
         report = self.env['account.report'].browse(options['report_id'])
         oss_import_report = self.env.ref('l10n_eu_oss_reports.oss_imports_report')
         eu_countries = self.env.ref('base.europe').country_ids
-        date_to = fields.Date.from_string(options['date']['date_to'])
-        month = None
-        quarter = None
-
-        if options['date']['period_type'] == 'month':
-            month = date_to.month
-        elif options['date']['period_type'] == 'quarter':
-            month_end = int(date_to.month)
-            quarter = month_end // 3
-        else:
-            raise UserError(_('Choose a month or quarter to export the OSS report'))
-
         # prepare a dict of european standard tax rates {'AT': 20.0, 'BE': 21.0 ... }
-        # sorted() is here needed to ensure the dict will contain the hihest rate each time
+        # sorted() is here needed to ensure the dict will contain the highest rate each time
         eu_standard_rates = {source_code: rate for source_code, rate, target_code in sorted(EU_TAX_MAP.keys())}
         tax_scopes = dict(self.env['account.tax'].fields_get()['tax_scope']['selection'])
         sender_company = report._get_sender_company_for_export(options)
 
-        lines = report._get_lines(options)
         data = {}
         current_country = None
-        for line in lines:
+        corrections_amount = 0.0
+        previous_period = False
+        tax = None
+        year, quarter, month = get_period()
+
+        for line in filter(lambda x: x['columns'][1]['no_format'], report._get_lines(options)):
             model, model_id = report._get_model_info_from_id(line['id'])
+            line_net_amt = line['columns'][0].get('no_format', 0.0)
+            line_tax_amt = line['columns'][1].get('no_format', 0.0)
 
             if model == 'res.country':
+                # If there are corrections (a.k.a. negative tax amounts) for the current country,
+                # they are added at the end, right before the next country.
+                # That is why the corrections amount is reset before moving on to the next country.
+                if corrections_amount:
+                    data[current_country].append(get_line_data())
+                    corrections_amount = 0.0
+
                 current_country = self.env['res.country'].browse(model_id)
                 data[current_country] = []
+                previous_period = line_tax_amt < 0.0
 
             elif model == 'account.tax':
                 tax = self.env['account.tax'].browse(model_id)
-                data[current_country].append({
-                    'tax': tax,
-                    'net_amt': line['columns'][0]['no_format'],
-                    'tax_amt': line['columns'][1]['no_format'],
-                    'currency': sender_company.currency_id,
-                    'supply_type': tax_scopes[tax.tax_scope].upper() if tax.tax_scope else 'GOODS',
-                    'rate_type': 'STANDARD' if tax.amount == eu_standard_rates[current_country.code] else 'REDUCED',
-                })
+                if line_tax_amt > 0.0:
+                    data[current_country].append(get_line_data())
+                else:
+                    corrections_amount += line_tax_amt
+
+        # If there are corrections for the last country,
+        # they must be added here since we won't iterate through another country.
+        if corrections_amount:
+            data[current_country].append(get_line_data())
 
         values = {
             'VATNumber': sender_company.vat if sender_company.account_fiscal_country_id in eu_countries else None,
             'VoesNumber': sender_company.voes if sender_company.account_fiscal_country_id not in eu_countries else None,
             'IOSSNumber': sender_company.ioss if report == oss_import_report else None,
             'IntNumber': sender_company.intermediary_no if report == oss_import_report else None,
-            'Year': date_to.year,
+            'Year': year,
             'Quarter': quarter,
             'Month': month,
             'country_taxes': data,

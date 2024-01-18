@@ -47,4 +47,5 @@
     },
     'auto_install': True,
     'license': 'OEEL-1',
+    'uninstall_hook': 'uninstall_hook',
 }

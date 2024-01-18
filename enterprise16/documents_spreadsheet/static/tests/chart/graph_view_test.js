@@ -12,6 +12,7 @@ import {
     spawnGraphViewForSpreadsheet,
 } from "../utils/chart_helpers";
 import { getSpreadsheetActionModel } from "../utils/webclient_helpers";
+import { toggleMenu, toggleMenuItem } from "@web/../tests/search/helpers";
 
 function beforeEach() {
     patch(GraphController.prototype, "graph_spreadsheet", patchGraphSpreadsheet);
@@ -63,6 +64,53 @@ QUnit.module("documents_spreadsheet > graph view", { beforeEach, afterEach }, ()
         assert.strictEqual(model.getters.getChartIds(sheetId).length, 1);
         const chartId = model.getters.getChartIds(sheetId)[0];
         assert.strictEqual(model.getters.getChart(chartId).metaData.order, "ASC");
+    });
+
+    QUnit.test("graph order is not saved in spreadsheet context", async (assert) => {
+        const context = {
+            graph_mode: "bar",
+            graph_order: "ASC",
+        };
+        const { model } = await createSpreadsheetFromGraphView({
+            additionalContext: context,
+            actions: async (target) => {
+                await click(target, ".fa-sort-amount-desc");
+            },
+        });
+        const sheetId = model.getters.getActiveSheetId();
+        const chartId = model.getters.getChartIds(sheetId)[0];
+        assert.strictEqual(model.getters.getChart(chartId).metaData.order, "DESC");
+        assert.deepEqual(
+            model.exportData().sheets[0].figures[0].data.searchParams.context,
+            {
+                graph_mode: "bar",
+            },
+            "graph order is not stored in context"
+        );
+    });
+
+    QUnit.test("graph measure is not saved in spreadsheet context", async (assert) => {
+        const context = {
+            graph_measure: "__count__",
+            graph_mode: "bar",
+        };
+        const { model } = await createSpreadsheetFromGraphView({
+            additionalContext: context,
+            actions: async (target) => {
+                await toggleMenu(target, "Measures");
+                await toggleMenuItem(target, "Foo");
+            },
+        });
+        const sheetId = model.getters.getActiveSheetId();
+        const chartId = model.getters.getChartIds(sheetId)[0];
+        assert.strictEqual(model.getters.getChart(chartId).metaData.measure, "foo");
+        assert.deepEqual(
+            model.exportData().sheets[0].figures[0].data.searchParams.context,
+            {
+                graph_mode: "bar",
+            },
+            "graph measure is not stored in context"
+        );
     });
 
     QUnit.test("Chart name can be changed from the dialog", async (assert) => {

@@ -10,8 +10,8 @@
                 <div class="oe_structure container o_appointment mb16">
                     <t t-set="is_chosen_assign_method" t-value="appointment_type.assign_method == 'chosen'"/>
                     <h1 class="o_page_header mt32">
-                        Schedule <span class="text-primary" t-out="appointment_type.name"/> Appointment
-                        <span t-if="is_chosen_assign_method and not (staff_user.name in appointment_type.name)">
+                        Schedule <span class="text-primary" t-out="appointment_type.name"/>
+                        <span t-if="(len(users_possible) == 1 or is_chosen_assign_method) and not (staff_user.name in appointment_type.name)">
                             with <span class="text-primary" t-out="staff_user.name"/>
                         </span>
                     </h1>
@@ -108,7 +108,7 @@
                                 </div>
                             </form>
                             <div class="col-lg-4 col-md-12 mb-5 mb-lg-0 pt-3 pt-lg-0">
-                                <article t-if="is_chosen_assign_method or appointment_type.category != 'website'"
+                                <article t-if="len(users_possible) == 1 or is_chosen_assign_method or appointment_type.category != 'website'"
                                     class="card o_appointment_user_short_card border-1 shadow-sm mb-3"
                                     itemscope="itemscope"
                                     itemtype="http://schema.org/Employee">

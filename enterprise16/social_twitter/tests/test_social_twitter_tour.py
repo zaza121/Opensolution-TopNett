@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import json
+from json import dumps as json_dumps
 import requests
 from contextlib import contextmanager
 from unittest.mock import patch
@@ -45,7 +45,7 @@ class TestSocialTwitter(HttpCase):
                 'stream_id': self.social_stream.id,
                 'twitter_tweet_id': 'test_tweet_id',
                 'twitter_author_id': 'twitter_author_id',
-                'twitter_screen_name': 'author_sreen_name',
+                'twitter_screen_name': 'social_demo',
                 'published_date': datetime.now(),
             })
 
@@ -63,16 +63,15 @@ class TestSocialTwitter(HttpCase):
 
         def _mock_request_get(url, *args, **kwargs):
             responses = {
-                'tweets.json': {"statuses": []},
-                'user_timeline.json': {},
-                'mentions_timeline.json': [],
-                'users/show.json': {},
+                '/tweets': {'data': [{'conversation_id': 1337}]},
+                '/mentions': {},
+                '/2/users/by': {},
             }
 
             for endpoint, content in responses.items():
                 if endpoint in url:
                     response = requests.Response()
-                    response._content = json.dumps(content).encode()
+                    response._content = json_dumps(content).encode()
                     response.status_code = 200
                     return response
 
@@ -85,31 +84,27 @@ class TestSocialTwitter(HttpCase):
         self.unique_id_str = 1000
         self.all_messages = []
 
-        def _mock_request_post(url, params=None, data=None, **kwargs):
-            params = params or data
-            if '/statuses/lookup.json' in url:
+        def _mock_request_post(url, params=None, data=None, json=None, **kwargs):
+            params = params or data or json or {}
+
+            if '/tweets/search/recent' in url:
                 response = requests.Response()
-                response._content = b'[]'
+                response._content = json_dumps({'data': [{'conversation_id': 1337}]}).encode()
                 response.status_code = 200
                 return response
 
-            if 'statuses/update.json' in url:
-                self.all_messages.append(params.get('status', ''))
+            if '/tweets' in url:
+                self.all_messages.append(params.get('text', ''))
                 self.unique_id_str += 1
                 # write a comment
                 response = requests.Response()
-                response._content = json.dumps({
-                    'id_str': 'tweet_%i' % self.unique_id_str,
-                    'full_text': params.get('status'),
+                response._content = json_dumps({'data': {
+                    'id': 'tweet_%i' % self.unique_id_str,
+                    'text': params.get('text', ''),
                     'created_at': datetime.now().strftime("%Y-%m-%d %H:00:00"),
-                    'user': {
-                        'id_str': 'social_manager',
-                        'name': 'social_manager',
-                        'screen_name': 'social_manager',
-                        'profile_image_url_https': '',
-                    },
-                    'in_reply_to_status_id_str': params.get('in_reply_to_status_id'),
-                }).encode()
+                    'in_reply_to_status_id_str': params.get('in_reply_to_tweet_id'),
+                    'from': {'screen_name': 'social_demo'},
+                }}).encode()
                 response.status_code = 200
                 return response
 

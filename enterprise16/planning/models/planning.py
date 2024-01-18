@@ -248,7 +248,7 @@ class Planning(models.Model):
         slots_with_calendar = self - planning_slots
         for slot in planning_slots:
             # for each planning slot, compute the duration
-            ratio = slot.allocated_percentage / 100.0 or 1
+            ratio = slot.allocated_percentage / 100.0
             slot.allocated_hours = slot._calculate_slot_duration() * ratio
         if slots_with_calendar:
             # for forecasted slots, compute the conjunction of the slot resource's work intervals and the slot.
@@ -361,11 +361,15 @@ class Planning(models.Model):
         query = """
             SELECT S1.id
             FROM planning_slot S1
-            INNER JOIN planning_slot S2 ON S1.resource_id = S2.resource_id AND S1.id <> S2.id
-            WHERE
-                S1.start_datetime < S2.end_datetime
-                AND S1.end_datetime > S2.start_datetime
-                AND S1.allocated_percentage + S2.allocated_percentage > 100
+            WHERE EXISTS (
+                SELECT 1
+                  FROM planning_slot S2
+                 WHERE S1.id <> S2.id
+                   AND S1.resource_id = S2.resource_id
+                   AND S1.start_datetime < S2.end_datetime
+                   AND S1.end_datetime > S2.start_datetime
+                   AND S1.allocated_percentage + S2.allocated_percentage > 100
+            )
         """
         operator_new = (operator == ">") and "inselect" or "not inselect"
         return [('id', operator_new, (query, ()))]
@@ -609,7 +613,7 @@ class Planning(models.Model):
             start = start.astimezone(pytz.utc).replace(tzinfo=None)
 
             h, m = divmod(template_id.duration, 1)
-            delta = timedelta(hours=int(h), minutes=int(m * 60))
+            delta = timedelta(hours=int(h), minutes=int(round(m * 60)))
             end = start + delta
         return (start, end)
 
@@ -857,20 +861,25 @@ class Planning(models.Model):
             This method is used in a rpc call
 
         :param slot_ids: The slots the work intervals have to be returned for.
-        :return: a dict of { resource_id: [Intervals] }.
+        :return: list of dicts { resource_id: [Intervals] } and { resource_id: flexible_hours }.
         """
         # Get the oldest start date and latest end date from the slots.
         domain = [("id", "in", slot_ids)]
-        fields = ["start_datetime:min", "end_datetime:max", "resource_ids:array_agg(resource_id)"]
-        planning_slot_read_group = self.env["planning.slot"]._read_group(domain, fields, [])
+        read_group_fields = ["start_datetime:min", "end_datetime:max", "resource_ids:array_agg(resource_id)"]
+        planning_slot_read_group = self.env["planning.slot"]._read_group(domain, read_group_fields, [])
         if not planning_slot_read_group[0]['__count']:
             return [{}]
 
-        start_datetime = planning_slot_read_group[0]["start_datetime"].replace(tzinfo=pytz.utc)
-        end_datetime = planning_slot_read_group[0]["end_datetime"].replace(tzinfo=pytz.utc)
+        # Get default start/end datetime if any.
+        default_start_datetime = (fields.Datetime.to_datetime(self._context.get('default_start_datetime')) or datetime.min).replace(tzinfo=pytz.utc)
+        default_end_datetime = (fields.Datetime.to_datetime(self._context.get('default_end_datetime')) or datetime.max).replace(tzinfo=pytz.utc)
+
+        start_datetime = max(default_start_datetime, planning_slot_read_group[0]["start_datetime"].replace(tzinfo=pytz.utc))
+        end_datetime = min(default_end_datetime, planning_slot_read_group[0]["end_datetime"].replace(tzinfo=pytz.utc))
 
         # Get slots' resources and current company work intervals.
-        resources = self.env["resource.resource"].browse(planning_slot_read_group[0]["resource_ids"])
+        fetched_resource_ids = [res_id for res_id in planning_slot_read_group[0]["resource_ids"] if res_id is not None]
+        resources = self.env["resource.resource"].browse(fetched_resource_ids)
         work_intervals_per_resource, dummy = resources._get_valid_work_intervals(start_datetime, end_datetime)
         company_calendar = self.env.company.resource_calendar_id
         company_calendar_work_intervals = company_calendar._work_intervals_batch(start_datetime, end_datetime)
@@ -883,7 +892,14 @@ class Planning(models.Model):
                 work_interval_per_resource[resource_id].append(
                     (resource_work_interval[0].astimezone(pytz.UTC), resource_work_interval[1].astimezone(pytz.UTC))
                 )
-        return [work_interval_per_resource]
+        # Add the flexible status per resource to the output
+        flexible_per_resource = {resource.id: resource.flexible_hours for resource in set(resources)}
+        flexible_per_resource[False] = False
+        return [work_interval_per_resource, flexible_per_resource]
+
+    @api.model
+    def gantt_company_hours_per_day(self):
+        return self.env.company.resource_calendar_id.hours_per_day
 
     @api.model
     def gantt_unavailability(self, start_date, end_date, scale, group_bys=None, rows=None):
@@ -1196,12 +1212,13 @@ class Planning(models.Model):
                 **values,
                 'start_datetime': start_inter.astimezone(pytz.utc).replace(tzinfo=None),
                 'end_datetime': end_inter.astimezone(pytz.utc).replace(tzinfo=None),
-                'allocated_hours': float_utils.float_round(
-                    (((end_inter - start_inter).total_seconds() / 3600.0) * (self.allocated_percentage / 100.0)),
-                    precision_digits=2
-                ),
             }
-            if not self._update_remaining_hours_to_plan_and_values(remaining_hours_to_plan, new_slot_vals):
+            was_updated = self._update_remaining_hours_to_plan_and_values(remaining_hours_to_plan, new_slot_vals)
+            new_slot_vals['allocated_hours'] = float_utils.float_round(
+                ((end_inter - start_inter).total_seconds() / 3600.0) * (self.allocated_percentage / 100.0),
+                precision_digits=2
+            )
+            if not was_updated:
                 return splitted_slot_values
             if unassign:
                 new_slot_vals['resource_id'] = False
@@ -1676,7 +1693,7 @@ class Planning(models.Model):
             return self.allocated_hours
         # if the slot goes over the gantt period, compute the duration only within
         # the gantt period
-        ratio = self.allocated_percentage / 100.0 or 1
+        ratio = self.allocated_percentage / 100.0
         working_hours = self._get_working_hours_over_period(start_utc, stop_utc, work_intervals, calendar_intervals)
         return working_hours * ratio
 

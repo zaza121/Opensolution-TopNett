@@ -16,8 +16,11 @@
             </t>
         </xpath>
         <xpath expr="//span[hasclass('account_report_line_name')]" position="inside">
-            <t t-if="report._get_model_info_from_id(line.get('id'))[0] == 'res.partner' and line.get('unfoldable')">
-                &amp;nbsp;<a t-att-data-id="line.get('id')" action="action_open_partner" class="no_print oe_link_reports">Open</a>
+            <t t-set="parsed_line_id" t-value="report._parse_line_id(line.get('id'))[-1]"/>
+            <t t-if="parsed_line_id[1] == 'res.partner' and line.get('unfoldable')">
+                <t t-if="parsed_line_id[2] is not None">
+                    &amp;nbsp;<a t-att-data-id="line.get('id')" action="action_open_partner" class="no_print oe_link_reports">Open</a>
+                </t>
                 &amp;nbsp;<a t-att-data-line_id="line.get('id')"
                          t-att-data-name="line.get('name')"
                          t-att-data-view_ref="'account.view_move_line_tree_grouped_partner'"
@@ -27,6 +30,9 @@
                         </a>
                 &amp;nbsp;<a t-att-data-line_id="line.get('id')" action="action_partner_reconcile" class="no_print oe_link_reports">Reconcile</a>
             </t>
+        </xpath>
+        <xpath expr="//td[contains(@t-att-class, 'o_account_report_name_ellipsis')]" position="attributes">
+            <attribute name="t-att-class" add="'o_account_report_name_ellipsis_partner_ledger'" separator=" + "/>
         </xpath>
     </template>
 
@@ -39,7 +45,7 @@
     <record id="partner_ledger_report" model="account.report">
         <field name="name">Partner Ledger</field>
         <field name="filter_show_draft" eval="True"/>
-        <field name="filter_account_type">payable_receivable</field>
+        <field name="filter_account_type" eval="True"/>
         <field name="filter_partner" eval="True"/>
         <field name="filter_unfold_all" eval="True"/>
         <field name="filter_unreconciled" eval="True"/>

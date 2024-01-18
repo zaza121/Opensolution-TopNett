@@ -63,5 +63,4 @@ class AccountBatchPaymentRejection(models.TransientModel):
 
     def button_cancel(self):
         """ Cancel the current operation and invalidate the current "Validate" action. """
-        self.cancel_action_todo = True
         return True

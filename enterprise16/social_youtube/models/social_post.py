@@ -53,9 +53,12 @@ class SocialPostYoutube(models.Model):
             else:
                 post.youtube_access_token = False
 
-    @api.depends('youtube_title', 'youtube_description', 'youtube_video_id', 'scheduled_date')
+    @api.depends('youtube_title', 'youtube_description', 'youtube_video_id', 'scheduled_date', 'youtube_accounts_count')
     def _compute_youtube_preview(self):
         for post in self:
+            if not (post.youtube_accounts_count == 1 and post.youtube_title):
+                post.youtube_preview = False
+                continue
             post.youtube_preview = self.env['ir.qweb']._render('social_youtube.youtube_preview', {
                 'youtube_title': post.youtube_title or _('Video'),
                 'youtube_description': post.youtube_description,

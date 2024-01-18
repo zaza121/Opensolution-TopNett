@@ -14,7 +14,7 @@
                 <field name="tracking" invisible="1"/>
                 <field name="tracking_line_ids" context="{'default_product_id': product_id, 'default_company_id': company_id}" attrs="{'readonly': [('fsm_done', '=', True)]}">
                     <tree editable="bottom">
-                        <field name="lot_id" context="{'default_product_id': product_id, 'default_company_id': company_id}"/>
+                        <field name="lot_id" groups="stock.group_production_lot" context="{'default_product_id': product_id, 'default_company_id': company_id}"/>
                         <field name="quantity" attrs="{'column_invisible': [('parent.tracking', '=', 'serial')]}"/>
                         <field name="product_id" invisible="1"/>
                         <field name="company_id" invisible="1"/>
@@ -25,7 +25,7 @@
                 <separator string="Already Delivered" attrs="{'invisible': [('tracking_validated_line_ids', '=', [])]}"/>
                 <field name="tracking_validated_line_ids" attrs="{'invisible': [('tracking_validated_line_ids', '=', [])]}" readonly="1">
                     <tree>
-                        <field name="lot_id" />
+                        <field name="lot_id" groups="stock.group_production_lot"/>
                         <field name="quantity" attrs="{'column_invisible': [('parent.tracking', '=', 'serial')]}"/>
                         <field name="product_id" invisible="1"/>
                         <field name="sale_order_line_id" invisible="1"/>
@@ -49,7 +49,7 @@
             <form string="Track Stock">
                 <group>
                     <group>
-                        <field name="lot_id" readonly="1"/>
+                        <field name="lot_id" groups="stock.group_production_lot" readonly="1"/>
                         <field name="quantity" readonly="1"/>
                         <field name="product_id" invisible="1"/>
                         <field name="sale_order_line_id" invisible="1"/>

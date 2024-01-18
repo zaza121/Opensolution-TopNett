@@ -73,4 +73,19 @@
             </div>
         </xpath>
     </template>
+
+    <template id="checkout_delivery" inherit_id="website_sale_delivery.payment_delivery_methods">
+        <xpath expr="//input[@name='delivery_type']" position="attributes">
+            <attribute name="t-att-data-delivery-type">delivery.delivery_type</attribute>
+            <attribute name="t-att-data-ups-cod">delivery.ups_cod</attribute>
+        </xpath>
+    </template>
+
+    <template id="checkout_payment" inherit_id="payment.checkout">
+        <xpath expr="//input[@name='o_payment_radio']" position="attributes">
+            <t t-if="provider.code == 'custom'">
+                <attribute name="t-att-data-provider-custom-mode">provider.custom_mode</attribute>
+            </t>
+        </xpath>
+    </template>
 </odoo>

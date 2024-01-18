@@ -146,7 +146,7 @@ class AccountMoveLine(models.Model):
     # COMPUTE METHODS
     # -------------------------------------------------------------------------
 
-    @api.depends('l10n_mx_edi_umt_aduana_id', 'product_uom_id')
+    @api.depends('l10n_mx_edi_umt_aduana_id', 'product_uom_id', 'quantity')
     def _compute_l10n_mx_edi_qty_umt(self):
         for line in self:
             product_aduana_code = line.l10n_mx_edi_umt_aduana_id.l10n_mx_edi_code_aduana

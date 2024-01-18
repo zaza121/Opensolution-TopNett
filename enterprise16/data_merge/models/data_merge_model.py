@@ -99,7 +99,7 @@ class DataMergeModel(models.Model):
             self.rule_ids = [(5, 0, 0)]
 
     def _compute_records_to_merge_count(self):
-        count_data = self.env['data_merge.record']._read_group([('model_id', 'in', self.ids)], ['model_id'], ['model_id'])
+        count_data = self.env['data_merge.record'].with_context(data_merge_model_ids=tuple(self.ids))._read_group([('model_id', 'in', self.ids)], ['model_id'], ['model_id'])
         counts = {cd['model_id'][0]:cd['model_id_count'] for cd in count_data}
         for dm_model in self:
             dm_model.records_to_merge_count = counts[dm_model.id] if dm_model.id in counts else 0

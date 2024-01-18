@@ -9,6 +9,7 @@ async function executeAccountReportDownload({ env, action }) {
     const data = action.data;
     try {
       await download({ url, data });
+      env.services.action.doAction({type: 'ir.actions.act_window_close'});
     } finally {
       env.services.ui.unblock();
     }

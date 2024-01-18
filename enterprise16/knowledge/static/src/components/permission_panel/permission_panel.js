@@ -279,7 +279,7 @@ class PermissionPanel extends Component {
     */
     _showConfirmDialog (message, title, confirm, discard) {
         if (discard === undefined) {
-            discard = this.loadPanel;
+            discard = this.loadPanel.bind(this);
         }
         this.dialog.add(ConfirmationDialog, {
             title: title || _t("Confirmation"),

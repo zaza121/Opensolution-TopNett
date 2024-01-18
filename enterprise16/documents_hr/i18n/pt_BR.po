@@ -4,15 +4,17 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
+# Kevilyn Rosa, 2023
+# Layna Nascimento, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-04 09:42+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Martin Trigaux, 2022\n"
-"Language-Team: Portuguese (Brazil) (https://www.transifex.com/odoo/teams/41243/pt_BR/)\n"
+"Last-Translator: Layna Nascimento, 2023\n"
+"Language-Team: Portuguese (Brazil) (https://app.transifex.com/odoo/teams/41243/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -43,20 +45,35 @@ msgstr ""
 msgid ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "        <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"            Dear <t t-esc=\"object.name\"/>, your personal documents access link is available for you.<br/><br/>\n"
-"            You'll find all your personal HR documents in this folder.<br/><br/>\n"
-"            Please keep this link secure.<br/><br/>\n"
+"            Dear <t t-esc=\"object.name\"></t>, your personal documents access link is available for you.<br><br>\n"
+"            You'll find all your personal HR documents in this folder.<br><br>\n"
+"            Please keep this link secure.<br><br>\n"
 "            <div style=\"text-align: center; padding: 16px 0px 16px 0px; font-size: 14px;\">\n"
 "                <a t-attf-href=\"{{ object.documents_share_id.full_url }}\" target=\"_blank\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                    Your Documents\n"
 "                </a>\n"
 "            </div>\n"
-"            Have a nice day,<br/>\n"
+"            Have a nice day,<br>\n"
 "            The HR Team\n"
 "        </td></tr>\n"
 "    </tbody></table>\n"
 "                "
 msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
+"        <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
+"            Caro <t t-esc=\"object.name\"></t>, seu link de acesso a documentos pessoais está disponível para você.<br><br>\n"
+"            Você encontrará todos os seus documentos pessoais de RH nessa pasta. <br><br>\n"
+"            Mantenha esse link seguro.<br><br>\n"
+"            <div style=\"text-align: center; padding: 16px 0px 16px 0px; font-size: 14px;\">\n"
+"                <a t-attf-href=\"{{ object.documents_share_id.full_url }}\" target=\"_blank\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                    Seus documentos\n"
+"                </a>\n"
+"            </div>\n"
+"            Tenha um ótimo dia,<br>\n"
+"            Time de RH\n"
+"        </td></tr>\n"
+"    </tbody></table>\n"
+"                "
 
 #. module: documents_hr
 #: model:documents.tag,name:documents_hr.documents_hr_documents_absences
@@ -100,6 +117,7 @@ msgid "Document Count"
 msgstr "Contagem de Documento"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/res_users.py:0
 #: model:documents.facet,name:documents_hr.documents_hr_documents
 #: model:ir.model.fields,field_description:documents_hr.field_res_users__document_count
@@ -125,12 +143,15 @@ msgid "Employee"
 msgstr "Funcionário"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid ""
-"Employee's private email must be set to use \"Send Access Link\" function:\n"
+"Employee's related user and private email must be set to use \"Send Access Link\" function:\n"
 "%s"
 msgstr ""
+"O usuário relacionado e o e-mail pessoal do funcionário devem ser definidos para usar a função \"Enviar link de acesso\":\n"
+"%s"
 
 #. module: documents_hr
 #: model:documents.tag,name:documents_hr.documents_hr_documents_employees
@@ -143,15 +164,16 @@ msgid "HR"
 msgstr "RH"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid "HR Documents: %s"
-msgstr ""
+msgstr "Documentos de RH: %s"
 
 #. module: documents_hr
 #: model:mail.template,name:documents_hr.mail_template_document_folder_link
 msgid "HR: Document Access Link"
-msgstr ""
+msgstr "HR: link de acesso a documentos"
 
 #. module: documents_hr
 #: model:ir.model.fields,field_description:documents_hr.field_res_config_settings__documents_hr_settings
@@ -161,12 +183,12 @@ msgstr "Recursos Humanos"
 #. module: documents_hr
 #: model:ir.model.fields,field_description:documents_hr.field_hr_departure_wizard__send_hr_documents_access_link
 msgid "Send Access Link"
-msgstr ""
+msgstr "Enviar link de acesso"
 
 #. module: documents_hr
 #: model:ir.actions.server,name:documents_hr.ir_actions_server_send_access_link
 msgid "Send HR Documents Access Link"
-msgstr ""
+msgstr "Enviar link de acesso a documentos de RH"
 
 #. module: documents_hr
 #: model:ir.model.fields,help:documents_hr.field_hr_departure_wizard__send_hr_documents_access_link
@@ -177,13 +199,14 @@ msgstr ""
 #. module: documents_hr
 #: model:mail.template,description:documents_hr.mail_template_document_folder_link
 msgid "Sent manually when recording an employee departure"
-msgstr ""
+msgstr "Enviado manualmente ao registrar a saída de um funcionário"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid "The access link has been sent to the employee."
-msgstr ""
+msgstr "O link de acesso foi enviado ao funcionário."
 
 #. module: documents_hr
 #: model:ir.model,name:documents_hr.model_res_users
@@ -196,10 +219,15 @@ msgid "Workspace"
 msgstr "Espaço de trabalho"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
-msgid "You must set an address on the employee to use Documents features."
+msgid ""
+"You must set a private address on the Employee in order to use Document's "
+"features."
 msgstr ""
+"Você deve definir um endereço privado no funcionário para usar os recursos "
+"do documento."
 
 #. module: documents_hr
 #: model:ir.model.fields,field_description:documents_hr.field_res_company__documents_hr_folder
@@ -215,3 +243,4 @@ msgstr "Espaço de trabalho padrão"
 #: model:mail.template,subject:documents_hr.mail_template_document_folder_link
 msgid "{{ object.name }}, your personal documents access link is available"
 msgstr ""
+"{{ object.name }}, seu link de acesso a documentos pessoais está disponível"

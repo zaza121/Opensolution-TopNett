@@ -36,19 +36,27 @@ class TestReports(TestAr, TestAccountReportsCommon):
                 "refund_method": "cancel",
                 "move_ids": self.demo_invoices['test_invoice_16'],
                 "date": '2021-03-01',
+            },
+            "demo_refund_bill_1": {
+                "reason": "demo_sup_refund_invoice_5: liquido producto bill refund (credit note)",
+                "refund_method": "cancel",
+                "move_ids": self.demo_bills['test_vendor_bill_8'],
+                "date": '2021-03-27',
+                "l10n_latam_document_number": "00011-00000012",
+                "l10n_latam_document_type_id": self.document_type['liq_pro_doc'].id,
             }
         }
 
         refund_wizard = self.env['account.move.reversal']
         for key, values in credit_notes.items():
+            origin_move = values.get("move_ids")
+            values.update({
+                'date': fields.Date.from_string(values.get('date')),
+                'journal_id': origin_move.journal_id.id,
+            })
             move_reversal = refund_wizard.with_context(
                 active_model="account.move",
-                active_ids=values.pop("move_ids").ids).create({
-                    'reason': values.get('reason'),
-                    'refund_method': values.get('refund_method'),
-                    'date': fields.Date.from_string(values.get('date')),
-                    'journal_id': self.journal.id,
-                })
+                active_ids=origin_move.ids).create(values)
             reversal = move_reversal.reverse_moves()
             reverse_move = self.env['account.move'].browse(reversal['res_id'])
             self.demo_credit_notes[key] = reverse_move
@@ -56,15 +64,6 @@ class TestReports(TestAr, TestAccountReportsCommon):
     def _create_test_vendor_bill_invoice_demo(self):
         """ Create in the unit tests the same vendor bills created in demo data """
         payment_term_id = self.env.ref("account.account_payment_term_end_following_month")
-        # `invoice_user_id` is a field meant to hold the salesman of customer invoices
-        # it makes no sense to set the `invoice_user_id` on vendor bills, and it doesn't impact the test anyway.
-        # In the invoice view, if it's not a customer invoice, `invoice_user_id` is not visible
-        # invoice_user_id = fields.Many2one('res.users', copy=False, tracking=True, string='Salesperson',
-        # <group string="Invoice"
-        #    name="sale_info_group"
-        #    attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund'))]}">
-        #        ...
-        #        <field name="invoice_user_id" domain="[('share', '=', False)]" widget="many2one_avatar_user"/>
         purchase_journal = self.env["account.journal"].search([('type', '=', 'purchase'), ('company_id', '=', self.env.company.id)])
         vendor_bills = {
             "test_vendor_bill_1": {
@@ -192,6 +191,27 @@ class TestReports(TestAr, TestAccountReportsCommon):
 
                 ],
             },
+            "test_vendor_bill_9": {
+                "ref": " demo_liquido_producto_1: Vendor bill liquido producto (document type 186)",
+                "l10n_latam_document_type_id": self.document_type['liq_pro_doc'],
+                "l10n_latam_document_number": "00077-00000077",
+                "partner_id": self.res_partner_adhoc,
+                "invoice_payment_term_id": payment_term_id,
+                "move_type": "in_invoice",
+                "invoice_date": '2021-03-25',
+                "company_id": self.env.company,
+                # as we create lines separatelly we need to set journal, if not, misc journal is selected
+                "journal_id": purchase_journal,
+                "invoice_line_ids": [
+                    {'product_id': self.service_wo_tax, "name": "[AFIP_DESPACHO] Despacho de importación", 'price_unit': 5064.98, 'quantity': 1,
+                     "tax_ids": [(6, 0, self.tax_21_purchase.ids)]},
+                    {'product_id': self.service_wo_tax, "name": "[AFIP_TASA_EST] Tasa Estadística", 'price_unit': 152.08, 'quantity': 1,
+                     "tax_ids": [(6, 0, self.tax_21_purchase.ids)]},
+                    {'product_id': self.service_iva_no_gravado, "name": "[AFIP_ARANCEL] Arancel", 'price_unit': 10.0, 'quantity': 1,
+                     "tax_ids": [(6, 0, self.tax_no_gravado_purchase.ids)]},
+
+                ],
+            }
         }
 
         for key, values in vendor_bills.items():
@@ -200,6 +220,8 @@ class TestReports(TestAr, TestAccountReportsCommon):
                 invoice_form.partner_id = values['partner_id']
                 invoice_form.invoice_payment_term_id = values['invoice_payment_term_id']
                 invoice_form.invoice_date = values['invoice_date']
+                if values.get('l10n_latam_document_type_id'):
+                    invoice_form.l10n_latam_document_type_id = values['l10n_latam_document_type_id']
                 invoice_form.l10n_latam_document_number = values['l10n_latam_document_number']
                 if values.get('invoice_incoterm_id'):
                     invoice_form.invoice_incoterm_id = values['invoice_incoterm_id']
@@ -291,16 +313,22 @@ class TestReports(TestAr, TestAccountReportsCommon):
         cls.env = cls.env(context=context)
         cls.env.user.write({'company_ids': [(4, cls.company_ri.id)]})
 
+        # ==== Document Types ====
+        cls.document_type.update({
+            'liq_pro_doc': cls.env.ref('l10n_ar.dc_liq_cd_sp_a'),
+        })
+
+        # ==== Create VAT BOOK demo data ====
         cls._create_test_invoices_like_demo(cls, use_current_date=False)
         for _key, inv in cls.demo_invoices.items():
             inv.action_post()
 
-        # demo_credit_notes are automatically posted thanks to the refund type
-        cls._create_test_credit_notes_like_demo(cls)
-
         cls._create_test_vendor_bill_invoice_demo(cls)
         for _key, inv in cls.demo_bills.items():
             inv.action_post()
+
+        # demo_credit_notes are automatically posted thanks to the refund type
+        cls._create_test_credit_notes_like_demo(cls)
 
         cls.options = cls._generate_options(cls.report, fields.Date.from_string('2021-03-01'), fields.Date.from_string('2021-03-31'))
         cls._vat_book_report_create_test_data(cls)

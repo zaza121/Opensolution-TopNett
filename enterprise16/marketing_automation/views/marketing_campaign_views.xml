@@ -43,7 +43,7 @@
         <field name="arch" type="xml">
             <form string="Campaign">
                 <header attrs="{'invisible': [('active', '=', False)]}">
-                    <button name="action_start_campaign" type="object" states="draft,stopped" class="btn-primary" string="Start" />
+                    <button name="action_start_campaign" type="object" class="btn-primary" string="Start" attrs="{'invisible': ['|', ('state', '=', 'running'), ('active', '=', False)]}" />
                     <button name="action_stop_campaign" type="object" states="running" class="btn-primary" string="Stop" />
                     <button name="%(marketing_campaign_test_action)d" type="action" attrs="{'invisible': ['|', ('marketing_activity_ids', '=', []), ('state', '=', 'stopped') ]}" class="btn-secondary" string="Launch a Test" />
                     <button name="sync_participants" type="object" states="running" class="btn-secondary" string="Generate participants" groups="base.group_no_one" confirm="Are you sure you want to proceed ?"/>
@@ -86,18 +86,17 @@
                     </div>
                     <group>
                         <field name="name" invisible="1"/>
-                        <label for="unique_field_id" string="Target"/>
+                        <field name="user_id" groups="base.group_no_one" class="oe_inline"/>
+                        <label for="model_id" string="Target"/>
                         <div name="mailing_container">
                             <div class="row">
                                 <div class="col-xs-12 col-md-3">
                                     <field name="model_id"
-                                        string="Target"
                                         attrs="{'readonly': [('state', '!=', 'draft')]}"
                                         options="{'no_create': True, 'no_open': True}"
                                         context="{'tree_view_ref': 'marketing_automation.ir_model_view_tree_marketing'}"/>
                                 </div>
                                 <div class="col-xs-12 col-md-9 o_td_label">
-                                    <label for="mailing_filter_id" string="Filter" class="me-4"/>
                                     <field name="mailing_filter_id"
                                         widget="mailing_filter"
                                         options="{'no_create': '1', 'no_open': '1', 'domain_field': 'domain', 'model_field': 'model_id'}"

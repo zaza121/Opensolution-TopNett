@@ -129,11 +129,13 @@
                     "timestamp_end": <t t-esc="int(o.l10n_de_fiskaly_time_end.timestamp())"/>,
                     "user":{
                         "user_export_id": "<t t-esc="o.user_id.id"/>",
-                        "name": "<t t-esc="o.user_id.name[:50]"/>"
+                        <t t-set="user_name"><t t-esc="o.user_id.name"/></t>
+                        "name": "<t t-esc="user_name[:50]"/>"
                     },
                     "buyer": {
                         <t t-if="o.partner_id">
-                            "name": "<t t-esc="o.partner_id.name[:50]"/>",
+                            <t t-set="partner_name"><t t-esc="o.partner_id.name"/></t>
+                            "name": "<t t-esc="partner_name[:50]"/>",
                             "buyer_export_id": "<t t-esc="o.partner_id.id"/>",
                             "type": <t t-if="company_id != o.partner_id.company_id">"Kunde"</t> <t t-else="">"Mitarbeiter"</t>,
                             <t t-if="o.amount_total > 200">
@@ -176,7 +178,7 @@
                         },
                         "lineitem_export_id": "<t t-esc="l.id"/>",
                         "storno": False,
-                        "text": "<t t-esc="l.product_id.product_tmpl_id.name"/>",
+                        "text": "<t t-esc="l.product_id.product_tmpl_id.name.replace('\n', ' ')"/>",
                         "item":{
                             "number": "<t t-esc="l.product_id.id"/>",
                             "quantity": <t t-esc="float_repr(l.qty, 3)"/>,

@@ -288,7 +288,7 @@
                             <record id="account_financial_report_executivesummary_avgcre0_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">-CRE.balance / OPINC.balance * AVG_CRED_DAYS.NDays</field>
+                                <field name="formula">-CRE.balance / (COS.balance + EXP.balance) * AVG_CRED_DAYS.NDays</field>
                                 <field name="date_scope">normal</field>
                                 <field name="subformula">cross_report</field>
                                 <field name="green_on_positive" eval="False"/>

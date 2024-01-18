@@ -81,14 +81,19 @@ class DHLProvider():
         contact = self.factory.Contact()
         contact.PersonName = partner_id.name
         contact.PhoneNumber = partner_id.phone
-        contact.Email = partner_id.email
+        if partner_id.email:
+            contact.Email = partner_id.email
         consignee.Contact = contact
         return consignee
 
     def _set_dct_to(self, partner_id):
         to = self.factory_dct_request.DCTTo()
-        to.CountryCode = partner_id.country_id.code
-        to.Postalcode = partner_id.zip
+        country_code = partner_id.country_id.code
+        zip_code = partner_id.zip or ''
+        if country_code == 'ES' and (zip_code.startswith('35') or zip_code.startswith('38')):
+            country_code = 'IC'
+        to.CountryCode = country_code
+        to.Postalcode = zip_code
         to.City = partner_id.city
         return to
 
@@ -108,7 +113,8 @@ class DHLProvider():
         contact = self.factory.Contact()
         contact.PersonName = warehouse_partner_id.name
         contact.PhoneNumber = warehouse_partner_id.phone
-        contact.Email = warehouse_partner_id.email
+        if warehouse_partner_id.email:
+            contact.Email = warehouse_partner_id.email
         shipper.Contact = contact
         return shipper
 
@@ -291,8 +297,12 @@ class DHLProvider():
     def _set_export_declaration(self, carrier, picking, is_return=False):
         export_lines = []
         move_lines = picking.move_line_ids.filtered(lambda line: line.product_id.type in ['product', 'consu'])
+        currency_id = picking.sale_id and picking.sale_id.currency_id or picking.company_id.currency_id
         for sequence, line in enumerate(move_lines, start=1):
-            unit_quantity = line.product_uom_id._compute_quantity(line.qty_done, line.product_id.uom_id, rounding_method='HALF-UP')
+            if line.move_id.sale_line_id:
+                unit_quantity = line.product_uom_id._compute_quantity(line.qty_done, line.move_id.sale_line_id.product_uom)
+            else:
+                unit_quantity = line.product_uom_id._compute_quantity(line.qty_done, line.product_id.uom_id)
             rounded_qty = max(1, float_round(unit_quantity, precision_digits=0, rounding_method='HALF-UP'))
             item = self.factory.ExportLineItem()
             item.LineNumber = sequence
@@ -301,12 +311,15 @@ class DHLProvider():
             if len(line.product_id.name) > 75:
                 raise UserError(_("DHL doesn't support products with name greater than 75 characters."))
             item.Description = line.product_id.name
-            item.Value = line.sale_price
+            item.Value = float_repr(line.sale_price / rounded_qty, currency_id.decimal_places)
             item.Weight = item.GrossWeight = {
                 "Weight": carrier._dhl_convert_weight(line.product_id.weight, carrier.dhl_package_weight_unit),
                 "WeightUnit": carrier.dhl_package_weight_unit,
             }
-            item.ManufactureCountryCode = line.product_id.country_of_origin or line.picking_id.picking_type_id.warehouse_id.partner_id.country_id.code
+            item.ManufactureCountryCode = line.product_id.country_of_origin.code or line.picking_id.picking_type_id.warehouse_id.partner_id.country_id.code
+            if line.product_id.hs_code:
+                item.ImportCommodityCode = line.product_id.hs_code
+                item.CommodityCode = line.product_id.hs_code
             export_lines.append(item)
 
         export_declaration = self.factory.ExportDeclaration()

@@ -2,6 +2,7 @@
 
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { scrollTo } from "@web/core/utils/scrolling";
 import { CallbackRecorder } from "@web/webclient/actions/action_hook";
 
 import { View } from "@web/views/view";
@@ -12,23 +13,30 @@ import { KanbanRenderer } from "@web/views/kanban/kanban_renderer";
 import { KanbanRecord } from "@web/views/kanban/kanban_record";
 
 import { BankRecWidgetGlobalInfo } from "./bank_rec_widget_global_info";
+import { BankRecActionHelper } from "./bank_rec_widget_action_helper";
 
-const { useState, useSubEnv, useRef, useChildSubEnv } = owl;
+import { useState, useRef, useChildSubEnv } from "@odoo/owl";
 
 export class BankRecKanbanRecord extends KanbanRecord {
+
+    async setup() {
+        super.setup();
+
+        this.bankRecService = useService("bank_rec_widget");
+        this.kanbanState = useState(this.bankRecService.kanbanState);
+        this.stLineState = useState(this.bankRecService.getStLineState(this.props.record.resId));
+
+    }
+
+    /** @override **/
     getRecordClasses() {
         let classes = `${super.getRecordClasses()} w-100 o_bank_rec_st_line`;
-        if (this.props.record.resId === this.props.selectedStLineId) {
+        if (this.props.record.resId === this.kanbanState.selectedStLineId) {
             classes = `${classes} o_bank_rec_selected_st_line`;
         }
         return classes;
     }
 }
-BankRecKanbanRecord.props = [
-    ...KanbanRecord.props,
-    "selectedStLineId?",
-]
-
 BankRecKanbanRecord.template = "account.BankRecKanbanRecord";
 
 export class BankRecKanbanController extends KanbanController {
@@ -45,153 +53,287 @@ export class BankRecKanbanController extends KanbanController {
             __getContext__: new CallbackRecorder(),
         });
 
-        this.default_journal_id = this.props.context.default_journal_id;
+        this.action = useService("action");
+
+        this.bankRecService = useService("bank_rec_widget");
         this.state = useState({
             selectedStLineId: null,
+            currentJournalId: null,
+        });
+        this.bankRecService.kanbanState = this.state;
+        this.bankRecService.initReconCounter();
+
+        // Move to the next available statement line after a click on a button form.
+        this.bankRecService.useTodoCommand("kanban-move-to-next-line", () => {
+            const stLineId = this.state.selectedStLineId;
+
+            // Select the next available statement line.
+            this.mountStLineInEdit(this.getNextAvailableStLineId(stLineId));
         });
 
-        this.orm = useService("orm");
-        this.action = useService("action");
-        useSubEnv({
-            kanbanDoAction: this.performAction.bind(this),
+        // Process a newly validated statement line.
+        this.bankRecService.useTodoCommand("kanban-validate-st-line", async () => {
+            // In case the newly validated record is no longer passing some filters like 'Not Matched', we need to
+            // find the next available line based on the records before update. Otherwise, we will not be able to
+            // find the next line "after".
+            let records = this.records;
+
+            this.bankRecService.incrementReconCounter();
+            await this.bankRecService.trigger("kanban-reload", true);
+
+            const stLineId = this.state.selectedStLineId;
+
+            // Select the next available statement line.
+            this.mountStLineInEdit(this.getNextAvailableStLineId(stLineId, records));
         });
-        const rootRef = useRef("root");
-        useSetupView({
-            rootRef,
-            getLocalState: () => {
-                return {
-                    lastStLineId: this.state.selectedStLineId,
-                };
+
+        this.bankRecService.useTodoCommand("kanban-reload", async (deep) => {
+            await this.model.root.load();
+            if (deep) {
+                this.model.notify();
+            } else {
+                this.bankRecService.trigger('kanban-render');
+            }
+        });
+
+        // Redirect the view to another using a window/client action.
+        this.bankRecService.useTodoCommand("kanban-do-action", (actionData) => {
+            this.action.doAction(actionData);
+        });
+
+        // Mount the first available statement line when the model is fully loaded.
+        this.model.addEventListener(
+            "update",
+            () => {
+                const propsState = this.props.state || {};
+                let stLineIdToRestore = propsState.selectedStLineId;
+                const stLineStateToRestore = this.bankRecService.stLineStates[stLineIdToRestore];
+
+                this.bankRecService.stLineStates = {};
+                if(stLineStateToRestore){
+                    // Check if View/Match buttons from list view have been clicked
+                    if(!this.props.selectedStLineId || this.props.selectedStLineId === stLineIdToRestore){
+                        this.bankRecService.stLineStates[stLineIdToRestore] = stLineStateToRestore;
+                    }else{
+                        stLineIdToRestore = null;
+                    }
+                }
+
+                // Select a statement line.
+                if (stLineIdToRestore && this.records.find((stLine) => stLine.data.id === stLineIdToRestore)) {
+                    this.mountStLineInEdit(stLineIdToRestore);
+                } else {
+                    this.mountStLineInEdit(this.getNextAvailableStLineId());
+                }
             },
+            { once: true },
+        );
+
+        // Mount the correct statement line when the search panel changed
+        this.env.searchModel.addEventListener(
+            "update",
+            () => {
+                this.model.addEventListener(
+                    "update",
+                    () => {
+                        // keep the current selected line if it's still in the list of st lines
+                        let nextStLineId;
+                        const currentStLineId = this.state.selectedStLineId;
+
+                        if (this.records.find((stLine) => stLine.data.id === currentStLineId)) {
+                            nextStLineId = currentStLineId;
+                        } else {
+                            nextStLineId = this.getNextAvailableStLineId();
+                        }
+
+                        if (nextStLineId !== currentStLineId) {
+                            this.mountStLineInEdit(nextStLineId);
+                        }
+                    },
+                    { once: true },
+                );
+            },
+        );
+
+        this.viewRef = useRef("root");
+        useSetupView({
+            rootRef: this.viewRef,
+            getLocalState: () => {
+                return {selectedStLineId: this.state.selectedStLineId};
+            }
         });
-        // to avoid a flicker we call kanbanRecordsReady only when the model is ready
-        this.model.addEventListener("update", () => this.kanbanRecordsReady(), { once: true });
-        this.env.searchModel.addEventListener("update", () => this.userSearched());
     }
 
+    // -----------------------------------------------------------------------------
+    // EVENTS
+    // -----------------------------------------------------------------------------
+
+    /**
+    Method called when the user changes the search pager.
+    **/
     async onUpdatedPager() {
-        if (this.state.selectedStLineId && !this.recordById(this.state.selectedStLineId)) {
-            this.kanbanRecordsReady();
+        this.mountStLineInEdit(this.getNextAvailableStLineId());
+    }
+
+    /**
+    Method called when the user clicks on a card.
+    **/
+    async openRecord(record, mode) {
+        this.mountStLineInEdit(record.resId);
+    }
+
+    // -----------------------------------------------------------------------------
+    // HELPERS
+    // -----------------------------------------------------------------------------
+
+    scrollToSelectedStLine(stLineId) {
+        // Scroll to the next kanban card iff the view is mounted, a line is selected  and the kanban
+        // card is in the view (cannot use .o_bank_rec_selected_st_line as the dom may not be patched yet)
+        if (this.viewRef.el && stLineId) {
+            const selectedKanbanCardEl = this.viewRef.el.querySelector(`[st-line-id="${stLineId}"]`);
+            if (selectedKanbanCardEl) {
+                scrollTo(selectedKanbanCardEl, {});
+            }
         }
     }
 
-    userSearched() {
-        this.model.addEventListener("update", () => this.kanbanRecordsReady(), { once: true });
+    /**
+    Mount the statement line passed as parameter into the edition form on the right.
+    @param stLineId: The id of the statement line to mount.
+    **/
+    mountStLineInEdit(stLineId){
+        const currentStLineId = this.state.selectedStLineId;
+        const isSameStLineId = currentStLineId && currentStLineId === stLineId;
+        if (!isSameStLineId) {
+
+            // Mount it inside the right-side form.
+            this.state.selectedStLineId = stLineId;
+
+            // Scroll to card
+            this.scrollToSelectedStLine(this.state.selectedStLineId);
+
+            // Reset the previous st line state
+            this.bankRecService.resetStLineState(currentStLineId);
+
+            // Compute currentJournalId.
+            if(stLineId){
+                const stLine = this.records.find((stLine) => stLine.data.id === stLineId);
+                this.state.currentJournalId = stLine.data.journal_id[0];
+            }else if(this.props.context.default_journal_id){
+                this.state.currentJournalId = this.props.context.default_journal_id;
+            }else{
+                if(this.records.length > 0){
+                    this.state.currentJournalId = this.records[0].data.journal_id[0];
+                }else{
+                    this.state.currentJournalId = null;
+                }
+            }
+        }
     }
 
-    get bankRecFormViewProps() {
+    /**
+    Get the next eligible statement line for reconciliation.
+    @param afterStLineId:   An optional id of a statement line indicating we want the
+                            next available line after this one.
+    @param records:         An optional list of records.
+    **/
+    getNextAvailableStLineId(afterStLineId=null, records=null) {
+        const stLines = this.records;
+
+        // Find all available records that need to be validated.
+        const isRecordReady = (x) => (!x.data.is_reconciled || x.data.to_check);
+        let waitBeforeReturn = Boolean(afterStLineId);
+        let availableRecordIds = [];
+        for (const stLine of (records || stLines)) {
+            if (waitBeforeReturn) {
+                if (stLine.resId === afterStLineId) {
+                    waitBeforeReturn = false;
+                }
+            } else if (isRecordReady(stLine)) {
+                availableRecordIds.push(stLine.resId);
+            }
+        }
+
+        // No records left, focus the first record instead. This behavior is mainly there when clicking on "View" from
+        // the list view to show an already reconciled line.
+        if (!availableRecordIds.length && stLines.length === 1) {
+            availableRecordIds = [stLines[0].resId];
+        }
+
+        if (availableRecordIds.length){
+            return availableRecordIds[0];
+        } else if(stLines.length) {
+            return stLines[0].resId;
+        } else {
+            return null;
+        }
+    }
+
+    mountNextStLineInEdit(){
+        this.mountStLineInEdit(this.getNextAvailableStLineId(this.state.selectedStLineId));
+    }
+
+    /**
+    Give the props when creating the embedded form view.
+    **/
+    prepareFormProps(){
+        // If a local state has been backup, reuse it instead of triggering the matching rules.
+        // Otherwise, try to find a match automatically.
+        let extraContext = {default_todo_command: "trigger_matching_rules"};
+
+        // Retrieve a backup of the current form.
+        const stLineState = this.bankRecService.getStLineState(this.state.selectedStLineId);
+        if (stLineState.formRestoreData) {
+            let formRestoreData = JSON.parse(stLineState.formRestoreData);
+            extraContext = {
+                default_todo_command: null,
+                default_lines_widget: formRestoreData.lines_widget,
+            };
+        }
+
         return {
             type: "form",
             views: [[false, "form"]],
             context: {
                 form_view_ref: "account_accountant.view_bank_rec_widget_form",
                 default_st_line_id: this.state.selectedStLineId,
-                default_todo_command: this.props.context.default_todo_command || 'trigger_matching_rules',
+                ...extraContext,
             },
-            display: { controlPanel: false, noBreadcrumbs: true, },
+            display: { controlPanel: false, noBreadcrumbs: true},
             mode: "edit",
             resModel: "bank.rec.widget",
         }
     }
 
-    kanbanRecordsReady() {
-        // Once the view is ready,
-        // select either the same line when returning to the view using breadcrumbs,
-        // or the line in the context, and finally the first available line
-        if (this.props.state && this.props.state.lastStLineId) {
-            this.selectStLine(this.props.state.lastStLineId);
-            this.props.state.lastStLineId = null;
-        } else if (this.props.context.default_st_line_id) {
-            this.selectStLine(this.props.context.default_st_line_id);
-        } else {
-            this.selectStLine(this.getNextAvailableStLine());
-        }
-        // the journal id is required for the global info component
-        if (!this.default_journal_id && this.state.selectedStLineId) {
-            this.default_journal_id = this.recordById(this.state.selectedStLineId).data.journal_id[0];
-        }
-    }
-
-    get stLineIdsStillToReconcile() {
-        return this.records.filter((record) => (!record.data.is_reconciled || record.data.to_check)).map((record) => record.resId);
-    }
-
-    getNextAvailableStLine(afterStLineId=null) {
-        let waitBeforeReturn = Boolean(afterStLineId);
-        for (const stLineId of this.stLineIdsStillToReconcile) {
-            if (waitBeforeReturn) {
-                if (stLineId === afterStLineId) {
-                    waitBeforeReturn = false;
-                }
-            } else {
-                return stLineId;
-            }
-        }
-        return null;
-    }
-
-    async selectStLine(stLineId){
-        const isSameStLine = this.state.selectedStLineId && this.state.selectedStLineId === stLineId;
-        if (!isSameStLine) {
-            this.state.selectedStLineId = stLineId;
-        }
-    }
-
-    async reload() {
-        await this.model.root.load();
-        this.model.notify();
-    }
-
-    recordById(id) {
-        return this.records.find((record) => record.data.id === id);
-    }
-
     get records() {
         return this.model.root.records;
     }
-
-    async openRecord(record, mode) {
-        this.selectStLine(record.resId);
-    }
-
-    async performAction(action_data) {
-        if (["ir.actions.client", "ir.actions.act_window"].includes(action_data.type)) {
-            await this.action.doAction(action_data);
-        } else if (action_data.type === "rpc") {
-            // Ideally this call should be asynchronous and silent, allowing the user to continue reconciling the next st line
-            // while the current is still processing.
-            // This is a problem since the trigger_matching suggestions and the list of aml's/ batches
-            // displayed on the next record might still be processing and should not be available
-            // TODO: resolve the async capability (for now, the `await` solves many problems incl. the extra search_read of aml's)
-            await this.orm.call("bank.rec.widget", action_data.method, [[], action_data.st_line_id, action_data.params], {});
-            this.reload();
-            const nextStLineId = this.getNextAvailableStLine(action_data.st_line_id);
-            this.selectStLine(nextStLineId);
-        } else if (action_data.type === "move_to_next") {
-            this.reload();
-            const nextStLineId = this.getNextAvailableStLine(action_data.st_line_id);
-            this.selectStLine(nextStLineId);
-        } else if (action_data.type === "refresh" || !action_data) {
-            this.reload();
-        }
-    }
 }
 BankRecKanbanController.template = "account.BankReconKanbanController";
+BankRecKanbanController.props = {
+    ...KanbanController.props,
+    selectedStLineId: { optional: true },
+}
 BankRecKanbanController.components = {
     ...BankRecKanbanController.components,
     BankRecWidgetGlobalInfo,
     View,
 }
 
-export class BankRecKanbanRenderer extends KanbanRenderer {}
+export class BankRecKanbanRenderer extends KanbanRenderer {
+    setup() {
+        super.setup();
+        this.bankRecService = useService("bank_rec_widget");
+        this.bankRecService.useTodoCommand("kanban-render", () => {
+            this.render();
+        });
+    }
+}
 BankRecKanbanRenderer.template = "account.BankRecKanbanRenderer";
-BankRecKanbanRenderer.props = [
-    ...KanbanRenderer.props,
-    "selectedStLineId?",
-]
 BankRecKanbanRenderer.components = {
     ...KanbanRenderer.components,
     KanbanRecord: BankRecKanbanRecord,
+    BankRecActionHelper: BankRecActionHelper,
 }
 
 export const BankRecKanbanView = {

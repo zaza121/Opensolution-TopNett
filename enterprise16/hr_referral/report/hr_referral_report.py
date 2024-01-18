@@ -9,6 +9,7 @@ class HrReferralReport(models.Model):
     _name = "hr.referral.report"
     _description = "Employee Referral Report"
     _auto = False
+    _rec_name = 'ref_user_id'
     _order = 'write_date desc, earned_points desc'
 
     write_date = fields.Date(string='Last Update Date', readonly=True)

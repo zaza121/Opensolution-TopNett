@@ -3,9 +3,10 @@
 # 	* website_sale_renting
 # 
 # Translators:
-# Martin Trigaux, 2022
-# Lucia Pacheco <lpo@odoo.com>, 2022
+# Lucia Pacheco, 2022
 # Braulio D. López Vázquez <bdl@odoo.com>, 2022
+# Martin Trigaux, 2023
+# Fernanda Alvarez, 2023
 # 
 msgid ""
 msgstr ""
@@ -13,8 +14,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-15 13:30+0000\n"
 "PO-Revision-Date: 2022-09-22 05:50+0000\n"
-"Last-Translator: Braulio D. López Vázquez <bdl@odoo.com>, 2022\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Fernanda Alvarez, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -47,7 +48,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"                Su producto de alquiler tiene una fecha de recolección inválida (%(start_date)s).\n"
+"                Su producto de alquiler tiene una fecha de recolección que no es válida (%(start_date)s).\n"
 "                Desafortunadamente, no procesamos recolecciones en ese día.\n"
 "            "
 
@@ -62,7 +63,7 @@ msgid ""
 "            "
 msgstr ""
 "\n"
-"                Su producto de alquiler tiene una fecha de devolución inválida (%(end_date)s).\n"
+"                Su producto de alquiler tiene una fecha de devolución que no es válida (%(end_date)s).\n"
 "                Desafortunadamente, no procesamos devoluciones en ese día.\n"
 "            "
 
@@ -79,7 +80,7 @@ msgid ""
 msgstr ""
 "\n"
 "                Su producto de alquiler tiene fechas de recolección (%(start_date)s) y\n"
-"                devolución (%(end_date)s) inválidas. Desafortunadamente, no procesamos recolecciones ni\n"
+"                devolución (%(end_date)s) que no son válidas. Desafortunadamente, no procesamos recolecciones ni\n"
 "                devoluciones en esos días.\n"
 "            "
 
@@ -287,11 +288,19 @@ msgid "Months"
 msgstr "Meses"
 
 #. module: website_sale_renting
+#. odoo-python
+#: code:addons/website_sale_renting/models/product_template.py:0
+#, python-format
+msgid "Please choose a return date that is after the pickup date."
+msgstr ""
+"Elija una fecha de devolución que sea posterior a la fecha de recolección."
+
+#. module: website_sale_renting
 #. odoo-javascript
 #: code:addons/website_sale_renting/static/src/js/renting_mixin.js:0
 #, python-format
 msgid "Please select a rental period."
-msgstr "Por favor, seleccione un periodo de alquiler."
+msgstr "Seleccione un periodo de alquiler."
 
 #. module: website_sale_renting
 #: model:ir.model,name:website_sale_renting.model_product_pricelist
@@ -312,6 +321,11 @@ msgstr "Variante de producto"
 #: model_terms:ir.ui.view,arch_db:website_sale_renting.res_config_settings_view_form
 msgid "Rent Online"
 msgstr "Alquilar en línea"
+
+#. module: website_sale_renting
+#: model_terms:ir.ui.view,arch_db:website_sale_renting.snippets
+msgid "Rental Search"
+msgstr "Búsqueda de alquiler"
 
 #. module: website_sale_renting
 #: model:ir.model,name:website_sale_renting.model_sale_order
@@ -372,7 +386,7 @@ msgstr "Jueves"
 #. module: website_sale_renting
 #: model_terms:ir.ui.view,arch_db:website_sale_renting.s_rental_search_options
 msgid "Timing"
-msgstr "Tiemp"
+msgstr "Tiempo"
 
 #. module: website_sale_renting
 #: model_terms:ir.ui.view,arch_db:website_sale_renting.rental_product

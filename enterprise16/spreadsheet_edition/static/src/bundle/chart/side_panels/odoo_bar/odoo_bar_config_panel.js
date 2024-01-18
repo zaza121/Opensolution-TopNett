@@ -5,7 +5,7 @@ import { CommonOdooChartConfigPanel } from "../common/config_panel";
 
 export class OdooBarChartConfigPanel extends CommonOdooChartConfigPanel {
     onUpdateStacked(ev) {
-        this.props.updateChart({
+        this.props.updateChart(this.props.figureId, {
             stacked: ev.target.checked,
         });
     }

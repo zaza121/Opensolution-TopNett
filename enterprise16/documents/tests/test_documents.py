@@ -559,3 +559,35 @@ class TestCaseDocuments(TransactionCase):
             'folder_id': self.folder_a.id,
         })
         self.assertEqual(message.tag_ids.ids, [self.tag_b.id], "Should only keep the existing tag")
+
+    def test_unlink_attachments_with_documents(self):
+        """
+        Tests a documents.document unlink method.
+        Attachments should be deleted when related documents are deleted,
+        for which res_model is not 'documents.document'.
+
+        Test case description:
+            Case 1:
+            - upload a document with res_model 'res.partner'.
+            - check if attachment exists.
+            - unlink the document.
+            - check if attachment exists or not.
+
+            Case 2:
+            - ensure the existing flow for res_model 'documents.document'
+              does not break.
+        """
+        document = self.env['documents.document'].create({
+            'datas': GIF,
+            'folder_id': self.folder_b.id,
+            'res_model': 'res.partner',
+        })
+        self.assertTrue(document.attachment_id.exists(), 'the attachment should exist')
+        attachment = document.attachment_id
+        document.unlink()
+        self.assertFalse(attachment.exists(), 'the attachment should not exist')
+
+        self.assertTrue(self.document_txt.attachment_id.exists(), 'the attachment should exist')
+        attachment_a = self.document_txt.attachment_id
+        self.document_txt.unlink()
+        self.assertFalse(attachment_a.exists(), 'the attachment should not exist')

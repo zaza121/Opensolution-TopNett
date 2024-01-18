@@ -10,21 +10,25 @@ export class DocumentSelectorDialog extends Component {
     setup() {
         this.selectedSpreadsheet = null;
         this.orm = useService("orm");
+        this.actionService = useService("action");
     }
 
     onSpreadsheetSelected({ spreadsheet }) {
         this.selectedSpreadsheet = spreadsheet;
     }
 
-    _confirm() {
+    async _confirm() {
         if (this.selectedSpreadsheet) {
-            this.orm.call("spreadsheet.dashboard", "add_document_spreadsheet_to_dashboard", [
+            await this.orm.call("spreadsheet.dashboard", "add_document_spreadsheet_to_dashboard", [
                 this.props.dashboardGroupId,
                 this.selectedSpreadsheet.id,
             ]);
+            // Reload the view
+            this.actionService.switchView("form", {
+                resId: this.props.dashboardGroupId,
+            });
         }
         this.props.close();
-        window.location.reload();
     }
 
     _cancel() {

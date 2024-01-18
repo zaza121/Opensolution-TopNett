@@ -79,3 +79,42 @@ class TestWorkorderDurationHr(common.TransactionCase):
             line.loss_id = self.env.ref('mrp.block_reason7')
         wo_form.save()
         self.assertEqual(wo.duration, 150)
+
+    def test_workorder_timer_with_employee(self):
+        """
+        Test that a timer is not created when we try to start a workorder
+        with an employee and the workcenter does not allow employees.
+        """
+        employee = self.env['hr.employee'].create({
+            'name': 'Arthur Fu',
+        })
+        # Search a workcenter that does not allow employees
+        workcenter = self.env['mrp.workcenter'].search(
+            [('allow_employee', '=', False)], limit=1)
+        product = self.env['product.template'].create({
+            'name': 'Product 1',
+            'type': 'product',
+        })
+        self.env['mrp.bom'].create({
+            'product_tmpl_id': product.id,
+            'product_qty': 1,
+            'operation_ids': [
+                Command.create({
+                    'name': 'Operation 2',
+                    'workcenter_id': workcenter.id,
+                }),
+            ],
+        })
+        production = self.env['mrp.production'].create({
+            'product_id': product.product_variant_id.id,
+            'product_qty': 1,
+        })
+        production.action_confirm()
+        production.button_plan()
+        wo = production.workorder_ids[0]
+        # The workcenter does not require employee login, so a timer should be created.
+        wo.button_start()
+        self.assertEqual(len(wo.time_ids), 1)
+        # As the workcenter does not allow employees, a timer should not be created.
+        wo.start_employee(employee.id)
+        self.assertEqual(len(wo.time_ids), 1)

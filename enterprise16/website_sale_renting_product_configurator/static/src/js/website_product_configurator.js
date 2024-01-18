@@ -8,7 +8,7 @@ WebsiteSale.include({
      */
     _getContext() {
         const context = this._super.apply(this, arguments);
-        Object.assign(context, this._getRentingDates());
+        Object.assign(context, this._getSerializedRentingDates());
         return context;
     }
 });

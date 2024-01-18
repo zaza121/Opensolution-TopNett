@@ -48,7 +48,7 @@ patch(ListRenderer.prototype, "documents_spreadsheet_list_renderer_patch", {
                 (col) =>
                     col.type === "field" &&
                     col.FieldComponent !== HandleField &&
-                    fields[col.name].type !== "binary"
+                    !["binary", "json"].includes(fields[col.name].type)
             )
             .map((col) => ({ name: col.name, type: fields[col.name].type }));
     },

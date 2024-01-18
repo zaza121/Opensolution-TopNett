@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import models
-
+from odoo.tools.misc import get_lang
 
 class FuenteReportCustomHandler(models.AbstractModel):
     _name = 'l10n_co.fuente.report.handler'
@@ -18,7 +18,11 @@ class FuenteReportCustomHandler(models.AbstractModel):
         queries = []
         params = []
         for column_group_key, column_group_options in report._split_options_per_column_group(options).items():
-
+            if self.pool['account.account'].name.translate:
+                lang = self.env.user.lang or get_lang(self.env).code
+                account_name = f"COALESCE(aa.name->>'{lang}', aa.name->>'en_US')"
+            else:
+                account_name = 'aa.name'
             tables, where_clause, where_params = report._query_get(column_group_options, 'strict_range', domain=domain)
             queries.append(f"""
                 SELECT
@@ -32,7 +36,7 @@ class FuenteReportCustomHandler(models.AbstractModel):
                         ELSE 0
                         END
                     ) AS tax_base_amount,
-                    {account and "aa.code || ' ' || aa.name AS account_name," or ''}
+                    {account and f"aa.code || ' ' || {account_name} AS account_name," or ''}
                     {account and "aa.id AS account_id," or ''}
                     rp.id AS partner_id,
                     rp.name AS partner_name

@@ -119,7 +119,7 @@ class TestAgedPayableReport(TestAccountReportsCommon):
         (move_3 + move_4).action_post()
         (move_3 + move_4).line_ids.filtered(lambda line: line.account_id == payable_4).reconcile()
         (move_3 + move_4).line_ids.filtered(lambda line: line.account_id == payable_5).reconcile()
-        cls.env['res.currency'].search([('name', '!=', 'USD')]).active = False
+        cls.env['res.currency'].search([('name', '!=', 'USD')]).with_context(force_deactivate=True).active = False
         cls.env.companies = cls.company_data['company'] + cls.company_data_2['company']
         cls.report = cls.env.ref('account_reports.aged_payable_report')
         cls.prefix_line_id = f'{cls._get_basic_line_dict_id_from_report_line_ref("account_reports.aged_payable_line")}|'
@@ -127,7 +127,7 @@ class TestAgedPayableReport(TestAccountReportsCommon):
     def test_aged_payable_unfold_1_whole_report(self):
         """ Test unfolding a line when rendering the whole report. """
         options = self._generate_options(self.report, fields.Date.from_string('2017-02-01'), fields.Date.from_string('2017-02-01'))
-        partner_a_line_id = f'{self.prefix_line_id}groupby:partner_id-res.partner-{self.partner_a.id}'
+        partner_a_line_id = self.env['account.report']._get_generic_line_id('res.partner', self.partner_a.id, markup=f'{self.prefix_line_id}groupby:partner_id')
         options['unfolded_lines'] = [partner_a_line_id]
 
         report_lines = self.report._get_lines(options)
@@ -199,6 +199,41 @@ class TestAgedPayableReport(TestAccountReportsCommon):
                 ('BILL/2016/11/0001',   '11/03/2016',       '',         '',         '',       500.0,         '',         '',          ''),
                 ('Total partner_a',               '',    100.0,      100.0,      100.0,       600.0,      300.0,      100.0,      1300.0),
                 ('Total Aged Payable',            '',    150.0,      150.0,      150.0,       900.0,      450.0,      150.0,      1950.0),
+            ],
+        )
+
+    def test_aged_payable_unfold_all(self):
+        options = self._generate_options(self.report, '2017-02-01', '2017-02-01', default_options={'unfold_all': True})
+
+        report_lines = self.report._get_lines(options)
+        self.assertLinesValues(
+            # pylint: disable=C0326
+            self.report._sort_lines(report_lines, options),
+            #   Name                        Due Date   Not Due On   1 - 30     31 - 60     61 - 90    91 - 120       Older         Total
+            [   0,                                 1,       4,          5,          6,          7,          8,          9,          10],
+            [
+                ('Aged Payable',                  '',   150.0,      150.0,      150.0,      900.0,      450.0,      150.0,      1950.0),
+                ('partner_a',                     '',   100.0,      100.0,      100.0,      600.0,      300.0,      100.0,      1300.0),
+                ('BILL/2016/10/0001',   '01/01/2016',      '',         '',         '',         '',         '',      100.0,          ''),
+                ('BILL/2016/10/0001',   '10/04/2016',      '',         '',         '',         '',      100.0,         '',          ''),
+                ('BILL/2016/10/0001',   '10/05/2016',      '',         '',         '',         '',      200.0,         '',          ''),
+                ('BILL/2016/11/0001',   '11/03/2016',      '',         '',         '',      500.0,         '',         '',          ''),
+                ('BILL/2016/10/0001',   '11/03/2016',      '',         '',         '',      100.0,         '',         '',          ''),
+                ('BILL/2016/10/0001',   '12/03/2016',      '',         '',      100.0,         '',         '',         '',          ''),
+                ('BILL/2016/10/0001',   '01/02/2017',      '',      100.0,         '',         '',         '',         '',          ''),
+                ('BILL/2016/10/0001',   '02/01/2017',   100.0,         '',         '',         '',         '',         '',          ''),
+                ('Total partner_a',               '',   100.0,      100.0,      100.0,       600.0,     300.0,      100.0,      1300.0),
+                ('partner_b',                     '',    50.0,       50.0,       50.0,       300.0,     150.0,       50.0,       650.0),
+                ('BILL/2016/10/0001',   '01/01/2016',      '',         '',         '',          '',        '',       50.0,          ''),
+                ('BILL/2016/10/0001',   '10/04/2016',      '',         '',         '',          '',      50.0,         '',          ''),
+                ('BILL/2016/10/0001',   '10/05/2016',      '',         '',         '',          '',     100.0,         '',          ''),
+                ('BILL/2016/11/0001',   '11/03/2016',      '',         '',         '',       250.0,        '',         '',          ''),
+                ('BILL/2016/10/0001',   '11/03/2016',      '',         '',         '',        50.0,        '',         '',          ''),
+                ('BILL/2016/10/0001',   '12/03/2016',      '',         '',       50.0,          '',        '',         '',          ''),
+                ('BILL/2016/10/0001',   '01/02/2017',      '',       50.0,         '',          '',        '',         '',          ''),
+                ('BILL/2016/10/0001',   '02/01/2017',    50.0,         '',         '',          '',        '',         '',          ''),
+                ('Total partner_b',               '',    50.0,       50.0,       50.0,       300.0,     150.0,       50.0,       650.0),
+                ('Total Aged Payable',            '',   150.0,      150.0,      150.0,      900.0,      450.0,      150.0,      1950.0),
             ],
         )
 
@@ -285,8 +320,8 @@ class TestAgedPayableReport(TestAccountReportsCommon):
     def test_aged_payable_sort_lines_by_date(self):
         """ Test the sort_lines function using date as sort key. """
         options = self._generate_options(self.report, fields.Date.from_string('2017-02-01'), fields.Date.from_string('2017-02-01'))
-        partner_a_line_id = f'{self.prefix_line_id}groupby:partner_id-res.partner-{self.partner_a.id}'
-        partner_b_line_id = f'{self.prefix_line_id}groupby:partner_id-res.partner-{self.partner_b.id}'
+        partner_a_line_id = self.env['account.report']._get_generic_line_id('res.partner', self.partner_a.id, markup=f'{self.prefix_line_id}groupby:partner_id')
+        partner_b_line_id = self.env['account.report']._get_generic_line_id('res.partner', self.partner_b.id, markup=f'{self.prefix_line_id}groupby:partner_id')
         options['unfolded_lines'] = [partner_a_line_id, partner_b_line_id]
 
         report_lines = self.report._get_lines(options)
@@ -357,8 +392,8 @@ class TestAgedPayableReport(TestAccountReportsCommon):
     def test_aged_payable_sort_lines_by_numeric_value(self):
         """ Test the sort_lines function using float as sort key. """
         options = self._generate_options(self.report, fields.Date.from_string('2017-02-01'), fields.Date.from_string('2017-02-01'))
-        partner_a_line_id = f'{self.prefix_line_id}groupby:partner_id-res.partner-{self.partner_a.id}'
-        partner_b_line_id = f'{self.prefix_line_id}groupby:partner_id-res.partner-{self.partner_b.id}'
+        partner_a_line_id = self.env['account.report']._get_generic_line_id('res.partner', self.partner_a.id, markup=f'{self.prefix_line_id}groupby:partner_id')
+        partner_b_line_id = self.env['account.report']._get_generic_line_id('res.partner', self.partner_b.id, markup=f'{self.prefix_line_id}groupby:partner_id')
         options['unfolded_lines'] = [partner_a_line_id, partner_b_line_id]
 
         report_lines = self.report._get_lines(options)
@@ -433,6 +468,7 @@ class TestAgedPayableReport(TestAccountReportsCommon):
             'partner_id': self.partner_a.id,
             'invoice_date': '2010-01-01',
             'date': '2010-01-01',
+            'invoice_date_due': '2010-01-01',
             'payment_reference': 'I',
             'invoice_line_ids': [Command.create({
                 'name': 'test invoice',
@@ -447,6 +483,7 @@ class TestAgedPayableReport(TestAccountReportsCommon):
             'partner_id': self.partner_a.id,
             'invoice_date': '2010-01-01',
             'date': '2010-01-01',
+            'invoice_date_due': '2010-01-01',
             'payment_reference': 'R',
             'invoice_line_ids': [Command.create({
                 'name': 'test refund',
@@ -524,5 +561,106 @@ class TestAgedPayableReport(TestAccountReportsCommon):
                 (f"{invoice.name} I",  '01/01/2010',      58.0,         '',         '',         '',         '',         '',          ''),
                 ('Total partner_a',              '',        '',         '',         '',         '',         '',         '',          ''),
                 ('Total Aged Payable',           '',        '',         '',         '',         '',         '',         '',          ''),
+            ],
+        )
+
+    def test_aged_payable_prefix_groups(self):
+        partner_names = [
+            'A',
+            'A partner',
+            'A nice partner',
+            'A new partner',
+            'An original partner',
+            'Another partner',
+            'Anonymous partner',
+            'Annoyed partner',
+            'Brave partner',
+        ]
+
+        test_date = '2010-12-13'
+        invoices_map = {}
+        for name in partner_names:
+            partner = self.env['res.partner'].create({'name': name})
+            invoice = self.init_invoice('in_invoice', partner=partner, invoice_date=test_date, amounts=[42.0], taxes=[], post=True)
+            invoices_map[name] = invoice.name
+
+        # Without prefix groups
+        options = self._generate_options(self.report, test_date, test_date)
+
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                 Not Due On      1 - 30     31 - 60     61 - 90    91 - 120       Older         Total
+            [   0,                           4,          5,          6,          7,          8,          9,          10],
+            [
+                ('Aged Payable',         378.0,         '',         '',         '',         '',         '',       378.0),
+                ('A',                     42.0,         '',         '',         '',         '',         '',        42.0),
+                ('A new partner',         42.0,         '',         '',         '',         '',         '',        42.0),
+                ('A nice partner',        42.0,         '',         '',         '',         '',         '',        42.0),
+                ('A partner',             42.0,         '',         '',         '',         '',         '',        42.0),
+                ('An original partner',   42.0,         '',         '',         '',         '',         '',        42.0),
+                ('Annoyed partner',       42.0,         '',         '',         '',         '',         '',        42.0),
+                ('Anonymous partner',     42.0,         '',         '',         '',         '',         '',        42.0),
+                ('Another partner',       42.0,         '',         '',         '',         '',         '',        42.0),
+                ('Brave partner',         42.0,         '',         '',         '',         '',         '',        42.0),
+                ('Total Aged Payable',   378.0,         '',         '',         '',         '',         '',       378.0),
+            ],
+        )
+
+        # With prefix groups
+        self.env['ir.config_parameter'].set_param('account_reports.aged_partner_balance.groupby_prefix_groups_threshold', '3')
+        options = self._generate_options(self.report, test_date, test_date, default_options={'unfold_all': True})
+
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name                             Not Due On    1 - 30     31 - 60     61 - 90    91 - 120       Older         Total
+            [   0,                                       4,        5,          6,          7,          8,          9,          10],
+            [
+                ('Aged Payable',                     378.0,       '',         '',         '',         '',         '',       378.0),
+                ('A (8 lines)',                      336.0,       '',         '',         '',         '',         '',       336.0),
+                ('A',                                 42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['A'],                   42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total A',                           42.0,       '',         '',         '',         '',         '',        42.0),
+                ('A[ ] (3 lines)',                   126.0,       '',         '',         '',         '',         '',       126.0),
+                ('A N (2 lines)',                     84.0,       '',         '',         '',         '',         '',        84.0),
+                ('A new partner',                     42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['A new partner'],       42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total A new partner',               42.0,       '',         '',         '',         '',         '',        42.0),
+                ('A nice partner',                    42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['A nice partner'],      42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total A nice partner',              42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total A N (2 lines)',               84.0,       '',         '',         '',         '',         '',        84.0),
+                ('A P (1 line)',                      42.0,       '',         '',         '',         '',         '',        42.0),
+                ('A partner',                         42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['A partner'],           42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total A partner',                   42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total A P (1 line)',                42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total A[ ] (3 lines)',             126.0,       '',         '',         '',         '',         '',       126.0),
+                ('AN (4 lines)',                     168.0,       '',         '',         '',         '',         '',       168.0),
+                ('AN[ ] (1 line)',                    42.0,       '',         '',         '',         '',         '',        42.0),
+                ('An original partner',               42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['An original partner'], 42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total An original partner',         42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total AN[ ] (1 line)',              42.0,       '',         '',         '',         '',         '',        42.0),
+                ('ANN (1 line)',                      42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Annoyed partner',                   42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['Annoyed partner'],     42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total Annoyed partner',             42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total ANN (1 line)',                42.0,       '',         '',         '',         '',         '',        42.0),
+                ('ANO (2 lines)',                     84.0,       '',         '',         '',         '',         '',        84.0),
+                ('Anonymous partner',                 42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['Anonymous partner'],   42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total Anonymous partner',           42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Another partner',                   42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['Another partner'],     42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total Another partner',             42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total ANO (2 lines)',               84.0,       '',         '',         '',         '',         '',        84.0),
+                ('Total AN (4 lines)',               168.0,       '',         '',         '',         '',         '',       168.0),
+                ('Total A (8 lines)',                336.0,       '',         '',         '',         '',         '',       336.0),
+                ('B (1 line)',                        42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Brave partner',                     42.0,       '',         '',         '',         '',         '',        42.0),
+                (invoices_map['Brave partner'],       42.0,       '',         '',         '',         '',         '',          ''),
+                ('Total Brave partner',               42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total B (1 line)',                  42.0,       '',         '',         '',         '',         '',        42.0),
+                ('Total Aged Payable',               378.0,       '',         '',         '',         '',         '',       378.0),
             ],
         )

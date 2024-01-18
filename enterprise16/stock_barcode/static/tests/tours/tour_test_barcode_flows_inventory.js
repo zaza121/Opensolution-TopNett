@@ -342,6 +342,57 @@ tour.register('test_inventory_adjustment_tracked_product_multilocation', {test: 
     },
 ]);
 
+tour.register('test_inventory_adjustment_tracked_product_permissive_quants', {test: true}, [
+
+    {
+        trigger: '.button_inventory',
+    },
+
+    // Scan a product tracked by lot that has a quant without lot_id, then scan a product's lot.
+    {
+        trigger: '.o_barcode_client_action',
+        run: 'scan productlot1',
+    },
+    {
+        trigger: '.o_barcode_line:contains("productlot1")',
+        run: 'scan lot1',
+    },
+    {
+        trigger: '.o_barcode_client_action',
+        run: 'scan lot1',
+    },
+    { trigger: '.o_barcode_line.o_selected .btn.o_toggle_sublines .fa-caret-down' },
+    // Must have 2 lines in one group: one without lot and one with lot1.
+    // Grouped lines for `productlot1` should be unfolded.
+    {
+        trigger: '.o_sublines .o_barcode_line.o_selected:contains("lot1") .qty-done:contains(2)',
+        run: function () {
+            helper.assertLinesCount(1);
+            helper.assertSublinesCount(2);
+        }
+    },
+
+    {
+        trigger: '.o_barcode_line .o_barcode_line:not(:contains("lot1")) .o_line_button.o_set.o_difference'
+    },
+    {
+        trigger: '.o_sublines .o_barcode_line:not(:contains("lot1")) .o_line_button.o_set:not(.o_difference)'
+    },
+
+    {
+        trigger: '.o_sublines .o_barcode_line:not(:contains("lot1")) .o_line_button.o_set .fa-check',
+        run: 'scan O-BTN.validate',
+    },
+    ...tour.stepUtils.validateBarcodeForm(),
+
+    {
+        trigger: '.o_stock_barcode_main_menu',
+        run: function () {
+            helper.assertErrorMessage('The inventory adjustment has been validated');
+        },
+    },
+]);
+
 tour.register('test_inventory_create_quant', {test: true}, [
     { trigger: '.button_inventory' },
     {
@@ -456,6 +507,33 @@ tour.register('test_inventory_package', {test: true}, [
     {
         trigger: '.o_stock_barcode_main_menu',
     },
+]);
+
+tour.register('test_inventory_packaging', {test: true}, [
+    { trigger: '.button_inventory' },
+    // Scans a packaging when there is no existing quant for its product.
+    { trigger: '.o_barcode_client_action', run: 'scan pack007' },
+    {
+        trigger: '.o_barcode_line',
+        run: function() {
+            const $line = helper.getLine({ barcode: "product1"});
+            helper.assertLineQty($line, "15");
+        }
+    },
+    { trigger: '.o_apply_page' },
+    { trigger: '.o_notification.border-success' },
+    { trigger: '.button_inventory' },
+    // Scans a packaging when a quant for its product exists.
+    {
+        trigger: '.o_barcode_client_action',
+        run: 'scan pack007',
+    },
+    // Verifies it takes the packaging's quantity.
+    {
+        extra_trigger: '.o_barcode_line .qty-done:contains(15)',
+        trigger: '.o_apply_page',
+    },
+    { trigger: '.o_notification.border-success' },
 ]);
 
 tour.register('test_inventory_owner_scan_package', {test: true}, [

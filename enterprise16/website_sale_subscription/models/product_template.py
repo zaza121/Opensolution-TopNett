@@ -16,7 +16,7 @@ class ProductTemplate(models.Model):
             for optional_template in template.optional_product_ids:
                 if self.env['product.pricing']._get_first_suitable_pricing(template).recurrence_id != \
                         self.env['product.pricing']._get_first_suitable_pricing(optional_template).recurrence_id:
-                    raise UserError(_('You cannot have a optional product that has a different default pricing.'))
+                    raise UserError(_('You cannot have an optional product that has a different default pricing.'))
 
     def _website_can_be_added(self, so=None, pricelist=None, pricing=None, product=None):
         """ Return true if the product/template can be added to the active SO
@@ -70,6 +70,7 @@ class ProductTemplate(models.Model):
             'is_recurrence_possible': self._website_can_be_added(pricelist=pricelist, pricing=pricing, product=product),
             'subscription_duration': pricing.recurrence_id.duration,
             'subscription_unit': pricing.recurrence_id.unit,
+            'subscription_unit_display': pricing.recurrence_id.subscription_unit_display,
         }
 
     def _get_combination_info(
@@ -90,6 +91,10 @@ class ProductTemplate(models.Model):
             combination=combination, product_id=product_id, add_qty=add_qty, pricelist=pricelist,
             parent_combination=parent_combination, only_template=only_template
         )
+
+        if not pricelist and self.env.context.get('website_id'):
+            current_website = self.env['website'].get_current_website()
+            pricelist = current_website.get_current_pricelist()
 
         pricelist = pricelist or self.product_pricing_ids[:1].pricelist_id
         if self.recurring_invoice:

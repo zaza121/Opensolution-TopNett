@@ -4,6 +4,7 @@
 from collections import defaultdict
 
 from datetime import datetime
+import pytz
 
 from odoo import api, fields, models
 from odoo.osv import expression
@@ -32,11 +33,15 @@ class HrPayslip(models.Model):
                 ]
             ])
         read_group = self.env['hr.attendance']._read_group(domain, fields=['id'], groupby=['employee_id', 'check_in:day'], lazy=False)
+        employee_ids = list({attendance['employee_id'][0] for attendance in read_group})
+        employee_tz = {employee.id: pytz.timezone(employee.tz) for employee in self.env['hr.employee'].browse(employee_ids)}
         for result in read_group:
-            slips = slip_by_employee[result['employee_id'][0]]
-            date = datetime.strptime(result['check_in:day'], '%d %b %Y').date()
+            employee_id = result['employee_id'][0]
+            slips = slip_by_employee[employee_id]
+            check_in_date_utc = datetime.strptime(result['__range']['check_in:day']['from'], '%Y-%m-%d %H:%M:%S')
+            check_in_date_employee = check_in_date_utc.astimezone(employee_tz[employee_id]).date()
             for slip in slips:
-                if slip.date_from <= date and date <= slip.date_to:
+                if slip.date_from <= check_in_date_employee and check_in_date_employee <= slip.date_to:
                     slip.attendance_count += result['__count']
 
     def action_open_attendances(self):

@@ -4,9 +4,12 @@
 from collections import Counter
 
 from odoo.addons.appointment.tests.common import AppointmentCommon
+from odoo.addons.website_appointment.controllers.appointment import WebsiteAppointment
 from odoo.addons.website.tests.test_website_visitor import MockVisitor
+from odoo.addons.website.tools import MockRequest
 from odoo.exceptions import ValidationError
 from odoo.tests import users, tagged
+from unittest.mock import patch
 
 
 @tagged('appointment')
@@ -119,3 +122,39 @@ class WAppointmentTest(AppointmentCommon, MockVisitor):
 
         appointment.write({'category': 'anytime'})
         self.assertTrue(appointment.is_published, "Modifying an appointment type category to anytime auto-published it")
+
+    def test_find_customer_country_from_visitor(self):
+        belgium = self.env.ref('base.be')
+        usa = self.env.ref('base.us')
+        appointments_belgium, appointment_usa = self.env['appointment.type'].create([
+            {
+                'name': 'Appointment for Belgium',
+                'country_ids': [(6, 0, [belgium.id])],
+            }, {
+                'name': 'Appointment for the US',
+                'country_ids': [(6, 0, [usa.id])],
+            },
+        ])
+
+        visitor_from_the_us = self.env['website.visitor'].create({
+            "name": 'Visitor from the US',
+            'access_token': self.apt_manager.partner_id.id,
+            "country_id": usa.id,
+        })
+
+        wa_controller = WebsiteAppointment()
+
+        self.env.user.country_id = False
+        with MockRequest(self.env) as mock_request:
+            with self.mock_visitor_from_request(force_visitor=visitor_from_the_us), \
+                    patch.object(mock_request, 'geoip', new={}):
+                # Make sure no country was identified before
+                self.assertFalse(mock_request.env.user.country_id)
+                self.assertFalse(mock_request.geoip)
+
+                available_appointments = wa_controller._fetch_available_appointments(None, None, "")
+
+                self.assertNotIn(appointments_belgium, available_appointments,
+                                 "US visitor should not have access to an Appointment Type restricted to Belgium.")
+                self.assertIn(appointment_usa, available_appointments,
+                              "US visitor should have access to an Appointment Type restricted to the US.")

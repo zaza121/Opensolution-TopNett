@@ -17,7 +17,20 @@ class ExpenseSampleReceipt(models.Model):
             'name': _('Sample Employee'),
             'company_id': self.env.company.id,
         })
-        product = self.env.ref('hr_expense.product_product_no_cost')
+
+        expense_categ = self.env.ref('product.cat_expense', raise_if_not_found=False)
+        product = self.env.ref('hr_expense.product_product_no_cost', raise_if_not_found=False) or \
+                  self.env['product.product']._load_records([
+                      dict(xml_id='hr_expense.product_product_no_cost',
+                           values={
+                                'name': 'Expenses',
+                                'list_price': 0.0,
+                                'standard_price': 1.0,
+                                'type': 'service',
+                                'categ_id': expense_categ.id if expense_categ else self.env.ref('product.product_category_all').id,
+                                'can_be_expensed': True
+                           }, noupdate=True)
+                  ])
 
         # 3/ Compute the line values
         expense_line_values = {

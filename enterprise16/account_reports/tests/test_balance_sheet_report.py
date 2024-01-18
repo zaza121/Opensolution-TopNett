@@ -137,3 +137,112 @@ class TestBalanceSheetReport(TestAccountReportsCommon):
                 ('LIABILITIES + EQUITY',                        2300.00),
             ],
         )
+
+    def test_unfold_all_and_total_lines(self):
+        """ Check that exactly the total lines we want exist when we use the 'unfold_all' option. I.e. empty sections should not have total lines (since there are not lines to total).
+        This test only tests the function '_get_lines'. It does not test that the total lines are always handled correctly for manual unfolds in the web UI. """
+
+        self.env.company.totals_below_sections = True
+        options = self._generate_options(
+            self.report,
+            fields.Date.from_string('1990-01-01'),
+            fields.Date.from_string('1990-01-01')
+        )
+
+        bank_journal = self.company_data['default_journal_bank']
+        account_bank = bank_journal.default_account_id
+        account_other = self.env['account.account'].create({
+            'account_type': 'asset_current',
+            'name': 'account_other',
+            'code': '121040',
+            'reconcile': True,
+        })
+        self.env['account.move'].create({
+            'move_type': 'entry',
+            'date': '1990-01-01',
+            'journal_id': bank_journal.id,
+            'line_ids': [
+                (0, 0, {'debit': 200.0,     'credit':   0.0,     'account_id': account_bank.id}),
+                (0, 0, {'debit':   0.0,     'credit': 200.0,     'account_id': account_other.id}),
+            ],
+        }).action_post()
+
+        # Note that assertLinesValues filters / ignores children lines of folded lines.
+        # The total lines for the 2 visible lines with groupbys already exist in 'folded_lines' but are filtered / ignored by assertLinesValues.
+        # (Thus they do not appear in the expected result below either.)
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name
+            [   0],
+            [
+                ('ASSETS',),
+                ('Current Assets',),
+                ('Bank and Cash Accounts',),
+                ('Receivables',),
+                ('Current Assets',),
+                ('Prepayments',),
+                ('Total Current Assets',),
+                ('Plus Fixed Assets',),
+                ('Plus Non-current Assets',),
+                ('Total ASSETS',),
+                ('LIABILITIES',),
+                ('Current Liabilities',),
+                ('Current Liabilities',),
+                ('Payables',),
+                ('Total Current Liabilities',),
+                ('Plus Non-current Liabilities',),
+                ('Total LIABILITIES',),
+                ('EQUITY',),
+                ('Unallocated Earnings',),
+                ('Current Year Unallocated Earnings',),
+                ('Current Year Earnings',),
+                ('Current Year Allocated Earnings',),
+                ('Total Current Year Unallocated Earnings',),
+                ('Previous Years Unallocated Earnings',),
+                ('Total Unallocated Earnings',),
+                ('Retained Earnings',),
+                ('Total EQUITY',),
+                ('LIABILITIES + EQUITY',),
+            ],
+        )
+
+        options['unfold_all'] = True
+        self.assertLinesValues(
+            self.report._get_lines(options),
+            #   Name
+            [   0],
+            [
+                ('ASSETS',),
+                ('Current Assets',),
+                ('Bank and Cash Accounts',),
+                (account_bank.display_name,),
+                ('Total Bank and Cash Accounts',),
+                ('Receivables',),
+                ('Current Assets',),
+                (account_other.display_name,),
+                ('Total Current Assets',),
+                ('Prepayments',),
+                ('Total Current Assets',),
+                ('Plus Fixed Assets',),
+                ('Plus Non-current Assets',),
+                ('Total ASSETS',),
+                ('LIABILITIES',),
+                ('Current Liabilities',),
+                ('Current Liabilities',),
+                ('Payables',),
+                ('Total Current Liabilities',),
+                ('Plus Non-current Liabilities',),
+                ('Total LIABILITIES',),
+                ('EQUITY',),
+                ('Unallocated Earnings',),
+                ('Current Year Unallocated Earnings',),
+                ('Current Year Earnings',),
+                ('Current Year Allocated Earnings',),
+                ('Total Current Year Unallocated Earnings',),
+                ('Previous Years Unallocated Earnings',),
+                ('Total Unallocated Earnings',),
+                ('Retained Earnings',),
+                ('Total EQUITY',),
+                ('LIABILITIES + EQUITY',),
+            ],
+        )

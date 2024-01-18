@@ -46,3 +46,35 @@ class MrpCostStructure(models.AbstractModel):
                 product_lines['total_cost_operations'] += cost
                 product_lines['total_cost'] += cost
         return lines
+
+    def _compute_mo_operation_cost(self, currency_table, Workorders, total_cost_by_mo, operation_cost_by_mo, total_cost_operations, operations):
+        query_str = """  SELECT
+                        wo.production_id,
+                        wo.id,
+                        op.id,
+                        wo.name,
+                        wc.name,
+                        wo.duration,
+                        CASE WHEN wo.costs_hour = 0.0 THEN wc.costs_hour ELSE wo.costs_hour END AS costs_hour,
+                        currency_table.rate,
+                        SUM(t.duration/60.0 * emp.hourly_cost) as employee_total_cost
+                    FROM mrp_workcenter_productivity t
+                    LEFT JOIN mrp_workorder wo ON (wo.id = t.workorder_id)
+                    LEFT JOIN hr_employee emp ON (emp.id = t.employee_id)
+                    LEFT JOIN mrp_workcenter wc ON (wc.id = t.workcenter_id)
+                    LEFT JOIN mrp_routing_workcenter op ON (wo.operation_id = op.id)
+                    LEFT JOIN {currency_table} ON currency_table.company_id = t.company_id
+                    WHERE t.workorder_id IS NOT NULL AND t.workorder_id IN %s
+                    GROUP BY wo.production_id, wo.id, op.id, wo.name, wc.costs_hour, wc.name, currency_table.rate
+                    ORDER BY wo.name, wc.name
+                """.format(currency_table=currency_table,)
+        self.env.cr.execute(query_str, (tuple(Workorders.ids), ))
+        for mo_id, dummy_wo_id, op_id, wo_name, wc_name, duration, cost_hour, currency_rate, employee_total_cost in self.env.cr.fetchall():
+            cost = duration / 60.0 * cost_hour * currency_rate
+            employee_total_cost = employee_total_cost or 0
+            total_cost_by_mo[mo_id] += cost + employee_total_cost
+            operation_cost_by_mo[mo_id] += cost + employee_total_cost
+            total_cost_operations += cost
+            operations.append([wc_name, op_id, wo_name, duration / 60.0, cost_hour * currency_rate])
+
+        return total_cost_operations

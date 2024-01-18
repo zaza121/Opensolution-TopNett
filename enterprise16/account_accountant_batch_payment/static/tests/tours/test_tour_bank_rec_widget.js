@@ -64,6 +64,7 @@ tour.register('account_accountant_batch_payment_bank_rec_widget',
         // Reconcile 'line2' with the remaining payment in batch.
         {
             content: "The 'line2' should be selected by default",
+            extra_trigger: "div[name='lines_widget'] td[field='name']:contains('line2')",
             trigger: "div[name='lines_widget'] td[field='name']:contains('line2')",
             run: function() {},
         },
@@ -82,6 +83,7 @@ tour.register('account_accountant_batch_payment_bank_rec_widget',
         },
         {
             content: "The 'line3' should be selected by default",
+            extra_trigger: "div[name='lines_widget'] td[field='name']:contains('line3')",
             trigger: "div[name='lines_widget'] td[field='name']:contains('line3')",
             run: function() {},
         },

@@ -157,6 +157,11 @@ class SpanishTaxReportCustomHandler(models.AbstractModel):
         date_from = datetime.strptime(options['date']['date_from'], "%Y-%m-%d")
         date_to = datetime.strptime(options['date']['date_to'], "%Y-%m-%d")
 
+        if 'original_date_to' in options:
+            # This means `date_to` was modified, which will interfere with the period calculation here. Use the original
+            # value instead.
+            date_to = datetime.strptime(options['original_date_to'], "%Y-%m-%d")
+
         if not date_from.year == date_to.year:
             raise UserError(_("Cannot generate a BOE file for two different years"))
 
@@ -267,10 +272,6 @@ class SpanishTaxReportCustomHandler(models.AbstractModel):
             if matcher:
                 casilla = matcher.group('casilla')
                 casilla_value = line['columns'][0]['no_format'] # Element [0] is the current period, in case we are comparing
-
-                if casilla == '65':
-                    # Casilla 65 is a percentage; the report stores it as float, where 1.0 = 100%
-                    casilla_value *= 100
 
                 rslt[casilla] = casilla_value
 
@@ -559,6 +560,8 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
 
         rslt += self._generate_page1(report, options, current_company, period, year, casilla_lines_map)
         rslt += self._generate_page3(report, options, current_company, period, year, casilla_lines_map)
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._generate_page_did(report, options, current_company, period, year, casilla_lines_map)
         # We don't need page 2 and 4 (specified in AEAT doc)
 
         # We close the tags...
@@ -619,9 +622,20 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
         rslt += self._l10n_es_boe_format_number(options, annual_volume_indicator)
 
         # Casillas
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('150', 0), length=17, decimal_places=2, in_currency=True)
+            rslt += self._l10n_es_boe_format_number(options, 0, length=5)  # Casilla 151 is constant
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('152', 0), length=17, decimal_places=2, in_currency=True)
+
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['01'], length=17, decimal_places=2, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, 400, length=5) # Casilla 02 is constant
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['03'], length=17, decimal_places=2, in_currency=True)
+
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('153', 0), length=17, decimal_places=2, in_currency=True)
+            rslt += self._l10n_es_boe_format_number(options, 500, length=5)  # Casilla 154 is constant
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('155', 0), length=17, decimal_places=2, in_currency=True)
+
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['04'], length=17, decimal_places=2, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, 1000, length=5) # Casilla 05 is constant
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['06'], length=17, decimal_places=2, in_currency=True)
@@ -634,8 +648,14 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['13'], length=17, decimal_places=2, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['14'], length=17, decimal_places=2, signed=True, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['15'], length=17, decimal_places=2, signed=True, in_currency=True)
+
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('156', 0), length=17, decimal_places=2, in_currency=True)
+            rslt += self._l10n_es_boe_format_number(options, 175, length=5)  # Casilla 157 is constant
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('158', 0), length=17, decimal_places=2, in_currency=True)
+
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['16'], length=17, decimal_places=2, in_currency=True)
-        rslt += self._l10n_es_boe_format_number(options, 50, length=5) # Casilla 17 is constant
+        rslt += self._l10n_es_boe_format_number(options, 50, length=5) # Casilla 17 is constant (any of 00000, 00050, 00062)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['18'], length=17, decimal_places=2, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['19'], length=17, decimal_places=2, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, 140, length=5) # Casilla 20 is constant
@@ -689,7 +709,6 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
         for casilla in to_treat:
             rslt += self._l10n_es_boe_format_number(options, casilla_lines_map[casilla], length=17, decimal_places=2, signed=True, in_currency=True)
 
-        # Reserved for AEAT
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['120'], length=17, decimal_places=2, signed=True, in_currency=True)
 
         if options['date']['date_from'] < '2022-01-01':
@@ -702,7 +721,7 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
         # Next casillas
         for casilla in (62, 63, 74, 75):
             rslt += self._l10n_es_boe_format_number(options, casilla_lines_map[str(casilla)], length=17, decimal_places=2, signed=True, in_currency=True)
-        rslt += self._l10n_es_boe_format_number(options, 0, length=17)
+        rslt += self._l10n_es_boe_format_number(options, 0, length=17)  # Normally casilla 76 (Regularization of quotas art. 80.Cinco.5ª LIVA)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['46'], length=17, decimal_places=2, signed=True, in_currency=True) # Should normally be casilla 64 (= sum of casillas 46, 58 and 76), but only casilla 46 is in our version of the report
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['65'], length=5, decimal_places=2)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['66'], length=17, decimal_places=2, signed=True, in_currency=True)
@@ -712,51 +731,65 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('87', 0), length=17, decimal_places=2, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['68'], length=17, decimal_places=2, signed=True, in_currency=True)
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['69'], length=17, decimal_places=2, signed=True, in_currency=True)
-        rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['70'], length=17, decimal_places=2, signed=True, in_currency=True)
+
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['70'], length=17, decimal_places=2, in_currency=True)  # Unsigned from 2023 on
+        else:
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['70'], length=17, decimal_places=2, signed=True, in_currency=True)
+
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._l10n_es_boe_format_number(options, casilla_lines_map.get('109', 0.0), length=17, decimal_places=2, in_currency=True)
+
         rslt += self._l10n_es_boe_format_number(options, casilla_lines_map['71'], length=17, decimal_places=2, signed=True, in_currency=True)
 
         # Information about declaration
-        rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and 'X' or ' ')
-        rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and boe_wizard.previous_report_number or '', length=13)
-        rslt += self._l10n_es_boe_format_string(casilla_lines_map['71'] == 0 and 'X' or ' ')
-
-        gov_giving_back = current_company.currency_id.compare_amounts(casilla_lines_map['71'], 0) == -1
-        partner_bank = boe_wizard.partner_bank_id
-
-        bic, iban = self._get_bic_and_iban(partner_bank)
-
-        rslt += self._l10n_es_boe_format_string(bic if gov_giving_back and iban and iban[:2] != 'ES' else '', length=11)
-        rslt += self._l10n_es_boe_format_string(iban, length=34)
-
-        # Reserved by AEAT
-        rslt += self._l10n_es_boe_format_string(' ' * 17)
-
-        # Devolución
-        if gov_giving_back:
-            bank = partner_bank.bank_id
-            rslt += self._l10n_es_boe_format_string(bank.name or '', length=70)
-            rslt += self._l10n_es_boe_format_string(' '.join([bank.street or '', bank.street2 or '']), length=35)
-            rslt += self._l10n_es_boe_format_string(bank.city or '', length=30)
-            rslt += self._l10n_es_boe_format_string(bank.country.code or '', length=2)
-
-            # Marca SEPA
-            if iban and boe_wizard.declaration_type != 'N':
-                iban_country_code = iban[:2]
-                if iban_country_code == 'ES':
-                    marca = '1'
-                elif iban_country_code in self.env.ref('base.sepa_zone').mapped('country_ids.code'):
-                    marca = '2'
-                else:
-                    marca = '3'
-            else:
-                marca = '0'
-
-            rslt += self._l10n_es_boe_format_string(marca, length=1)
-
+        if options['date']['date_from'] >= '2023-01-01':
+            rslt += self._l10n_es_boe_format_string(casilla_lines_map['71'] == 0 and 'X' or ' ')
+            rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and 'X' or ' ')
+            rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and boe_wizard.previous_report_number or '', length=13)
         else:
-            # All those fields must be empty if the report for the current period isn't a return (Devolución),
-            # the file is rejected if they are not.
-            rslt += self._l10n_es_boe_format_string('', length=138)
+            rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and 'X' or ' ')
+            rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and boe_wizard.previous_report_number or '', length=13)
+            rslt += self._l10n_es_boe_format_string(casilla_lines_map['71'] == 0 and 'X' or ' ')
+
+        if options['date']['date_from'] < '2023-01-01':
+            gov_giving_back = current_company.currency_id.compare_amounts(casilla_lines_map['71'], 0) == -1
+            partner_bank = boe_wizard.partner_bank_id
+
+            bic, iban = self._get_bic_and_iban(partner_bank)
+
+            rslt += self._l10n_es_boe_format_string(bic if gov_giving_back and iban and iban[:2] != 'ES' else '', length=11)
+            rslt += self._l10n_es_boe_format_string(iban, length=34)
+
+            # Reserved by AEAT
+            rslt += self._l10n_es_boe_format_string(' ' * 17)
+
+            # Devolución
+            if gov_giving_back:
+                bank = partner_bank.bank_id
+                rslt += self._l10n_es_boe_format_string(bank.name or '', length=70)
+                rslt += self._l10n_es_boe_format_string(' '.join([bank.street or '', bank.street2 or '']), length=35)
+                rslt += self._l10n_es_boe_format_string(bank.city or '', length=30)
+                rslt += self._l10n_es_boe_format_string(bank.country.code or '', length=2)
+
+                # Marca SEPA
+                if iban and boe_wizard.declaration_type != 'N':
+                    iban_country_code = iban[:2]
+                    if iban_country_code == 'ES':
+                        marca = '1'
+                    elif iban_country_code in self.env.ref('base.sepa_zone').mapped('country_ids.code'):
+                        marca = '2'
+                    else:
+                        marca = '3'
+                else:
+                    marca = '0'
+
+                rslt += self._l10n_es_boe_format_string(marca, length=1)
+
+            else:
+                # All those fields must be empty if the report for the current period isn't a return (Devolución),
+                # the file is rejected if they are not.
+                rslt += self._l10n_es_boe_format_string('', length=138)
 
         # Reserved by AEAT
         reserved_empty_chars = 600
@@ -770,6 +803,50 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
 
         return rslt
 
+    def _generate_page_did(self, report, options, current_company, period, year, casilla_lines_map):
+        rslt = self._l10n_es_boe_format_string('<T303DID00>')
+
+        # Wizard with manually-entered data
+        boe_wizard = self._retrieve_boe_manual_wizard(options, 303)
+
+        partner_bank = boe_wizard.partner_bank_id
+
+        bic, iban = self._get_bic_and_iban(partner_bank)
+
+        rslt += self._l10n_es_boe_format_string(bic if boe_wizard.declaration_type == 'X' else '', length=11)
+        rslt += self._l10n_es_boe_format_string(iban, length=34)
+
+        # Return in foreign bank account
+        if boe_wizard.declaration_type == 'X':
+            bank = partner_bank.bank_id
+            rslt += self._l10n_es_boe_format_string(bank.name or '', length=70)
+            rslt += self._l10n_es_boe_format_string(' '.join([bank.street or '', bank.street2 or '']), length=35)
+            rslt += self._l10n_es_boe_format_string(bank.city or '', length=30)
+            rslt += self._l10n_es_boe_format_string(bank.country.code or '', length=2)
+        else:
+            rslt += self._l10n_es_boe_format_string('', length=137)
+
+        # Marca SEPA
+        if iban and boe_wizard.declaration_type in ('D', 'X'):
+            iban_country_code = iban[:2]
+            if iban_country_code == 'ES':
+                marca = '1'
+            elif iban_country_code in self.env.ref('base.sepa_zone').mapped('country_ids.code'):
+                marca = '2'
+            else:
+                marca = '3'
+        else:
+            marca = '0'
+
+        rslt += self._l10n_es_boe_format_string(marca, length=1)
+
+        # Reserved by AEAT
+        rslt += self._l10n_es_boe_format_string(' ' * 617)
+
+        # Footer of page 3
+        rslt += self._l10n_es_boe_format_string('</T303DID00>')
+
+        return rslt
 
 class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
     _name = 'l10n_es.mod347.tax.report.handler'
@@ -803,9 +880,21 @@ class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
         report = self.env['account.report'].browse(options['report_id'])
         report._check_groupby_fields((next_groupby.split(',') if next_groupby else []) + ([current_groupby] if current_groupby else []))
 
+        from_fy_dates = self.env.company.compute_fiscalyear_dates(fields.Date.from_string(options['date']['date_from']))
+        to_fy_dates = self.env.company.compute_fiscalyear_dates(fields.Date.from_string(options['date']['date_to']))
+        fy_options = {**options, 'date': options['date'].copy()}
+
+        # Only adapt dates for the threshold if from and to dates belong to the same fiscal year.
+        if from_fy_dates == to_fy_dates:
+            fy_options['date'].update({
+                'date_from': fields.Date.to_string(from_fy_dates['date_from']),
+                'date_to': fields.Date.to_string(from_fy_dates['date_to']),
+                'mode': 'range',
+            })
+
         # First get all the partners that match the domain but don't reach the threshold. We'll have to exclude them
         ct_query = self.env['res.currency']._get_query_currency_table(options)
-        tables, where_clause, where_params = report._query_get(options, date_scope, domain=domain + options.get('forced_domain', []))
+        tables, where_clause, where_params = report._query_get(fy_options, date_scope, domain=domain + options.get('forced_domain', []))
         threshold_value = self._convert_threshold_to_company_currency(3005.06, options)
         partners_to_exclude_params = [*where_params, threshold_value]
         partners_to_exclude_query = f"""
@@ -899,7 +988,7 @@ class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
         rslt += self._l10n_es_boe_format_string('T')
         rslt += self._l10n_es_boe_format_string(boe_wizard.get_formatted_contact_phone(), length=9)
         rslt += self._l10n_es_boe_format_string(boe_wizard.contact_person_name, length=40)
-        mod_347_boe_sequence = self.env['ir.sequence'].search([('company_id', '=', current_company.id), ('code', '=', 'l10n_es.boe.mod_347')])
+        mod_347_boe_sequence = current_company.sudo()._get_mod_boe_sequence("347")
         rslt += self._l10n_es_boe_format_number(yearly_options, 347) + self._l10n_es_boe_format_string(mod_347_boe_sequence.next_by_id(), length=10)
         rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and 'X' or ' ')
         rslt += self._l10n_es_boe_format_string(boe_wizard.substitutive_declaration and 'X' or ' ')
@@ -980,10 +1069,10 @@ class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
         cash_payments_lines_in_period = self.env['account.move.line'].search([('date', '<=', year + '-12-31'), ('date', '>=', year + '-01-01'), ('journal_id.type', '=', 'cash'), ('payment_id', '!=', False), ('partner_id', '=', line_partner.id), ('account_type', '=', account_type), ('company_id', '=', current_company.id)])
         metalico_amount = 0
         for cash_payment_aml in cash_payments_lines_in_period:
-                partial_reconcile_ids = getattr(cash_payment_aml, 'matched_' + matching_field + '_ids')
-                partial_rec_on_inv_type = partial_reconcile_ids.filtered(lambda x: getattr(x, matching_field + '_move_id').move_id.l10n_es_reports_mod347_invoice_type == current_invoice_type)
-                for partial_rec in partial_rec_on_inv_type:
-                    metalico_amount += partial_rec.amount
+            partial_reconcile_ids = cash_payment_aml['matched_' + matching_field + '_ids']
+            partial_rec_on_inv_type = partial_reconcile_ids.filtered(lambda x: x[matching_field + '_move_id'].move_id.l10n_es_reports_mod347_invoice_type == current_invoice_type)
+            for partial_rec in partial_rec_on_inv_type:
+                metalico_amount += partial_rec.amount
 
         # Context key used for conversion date is set in get_txt.
         curr_eur = self.env["res.currency"].search([('name', '=', 'EUR')], limit=1)
@@ -1106,7 +1195,7 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
         rslt += self._l10n_es_boe_format_string('T')
         rslt += self._l10n_es_boe_format_string(boe_wizard.get_formatted_contact_phone(), length=9)
         rslt += self._l10n_es_boe_format_string(boe_wizard.contact_person_name, length=40)
-        mod_349_boe_sequence = self.env['ir.sequence'].search([('company_id','=',current_company.id), ('code','=','l10n_es.boe.mod_349')])
+        mod_349_boe_sequence = current_company.sudo()._get_mod_boe_sequence("349")
         rslt += self._l10n_es_boe_format_number(options, 349) + self._l10n_es_boe_format_string(mod_349_boe_sequence.next_by_id(), length=10)
         rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and 'X' or ' ')
         rslt += self._l10n_es_boe_format_string(boe_wizard.substitutive_declaration and 'X' or ' ')
@@ -1201,6 +1290,8 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
             if period[-1] == 'T':
                 options = options.copy()
                 end_date = datetime.strptime(options['date']['date_to'], '%Y-%m-%d')
+                # Note the original value so we can still check it later (like in _get_mod_period_and_year)
+                options['original_date_to'] = options['date']['date_to']
                 options['date']['date_to'] = (end_date + relativedelta(day=31, months=-1)).strftime('%Y-%m-%d')
             else:
                 raise UserError(_("You cannot generate a BOE file for the first two months of a trimester if only one month is selected!"))

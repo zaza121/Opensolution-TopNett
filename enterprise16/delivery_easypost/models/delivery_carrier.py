@@ -7,6 +7,7 @@ from werkzeug.urls import url_join
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_round
+from odoo.tools import file_open
 
 from .easypost_request import EasypostRequest
 
@@ -173,19 +174,6 @@ class DeliverCarrier(models.Model):
         result = ep.send_shipping(self, pickings.partner_id, pickings.picking_type_id.warehouse_id.partner_id, picking=pickings, is_return=True)
         if result.get('error_message'):
             raise UserError(result['error_message'])
-        rate = result.get('rate')
-        if rate['currency'] == pickings.company_id.currency_id.name:
-            price = rate['rate']
-        else:
-            quote_currency = self.env['res.currency'].search([('name', '=', rate['currency'])], limit=1)
-            price = quote_currency._convert(float(rate['rate']), pickings.company_id.currency_id, self.env.company, fields.Date.context_today(self))
-
-        # return tracking information
-        carrier_tracking_link = ""
-        for track_number, tracker_url in result.get('track_shipments_url').items():
-            carrier_tracking_link += '<a href=' + tracker_url + '>' + track_number + '</a><br/>'
-
-        carrier_tracking_ref = ' + '.join(result.get('track_shipments_url').keys())
 
         requests_session = requests.Session()
         logmessage = _('Return Label<br/>')
@@ -194,7 +182,7 @@ class DeliverCarrier(models.Model):
             try:
                 response = requests_session.get(label_url, timeout=30)
                 response.raise_for_status()
-                labels.append(('%s-%s-%s.%s' % (self.get_return_label_prefix(), 'blablabla', track_number, self.easypost_label_file_type), response.content))
+                labels.append(('%s-%s.%s' % (self.get_return_label_prefix(), track_number, self.easypost_label_file_type), response.content))
             except Exception:
                 logmessage += '<li><a href="%s">%s</a></li>' % (label_url, label_url)
 
@@ -227,11 +215,8 @@ class DeliverCarrier(models.Model):
         json is to replace the static file request by an API request if easypost
         implements a way to do it.
         """
-        base_url = self.get_base_url()
-        response_package = requests.get(url_join(base_url, '/delivery_easypost/static/data/package_types_by_carriers.json'))
-        response_service = requests.get(url_join(base_url, '/delivery_easypost/static/data/services_by_carriers.json'))
-        packages = response_package.json()
-        services = response_service.json()
+        packages = json.load(file_open('delivery_easypost/static/data/package_types_by_carriers.json'))
+        services = json.load(file_open('delivery_easypost/static/data/services_by_carriers.json'))
         return packages, services
 
     @api.onchange('delivery_type')

@@ -118,11 +118,13 @@ var SearchEditor = SearchRenderer.extend(EditorMixin, {
      */
     _addFirstHook: function ($parent, type) {
         var node = {
-            tag: 'search'
+            tag: 'search',
+            attrs: {},
         };
         if (type === "group_by") {
             node = {
                 tag: 'group',
+                attrs: {},
             };
         }
         var formEditorHook = this._renderHook(node, 'inside', 'tr', type);

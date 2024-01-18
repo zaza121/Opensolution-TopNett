@@ -15,7 +15,7 @@ class ConsolidationJournal(models.Model):
 
     name = fields.Char(string='Name', required=True)
     period_id = fields.Many2one('consolidation.period', string="Analysis Period", ondelete="cascade")
-    chart_id = fields.Many2one('consolidation.chart', string="Chart", required=True)
+    chart_id = fields.Many2one('consolidation.chart', string="Chart", required=True, ondelete='cascade')
     company_period_id = fields.Many2one('consolidation.company_period', string="Company Period", required=False,
                                         copy=False)
     state = fields.Selection(related="period_id.state", readonly=True)
@@ -121,7 +121,7 @@ class ConsolidationJournalLine(models.Model):
     _description = "Consolidation journal line"
 
     note = fields.Text(string='Description', required=False)
-    journal_id = fields.Many2one('consolidation.journal', string="Journal", ondelete='cascade', required=True)
+    journal_id = fields.Many2one('consolidation.journal', string="Journal", ondelete='restrict', required=True)
     account_id = fields.Many2one('consolidation.account', string="Consolidated Account", required=True)
     group_id = fields.Many2one('consolidation.group', related="account_id.group_id",
                                  string="Group", store=True)

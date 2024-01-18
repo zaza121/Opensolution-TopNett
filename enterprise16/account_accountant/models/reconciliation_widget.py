@@ -301,7 +301,7 @@ class AccountReconciliation(models.AbstractModel):
     @api.model
     def _domain_move_lines_for_manual_reconciliation(self, account_id, partner_id=False, excluded_ids=None, search_str=''):
         """ Create domain criteria that are relevant to manual reconciliation. """
-        domain = ['&', '&', ('reconciled', '=', False), ('account_id', '=', account_id), ('move_id.state', '=', 'posted')]
+        domain = ['&', '&', ('reconciled', '=', False), ('account_id', '=', account_id), ('parent_state', '=', 'posted')]
         if partner_id:
             domain = expression.AND([domain, [('partner_id', '=', partner_id)]])
         if excluded_ids:
@@ -544,7 +544,7 @@ class AccountReconciliation(models.AbstractModel):
             moves.action_post()
             account = move_lines[0].account_id
             move_lines |= moves.line_ids.filtered(lambda line: line.account_id == account and not line.reconciled)
-        move_lines.reconcile()
+        move_lines.with_context(reduced_line_sorting=True).reconcile()
 
     @api.model
     def get_reconciliation_dict_from_model(self, model_id, residual_balance, widget_partner_id):

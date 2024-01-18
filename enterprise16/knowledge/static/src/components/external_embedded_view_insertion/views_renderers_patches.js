@@ -33,25 +33,27 @@ const EmbeddedViewRendererPatch = {
         }
     },
     /**
+     * Returns the full context that will be passed to the embedded view.
      * @returns {Object}
      */
     _getViewContext: function () {
+        const context = {};
         if (this.env.searchModel) {
-            return omit(this.env.searchModel.context, ...Object.keys(this.userService.context));
+            // Store the context of the search model:
+            Object.assign(context, omit(this.env.searchModel.context, ...Object.keys(this.userService.context)));
+            // Store the state of the search model:
+            Object.assign(context, {
+                knowledge_search_model_state: JSON.stringify(this.env.searchModel.exportState())
+            });
         }
-        return {};
-    },
-    /**
-     * @returns {Object}
-     */
-    _getViewState: function () {
-        const state = {
+        // Store the "local context" of the view:
+        const fns = this.env.__getContext__.callbacks;
+        const localContext = Object.assign({}, ...fns.map(fn => fn()));
+        Object.assign(context, localContext);
+        Object.assign(context, {
             knowledge_embedded_view_framework: 'owl'
-        };
-        if (this.env.searchModel) {
-            state.knowledge_search_model_state = JSON.stringify(this.env.searchModel.exportState());
-        }
-        return state;
+        });
+        return context;
     },
     _insertEmbeddedView: function () {
         const config = this.env.config;
@@ -59,7 +61,8 @@ const EmbeddedViewRendererPatch = {
             return;
         }
         this._openArticleSelector(async id => {
-            const context = Object.assign({}, this._getViewContext(), this._getViewState());
+            const context = this._getViewContext();
+            context['keyOptionalFields'] = this.keyOptionalFields;
             await this.orm.call('knowledge.article', 'append_embedded_view',
                 [[id],
                 config.actionId,
@@ -83,7 +86,7 @@ const EmbeddedViewRendererPatch = {
             return;
         }
         this._openArticleSelector(async id => {
-            const context = Object.assign({}, this._getViewContext(), this._getViewState());
+            const context = this._getViewContext();
             await this.orm.call('knowledge.article', 'append_view_link',
                 [[id],
                 config.actionId,
@@ -124,11 +127,55 @@ const EmbeddedViewRendererPatch = {
     },
 };
 
+const EmbeddedViewListRendererPatch = {
+    ...EmbeddedViewRendererPatch,
+    /**
+     * @override
+     * @returns {Object}
+     */
+    _getViewContext: function () {
+        const context = EmbeddedViewRendererPatch._getViewContext.call(this);
+        Object.assign(context, {
+            orderBy: JSON.stringify(this.props.list.orderBy)
+        });
+        return context;
+    },
+    /**
+     * When the user hides/shows some columns from the list view, the system will
+     * add a new cache entry in the local storage of the user and will list all
+     * visible columns for the current view. To make the configuration specific to
+     * a view, the system generates a unique key for the cache entry by using all
+     * available information about the view.
+     *
+     * When loading the view, the system regenerates a key from the current view
+     * and check if there is any entry in the cache for that key. If there is a
+     * match, the system will load the configuration specified in the cache entry.
+     *
+     * For the embedded views of Knowledge, we want the configuration of the view
+     * to be unique for each embedded view. To achieve that, we will overwrite the
+     * function generating the key for the cache entry and include the unique id
+     * of the embedded view.
+     *
+     * @override
+     * @returns {string}
+     */
+    createKeyOptionalFields () {
+        const embeddedViewId = this.env.searchModel ? this.env.searchModel.context.knowledgeEmbeddedViewId : null;
+        if (this.env.searchModel && this.env.searchModel.context.keyOptionalFields) {
+            const searchModelKeyOptionalFields = this.env.searchModel.context.keyOptionalFields;
+            return searchModelKeyOptionalFields.includes(embeddedViewId)
+                ? searchModelKeyOptionalFields
+                : searchModelKeyOptionalFields + (embeddedViewId ? `,${embeddedViewId}` : "");
+        }
+        return this._super(...arguments) + (embeddedViewId ? "," + embeddedViewId : "");
+    },
+};
+
 patch(CalendarRenderer.prototype, 'knowledge_calendar_embeddable', EmbeddedViewRendererPatch);
 patch(CohortRenderer.prototype, 'knowledge_cohort_embeddable', EmbeddedViewRendererPatch);
 patch(GraphRenderer.prototype, 'knowledge_graph_embeddable', EmbeddedViewRendererPatch);
 patch(KanbanRenderer.prototype, 'knowledge_kanban_embeddable', EmbeddedViewRendererPatch);
-patch(ListRenderer.prototype, 'knowledge_list_embeddable', EmbeddedViewRendererPatch);
+patch(ListRenderer.prototype, 'knowledge_list_embeddable', EmbeddedViewListRendererPatch);
 patch(MapRenderer.prototype, 'knowledge_map_embeddable', EmbeddedViewRendererPatch);
 patch(PivotRenderer.prototype, 'knowledge_pivot_embeddable', EmbeddedViewRendererPatch);
 

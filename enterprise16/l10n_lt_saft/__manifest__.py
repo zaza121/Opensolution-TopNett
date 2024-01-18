@@ -16,7 +16,6 @@
         'l10n_lt', 'account_saft',
     ],
     'data': [
-        'data/ir_cron_data.xml',
         'data/saft_report.xml',
     ],
     'license': 'OEEL-1',

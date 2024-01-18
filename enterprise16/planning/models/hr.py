@@ -2,8 +2,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import logging
 import uuid
+from pytz import utc, timezone
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from odoo import fields, models, _, api, Command
 
 _logger = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ class Employee(models.Model):
 
     def action_archive(self):
         res = super().action_archive()
-        departure_date = datetime.combine(fields.Date.today(), time.max)
+        departure_date = datetime.combine(fields.Date.context_today(self) + timedelta(days=1), time.min)
         planning_slots = self.env['planning.slot'].sudo().search([
             ('resource_id', 'in', self.resource_id.ids),
             ('end_datetime', '>=', departure_date),
@@ -129,15 +130,17 @@ class Employee(models.Model):
         shift_vals_list = []
         shift_ids_to_remove_resource = []
         for slot in planning_slots:
-            if (slot.start_datetime < departure_date) and (slot.end_datetime > departure_date):
+            split_time = timezone(slot.resource_id.tz).localize(departure_date).astimezone(utc).replace(tzinfo=None)
+            if (slot.start_datetime < split_time) and (slot.end_datetime > split_time):
                 shift_vals_list.append({
-                    'start_datetime': departure_date,
+                    'start_datetime': split_time,
                     'end_datetime': slot.end_datetime,
                     'role_id': slot.role_id.id,
                     'company_id': slot.company_id.id,
                 })
-                slot.write({'end_datetime': departure_date})
-            elif slot.start_datetime >= departure_date:
+                if split_time > slot.start_datetime:
+                    slot.write({'end_datetime': split_time})
+            elif slot.start_datetime >= split_time:
                 shift_ids_to_remove_resource.append(slot.id)
         if shift_vals_list:
             self.env['planning.slot'].sudo().create(shift_vals_list)

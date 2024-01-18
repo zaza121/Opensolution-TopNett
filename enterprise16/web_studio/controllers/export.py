@@ -78,10 +78,10 @@ FIELDS_TO_EXPORT = {
         'priority', 'type'
     ],
     'mail.template': [
-        'auto_delete', 'body_html', 'copyvalue', 'email_cc', 'email_from', 'email_to', 'lang',
-        'model_id', 'model_object_field', 'name', 'null_value', 'partner_to', 'ref_ir_act_window',
-        'reply_to', 'report_name', 'report_template', 'scheduled_date', 'sub_model_object_field',
-        'sub_object', 'subject', 'use_default_to'
+        'auto_delete', 'body_html', 'email_cc', 'email_from', 'email_to', 'lang',
+        'model_id', 'name', 'partner_to', 'ref_ir_act_window',
+        'reply_to', 'report_name', 'report_template', 'scheduled_date',
+        'subject', 'use_default_to'
     ],
     'res.groups': ['color', 'comment', 'implied_ids', 'name', 'share'],
     'ir.default': ['field_id', 'condition', 'json_value'],
@@ -90,7 +90,7 @@ FIELDS_TO_EXPORT = {
 FIELDS_NOT_TO_EXPORT = {
     'base.automation': ['trg_date_calendar_id'],
     'ir.actions.server': ['fields_lines', 'partner_ids'],
-    'ir.filter': ['user_id'],
+    'ir.filters': ['user_id'],
     'mail.template': ['attachment_ids', 'mail_server_id'],
     'report.paperformat': ['report_ids'],
     'res.groups': ['category_id', 'users'],

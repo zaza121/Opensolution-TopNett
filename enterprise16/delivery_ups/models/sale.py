@@ -27,6 +27,6 @@ class SaleOrder(models.Model):
             order.partner_shipping_id.with_company(order.company_id).property_ups_carrier_account = order.partner_ups_carrier_account
 
     def _action_confirm(self):
-        if self.carrier_id.ups_bill_my_account and not self.partner_ups_carrier_account:
+        if any(order.carrier_id.ups_bill_my_account and not order.partner_ups_carrier_account for order in self):
             raise UserError(_('You must enter an UPS account number.'))
-        super(SaleOrder, self)._action_confirm()
+        return super(SaleOrder, self)._action_confirm()

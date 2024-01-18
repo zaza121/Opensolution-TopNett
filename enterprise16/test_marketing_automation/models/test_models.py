@@ -36,6 +36,7 @@ class MarketingTestBlPhone(models.Model):
     mobile = fields.Char(compute='_compute_from_customer', readonly=False, store=True)
     description = fields.Text()
     customer_id = fields.Many2one('res.partner', 'Partner')
+    text_trans = fields.Char(translate=True)
 
     @api.depends('customer_id')
     def _compute_from_customer(self):

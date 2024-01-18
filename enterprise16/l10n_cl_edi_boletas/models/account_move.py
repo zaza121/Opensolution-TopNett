@@ -13,13 +13,12 @@ class AccountMove(models.Model):
 
 
     def _l10n_cl_edi_post_validation(self):
-        if self.l10n_latam_document_type_id.code == '39':
+        if self.l10n_latam_document_type_id.code in ['39', '41']:
             if self.line_ids.filtered(lambda x: x.tax_group_id.id in [
                     self.env.ref('l10n_cl.tax_group_ila').id, self.env.ref('l10n_cl.tax_group_retenciones').id]):
                 raise UserError(_('Receipts with withholding taxes are not allowed'))
-            if any(self.invoice_line_ids.mapped('tax_ids.price_include')):
-                raise UserError(_('Tax included in price is not supported for boletas. '
-                                  'Please change the tax to not included in price.'))
+            if self.company_id.currency_id != self.currency_id:
+                raise UserError(_('It is not allowed to create receipts in a different currency than CLP'))
         super()._l10n_cl_edi_post_validation()
 
     def _l10n_cl_edi_validate_boletas(self):
@@ -42,6 +41,11 @@ class AccountMove(models.Model):
         if self.l10n_cl_dte_status != "not_sent":
             return None
         digital_signature = self.company_id._get_digital_signature(user_id=self.env.user.id)
+        if self.company_id.l10n_cl_dte_service_provider == 'SIIDEMO':
+            self.message_post(body=_('This DTE has been generated in DEMO Mode. It is considered as accepted and '
+                                     'it won\'t be sent to SII.'))
+            self.l10n_cl_dte_status = 'accepted'
+            return None
         response = self._send_xml_to_sii_rest(
             self.company_id.l10n_cl_dte_service_provider,
             self.company_id.vat,

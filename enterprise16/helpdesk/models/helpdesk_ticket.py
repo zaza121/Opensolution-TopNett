@@ -96,10 +96,10 @@ class HelpdeskSLAStatus(models.Model):
             if status.sla_id.exclude_stage_ids:
                 sla_hours += status._get_freezed_hours(working_calendar)
 
-                # Except if ticket creation time is later than the end time of the working day
-                deadline_for_working_cal = working_calendar.plan_hours(0, deadline)
-                if deadline_for_working_cal and deadline.day < deadline_for_working_cal.day:
-                    deadline = deadline.replace(hour=0, minute=0, second=0, microsecond=0)
+            # Except if ticket creation time is later than the end time of the working day
+            deadline_for_working_cal = working_calendar.plan_hours(0, deadline)
+            if deadline_for_working_cal and deadline.day < deadline_for_working_cal.day and time_days > 0:
+                deadline = deadline.replace(hour=0, minute=0, second=0, microsecond=0)
             # We should execute the function plan_hours in any case because, in a 1 day SLA environment,
             # if I create a ticket knowing that I'm not working the day after at the same time, ticket
             # deadline will be set at time I don't work (ticket creation time might not be in working calendar).
@@ -224,7 +224,7 @@ class HelpdeskTicket(models.Model):
     team_id = fields.Many2one('helpdesk.team', string='Team', default=_default_team_id, index=True, tracking=True)
     use_sla = fields.Boolean(related='team_id.use_sla')
     team_privacy_visibility = fields.Selection(related='team_id.privacy_visibility', string="Team Visibility")
-    description = fields.Html()
+    description = fields.Html(sanitize_attributes=False)
     active = fields.Boolean(default=True)
     ticket_type_id = fields.Many2one('helpdesk.ticket.type', string="Type", tracking=True)
     tag_ids = fields.Many2many('helpdesk.tag', string='Tags')
@@ -407,8 +407,8 @@ class HelpdeskTicket(models.Model):
     def _search_sla_success(self, operator, value):
         datetime_now = fields.Datetime.now()
         if (value and operator in expression.NEGATIVE_TERM_OPERATORS) or (not value and operator not in expression.NEGATIVE_TERM_OPERATORS):  # is failed
-            return [('sla_status_ids.reached_datetime', '>', datetime_now), ('sla_reached_late', '!=', False)]
-        return [('sla_status_ids.reached_datetime', '<', datetime_now), ('sla_reached', '=', True)]  # is success
+            return [('sla_status_ids.reached_datetime', '>', datetime_now), ('sla_reached_late', '!=', False), '|', ('sla_deadline', '!=', False), ('sla_deadline', '<', datetime_now)]
+        return [('sla_status_ids.reached_datetime', '<', datetime_now), ('sla_reached', '=', True), ('sla_reached_late', '=', False), '|', ('sla_deadline', '=', False), ('sla_deadline', '>=', datetime_now)]  # is success
 
     @api.depends('team_id')
     def _compute_user_and_stage_ids(self):
@@ -468,7 +468,7 @@ class HelpdeskTicket(models.Model):
             ticket.partner_ticket_ids = partner_ticket
             partner_ticket = partner_ticket - ticket._origin
             ticket.partner_ticket_count = len(partner_ticket) if partner_ticket else 0
-            open_ticket = partner_ticket.filtered(lambda ticket: not ticket.stage_id.fold)
+            open_ticket = partner_ticket.with_context(prefetch_fields=False).filtered(lambda ticket: not ticket.stage_id.fold)
             ticket.partner_open_ticket_count = len(open_ticket)
 
     @api.depends('assign_date')
@@ -518,6 +518,14 @@ class HelpdeskTicket(models.Model):
             d1 = expression.AND([[('close_date', '=', False)], subdomain])
             d2 = ['&', ('close_date', '!=', False), ('close_hours', operator, value)]
         return expression.OR([d1, d2])
+
+    @api.model
+    def _get_view(self, view_id=None, view_type='form', **options):
+        arch, view = super()._get_view(view_id, view_type, **options)
+        if view_type == 'search' and  self.env.user.notification_type == 'email':
+            for node in arch.xpath("//filter[@name='message_needaction']"):
+                node.set('invisible', '1')
+        return arch, view
 
     def _get_partner_email_update(self):
         self.ensure_one()
@@ -588,25 +596,24 @@ class HelpdeskTicket(models.Model):
                 parsed_name, parsed_email = self.env['res.partner']._parse_partner_name(partner_email)
                 if not parsed_name:
                     parsed_name = partner_name
-                try:
-                    vals['partner_id'] = self.env['res.partner'].with_context(default_team_id=False).find_or_create(
-                        tools.formataddr((partner_name, parsed_email))
-                    ).id
-                except UnicodeEncodeError:
-                    # 'formataddr' doesn't support non-ascii characters in email. Therefore, we fall
-                    # back on a simple partner creation.
-                    vals['partner_id'] = self.env['res.partner'].create({
-                        'name': partner_name,
-                        'email': partner_email,
-                    }).id
+                if vals.get('team_id'):
+                    team = self.env['helpdesk.team'].browse(vals.get('team_id'))
+                    company = team.company_id.id
+                else:
+                    company = False
+
+                vals['partner_id'] = self.env['res.partner'].with_context(default_company_id=company).find_or_create(
+                    tools.formataddr((parsed_name, parsed_email))
+                ).id
 
         # determine partner email for ticket with partner but no email given
         partners = self.env['res.partner'].browse([vals['partner_id'] for vals in list_value if 'partner_id' in vals and vals.get('partner_id') and 'partner_email' not in vals])
         partner_email_map = {partner.id: partner.email for partner in partners}
         partner_name_map = {partner.id: partner.name for partner in partners}
-
+        company_per_team_id = {t.id: t.company_id for t in teams}
         for vals in list_value:
-            vals['ticket_ref'] = self.env['ir.sequence'].sudo().next_by_code('helpdesk.ticket')
+            company = company_per_team_id.get(vals.get('team_id', False))
+            vals['ticket_ref'] = self.env['ir.sequence'].with_company(company).sudo().next_by_code('helpdesk.ticket')
             if vals.get('team_id'):
                 team_default = team_default_map[vals['team_id']]
                 if 'stage_id' not in vals:
@@ -869,7 +876,7 @@ class HelpdeskTicket(models.Model):
 
     @api.model
     def message_new(self, msg, custom_values=None):
-        values = dict(custom_values or {}, partner_email=msg.get('from'), partner_id=msg.get('author_id'), description=msg.get('body'))
+        values = dict(custom_values or {}, partner_email=msg.get('from'), partner_name=msg.get('from'), partner_id=msg.get('author_id'))
         ticket = super(HelpdeskTicket, self.with_context(mail_notify_author=True)).message_new(msg, custom_values=values)
         partner_ids = [x.id for x in self.env['mail.thread']._mail_find_partner_from_emails(self._ticket_email_split(msg), records=ticket) if x]
         customer_ids = [p.id for p in self.env['mail.thread']._mail_find_partner_from_emails(tools.email_split(values['partner_email']), records=ticket) if p]
@@ -894,12 +901,21 @@ class HelpdeskTicket(models.Model):
             # we consider that posting a message with a specified recipient (not a follower, a specific one)
             # on a document without customer means that it was created through the chatter using
             # suggested recipients. This heuristic allows to avoid ugly hacks in JS.
-            new_partner = message.partner_ids.filtered(lambda partner: partner.email == self.partner_email)
+            email_normalized = tools.email_normalize(self.partner_email)
+            new_partner = message.partner_ids.filtered(
+                lambda partner: partner.email == self.partner_email or (email_normalized and partner.email_normalized == email_normalized)
+            )
             if new_partner:
+                if new_partner[0].email_normalized:
+                    email_domain = ('partner_email', 'in', [new_partner[0].email, new_partner[0].email_normalized])
+                else:
+                    email_domain = ('partner_email', '=', new_partner[0].email)
                 self.search([
-                    ('partner_id', '=', False),
-                    ('partner_email', '=', new_partner.email),
-                    ('stage_id.fold', '=', False)]).write({'partner_id': new_partner.id})
+                    ('partner_id', '=', False), email_domain, ('stage_id.fold', '=', False)
+                ]).write({'partner_id': new_partner[0].id})
+        # use the sanitized body of the email from the message thread to populate the ticket's description
+        if not self.description and message.subtype_id == self._creation_subtype() and self.partner_id == message.author_id:
+            self.description = message.body
         return super(HelpdeskTicket, self)._message_post_after_hook(message, msg_vals)
 
     def _track_template(self, changes):
@@ -934,19 +950,7 @@ class HelpdeskTicket(models.Model):
 
         self.ensure_one()
 
-        if self.user_id:
-            return groups
-
-        local_msg_vals = dict(msg_vals or {})
-        take_action = self._notify_get_action_link('assign', **local_msg_vals)
-        helpdesk_actions = [{'url': take_action, 'title': _('Assign to me')}]
-        helpdesk_user_group_id = self.env.ref('helpdesk.group_helpdesk_user').id
-        new_groups = [(
-            'group_helpdesk_user',
-            lambda pdata: pdata['type'] == 'user' and helpdesk_user_group_id in pdata['groups'],
-            {'actions': helpdesk_actions}
-        )]
-        return new_groups + groups
+        return groups
 
     def _notify_get_reply_to(self, default=None):
         """ Override to set alias of tickets to their team if any. """

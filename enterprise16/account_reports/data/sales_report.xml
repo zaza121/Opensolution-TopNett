@@ -14,13 +14,34 @@
             </div>
         </xpath>
         <xpath expr="//div[@id='warnings_div']" position="inside">
-            <div class="alert alert-info text-center mb-0 no_print" t-if="options.get('missing_vat_warning')">
-                <span>Some partners are missing a VAT number.</span>
+            <div class="alert alert-warning text-center mb-0 no_print" t-if="options.get('missing_vat_warning')">
+                <span>
+                    Intra-community taxes are applied on
+                    <a type="action" t-att-data-type="'no_vat'" t-att-data-model="'move'" action="get_warning_act_window">invoices</a>
+                    addressed to
+                    <a type="action" t-att-data-type="'no_vat'" t-att-data-model="'partner'" action="get_warning_act_window">partners</a>
+                    without a valid intra-community VAT number.
+                </span>
             </div>
-            <div class="alert alert-info text-center mb-0 no_print"
-                 t-if="options.get('unexpected_intrastat_tax_warning')">
-                <span>Intrastat taxes are applied on unexpected journal entries (international or between non intrastat countries).</span>
+            <div class="alert alert-warning text-center mb-0 no_print" t-if="options.get('same_country_warning')">
+                <span>
+                    Intra-community taxes are applied on
+                    <a type="action" t-att-data-type="'same_country'" t-att-data-model="'move'" action="get_warning_act_window">invoices</a>
+                    addressed to
+                    <a type="action" t-att-data-type="'same_country'" t-att-data-model="'partner'" action="get_warning_act_window">partners</a>
+                    that are not established abroad.
+                </span>
             </div>
+            <div class="alert alert-warning text-center mb-0 no_print" t-if="options.get('non_ec_country_warning')">
+                <span>
+                    Intra-community taxes are applied on
+                    <a type="action" t-att-data-type="'non_ec_country'" t-att-data-model="'move'" action="get_warning_act_window">invoices</a>
+                    addressed to
+                    <a type="action" t-att-data-type="'non_ec_country'" t-att-data-model="'partner'" action="get_warning_act_window">partners</a>
+                    who are not established in any of the EC countries.
+                </span>
+            </div>
+
         </xpath>
     </template>
 

@@ -51,6 +51,7 @@ patch(DocumentsInspector.prototype, "documents_spreadsheet_documents_inspector",
             isPdfSplit: false,
             rules: [],
             hasPdfSplit: false,
+            selection: [record],
         });
     },
 
@@ -86,7 +87,9 @@ patch(DocumentsInspector.prototype, "documents_spreadsheet_documents_inspector",
                         type: "danger",
                     }
                 );
-                const docs = selection.filter((doc) => doc.data.handler !== "spreadsheet");
+                const docs = selection.filter(
+                    (doc) => doc.data.handler !== "spreadsheet" && doc.data.type !== "empty"
+                );
                 if (docs.length) {
                     this.download(selection.filter((rec) => rec.data.handler !== "spreadsheet"));
                 }

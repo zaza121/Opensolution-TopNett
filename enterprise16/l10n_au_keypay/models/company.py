@@ -12,7 +12,8 @@ _logger = logging.getLogger(__name__)
 
 class res_company(models.Model):
     _inherit = 'res.company'
-    l10n_au_kp_enable = fields.Boolean(string='Enable KeyPay Integration')
+
+    l10n_au_kp_enable = fields.Boolean(string='Enable Employment Hero Integration')
     l10n_au_kp_identifier = fields.Char(string='Business Id')
     l10n_au_kp_lock_date = fields.Date(string='Fetch Payrun After', help="Import payruns paied after this date. This date cannot be prior to Lock Date)")
     l10n_au_kp_journal_id = fields.Many2one('account.journal', string='Payroll Journal')
@@ -29,7 +30,7 @@ class res_company(models.Model):
     def _kp_payroll_fetch_journal_entries(self, kp_payrun):
         self.ensure_one()
         key, l10n_au_kp_base_url = self._kp_get_key_and_url()
-        # Fetch the journal details: https://api.keypay.com.au/australia/reference/pay-run/journal--get
+        # Fetch the journal details: https://api.keypay.com.au/australia/reference/pay-run/au-journal--get
         url = url_join(l10n_au_kp_base_url, 'api/v2/business/%s/journal/%s' % (self.l10n_au_kp_identifier, kp_payrun['id']))
         response = requests.get(url, auth=(key, ''), timeout=10)
         response.raise_for_status()
@@ -42,7 +43,7 @@ class res_company(models.Model):
                 '|', ('l10n_au_kp_account_identifier', '=', kp_journal_item['accountCode']), ('code', '=', kp_journal_item['accountCode'])
             ], limit=1, order='l10n_au_kp_account_identifier')
             if not item_account:
-                raise UserError(_("Account not found: %s, either create an account with that code or link an existing one to that keypay code") % (kp_journal_item['accountCode'],))
+                raise UserError(_("Account not found: %s, either create an account with that code or link an existing one to that Employment Hero code") % (kp_journal_item['accountCode'],))
             line_ids_commands.append((0, 0, {
                 'account_id': item_account.id,
                 'name': kp_journal_item['reference'],
@@ -63,13 +64,13 @@ class res_company(models.Model):
     def _kp_payroll_fetch_payrun(self):
         self.ensure_one()
         if not self.env.user.has_group('account.group_account_manager'):
-            raise AccessError(_("You don't have the access rights to fetch keypay payrun."))
+            raise AccessError(_("You don't have the access rights to fetch Employment Hero payrun."))
         key, l10n_au_kp_base_url = self._kp_get_key_and_url()
         if not key or not self.l10n_au_kp_identifier or not self.l10n_au_kp_journal_id:
             raise UserError(_("Company %s does not have the apikey, business_id or the journal_id set") % (self.name))
 
         from_formated_datetime = self.l10n_au_kp_lock_date and datetime.combine(self.l10n_au_kp_lock_date, datetime.min.time()).replace(hour=23, minute=59, second=59)
-        from_formated_datetime = format_datetime(self.env, from_formated_datetime, dt_format="yyyy-MM-dd'T'HH:mm:ss")
+        from_formated_datetime = format_datetime(self.env, from_formated_datetime, dt_format="yyyy-MM-dd'T'HH:mm:ss", tz='UTC')
         filter = "$filter=DatePaid gt datetime'%s'&" % (from_formated_datetime) if from_formated_datetime else ''
         skip = 0
         top = 100

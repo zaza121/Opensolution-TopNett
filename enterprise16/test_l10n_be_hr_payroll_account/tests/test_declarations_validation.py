@@ -140,7 +140,7 @@ class TestPayslipValidation(AccountTestInvoicingCommon):
             'rd_percentage': 100,
         } for i in range(cls.EMPLOYEES_COUNT)])
 
-        cls.contracts._generate_work_entries(datetime.date(2021, 1, 1), datetime.date(2021, 12, 31))
+        cls.contracts.generate_work_entries(datetime.date(2021, 1, 1), datetime.date(2021, 12, 31))
 
         cls.batch = cls.env['hr.payslip.run'].create({
             'name': 'History Batch',

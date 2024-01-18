@@ -39,7 +39,7 @@
             <attribute name="t-if">(not task.is_fsm and timesheets and allow_timesheets) or (task.is_fsm and task.allow_worksheets and task.comment)</attribute>
         </xpath>
         <xpath expr="//li[@id='nav-report']" position="before">
-            <li class="list-group-item d-grid">
+            <li t-if="task.is_fsm and (task.display_sign_report_primary or task.display_sign_report_secondary)" class="list-group-item d-grid">
                 <t t-call="industry_fsm.portal_task_sign_button"/>
             </li>
         </xpath>

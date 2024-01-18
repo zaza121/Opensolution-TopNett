@@ -2,6 +2,7 @@
 <templates>
     <t t-name="documents.DocumentsViews.Buttons" owl="1">
         <t t-set="disabled" t-value="hasDisabledButtons()"/>
+        <t t-set="isShareable" t-value="hasShareDocuments()"/>
         <button type="button" t-attf-class="btn btn-primary o_documents_kanban_upload {{additionalClasses}}" t-att-disabled="disabled"
             t-on-click.stop.prevent="() => this.uploadFileInputRef.el.click()">
             Upload
@@ -15,7 +16,7 @@
             t-on-click.stop.prevent="onClickDocumentsAddUrl">
             Add a Link
         </button>
-        <button type="button" t-attf-class="btn btn-secondary o_documents_kanban_share_domain {{additionalClasses}}" title="Share this domain" t-att-disabled="disabled" groups="documents.group_documents_user"
+        <button type="button" t-attf-class="btn btn-secondary o_documents_kanban_share_domain {{additionalClasses}}" title="Share this domain" t-att-disabled="isShareable" groups="documents.group_documents_user"
             t-on-click.stop.prevent="onClickShareDomain">
             Share
         </button>

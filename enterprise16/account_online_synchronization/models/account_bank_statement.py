@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import threading
+import time
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models, SUPERUSER_ID, tools, _
 from odoo.tools import date_utils
 
 
@@ -34,6 +36,7 @@ class AccountBankStatementLine(models.Model):
          :param online_account: The online account for this statement
          Return: The number of imported transaction for the journal
         """
+        start_time = time.time()
         line_to_reconcile = self.env['account.bank.statement.line']
         amount_sign = -1 if online_account.inverse_transaction_sign else 1
         for journal in online_account.journal_ids:
@@ -70,7 +73,7 @@ class AccountBankStatementLine(models.Model):
             journal_currency = journal.currency_id or journal.company_id.currency_id
             # If there are neither statement and the ending balance != 0, we create an opening bank statement
             if not any_st_line and not journal_currency.is_zero(online_account.balance - total):
-                opening_st_line = self.create({
+                opening_st_line = self.with_context(skip_statement_line_cron_trigger=True).create({
                     'date': date_utils.subtract(sorted_transactions[0]['date'], days=1),
                     'journal_id': journal.id,
                     'payment_ref': _("Opening statement: first synchronization"),
@@ -96,7 +99,18 @@ class AccountBankStatementLine(models.Model):
                 st_line_vals_list.append(st_line_vals)
 
             if st_line_vals_list:
-                line_to_reconcile += self.env['account.bank.statement.line'].create(st_line_vals_list)
+                line_to_reconcile += self.with_user(SUPERUSER_ID).env['account.bank.statement.line'].with_context(skip_statement_line_cron_trigger=True).create(st_line_vals_list)
             # Set last sync date as the last transaction date
             journal.account_online_account_id.sudo().write({'last_sync': sorted_transactions[-1]['date']})
+
+            # Commit except in testing mode
+            do_commit = not (hasattr(threading.current_thread(), 'testing') and threading.current_thread().testing)
+            if do_commit:
+                self.env.cr.commit()  # if something occurs during auto reconciliation we don't want to rollback everything
+            if line_to_reconcile:
+                cron_limit_time = tools.config['limit_time_real_cron']  # default is -1
+                limit_time = (cron_limit_time if cron_limit_time > 0 else 180) - (time.time() - start_time)
+                if limit_time > 0:
+                    line_to_reconcile._cron_try_auto_reconcile_statement_lines(limit_time=limit_time)
+
         return line_to_reconcile

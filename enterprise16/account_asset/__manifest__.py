@@ -28,10 +28,14 @@ Keeps track of depreciations, and creates corresponding journal entries.
     ],
     'demo': [
         'demo/account_deferred_revenue_demo.xml',
+        'demo/account_asset_demo.xml',
     ],
     'license': 'OEEL-1',
     'auto_install': True,
     'assets': {
+        'account_reports.assets_financial_report': [
+            'account_asset/static/src/scss/account_asset.scss',
+        ],
         'web.assets_backend': [
             'account_asset/static/src/scss/account_asset.scss',
             'account_asset/static/src/components/**/*'

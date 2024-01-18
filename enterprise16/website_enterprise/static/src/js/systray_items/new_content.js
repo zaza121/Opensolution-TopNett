@@ -9,6 +9,7 @@ patch(NewContentModal.prototype, 'website_enterprise_user_navbar', {
         this._super();
 
         this.state.newContentElements.push({
+            moduleName: 'website_appointment',
             moduleXmlId: 'base.module_website_appointment',
             status: MODULE_STATUS.NOT_INSTALLED,
             icon: xml`<i class="fa fa-calendar"/>`,

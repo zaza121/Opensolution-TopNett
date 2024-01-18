@@ -9,6 +9,7 @@ import requests
 import uuid
 import time
 import xml.etree.ElementTree as XmlElementTree
+from html import unescape
 
 from odoo import models, fields, api, _
 from odoo.addons.iap.tools import iap_tools
@@ -186,43 +187,45 @@ class SocialMediaTwitter(models.Model):
     @api.model
     def _format_tweet(self, tweet):
         """ Formats a tweet returned by the Twitter API to a dict that will be interpreted by our frontend. """
+        if 'created_at' in tweet:
+            created_date = fields.Datetime.from_string(
+                dateutil.parser.parse(tweet.get('created_at')).strftime('%Y-%m-%d %H:%M:%S'))
+        else:
+            created_date = fields.Datetime.now()
+
+        in_reply_to_status_id = next((referenced['id'] for referenced in tweet.get('referenced_tweets', []) if referenced['type'] == 'replied_to'), None)
         formatted_tweet = {
-            'id': tweet.get('id_str'),
-            'message': tweet.get('full_text'),
+            'id': tweet.get('id'),
+            'message': unescape(tweet.get('text', '')),
             'from': {
-                'id': tweet.get('user').get('id_str'),
-                'name': tweet.get('user').get('name'),
-                'screen_name': tweet.get('user', {}).get('screen_name', ''),  # Pseudo of the author
-                'profile_image_url_https': tweet.get('user').get('profile_image_url_https')
+                'id': tweet.get('author_id'),
+                'name': tweet.get('author', {}).get('name'),
+                'screen_name': tweet.get('author', {}).get('username'),
+                'profile_image_url_https': tweet.get('author', {}).get('profile_image_url'),
             },
             'created_time': tweet.get('created_at'),
-            'formatted_created_time': self.env['social.stream.post']._format_published_date(fields.Datetime.from_string(
-                dateutil.parser.parse(tweet.get('created_at')).strftime('%Y-%m-%d %H:%M:%S')
-            )),
-            'user_likes': tweet.get('favorited'),
+            'formatted_created_time': self.env['social.stream.post']._format_published_date(
+                fields.Datetime.from_string(created_date)),
+            'user_likes': False,
             'likes': {
                 'summary': {
-                    'total_count': tweet.get('favorite_count')
-                }
+                    'total_count': tweet.get('public_metrics', {}).get('like_count', 0),
+                },
             },
             'comments': {'data': []},
-            'in_reply_to_status_id_str': tweet.get('in_reply_to_status_id_str'),
+            'in_reply_to_status_id_str': in_reply_to_status_id,
         }
 
-        attachment = False
-        attached_medias = tweet.get('extended_entities', {}).get('media', [])
+        attached_medias = tweet.get('medias')
         if attached_medias:
             if attached_medias[0].get('type') == 'photo':
-                attachment = {
+                formatted_tweet['attachment'] = {
                     'type': 'photo',
                     'media': {
                         'image': {
-                            'src': attached_medias[0].get('media_url_https')
+                            'src': attached_medias[0].get('url'),
                         }
                     }
                 }
-
-        if attachment:
-            formatted_tweet['attachment'] = attachment
 
         return formatted_tweet

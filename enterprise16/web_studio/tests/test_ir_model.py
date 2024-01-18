@@ -4,6 +4,8 @@ from unittest.mock import patch
 import odoo
 
 from odoo.tests.common import TransactionCase
+from odoo.addons.web_studio.controllers.export import MODELS_TO_EXPORT, FIELDS_TO_EXPORT, \
+     FIELDS_NOT_TO_EXPORT, CDATA_FIELDS, XML_FIELDS
 from odoo.addons.web_studio.models.ir_model import OPTIONS_WL
 from odoo.exceptions import ValidationError
 from odoo import Command
@@ -420,6 +422,26 @@ class TestStudioIrModel(TransactionCase):
         # rename the menu name
         new_menu.name = 'new Rockets'
         self.assertEqual(action.name, new_menu.name, 'rename the menu name should rename the window action name')
+
+    def test_23_export_hardcoded_models_and_fields(self):
+        """Test that all models and fields from hardcoded lists exist in the data model"""
+
+        for model in MODELS_TO_EXPORT:
+            self.assertIn(model, self.env)
+
+        for model, fields in FIELDS_TO_EXPORT.items():
+            for field in fields:
+                self.assertIn(field, self.env[model]._fields)
+
+        for model, fields in FIELDS_NOT_TO_EXPORT.items():
+            for field in fields:
+                self.assertIn(field, self.env[model]._fields)
+
+        for model, field in CDATA_FIELDS:
+            self.assertIn(field, self.env[model]._fields)
+
+        for model, field in XML_FIELDS:
+            self.assertIn(field, self.env[model]._fields)
 
     def test_performance_01_fields_batch(self):
         """Test number of call to setup_models when creating a model with multiple"""

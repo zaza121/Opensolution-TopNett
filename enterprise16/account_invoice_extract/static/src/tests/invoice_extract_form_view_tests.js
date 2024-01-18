@@ -12,11 +12,14 @@ import {
 } from "@web/../tests/helpers/utils";
 
 import invoiceExtractTestUtils from '@account_invoice_extract/tests/helpers/invoice_extract_test_utils';
+import { registry } from "@web/core/registry";
+import { accountMove } from '@account/components/account_move_service/account_move_service';
 
 QUnit.module('account_invoice_extract', {}, function () {
 QUnit.module('invoice_extract_form_view_tests.js', {
     beforeEach() {
         patchUiSize({ size: SIZES.XXL });
+        registry.category("services").add("account_move", accountMove);
     },
 }, function () {
 
@@ -239,7 +242,7 @@ QUnit.module('invoice_extract_form_view_tests.js', {
         // ---------- Date ----------
 
         // Focus the field
-        await triggerEvent(document, '.o_field_widget[name=invoice_date] input', 'focusin');
+        await triggerEvent(document, '.o_field_widget[name=invoice_date] .o_datepicker_input', 'focusin');
 
         // Check boxes presence for date
         assert.strictEqual(attachmentPreview.querySelectorAll('.o_invoice_extract_box').length, 3,
@@ -255,7 +258,7 @@ QUnit.module('invoice_extract_form_view_tests.js', {
         // ---------- Due date ----------
 
         // Focus the field
-        await triggerEvent(document, '.o_field_widget[name=invoice_date_due] input', 'focusin');
+        await triggerEvent(document, '.o_field_widget[name=invoice_date_due] .o_datepicker_input', 'focusin');
 
         // Check boxes presence for due date
         assert.strictEqual(attachmentPreview.querySelectorAll('.o_invoice_extract_box').length, 2,

@@ -33,19 +33,14 @@ class HrAppraisalGoal(models.Model):
     @api.depends('employee_id')
     def _compute_is_manager(self):
         self.is_manager = self.env.user.has_group('hr_appraisal.group_hr_appraisal_user')
+        self.employee_autocomplete_ids = self.env.user.get_employee_autocomplete_ids()
         for goal in self:
             if goal.is_manager:
                 goal.is_implicit_manager = False
-                goal.employee_autocomplete_ids = self.env['hr.employee'].search([])
             else:
                 if not self.env.user.employee_id:
-                    goal.employee_autocomplete_ids = False
                     goal.is_implicit_manager = False
                 else:
-                    child_ids = self.env.user.employee_id.child_ids
-                    goal.employee_autocomplete_ids = child_ids\
-                        + self.env.user.employee_id\
-                        + self.env['hr.appraisal'].search([]).employee_id
                     goal.is_implicit_manager = len(goal.employee_autocomplete_ids) > 1
 
     @api.model

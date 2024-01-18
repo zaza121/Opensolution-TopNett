@@ -28,6 +28,16 @@ odoo.define('hr_recruitment_sign.tour', function (require) {
                 run: 'click',
             },
             {
+                trigger: ".o_statusbar_status button.dropdown-toggle",
+                content: "Move applicant to hired stage",
+                run: 'click'
+            },
+            {
+                content: "Recruitment",
+                trigger: '.dropdown-item.btn.btn-secondary.o_arrow_button',
+                run: 'click',
+            },
+            {
                 content: "Create an employee",
                 trigger: '.btn[name="create_employee_from_applicant"]',
                 run: 'click',

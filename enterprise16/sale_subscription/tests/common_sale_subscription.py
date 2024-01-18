@@ -135,6 +135,32 @@ class TestSubscriptionCommon(TestSaleCommon):
                 })
             ]
         })
+        cls.templ_5_days = cls.env['sale.order.template'].create({
+            'name': 'Template 2 days',
+            'recurring_rule_boundary': 'limited',
+            'note': "This is the template description",
+            'recurring_rule_count': 4,
+            'recurring_rule_type': 'year',
+            'auto_close_limit': 5,
+            'recurrence_id': cls.recurrence_year.id,
+            'sale_order_template_line_ids': [
+                (0, 0, {
+                    'name': cls.product.name,
+                    'product_id': cls.product.id,
+                    'product_uom_qty': 3.0,
+                    'product_uom_id': cls.product.uom_id.id,
+                }),
+                (0, 0, {
+                    'name': cls.product2.name,
+                    'product_id': cls.product2.id,
+                    'product_uom_qty': 2.0,
+                    'product_uom_id': cls.product2.uom_id.id,
+                })
+            ],
+
+        })
+        cls.templ_60_days = cls.templ_5_days.copy(default={'auto_close_limit': 60})
+
         # Test user
         TestUsersEnv = cls.env['res.users'].with_context({'no_reset_password': True})
         group_portal_id = cls.env.ref('base.group_portal').id
@@ -252,7 +278,7 @@ class TestSubscriptionCommon(TestSaleCommon):
     # Necessary to have a valid and done transaction when the cron on subscription passes through
     def _mock_subscription_do_payment(self, payment_method, invoice):
         tx_obj = self.env['payment.transaction']
-        reference = "CONTRACT-%s-%s" % (self.id, datetime.datetime.now().strftime('%y%m%d_%H%M%S%f'))
+        reference = "CONTRACT-%s-%s" % (invoice.id, datetime.datetime.now().strftime('%y%m%d_%H%M%S%f'))
         values = {
             'amount': invoice.amount_total,
             'provider_id': self.provider.id,

@@ -105,7 +105,7 @@ QUnit.module("documents_spreadsheet > chart side panel", { beforeEach, afterEach
         );
 
         // check
-        await click(target, ".o_checkbox input");
+        await click(target, ".o_checkbox input[name='stackedBar']");
         assert.strictEqual(model.getters.getChart(chartId).stacked, true);
         assert.containsOnce(target, ".o_checkbox input:checked", "checkbox should be checked");
     });
@@ -123,5 +123,31 @@ QUnit.module("documents_spreadsheet > chart side panel", { beforeEach, afterEach
         input.value = "bla";
         await triggerEvent(input, null, "change");
         assert.strictEqual(model.getters.getChart(chartId).title, "bla");
+    });
+
+    QUnit.test("Cumulative line chart", async (assert) => {
+        const { model, env } = await createSpreadsheetFromGraphView();
+        const sheetId = model.getters.getActiveSheetId();
+        const chartId = model.getters.getChartIds(sheetId)[0];
+        await openChartSidePanel(model, env);
+        const target = getFixture();
+        /** @type {HTMLSelectElement} */
+        const select = target.querySelector(".o-type-selector");
+        select.value = "odoo_line";
+        await triggerEvent(select, null, "change");
+        await click(target, ".o_checkbox input[name='stackedBar']");
+        await click(target, ".o_checkbox input[name='cumulative']");
+        // check
+        assert.strictEqual(model.getters.getChart(chartId).cumulative, true);
+        assert.containsOnce(target, ".o_checkbox input:checked", "checkbox should be checked");
+
+        // uncheck
+        await click(target, ".o_checkbox input[name='cumulative']");
+        assert.strictEqual(model.getters.getChart(chartId).cumulative, false);
+        assert.containsNone(
+            target,
+            ".o_checkbox input:checked",
+            "checkbox should no longer be checked"
+        );
     });
 });

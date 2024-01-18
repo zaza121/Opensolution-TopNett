@@ -97,11 +97,14 @@ class HrPayslipWorkedDays(models.Model):
                 #
                 #  TOTAL PAID : WORK100 + PAID + UNPAID = (1 - 3/13/38 * 15 ) * wage
                 ####################################################################################
-                main_worked_day = "WORK100"
-                if main_worked_day not in worked_day.payslip_id.worked_days_line_ids.mapped('code'):
-                    main_worked_day = worked_day.payslip_id.worked_days_line_ids.filtered(
+                paid_worked_days = worked_day.payslip_id.worked_days_line_ids.filtered(
+                    lambda wd: wd.is_paid and wd.code not in ['OUT', 'LEAVE300', 'LEAVE301', 'LEAVE260', 'LEAVE216', 'LEAVE1731', 'LEAVE6665', 'LEAVE214']
+                ).sorted('number_of_hours', reverse=True)
+                if not paid_worked_days:
+                    # In case there is only european time off for instance
+                    paid_worked_days = worked_day.payslip_id.worked_days_line_ids.filtered(
                         lambda wd: wd.is_paid and wd.code not in ['LEAVE300', 'LEAVE301'])
-                    main_worked_day = main_worked_day[0].code if main_worked_day else False
+                main_worked_day = paid_worked_days[0].code if paid_worked_days else False
 
                 worked_day_amount = 0
                 if worked_day.code == 'OUT':

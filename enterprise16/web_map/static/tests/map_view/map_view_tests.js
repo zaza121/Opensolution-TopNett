@@ -10,7 +10,6 @@ import {
     toggleMenuItemOption,
 } from "@web/../tests/search/helpers";
 import { registry } from "@web/core/registry";
-import { dialogService } from "@web/core/dialog/dialog_service";
 import {
     click,
     getFixture,
@@ -46,7 +45,7 @@ QUnit.module("Views", (hooks) => {
             "project.task": {
                 fields: {
                     display_name: { string: "name", type: "char" },
-                    scheduled_date: { string: "Schedule date", type: "datetime"},
+                    scheduled_date: { string: "Schedule date", type: "datetime" },
                     sequence: { string: "sequence", type: "integer" },
                     partner_id: {
                         string: "partner",
@@ -75,7 +74,12 @@ QUnit.module("Views", (hooks) => {
                 twoRecordsFieldDateTime: {
                     records: [
                         { id: 1, display_name: "Foo", scheduled_date: false, partner_id: [1] },
-                        { id: 2, display_name: "Bar", scheduled_date: "2022-02-07 21:09:31", partner_id: [2] },
+                        {
+                            id: 2,
+                            display_name: "Bar",
+                            scheduled_date: "2022-02-07 21:09:31",
+                            partner_id: [2],
+                        },
                     ],
                     length: 2,
                 },
@@ -272,7 +276,6 @@ QUnit.module("Views", (hooks) => {
         };
         serverData = { models };
         setupControlPanelServiceRegistry();
-        serviceRegistry.add("dialog", dialogService);
         serviceRegistry.add("localization", makeFakeLocalizationService());
         serviceRegistry.add("http", makeFakeHTTPService());
 
@@ -291,8 +294,8 @@ QUnit.module("Views", (hooks) => {
                     return Promise.reject({ status: 401 });
                 }
                 const coordinates = [];
-                coordinates[0] = 10.0;
-                coordinates[1] = 10.5;
+                coordinates[0] = "10.0";
+                coordinates[1] = "10.5";
                 const geometry = { coordinates };
                 const features = [];
                 features[0] = { geometry };
@@ -308,7 +311,7 @@ QUnit.module("Views", (hooks) => {
             },
             _fetchCoordinatesFromAddressOSM(metaData, data, record) {
                 const coordinates = [];
-                coordinates[0] = { lat: 10.0, lon: 10.5 };
+                coordinates[0] = { lat: "10.0", lon: "10.5" };
                 switch (record.contact_address_complete) {
                     case "Cfezfezfefes":
                         return Promise.resolve([]);
@@ -1049,8 +1052,8 @@ QUnit.module("Views", (hooks) => {
         await click(target, ".leaflet-marker-icon");
         assert.strictEqual(
             target.querySelector("div.leaflet-popup a.btn.btn-primary").href,
-            "https://www.google.com/maps/dir/?api=1&destination=10,10.5",
-            "The link's URL should the right set of coordinates"
+            "https://www.google.com/maps/dir/?api=1&destination=Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies",
+            "The URL of the link should contain the address"
         );
     });
 
@@ -1081,8 +1084,8 @@ QUnit.module("Views", (hooks) => {
         await click(target, ".leaflet-marker-icon");
         assert.strictEqual(
             target.querySelector("div.leaflet-popup a.btn.btn-primary").href,
-            "https://www.google.com/maps/dir/?api=1&destination=10,10.5",
-            "The link's URL should the right set of coordinates"
+            "https://www.google.com/maps/dir/?api=1&destination=Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies",
+            "The URL of the link should contain the address"
         );
     });
 
@@ -1111,8 +1114,8 @@ QUnit.module("Views", (hooks) => {
         await click(target, ".leaflet-marker-icon");
         assert.strictEqual(
             target.querySelector("div.leaflet-popup a.btn.btn-primary").href,
-            "https://www.google.com/maps/dir/?api=1&destination=10.5,10",
-            "The link's URL should only contain unqiue sets of coordinates"
+            "https://www.google.com/maps/dir/?api=1&destination=Chauss%C3%A9e%20de%20Louvain%2094%2C%205310%20%C3%89ghez%C3%A9e",
+            "The URL of the link should contain the address"
         );
     });
 
@@ -1675,14 +1678,14 @@ QUnit.module("Views", (hooks) => {
         );
     });
 
-    QUnit.test('Content of the marker popup with date time', async function (assert) {
+    QUnit.test("Content of the marker popup with date time", async function (assert) {
         assert.expect(2);
         serverData.views = {
             "project.task,false,form": "<form/>",
-        };    
+        };
 
         patchTimeZone(120); // UTC+2
-        patchWithCleanup(session, {map_box_token: MAP_BOX_TOKEN});
+        patchWithCleanup(session, { map_box_token: MAP_BOX_TOKEN });
         serverData.models["res.partner"].twoRecordsAddressCoordinates[0].partner_latitude = 11.0;
 
         await makeView({
@@ -1713,8 +1716,11 @@ QUnit.module("Views", (hooks) => {
 
         await click(target, "div.leaflet-marker-icon:last-child");
 
-        assert.strictEqual(target.querySelector("tbody tr .o-map-renderer--popup-table-content-value").textContent, "2022-02-07 23:09:31",
-            'The time  "2022-02-07 21:09:31" should be in the local timezone');
+        assert.strictEqual(
+            target.querySelector("tbody tr .o-map-renderer--popup-table-content-value").textContent,
+            "2022-02-07 23:09:31",
+            'The time  "2022-02-07 21:09:31" should be in the local timezone'
+        );
     });
 
     /**

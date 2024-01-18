@@ -4,9 +4,13 @@ import io
 import base64
 
 from PyPDF2 import PdfFileReader
+try:
+    from PyPDF2.errors import PdfReadError
+except ImportError:
+    from PyPDF2.utils import PdfReadError
 
 from odoo import api, models, fields, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 class SignDuplicateTemplatePDF(models.TransientModel):
     _name = 'sign.duplicate.template.pdf'
@@ -30,6 +34,7 @@ class SignDuplicateTemplatePDF(models.TransientModel):
         })
 
         new_template = self.original_template_id.copy({
+            'name': pdf.name,
             'attachment_id': pdf.id,
             'active': True,
             'favorited_ids': [(4, self.env.user.id)],
@@ -40,5 +45,8 @@ class SignDuplicateTemplatePDF(models.TransientModel):
     @api.model
     def _compare_page_templates(self, original_file, new_file):
         pages_original_file = PdfFileReader(io.BytesIO(base64.b64decode(original_file)), strict=False, overwriteWarnings=False).getNumPages()
-        pages_new_file = PdfFileReader(io.BytesIO(base64.b64decode(new_file)), strict=False, overwriteWarnings=False).getNumPages()
+        try:
+            pages_new_file = PdfFileReader(io.BytesIO(base64.b64decode(new_file)), strict=False, overwriteWarnings=False).getNumPages()
+        except PdfReadError:
+            raise ValidationError(_("The uploaded file is not a valid PDF. Please upload a valid PDF file."))
         return pages_new_file >= pages_original_file

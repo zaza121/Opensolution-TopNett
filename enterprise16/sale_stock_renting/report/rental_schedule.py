@@ -27,7 +27,7 @@ class RentalSchedule(models.Model):
         return f"""COALESCE(lot_info.name, NULLIF(t.name->>'{lang}', ''), t.name->>'en_US') as product_name"""
 
     def _id(self):
-        return """CAST(CONCAT(lot_info.lot_id, pdg.max_id, sol.id) AS NUMERIC) as id"""
+        return """ROW_NUMBER() OVER () AS id"""
 
     def _quantity(self):
         return """
@@ -116,16 +116,6 @@ class RentalSchedule(models.Model):
                     JOIN stock_lot lot
                         ON res.stock_lot_id=lot.id
                         OR pickedup.stock_lot_id=lot.id
-                ),
-                padding(max_id) AS (
-                    SELECT
-                        MAX(id) as max
-                    FROM
-                        (
-                            SELECT max(id) as id from stock_lot
-                            UNION
-                            SELECT max(id) as id from sale_order_line
-                        ) AS whatever
                 )
         """
 
@@ -137,13 +127,13 @@ class RentalSchedule(models.Model):
 
     def _from(self):
         return super(RentalSchedule, self)._from() + """
-            LEFT OUTER JOIN ordered_lots lot_info ON sol.id=lot_info.sol_id,
-            padding pdg
+            LEFT OUTER JOIN ordered_lots lot_info ON sol.id=lot_info.sol_id
         """
 
     def _groupby(self):
+        # Add ORDER BY to ensure that `ROW_NUMBER() OVER () AS id` targets the same row each time
         return super(RentalSchedule, self)._groupby() + """,
-            pdg.max_id,
             lot_info.lot_id,
             lot_info.name,
-            lot_info.report_line_status"""
+            lot_info.report_line_status
+        ORDER BY sol.id, lot_info.lot_id"""

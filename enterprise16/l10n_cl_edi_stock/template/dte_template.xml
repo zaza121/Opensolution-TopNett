@@ -67,7 +67,7 @@
                 <UnmdItem t-esc="format_uom(line.product_uom)"/>
                 <PrcItem t-if="line_amounts.get('price_unit', False)" t-esc="float_repr(line_amounts['price_unit'], 6)"/>
             <t t-if="line_amounts.get('discount', False)">
-                <DescuentoPct t-esc="line_amounts['discount']"/>
+                <DescuentoPct t-esc="float_repr(line_amounts['discount'], 2)"/>
                 <DescuentoMonto t-esc="line_amounts['total_discount']"/>
             </t>
             <t t-foreach="line_amounts.get('wh_taxes', [])" t-as="tax">

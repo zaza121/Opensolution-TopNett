@@ -29,8 +29,5 @@ Kenyan Payroll Rules.
         'views/hr_contract_views.xml',
         'views/report_payslip_templates.xml',
     ],
-    'demo': [
-        'data/l10n_ke_hr_payroll_demo.xml',
-    ],
     'license': 'OEEL-1',
 }

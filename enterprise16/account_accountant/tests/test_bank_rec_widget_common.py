@@ -102,13 +102,18 @@ class TestBankRecWidgetCommon(AccountTestInvoicingCommon):
 
     @classmethod
     def _create_st_line(cls, amount, date='2019-01-01', payment_ref='turlututu', **kwargs):
-        return cls.env['account.bank.statement.line'].create({
+        st_line = cls.env['account.bank.statement.line'].create({
             'amount': amount,
             'date': date,
             'payment_ref': payment_ref,
             'journal_id': kwargs.get('journal_id', cls.company_data['default_journal_bank'].id),
             **kwargs,
         })
+        # The automatic reconcile cron checks the create_date when considering st_lines to run on.
+        # create_date is a protected field so this is the only way to set it correctly
+        cls.env.cr.execute("UPDATE account_bank_statement_line SET create_date = %s WHERE id=%s",
+                           (st_line.date, st_line.id))
+        return st_line
 
     @classmethod
     def _create_reconcile_model(cls, **kwargs):

@@ -3,20 +3,22 @@
 # 	* account_disallowed_expenses
 # 
 # Translators:
-# Rastislav Brencic <rastislav.brencic@azet.sk>, 2022
-# trendspotter <jirka.p@volny.cz>, 2022
+# Jiří Podhorecký, 2022
 # Jan Horzinka <jan.horzinka@centrum.cz>, 2022
-# Martin Trigaux, 2022
 # karolína schusterová <karolina.schusterova@vdp.sk>, 2022
+# Rastislav Brencic <rastislav.brencic@azet.sk>, 2023
+# Martin Trigaux, 2023
+# Jakub Smolka, 2023
+# Tomáš Píšek, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 15.5alpha1+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-09-20 09:48+0000\n"
+"POT-Creation-Date: 2023-04-14 06:17+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: karolína schusterová <karolina.schusterova@vdp.sk>, 2022\n"
-"Language-Team: Czech (https://www.transifex.com/odoo/teams/41243/cs/)\n"
+"Last-Translator: Tomáš Píšek, 2023\n"
+"Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -88,7 +90,7 @@ msgstr "Aktuální kurz"
 #. module: account_disallowed_expenses
 #: model:ir.model.fields,field_description:account_disallowed_expenses.field_account_disallowed_expenses_rate__rate
 msgid "Disallowed %"
-msgstr ""
+msgstr "Neuznatelné %"
 
 #. module: account_disallowed_expenses
 #: model:account.report.column,name:account_disallowed_expenses.disallowed_expenses_report_disallowed_amount
@@ -99,13 +101,13 @@ msgstr "Nepovolené množství"
 #: model:ir.ui.menu,name:account_disallowed_expenses.menu_action_account_report_de
 #: model_terms:ir.ui.view,arch_db:account_disallowed_expenses.view_account_form
 msgid "Disallowed Expenses"
-msgstr "Nepovolené výdaje"
+msgstr "Neuznatelné náklady"
 
 #. module: account_disallowed_expenses
 #: model:ir.actions.act_window,name:account_disallowed_expenses.action_account_disallowed_expenses_category_list
 #: model:ir.ui.menu,name:account_disallowed_expenses.menu_action_account_disallowed_expenses_category_list
 msgid "Disallowed Expenses Categories"
-msgstr "Nepovolené kategorie výdajů"
+msgstr "Kategorie neuznatelných nákladů"
 
 #. module: account_disallowed_expenses
 #: model:ir.model,name:account_disallowed_expenses.model_account_disallowed_expenses_category
@@ -116,7 +118,7 @@ msgstr "Kategorie nepovolených výdajů"
 #. module: account_disallowed_expenses
 #: model:ir.model,name:account_disallowed_expenses.model_account_disallowed_expenses_report_handler
 msgid "Disallowed Expenses Custom Handler"
-msgstr ""
+msgstr "Vlastní zpracování neuznatelných nákladů"
 
 #. module: account_disallowed_expenses
 #: model:ir.model,name:account_disallowed_expenses.model_account_disallowed_expenses_rate
@@ -142,10 +144,24 @@ msgid "Display Name"
 msgstr "Zobrazované jméno"
 
 #. module: account_disallowed_expenses
+#. odoo-python
+#: code:addons/account_disallowed_expenses/report/account_disallowed_expenses_report.py:0
+#, python-format
+msgid "General Ledger"
+msgstr "Obratová předvaha"
+
+#. module: account_disallowed_expenses
 #: model:ir.model.fields,field_description:account_disallowed_expenses.field_account_disallowed_expenses_category__id
 #: model:ir.model.fields,field_description:account_disallowed_expenses.field_account_disallowed_expenses_rate__id
 msgid "ID"
 msgstr "ID"
+
+#. module: account_disallowed_expenses
+#. odoo-python
+#: code:addons/account_disallowed_expenses/report/account_disallowed_expenses_report.py:0
+#, python-format
+msgid "Journal Items"
+msgstr "Účetní deník"
 
 #. module: account_disallowed_expenses
 #: model:ir.model.fields,field_description:account_disallowed_expenses.field_account_disallowed_expenses_category____last_update
@@ -171,6 +187,7 @@ msgid "Name"
 msgstr "Jméno"
 
 #. module: account_disallowed_expenses
+#. odoo-python
 #: code:addons/account_disallowed_expenses/models/account_disallowed_expenses.py:0
 #, python-format
 msgid "No Rate"
@@ -191,12 +208,12 @@ msgstr "Kurzy"
 #: model_terms:ir.ui.view,arch_db:account_disallowed_expenses.view_account_disallowed_expenses_category_form
 #: model_terms:ir.ui.view,arch_db:account_disallowed_expenses.view_account_disallowed_expenses_category_tree
 msgid "Related Account(s)"
-msgstr ""
+msgstr "Odpovídající účty"
 
 #. module: account_disallowed_expenses
 #: model_terms:ir.ui.view,arch_db:account_disallowed_expenses.view_account_disallowed_expenses_category_tree
 msgid "Set Rates"
-msgstr ""
+msgstr "Nastavit podíly"
 
 #. module: account_disallowed_expenses
 #: model:ir.model.fields,help:account_disallowed_expenses.field_account_disallowed_expenses_category__active
@@ -211,6 +228,13 @@ msgid "Start Date"
 msgstr "Počáteční datum"
 
 #. module: account_disallowed_expenses
+#. odoo-python
+#: code:addons/account_disallowed_expenses/report/account_disallowed_expenses_report.py:0
+#, python-format
+msgid "Total"
+msgstr "Celkem"
+
+#. module: account_disallowed_expenses
 #: model:account.report.column,name:account_disallowed_expenses.disallowed_expenses_report_total_amount
 msgid "Total Amount"
 msgstr "Celková částka"
@@ -218,9 +242,9 @@ msgstr "Celková částka"
 #. module: account_disallowed_expenses
 #: model_terms:ir.ui.view,arch_db:account_disallowed_expenses.view_account_disallowed_expenses_category_form
 msgid "e.g. 1201"
-msgstr ""
+msgstr "např. 1201"
 
 #. module: account_disallowed_expenses
 #: model_terms:ir.ui.view,arch_db:account_disallowed_expenses.view_account_disallowed_expenses_category_form
 msgid "e.g. Non-Deductible Tax"
-msgstr ""
+msgstr "např. Neodpočitatelná daň"

@@ -29,7 +29,7 @@ class ResConfigSettings(models.TransientModel):
         ('sand', 'Sandbox'),
     ], string='eBay Environment', default='sand', required=True, config_parameter='ebay_domain')
     ebay_currency = fields.Many2one("res.currency", string='ebay Currency',
-                                    domain=[('ebay_available', '=', True)], required=True,
+                                    domain=[('ebay_available', '=', True)],
                                     default=lambda self: self.env['res.currency'].search([('ebay_available', '=', True)], limit=1).id,
                                     config_parameter='ebay_currency')
     ebay_country = fields.Many2one("res.country", domain=[('ebay_available', '=', True)],

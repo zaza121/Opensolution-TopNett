@@ -310,7 +310,7 @@ class MrpEco(models.Model):
         if self.new_bom_id:
             for line in new_bom.bom_line_ids:
                 old_line = old_bom_lines.pop((line.product_id, tuple(line.bom_product_template_attribute_value_ids.ids), line.operation_id._get_comparison_values()), None)
-                if old_line and (line.product_uom_id, line.product_qty) != (old_line.product_uom_id, old_line.product_qty):
+                if old_line and (line.product_uom_id != old_line.product_uom_id or tools.float_compare(line.product_qty, old_line.product_qty, precision_rounding=line.product_uom_id.rounding)):
                     new_bom_commands += [(0, 0, {
                         'change_type': 'update',
                         'product_id': line.product_id.id,

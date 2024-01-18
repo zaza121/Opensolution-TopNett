@@ -191,16 +191,16 @@ class IrModel(models.Model):
         )
         return line_model_values
 
-    def _setup_one2many_lines(self):
+    def _setup_one2many_lines(self, one2many_name=None):
         # create the Line model
-        model_values, field_values = self._values_lines(self.model)
+        model_values, field_values = self._values_lines(self.model, one2many_name)
         line_model = self.create(model_values)
         line_model._setup_access_rights()
         self.env['ir.ui.view'].create_automatic_views(line_model.model)
         field_values['model_id'] = self.id
         return self.env['ir.model.fields'].create(field_values)
 
-    def _values_lines(self, model_name):
+    def _values_lines(self, model_name, one2many_name=None):
         """ Creates a new model (with sequence and description fields) and a
             one2many field pointing to that model.
         """
@@ -235,7 +235,7 @@ class IrModel(models.Model):
             ],
         }
         field_values = {
-            'name': model_table + '_line_ids_' + uuid.uuid4().hex[:5],
+            'name': one2many_name or model_table + '_line_ids_' + uuid.uuid4().hex[:5],
             'ttype': 'one2many',
             'relation': model_line_model,
             'relation_field': relation_field_name,

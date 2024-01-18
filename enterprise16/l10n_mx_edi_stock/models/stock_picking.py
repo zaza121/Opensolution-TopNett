@@ -125,8 +125,7 @@ class Picking(models.Model):
         for pick in self:
             if pick.l10n_mx_edi_cfdi_uuid:
                 replaced_pick = pick.search(
-                    [('l10n_mx_edi_origin', 'like', '04|%'),
-                     ('l10n_mx_edi_origin', 'like', '%' + pick.l10n_mx_edi_cfdi_uuid + '%'),
+                    [('l10n_mx_edi_origin', '=like', '04|%' + pick.l10n_mx_edi_cfdi_uuid + '%'),
                      ('company_id', '=', pick.company_id.id)],
                     limit=1,
                 )
@@ -208,13 +207,6 @@ class Picking(models.Model):
         '''
         self.ensure_one()
 
-        def get_node(cfdi_node, attribute, namespaces):
-            if hasattr(cfdi_node, 'Complemento'):
-                node = cfdi_node.Complemento.xpath(attribute, namespaces=namespaces)
-                return node[0] if node else None
-            else:
-                return None
-
         # Get the signed cfdi data.
         if not cfdi_data:
             cfdi_data = self.l10n_mx_edi_cfdi_file_id.raw
@@ -223,32 +215,13 @@ class Picking(models.Model):
         if not cfdi_data:
             return {}
 
-        cfdi_node = objectify.fromstring(cfdi_data)
-        tfd_node = get_node(
-            cfdi_node,
-            'tfd:TimbreFiscalDigital[1]',
-            {'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'},
-        )
+        try:
+            cfdi_node = objectify.fromstring(cfdi_data)
+        except etree.XMLSyntaxError:
+            # Not an xml
+            return {}
 
-        return {
-            'uuid': ({} if tfd_node is None else tfd_node).get('UUID'),
-            'supplier_rfc': cfdi_node.Emisor.get('Rfc', cfdi_node.Emisor.get('rfc')),
-            'customer_rfc': cfdi_node.Receptor.get('Rfc', cfdi_node.Receptor.get('rfc')),
-            'amount_total': cfdi_node.get('Total', cfdi_node.get('total')),
-            'cfdi_node': cfdi_node,
-            'usage': cfdi_node.Receptor.get('UsoCFDI'),
-            'payment_method': cfdi_node.get('formaDePago', cfdi_node.get('MetodoPago')),
-            'bank_account': cfdi_node.get('NumCtaPago'),
-            'sello': cfdi_node.get('sello', cfdi_node.get('Sello', 'No identificado')),
-            'sello_sat': tfd_node is not None and tfd_node.get('selloSAT', tfd_node.get('SelloSAT', 'No identificado')),
-            'cadena': self.env['l10n_mx_edi.certificate']._get_cadena_chain(cfdi_node, self._l10n_mx_edi_get_cadena_xslt()),
-            'certificate_number': cfdi_node.get('noCertificado', cfdi_node.get('NoCertificado')),
-            'certificate_sat_number': tfd_node is not None and tfd_node.get('NoCertificadoSAT'),
-            'expedition': cfdi_node.get('LugarExpedicion'),
-            'fiscal_regime': cfdi_node.Emisor.get('RegimenFiscal', ''),
-            'emission_date_str': cfdi_node.get('fecha', cfdi_node.get('Fecha', '')).replace('T', ' '),
-            'stamp_date': tfd_node is not None and tfd_node.get('FechaTimbrado', '').replace('T', ' '),
-        }
+        return self.env["account.move"]._l10n_mx_edi_decode_cfdi_etree(cfdi_node)
 
     # -------------------------------------------------------------------------
     # WEB SERVICES

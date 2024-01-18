@@ -48,7 +48,14 @@ class AccountLinkJournalLine(models.TransientModel):
 
         bank_journals = self.env['account.journal'].search([('type', '=', 'bank'), ('account_online_account_id', '=', False)])
         journals_with_local_account = bank_journals.filtered(lambda journal: journal.bank_account_id)
-        journal_with_amls = self.env['account.journal'].browse([j.get('journal_id')[0] for j in self.env['account.move.line'].read_group(fields=['journal_id'], groupby=['journal_id'], domain=[])])
+        journal_with_amls = self.env['account.journal'].browse([
+            aml.get('journal_id')[0]
+            for aml in self.env['account.move.line'].read_group(
+                fields=['journal_id'],
+                groupby=['journal_id'],
+                domain=[('journal_id', '!=', False)],
+            )
+        ])
         empty_journals_without_bank_account = bank_journals - journals_with_local_account - journal_with_amls
 
         journal_account_numbers = {journal.bank_account_id.sanitized_acc_number: journal for journal in journals_with_local_account}

@@ -138,7 +138,7 @@
                 <field name="activity_exception_decoration" widget="activity_exception"/>
             </field>
             <field name="date_assign" position="after">
-                <field name="company_id" groups="base.main_company"/>
+                <field name="company_id" groups="base.group_multi_company"/>
             </field>
         </field>
     </record>
@@ -247,17 +247,17 @@
                             <label for="qty_line" attrs="{'invisible': [('move_line_id', '=', False)]}"/>
                             <div class="o_row" attrs="{'invisible': [('move_line_id', '=', False)]}">
                                 <field name="qty_line"/> 
-                                <field name="uom_id"/>
+                                <field name="uom_id" groups="uom.group_uom"/>
                             </div>
                             <label for="qty_to_test" attrs="{'invisible': ['|', ('move_line_id', '=', False), '|', ('measure_on', '!=', 'move_line'), ('is_lot_tested_fractionally', '=', False)]}"/>
                             <div class="o_row" attrs="{'invisible': ['|', ('move_line_id', '=', False), '|', ('measure_on', '!=', 'move_line'), ('is_lot_tested_fractionally', '=', False)]}">
                                 <field name="qty_to_test"/> 
-                                <field name="uom_id"/>
+                                <field name="uom_id" groups="uom.group_uom"/>
                             </div>
                             <label for="qty_tested" attrs="{'invisible': ['|', ('measure_on', '!=', 'move_line'), ('is_lot_tested_fractionally', '=', False)]}"/>
                             <div class="o_row" attrs="{'invisible': ['|', ('measure_on', '!=', 'move_line'), ('is_lot_tested_fractionally', '=', False)]}">
                                 <field name="qty_tested" attrs="{'readonly': [('quality_state', '!=', 'none')]}"/> 
-                                <field name="uom_id"/>
+                                <field name="uom_id" groups="uom.group_uom"/>
                             </div>
                             <field name="test_type" invisible="1"/>
                             <field name="measure" attrs="{'invisible': [('test_type', '!=', 'measure')]}"/>
@@ -351,7 +351,7 @@
                 <field name="point_id" optional="hide"/>
                 <field name="team_id" optional="show"/>
                 <field name="quality_state" optional="show" widget='badge' decoration-success="quality_state == 'pass'" decoration-info="quality_state == 'none'" decoration-danger="quality_state == 'fail'"/>
-                <field name="company_id" groups="base.main_company"/>
+                <field name="company_id" groups="base.group_multi_company"/>
             </tree>
         </field>
     </record>
@@ -385,7 +385,7 @@
             <search>
                 <field name="product_id" string="Product" filter_domain="['|', ('product_id', 'ilike', self), ('lot_id', 'ilike', self)]"/>
                 <field name="picking_id"/>
-                <field name="lot_id"/>
+                <field name="lot_id" groups="stock.group_production_lot"/>
                 <field name="team_id"/>
                 <filter string="In Progress" name="progress" domain="[('quality_state', '=', 'none')]"/>
                 <filter string="Passed" name="passed" domain="[('quality_state', '=', 'pass')]"/>
@@ -639,7 +639,7 @@
         <field name="name">quality.alert.team.view.tree</field>
         <field name="model">quality.alert.team</field>
         <field name="arch" type="xml">
-            <tree string="Teams">
+            <tree string="Teams" default_order="sequence, id">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="company_id" groups="base.group_multi_company"/>
@@ -726,7 +726,7 @@
         <field name="name">quality.alert.stage.tree</field>
         <field name="model">quality.alert.stage</field>
         <field name="arch" type="xml">
-            <tree editable="bottom">
+            <tree editable="bottom" default_order="sequence, id">
                 <field name="sequence" widget="handle"/>
                 <field name="name" string="Stage Name"/>
                 <field name="folded"/>

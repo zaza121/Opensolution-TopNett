@@ -10,6 +10,7 @@ from werkzeug.exceptions import InternalServerError
 
 from odoo import http, fields
 from odoo.http import request, content_disposition
+from odoo.tools.misc import html_escape
 
 _logger = logging.getLogger(__name__)
 
@@ -80,9 +81,5 @@ class SalemanDashboard(http.Controller):
                 'message': 'Odoo Server Error',
                 'data': se
             }
-            res = werkzeug.wrappers.Response(
-                json.dumps(error),
-                status=500,
-                headers=[("Content-Type", "application/json")]
-            )
+            res = request.make_response(html_escape(json.dumps(error)))
             raise InternalServerError(response=res) from e

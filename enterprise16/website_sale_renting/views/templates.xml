@@ -17,14 +17,14 @@
                 <span>per</span>
                 <span itemprop="rental_duration" t-if="combination_info['rental_duration'] > 1"
                       t-esc="combination_info['rental_duration']"/>
-                <span itemprop="rental_unit" style="text-transform:lowercase;" t-esc="combination_info['rental_unit']"/>
+                <span itemprop="rental_unit" t-esc="combination_info['rental_unit']"/>
             </t>
         </xpath>
         <xpath expr="//span[hasclass('oe_price')]" position="attributes">
             <attribute name="t-if">not combination_info.get('is_rental')</attribute>
         </xpath>
         <xpath expr="//span[@itemprop='listPrice']" position="attributes">
-            <attribute name="t-if">not combination_info.get('is_rental')</attribute>
+            <attribute name="t-if" add="not combination_info.get('is_rental')" separator=" and "/>
         </xpath>
         <xpath expr="//h3[hasclass('css_non_editable_mode_hidden')]" position="attributes">
             <attribute name="t-if">not combination_info.get('is_rental')</attribute>
@@ -32,9 +32,11 @@
     </template>
 
     <template id="rental_product" inherit_id="website_sale.product" name="Select pickup Date and Return Date">
-        <xpath expr="//div[hasclass('js_main_product')]/t[@t-placeholder='select']" position="after">
-            <div t-if="combination_info['is_rental']" class="o_not_editable">
-                <div class="mb-3 align-middle input-group-lg o_website_sale_daterange_picker variant_attribute">
+        <xpath expr="//div[hasclass('js_main_product')]//t[@t-placeholder='select']" position="after">
+            <div t-if="combination_info['is_rental'] and (not website.prevent_zero_price_sale or combination_info['current_rental_price'])" class="o_not_editable">
+                <div t-nocache="The default start and end dates must be up-to-date."
+                     class="mb-3 align-middle input-group-lg o_website_sale_daterange_picker variant_attribute">
+                    <t t-set="combination_info" t-value="product._get_combination_info(combination, add_qty=add_qty or 1, pricelist=pricelist)"/>
                     <input type="hidden" name="default_start_date"
                            t-att-value="combination_info['default_start_date']"/>
                     <input type="hidden" name="default_end_date" t-att-value="combination_info['default_end_date']"/>
@@ -58,8 +60,7 @@
                     <div>
                         <strong>
                             <span class="o_renting_duration" t-esc="combination_info['current_rental_duration']"/>
-                            <span class="o_renting_unit" t-esc="combination_info['current_rental_unit']"
-                                  style="text-transform:lowercase;"/>
+                            <span class="o_renting_unit" t-esc="combination_info['current_rental_unit']"/>
                         </strong>
                     </div>
                     <div>
@@ -80,7 +81,7 @@
             </div>
         </xpath>
         <xpath expr="//div[@id='o_product_terms_and_share']" position="before">
-            <t t-if="combination_info['is_rental']">
+            <t t-if="combination_info['is_rental'] and (not website.prevent_zero_price_sale or combination_info['current_rental_price'])">
                 <u class="h5">Pricing</u>
                 <table class="o_not_editable table w-50 {{'' if combination_info['pricing_table'] else 'd-none'}}" id="oe_wsale_rental_pricing_table">
                     <tbody>
@@ -104,7 +105,7 @@
                position="attributes">
             <attribute name="t-if">not product.rent_ok</attribute>
         </xpath>
-        <xpath expr="//div[hasclass('o_variant_pills_input_value')]/t[@t-call='sale.badge_extra_price']"
+        <xpath expr="//label[hasclass('o_variant_pills_input_value')]/t[@t-call='sale.badge_extra_price']"
                position="attributes">
             <attribute name="t-if">not product.rent_ok</attribute>
         </xpath>
@@ -112,13 +113,18 @@
 
     <template id="products_item" inherit_id="website_sale.products_item">
         <xpath expr="//div[hasclass('product_price')]/*[1]" position="before">
-            <span t-if="product.rent_ok and template_price_vals['rental_duration']" class="h6">from</span>
+            <span t-if="product.rent_ok and template_price_vals['rental_duration']
+                and (not website.prevent_zero_price_sale or template_price_vals['price_reduce'])" class="h6">from</span>
+        </xpath>
+        <xpath expr="//div[hasclass('product_price')]/*/del" position="attributes">
+            <attribute name="t-if" add="not product.rent_ok" separator=" and "/>
         </xpath>
         <xpath expr="//span[@itemprop='priceCurrency']" position="after">
-            <span t-if="product.rent_ok and template_price_vals['rental_duration']" class="h6">
+            <span t-if="product.rent_ok and template_price_vals['rental_duration']
+                and (not website.prevent_zero_price_sale or template_price_vals['price_reduce'])" class="h6">
                 <span>per</span>
                 <span t-if="template_price_vals['rental_duration'] > 1" t-esc="template_price_vals['rental_duration']"/>
-                <span t-esc="template_price_vals['rental_unit']" style="text-transform:lowercase;"/>
+                <span t-esc="template_price_vals['rental_unit']"/>
             </span>
         </xpath>
     </template>
@@ -129,7 +135,7 @@
            t-options="{'widget': 'monetary', 'display_currency': currency}"/>
         <small>per</small>
         <small t-if="duration > 1" t-esc="duration"/>
-        <small t-esc="unit" style="text-transform:lowercase;"/>
+        <small t-esc="unit"/>
     </template>
 
     <template id="cart_summary_inherit_website_sale_renting"
@@ -148,16 +154,16 @@
 
     <template id="suggested_products_list" inherit_id="website_sale.suggested_products_list">
         <xpath expr="//table[@id='suggested_products']//td[hasclass('td-price')]/*[1]" position="before">
-            <span t-if="product.rent_ok and combination_info['rental_duration']" class="h6">from</span>
+            <span t-if="combination_info['is_rental'] and combination_info['rental_duration']" class="h6">from</span>
         </xpath>
         <xpath expr="//table[@id='suggested_products']//td[hasclass('td-price')]/del" position="attributes">
             <attribute name="t-if">not product.rent_ok</attribute>
         </xpath>
-        <xpath expr="//table[@id='suggested_products']//td[hasclass('td-price')]/span" position="after">
-            <span t-if="product.rent_ok and combination_info['rental_duration']" class="h6">
+        <xpath expr="//table[@id='suggested_products']//td[hasclass('td-price')]/span[last()]" position="after">
+            <span t-if="combination_info['is_rental'] and combination_info['rental_duration']" class="h6">
                 <span>per</span>
                 <span t-if="combination_info['rental_duration'] > 1" t-esc="combination_info['rental_duration']"/>
-                <span t-esc="combination_info['rental_unit']" style="text-transform:lowercase;"/>
+                <span t-esc="combination_info['rental_unit']"/>
             </span>
         </xpath>
     </template>

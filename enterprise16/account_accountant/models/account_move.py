@@ -22,7 +22,7 @@ class AccountMove(models.Model):
     def action_post(self):
         # EXTENDS 'account' to trigger the CRON auto-reconciling the statement lines.
         res = super().action_post()
-        if self.statement_line_id:
+        if self.statement_line_id and not self._context.get('skip_statement_line_cron_trigger'):
             self.env.ref('account_accountant.auto_reconcile_bank_statement_line')._trigger()
         return res
 

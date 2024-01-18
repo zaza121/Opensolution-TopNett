@@ -23,14 +23,15 @@ TimeOffToDeferWarning.template = xml`
 
 export function useTimeOffToDefer(selector, position) {
     const orm = useService("orm");
+    const user = useService("user");
     const rootRef = useRef("root");
     const env = useEnv();
     const state = useState({
         hasTimeOffToDefer: false
     });
     onWillStart(async () => {
-        const result = await orm.search('hr.leave', [["payslip_state", "=", "blocked"]]);
-        state.hasTimeOffToDefer = result.length !== 0;
+        const result = await orm.searchCount('hr.leave', [["payslip_state", "=", "blocked"], ["state", "=", "validate"], ["employee_company_id", "in", user.context.allowed_company_ids]]);
+        state.hasTimeOffToDefer = result > 0;
     });
     useEffect((el) => {
         if (!el) {

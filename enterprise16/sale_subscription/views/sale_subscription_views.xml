@@ -57,7 +57,7 @@
 
     <record id="action_sale_order_log" model="ir.actions.act_window">
         <field name="name">MRR Analysis</field>
-        <field name="view_mode">tree,graph,form</field>
+        <field name="view_mode">tree,graph</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">sale.order.log</field>
     </record>
@@ -103,6 +103,8 @@
                 <filter name="alive" string="Alive" domain="[('recurring_live','=', True), ]" help="Running Subscriptions"/>
                 <separator/>
                 <filter name="pending" string="To Renew" domain="[('to_renew','=',True)]" help="Pending subscriptions"/>
+                <separator/>
+                <filter name="to_invoice" string="To Invoice" domain="[('next_invoice_date', '&lt;=', context_today().strftime('%Y-%m-%d')), ('stage_category', 'in', ('progress', 'paused'))]"/>
                 <separator/>
                 <filter name="payment_exception" string="Failed Payments" domain="[('payment_exception','=', True)]" help="Contracts whose payment has failed"/>
                 <separator/>
@@ -233,7 +235,7 @@
         <field name="name">sale.order.kanban</field>
         <field name="model">sale.order</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="stage_id" class="o_kanban_mobile o_kanban_order" sample="1">
+            <kanban default_group_by="stage_id" class="o_kanban_mobile o_kanban_order" sample="1" quick_create="false">
                 <field name="user_id"/>
                 <field name="stage_id" options="{'group_by_tooltip': {'description': 'Description'}}"/>
                 <field name="starred"/>
@@ -450,7 +452,7 @@
                     <!-- company_id invisible to be available in domains -->
                     <field name="company_id" invisible="1"/>
                        <button name="run_cron_manually" string="Trigger Now" type="object" class="btn-primary"
-                       confirm="This will trigger the action on all linked subsccriptions, regardless of possible timed conditions. Are you sure you want to proceed?"/>
+                       confirm="This will trigger the action on all linked subscriptions, regardless of possible timed conditions. Are you sure you want to proceed?"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">

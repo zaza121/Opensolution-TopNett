@@ -18,7 +18,7 @@ publicWidget.registry.ProductComparison.include({
         const params = this._super.apply(this, arguments);
         const isRental = $form.find('input[name=is_rental]');
         if (isRental.val()) {
-            Object.assign(params, this._getRentingDates($form));
+            Object.assign(params, this._getSerializedRentingDates($form));
         }
         return params;
     },

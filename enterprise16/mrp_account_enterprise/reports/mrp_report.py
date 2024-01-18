@@ -85,6 +85,32 @@ class MrpReport(models.Model):
 
         return select_str
 
+    def _op_cost_query(self):
+        # To be override
+        return """
+            SELECT
+                mo_id                                                                    AS mo_id,
+                SUM(op_costs_hour / 60. * op_duration)                                   AS total,
+                SUM(op_duration)                                                         AS total_duration
+            FROM (
+                SELECT
+                    mo.id AS mo_id,
+                    CASE
+                        WHEN wo.costs_hour != 0.0 AND wo.costs_hour IS NOT NULL THEN wo.costs_hour
+                        ELSE COALESCE(wc.costs_hour, 0.0) END                                       AS op_costs_hour,
+                    COALESCE(SUM(wo.duration), 0.0)                                                 AS op_duration
+                FROM mrp_production AS mo
+                LEFT JOIN mrp_workorder wo ON wo.production_id = mo.id
+                LEFT JOIN mrp_workcenter wc ON wc.id = wo.workcenter_id
+                WHERE mo.state = 'done'
+                GROUP BY
+                    mo.id,
+                    wc.costs_hour,
+                    wo.id
+                ) AS op_cost_vars
+            GROUP BY mo_id
+        """
+
     def _from(self):
         """ MO costs are quite complicated so the table is built with the following subqueries (per MO):
             1. total component cost (note we cover no components use case)
@@ -113,30 +139,7 @@ class MrpReport(models.Model):
                 GROUP BY
                     mo.id
             ) comp_cost ON comp_cost.mo_id = mo.id
-            LEFT JOIN (
-                SELECT
-                    mo_id                                                                    AS mo_id,
-                    SUM(op_costs_hour / 60. * op_duration)                                   AS total,
-                    SUM(op_duration)                                                         AS total_duration
-                FROM (
-                    SELECT
-                        mo.id AS mo_id,
-                        CASE
-                            WHEN wo.costs_hour != 0.0 AND wo.costs_hour IS NOT NULL THEN wo.costs_hour
-                            ELSE COALESCE(wc.costs_hour, 0.0) END                                       AS op_costs_hour,
-                        COALESCE(SUM(t.duration), 0.0)                                                  AS op_duration
-                    FROM mrp_production AS mo
-                    LEFT JOIN mrp_workorder wo ON wo.production_id = mo.id
-                    LEFT JOIN mrp_workcenter_productivity t ON t.workorder_id = wo.id
-                    LEFT JOIN mrp_workcenter wc ON wc.id = t.workcenter_id
-                    WHERE mo.state = 'done'
-                    GROUP BY
-                        mo.id,
-                        wc.costs_hour,
-                        wo.id
-                    ) AS op_cost_vars
-                GROUP BY mo_id
-            ) op_cost ON op_cost.mo_id = mo.id
+            LEFT JOIN ({op_cost_query}) op_cost ON op_cost.mo_id = mo.id
             LEFT JOIN (
                 SELECT
                     mo.id AS mo_id,
@@ -167,7 +170,8 @@ class MrpReport(models.Model):
             LEFT JOIN {currency_table} ON currency_table.company_id = mo.company_id
         """.format(
             currency_table=self.env['res.currency']._get_query_currency_table({'multi_company': True, 'date': {'date_to': fields.Date.today()}}),
-            company_id=int(self.env.company.id)
+            company_id=int(self.env.company.id),
+            op_cost_query=self._op_cost_query()
         )
 
         return from_str

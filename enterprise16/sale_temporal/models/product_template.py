@@ -20,7 +20,7 @@ class ProductTemplate(models.Model):
         incomptatible_types = self._get_incompatible_types()
         if len(incomptatible_types) < 2:
             return
-        fields = self.env['ir.model.fields'].search_read(
+        fields = self.env['ir.model.fields'].sudo().search_read(
             [('model', '=', 'product.template'), ('name', 'in', incomptatible_types)],
             ['field_description'])
         field_descriptions = [v['field_description'] for v in fields]

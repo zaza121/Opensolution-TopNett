@@ -28,6 +28,22 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
         super()._custom_options_initializer(report, options, previous_options=previous_options)
         options['buttons'].append({'name': _('Closing Entry'), 'action': 'action_periodic_vat_entries', 'sequence': 80})
 
+        if not previous_options or not previous_options.get('disable_archived_tag_test'):
+            tables, where_clause, where_params = report._query_get(options, 'strict_range')
+            self._cr.execute(f"""
+                SELECT 1
+                FROM {tables}
+                JOIN account_account_tag_account_move_line_rel aml_tag
+                    ON account_move_line.id = aml_tag.account_move_line_id
+                JOIN account_account_tag tag
+                    ON aml_tag.account_account_tag_id = tag.id
+                WHERE {where_clause}
+                AND NOT tag.active
+                LIMIT 1
+            """, where_params)
+
+            options['contains_archived_tag'] = bool(self._cr.fetchone())
+
     def _get_dynamic_lines(self, report, options, grouping):
         """ Compute the report lines for the generic tax report.
 
@@ -316,7 +332,7 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
                     AND src_tax.type_tax_use IN ('sale', 'purchase')
                 JOIN account_account account ON account.id = tdr.base_account_id
                 WHERE tdr.tax_exigible
-                GROUP BY tdr.tax_repartition_line_id, trl.refund_tax_id, {groupby_query_str}
+                GROUP BY tdr.tax_repartition_line_id, trl.refund_tax_id, tdr.display_type, {groupby_query_str}
                 ORDER BY src_tax.sequence, src_tax.id, tax.sequence, tax.id
             ''', tax_details_params)
 
@@ -544,9 +560,20 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
      # -------------------------------------------------------------------------
 
     def action_periodic_vat_entries(self, options):
-        # Return action to open form view of newly entry created
+        # Return action to open form view of newly created entry
         report = self.env.ref('account.generic_tax_report')
-        moves = self._generate_tax_closing_entries(report, options)
+        moves = self.env['account.move']
+        # Get all companies impacting the report.
+        end_date = fields.Date.from_string(options['date']['date_to'])
+        options_company_ids = [company_opt['id'] for company_opt in options.get('multi_company', [])]
+        companies = self.env['res.company'].browse(options_company_ids) if options_company_ids else self.env.company
+        # Get the moves separately for companies with a lock date on the concerned period, and those without.
+        tax_locked_companies = companies.filtered(lambda c: c.tax_lock_date and c.tax_lock_date >= end_date)
+        moves += self._get_tax_closing_entries_for_closed_period(report, options, tax_locked_companies)
+
+        non_tax_locked_companies = companies - tax_locked_companies
+        moves += self._generate_tax_closing_entries(report, options, companies=non_tax_locked_companies)
+        # Make the action for the retrieved move and return it.
         action = self.env["ir.actions.actions"]._for_xml_id("account.action_move_journal_line")
         action = clean_action(action, env=self.env)
         if len(moves) == 1:
@@ -556,7 +583,7 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
             action['domain'] = [('id', 'in', moves.ids)]
         return action
 
-    def _generate_tax_closing_entries(self, report, options, closing_moves=None):
+    def _generate_tax_closing_entries(self, report, options, closing_moves=None, companies=None):
         """Generates and/or updates VAT closing entries.
 
         This method computes the content of the tax closing in the following way:
@@ -573,11 +600,13 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
         :param options: the tax report options dict to use to make the closing.
         :param closing_moves: If provided, closing moves to update the content from.
                               They need to be compatible with the provided options (if they have a fiscal_position_id, for example).
-
+        :param companies: optional params, the companies given will be used instead of taking all the companies impacting
+                          the report.
         :return: The closing moves.
         """
-        options_company_ids = [company_opt['id'] for company_opt in options.get('multi_company', [])]
-        companies = self.env['res.company'].browse(options_company_ids) if options_company_ids else self.env.company
+        if companies is None:
+            options_company_ids = [company_opt['id'] for company_opt in options.get('multi_company', [])]
+            companies = self.env['res.company'].browse(options_company_ids) if options_company_ids else self.env.company
         end_date = fields.Date.from_string(options['date']['date_to'])
 
         closing_moves_by_company = defaultdict(lambda: self.env['account.move'])
@@ -629,6 +658,30 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
 
         return closing_moves
 
+    def _get_tax_closing_entries_for_closed_period(self, report, options, companies, posted_only=True):
+        """ Fetch the closing entries related to the given companies for the currently selected tax report period.
+        Only used when the selected period already has a tax lock date impacting it, and assuming that these periods
+        all have a tax closing entry.
+        :param report: The tax report for which we are getting the closing entries.
+        :param options: the tax report options dict needed to get the period end date and fiscal position info.
+        :param companies: a recordset of companies for which the period has already been closed.
+        :return: The closing moves.
+        """
+        end_date = fields.Date.from_string(options['date']['date_to'])
+        closing_moves = self.env['account.move']
+        for company in companies:
+            include_domestic, fiscal_positions = self._get_fpos_info_for_tax_closing(company, report, options)
+            fiscal_position_ids = fiscal_positions.ids + ([False] if include_domestic else [])
+            state_domain = ('state', '=', 'posted') if posted_only else ('state', '!=', 'cancel')
+            closing_moves += self.env['account.move'].search([
+                ('company_id', '=', company.id),
+                ('fiscal_position_id', 'in', fiscal_position_ids),
+                ('tax_closing_end_date', '=', end_date),
+                state_domain,
+            ], limit=1)
+
+        return closing_moves
+
     @api.model
     def _compute_vat_closing_entry(self, company, options):
         """Compute the VAT closing entry.
@@ -641,7 +694,7 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
         # first, for each tax group, gather the tax entries per tax and account
         self.env['account.tax'].flush_model(['name', 'tax_group_id'])
         self.env['account.tax.repartition.line'].flush_model(['use_in_tax_closing'])
-        self.env['account.move.line'].flush_model(['account_id', 'debit', 'credit', 'move_id', 'tax_line_id', 'date', 'company_id', 'display_type'])
+        self.env['account.move.line'].flush_model(['account_id', 'debit', 'credit', 'move_id', 'tax_line_id', 'date', 'company_id', 'display_type', 'parent_state'])
         self.env['account.move'].flush_model(['state'])
 
         # Check whether it is multilingual, in order to get the translation from the JSON value if present
@@ -860,6 +913,26 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
             include_domestic = options['fiscal_position'] == 'domestic'
 
         return include_domestic, fiscal_positions
+
+    def _get_amls_with_archived_tags_domain(self, options):
+        domain = [
+            ('tax_tag_ids.active', '=', False),
+            ('parent_state', '=', 'posted'),
+            ('date', '>=', options['date']['date_from']),
+        ]
+        if options['date']['mode'] == 'single':
+            domain.append(('date', '<=', options['date']['date_to']))
+        return domain
+
+    def action_open_amls_with_archived_tags(self, options, params=None):
+        return {
+            'name': _("Journal items with archived tax tags"),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move.line',
+            'domain': self._get_amls_with_archived_tags_domain(options),
+            'context': {'active_test': False},
+            'views': [(self.env.ref('account_reports.view_archived_tag_move_tree').id, 'list')],
+        }
 
 
 class GenericTaxReportCustomHandlerAT(models.AbstractModel):

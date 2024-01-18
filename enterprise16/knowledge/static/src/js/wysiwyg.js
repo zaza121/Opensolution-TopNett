@@ -6,59 +6,72 @@ import Wysiwyg from 'web_editor.wysiwyg';
 import { KnowledgeArticleLinkModal } from './wysiwyg/knowledge_article_link.js';
 import { PromptEmbeddedViewNameDialogWrapper } from '../components/prompt_embedded_view_name_dialog/prompt_embedded_view_name_dialog.js';
 import { preserveCursor } from '@web_editor/js/editor/odoo-editor/src/OdooEditor';
+import { Markup } from 'web.utils';
+import {
+    encodeDataBehaviorProps,
+} from "@knowledge/js/knowledge_utils";
 
 Wysiwyg.include({
     /**
      * @override
      */
-    init: function (parent, options) {
-        if (options.knowledgeCommands) {
-            /**
-             * knowledgeCommands is a view option from a field_html that
-             * indicates that knowledge-specific commands should be loaded.
-             * powerboxFilters is an array of functions used to filter commands
-             * displayed in the powerbox.
-             */
-            options.powerboxFilters = options.powerboxFilters ? options.powerboxFilters : [];
-            options.powerboxFilters.push(this._filterKnowledgeCommandGroupInTable);
-            options.powerboxFilters.push(this._filterKnowledgeCommandGroupInTemplate);
-        }
-        this._super.apply(this, arguments);
+    resetEditor: async function () {
+        await this._super(...arguments);
+        this.$editable[0].dispatchEvent(new Event('refresh_behaviors'));
     },
     /**
-     * Prevent usage of commands from the group "Knowledge" inside the tables.
-     * @param {Array[Object]} commands commands available in this wysiwyg
-     * @returns {Array[Object]} commands which can be used after the filter was applied
+     * @override
      */
-    _filterKnowledgeCommandGroupInTable: function (commands) {
+    setValue: function () {
+        // Temporary hack that will be removed in 16.2 with the full
+        // implementation of oeProtected in the editor.
+        // purpose: ignore locks from Behavior components rendering
+        // when the content of the editor is reset (those components will also
+        // have to be reset anyway)
+        if (this.odooEditor._observerUnactiveLabels.size) {
+            [...this.odooEditor._observerUnactiveLabels].forEach(lock => {
+                if (lock && lock.startsWith('knowledge_behavior_id_')) {
+                    this.odooEditor.observerActive(lock);
+                }
+            });
+        }
+        this._super(...arguments);
+    },
+    /**
+     * Check if the selection starts inside a table. This function can be used
+     * as the `isDisabled` property of a command of the PowerBox to disable
+     * a command in a table.
+     * @returns {boolean} true if the command should be filtered
+     */
+    _filterCommandInTable: function () {
         let anchor = document.getSelection().anchorNode;
         if (anchor.nodeType !== Node.ELEMENT_NODE) {
             anchor = anchor.parentElement;
         }
         if (anchor && anchor.closest('table')) {
-            commands = commands.filter(command => command.category !== 'Knowledge');
+            return true;
         }
-        return commands;
+        return false;
     },
     /**
-     * Prevent usage of commands from the group "Knowledge" inside the block
-     * inserted by the /template Knowledge command. The content of a /template
-     * block is destined to be used in @see OdooEditor in modules other than
-     * Knowledge, where knowledge-specific commands may not be available.
-     * i.e.: prevent usage /template in a /template block
-     *
-     * @param {Array[Object]} commands commands available in this wysiwyg
-     * @returns {Array[Object]} commands which can be used after the filter was applied
+     * Check if the selection starts inside a Behavior element.
+     * This function can be used as the `isDisabled` property of a command of
+     * the PowerBox to disable a command in a template.
+     * Example: The content of a /template block is destined to be used in
+     * @see OdooEditor in modules other than Knowledge, where knowledge-specific
+     * commands may not be available, so commands inserting a non-supported
+     * Behavior in the /template content should be disabled.
+     * @returns {boolean} true if the command should be filtered
      */
-    _filterKnowledgeCommandGroupInTemplate: function (commands) {
+    _filterCommandInBehavior: function () {
         let anchor = document.getSelection().anchorNode;
         if (anchor.nodeType !== Node.ELEMENT_NODE) {
             anchor = anchor.parentElement;
         }
-        if (anchor && anchor.closest('.o_knowledge_content')) {
-            commands = commands.filter(command => command.category !== 'Knowledge');
+        if (anchor && anchor.closest('.o_knowledge_behavior_anchor')) {
+            return true;
         }
-        return commands;
+        return false;
     },
     /**
      * @override
@@ -74,6 +87,7 @@ Wysiwyg.include({
             priority: 10,
             description: _t('Link an article.'),
             fontawesome: 'fa-file',
+            isDisabled: () => this.options.isWebsite || this.options.inIframe,
             callback: () => {
                 this._insertArticleLink();
             },
@@ -86,6 +100,7 @@ Wysiwyg.include({
                 priority: 20,
                 description: _t('Embed a file.'),
                 fontawesome: 'fa-file',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     this.openMediaDialog({
                         noVideos: true,
@@ -101,6 +116,7 @@ Wysiwyg.include({
                 priority: 10,
                 description: _t('Add a template section.'),
                 fontawesome: 'fa-pencil-square',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     this._insertTemplate();
                 },
@@ -110,6 +126,7 @@ Wysiwyg.include({
                 priority: 30,
                 description: _t('Add a table of content.'),
                 fontawesome: 'fa-bookmark',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     this._insertTableOfContent();
                 },
@@ -119,6 +136,7 @@ Wysiwyg.include({
                 priority: 40,
                 description: _t('Insert a Kanban view of article items'),
                 fontawesome: 'fa-th-large',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     const restoreSelection = preserveCursor(this.odooEditor.document);
                     const viewType = 'kanban';
@@ -138,6 +156,7 @@ Wysiwyg.include({
                 priority: 50,
                 description: _t('Insert a List view of article items'),
                 fontawesome: 'fa-th-list',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     const restoreSelection = preserveCursor(this.odooEditor.document);
                     const viewType = 'list';
@@ -154,18 +173,20 @@ Wysiwyg.include({
             }, {
                 category: _t('Knowledge'),
                 name: _t('Index'),
-                priority: 40,
+                priority: 60,
                 description: _t('Show the first level of nested articles.'),
                 fontawesome: 'fa-list',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     this._insertArticlesStructure(true);
                 }
             }, {
                 category: _t('Knowledge'),
-                name: _t('Outline'),
-                priority: 40,
+                name: _t('Article Structure'),
+                priority: 60,
                 description: _t('Show all nested articles.'),
                 fontawesome: 'fa-list',
+                isDisabled: () => this._filterCommandInBehavior() || this._filterCommandInTable(),
                 callback: () => {
                     this._insertArticlesStructure(false);
                 }
@@ -178,9 +199,8 @@ Wysiwyg.include({
      * @see KnowledgeBehavior
      *
      * @param {Element} anchor
-     * @param {Object} props
      */
-    _notifyNewBehavior(anchor, props=null) {
+    _notifyNewBehavior(anchor) {
         const behaviorsData = [];
         const type = Array.from(anchor.classList).find(className => className.startsWith('o_knowledge_behavior_type_'));
         if (type) {
@@ -188,7 +208,6 @@ Wysiwyg.include({
                 anchor: anchor,
                 behaviorType: type,
                 setCursor: true,
-                props: props || {},
             });
         }
         this.$editable.trigger('refresh_behaviors', { behaviorsData: behaviorsData});
@@ -242,6 +261,8 @@ Wysiwyg.include({
                 }))[0];
                 dialog.close();
                 restoreSelection();
+                const nameNode = document.createTextNode(article.display_name);
+                articleLinkBlock.appendChild(nameNode);
                 const [anchor] = this.odooEditor.execCommand('insert', articleLinkBlock);
                 this._notifyNewBehavior(anchor);
             }
@@ -283,15 +304,18 @@ Wysiwyg.include({
             element.classList.remove('o_is_knowledge_file');
             element.classList.add('o_image');
             const extension = (element.title && element.title.split('.').pop()) || element.dataset.mimetype;
-            const fileBlock = $(QWeb.render('knowledge.abstract_behavior', {
+            const fileBlock = $(QWeb.render('knowledge.WysiwygFileBehavior', {
                 behaviorType: "o_knowledge_behavior_type_file",
+                fileName: element.title,
+                fileImage: Markup(element.outerHTML),
+                behaviorProps: encodeDataBehaviorProps({
+                    fileName: element.title,
+                    fileExtension: extension,
+                }),
+                fileExtension: extension,
             }))[0];
             const [container] = this.odooEditor.execCommand('insert', fileBlock);
-            this._notifyNewBehavior(container, {
-                fileName: element.title,
-                fileImage: element.outerHTML,
-                fileExtension: extension,
-            });
+            this._notifyNewBehavior(container);
             // need to set cursor (anchor.sibling)
         } else {
             return this._super(...arguments);

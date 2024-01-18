@@ -76,7 +76,7 @@
                     </div>
                 </nav>
                 <div class="container pb64 o_appointment o_wappointment_select_operator">
-                    <h1 class="o_page_header mt32"> Schedule <span class="text-primary" t-out="appointment_type.name"/> Appointment</h1>
+                    <h1 class="o_page_header mt32"> Schedule <span class="text-primary" t-out="appointment_type.name"/></h1>
                     <div class="row justify-content-between my-2">
                         <h3 class="col-12 col-md-6 pt-1 pb-2">Choose who you will meet</h3>
                         <div class="col-12 col-md-6 mb-md-0 my-3 mt-md-2 text-center text-md-end">
@@ -145,23 +145,23 @@
         <t t-set="show_operator_select" t-value="step==STEP_OPERATOR_SELECT or appointment_type.avatars_display == 'show' and appointment_type.assign_method == 'chosen' and len(users_possible) > 1"/>
         <ul class="o_wappointment_progress_bar list-unstyled my-0 ms-auto float-end d-none d-lg-block">
             <t t-if="show_operator_select">
-                <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_OPERATOR_SELECT and 'o_current_stage pe-none' or step&gt;STEP_OPERATOR_SELECT and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted pe-none')">
+                <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_OPERATOR_SELECT and 'o_current_stage' or step&gt;STEP_OPERATOR_SELECT and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted')">
                     <a class="text-decoration-none text-reset"
-                       t-att-href="'#' if step&lt;STEP_OPERATOR_SELECT else '/appointment/%s?%s' % (appointment_type.id, keep_query('filter_appointment_type_ids', 'filter_staff_user_ids', 'invite_token'))">
+                       t-att-href="'#' if step&lt;STEP_OPERATOR_SELECT or step==STEP_OPERATOR_SELECT else '/appointment/%s?%s' % (appointment_type.id, keep_query('filter_appointment_type_ids', 'filter_staff_user_ids', 'invite_token'))">
                         Operator<t t-out="operator_chevron_href"/><span class="chevron position-absolute d-block"></span>
                     </a>
                 </li>
             </t>
-            <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_TIME and 'o_current_stage pe-none' or step&gt;STEP_TIME and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted pe-none')">
+            <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_TIME and 'o_current_stage' or step&gt;STEP_TIME and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted')">
                 <a class="text-decoration-none text-reset"
-                   t-att-href="'#' if step&lt;STEP_TIME else '/appointment/%s?%s' % (appointment_type.id, keep_query('*'))">
+                   t-att-href="'#' if step&lt;STEP_TIME or step==STEP_TIME else '/appointment/%s?%s' % (appointment_type.id, keep_query('*'))">
                     Time<span class="chevron position-absolute d-block"></span>
                 </a>
             </li>
-            <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_FORM and 'o_current_stage pe-none' or step&gt;STEP_FORM and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted pe-none')">
+            <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_FORM and 'o_current_stage' or step&gt;STEP_FORM and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted')">
                 Details<span class="chevron position-absolute d-block"></span>
             </li>
-            <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_VALIDATION and 'o_current_stage pe-none' or step&gt;STEP_VALIDATION and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted pe-none')">
+            <li t-att-class="'position-relative float-start m-0 ' + (step==STEP_VALIDATION and 'o_current_stage' or step&gt;STEP_VALIDATION and 'o_passed_stage bg-transparent' or 'o_future_stage bg-transparent text-muted')">
                 Booked<span class="chevron position-absolute d-block"></span>
             </li>
         </ul>

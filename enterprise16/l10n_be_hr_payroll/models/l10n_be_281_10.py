@@ -19,18 +19,38 @@ _logger = logging.getLogger(__name__)
 # - "Avis aux débiteurs" https://finances.belgium.be/fr/entreprises/personnel_et_remuneration/avis_aux_debiteurs#q2
 
 COUNTRY_CODES = {
-    'BE': '00150',
-    'ES': '00109',
-    'FR': '00111',
-    'GR': '00112',
-    'LU': '00113',
-    'DE': '00103',
-    'RO': '00124',
-    'IT': '00128',
-    'NL': '00129',
-    'TR': '00262',
-    'US': '00402',
-    'MA': '00354',
+    'AD': '00102', 'AE': '00260', 'AF': '00251', 'AG': '00403', 'AI': '00490', 'AL': '00101', 'AM': '00249',
+    'AO': '00341', 'AR': '00511', 'AS': '00690', 'AT': '00105', 'AU': '00611', 'AZ': '00250', 'BA': '00149',
+    'BB': '00423', 'BD': '00237', 'BE': '00000', 'BF': '00308', 'BG': '00106', 'BH': '00268', 'BI': '00303',
+    'BJ': '00310', 'BM': '00485', 'BN': '00224', 'BO': '00512', 'BR': '00513', 'BS': '00425', 'BT': '00223',
+    'BW': '00302', 'BY': '00142', 'BZ': '00430', 'CA': '00401', 'CD': '00306', 'CF': '00305', 'CG': '00307',
+    'CH': '00127', 'CI': '00309', 'CK': '00687', 'CL': '00514', 'CM': '00304', 'CN': '00218', 'CO': '00515',
+    'CR': '00411', 'CU': '00412', 'CV': '00339', 'CY': '00107', 'CZ': '00140', 'DE': '00103', 'DJ': '00345',
+    'DK': '00108', 'DM': '00480', 'DO': '00427', 'DZ': '00351', 'EC': '00516', 'EE': '00136', 'EG': '00352',
+    'EH': '00388', 'ER': '00349', 'ES': '00109', 'ET': '00311', 'FI': '00110', 'FJ': '00617', 'FK': '00580',
+    'FM': '00602', 'FR': '00111', 'GA': '00312', 'GB': '00112', 'GD': '00426', 'GE': '00253', 'GF': '00581',
+    'GH': '00314', 'GI': '00180', 'GL': '00498', 'GM': '00313', 'GN': '00315', 'GP': '00496', 'GQ': '00337',
+    'GR': '00114', 'GT': '00413', 'GU': '00681', 'GW': '00338', 'GY': '00521', 'HK': '00234', 'HN': '00414',
+    'HR': '00146', 'HT': '00419', 'HU': '00115', 'ID': '00208', 'IE': '00116', 'IL': '00256', 'IN': '00207',
+    'IQ': '00254', 'IR': '00255', 'IS': '00117', 'IT': '00128', 'JM': '00415', 'JO': '00257', 'JP': '00209',
+    'KE': '00336', 'KG': '00226', 'KH': '00216', 'KI': '00622', 'KM': '00343', 'KN': '00431', 'KP': '00219',
+    'KR': '00206', 'KW': '00264', 'KY': '00492', 'KZ': '00225', 'LA': '00210', 'LB': '00258', 'LC': '00428',
+    'LI': '00118', 'LK': '00203', 'LR': '00318', 'LS': '00301', 'LT': '00137', 'LU': '00113', 'LV': '00135',
+    'LY': '00353', 'MA': '00354', 'MC': '00120', 'MD': '00144', 'ME': '00151', 'MG': '00324', 'MH': '00603',
+    'MK': '00148', 'ML': '00319', 'MM': '00201', 'MN': '00221', 'MO': '00281', 'MQ': '00497', 'MR': '00355',
+    'MS': '00493', 'MT': '00119', 'MU': '00317', 'MV': '00222', 'MW': '00358', 'MX': '00416', 'MY': '00212',
+    'MZ': '00340', 'NA': '00384', 'NC': '00683', 'NE': '00321', 'NG': '00322', 'NI': '00417', 'NL': '00129',
+    'NO': '00121', 'NP': '00213', 'NR': '00615', 'NU': '00604', 'NZ': '00613', 'OM': '00266', 'PA': '00418',
+    'PE': '00518', 'PF': '00684', 'PG': '00619', 'PH': '00214', 'PK': '00259', 'PL': '00122', 'PM': '00495',
+    'PN': '00692', 'PR': '00487', 'PS': '00271', 'PT': '00123', 'PW': '00679', 'PY': '00517', 'QA': '00267',
+    'RE': '00387', 'RO': '00124', 'RS': '00152', 'RU': '00145', 'RW': '00327', 'SA': '00252', 'SB': '00623',
+    'SC': '00342', 'SD': '00356', 'SE': '00126', 'SG': '00205', 'SH': '00389', 'SI': '00147', 'SK': '00141',
+    'SL': '00328', 'SM': '00125', 'SN': '00320', 'SO': '00329', 'SR': '00522', 'SS': '00365', 'SV': '00421',
+    'SY': '00261', 'SZ': '00347', 'TC': '00488', 'TD': '00333', 'TG': '00334', 'TH': '00235', 'TJ': '00228',
+    'TL': '00282', 'TM': '00229', 'TN': '00357', 'TO': '00616', 'TR': '00262', 'TT': '00422', 'TV': '00621',
+    'TW': '00204', 'TZ': '00332', 'UA': '00143', 'UG': '00323', 'US': '00402', 'UY': '00519', 'UZ': '00227',
+    'VA': '00133', 'VC': '00429', 'VE': '00520', 'VG': '00479', 'VI': '00478', 'VN': '00220', 'VU': '00624',
+    'WF': '00689', 'WS': '00614', 'XK': '00153', 'YE': '00270', 'ZA': '00325', 'ZM': '00335', 'ZW': '00344'
 }
 
 
@@ -80,7 +100,7 @@ class L10nBe28110(models.Model):
         xsd_schema_file_path = get_resource_path(
             'l10n_be_hr_payroll',
             'data',
-            '161-xsd-2021-20220120.xsd',
+            '161-xsd-2022-20221213.xsd',
         )
         xsd_root = etree.parse(xsd_schema_file_path)
         schema = etree.XMLSchema(xsd_root)
@@ -115,8 +135,14 @@ class L10nBe28110(models.Model):
         if invalid_employees:
             raise UserError(_("The following employees don't have a valid private address (with a street, a zip, a city and a country):\n%s", '\n'.join(invalid_employees.mapped('name'))))
 
-        if not all(emp.contract_ids and emp.contract_id for emp in employees):
-            raise UserError(_('Some employee has no contract.'))
+        invalid_employees = employees.filtered(lambda emp: not emp.contract_ids or not emp.contract_id)
+        for employee in invalid_employees:
+            history = self.env['hr.contract.history'].search([('employee_id', '=', employee.id)], limit=1)
+            contracts = history.contract_ids.filtered(lambda c: c.active and c.state in ['open', 'close'])[0]
+            employee.contract_id = contracts[0] if contracts else False
+        invalid_employees = employees.filtered(lambda emp: not emp.contract_ids or not emp.contract_id)
+        if invalid_employees:
+            raise UserError(_("Some employee don't have any contract.:\n%s", '\n'.join(invalid_employees.mapped('name'))))
 
         invalid_employees = employees.filtered(lambda e: not e._is_niss_valid())
         if invalid_employees:
@@ -285,8 +311,10 @@ class L10nBe28110(models.Model):
             if round(mapped_total['CAR.PRIV'], 2) + round(mapped_total['ATN.CAR'], 2):
                 other_transport_exemption = max_other_transport_exemption * number_of_month / 12.0
 
-            cycle_days_count = sum(all_line_values['CYCLE'][p.id]['quantity'] for p in payslips)
-            cycle_days_amount = sum(all_line_values['CYCLE'][p.id]['total'] for p in payslips)
+            cycle_days_count = 0
+            cycle_days_amount = 0
+            # cycle_days_count = sum(all_line_values['CYCLE'][p.id]['quantity'] for p in payslips)
+            # cycle_days_amount = sum(all_line_values['CYCLE'][p.id]['total'] for p in payslips)
 
             sheet_values = {
                 'employee': employee,
@@ -306,10 +334,7 @@ class L10nBe28110(models.Model):
                 'f2029_enkelopgave325': 0,
                 'f2112_buitenlandspostnummer': employee.address_home_id.zip if not is_belgium else '0',
                 'f2114_voornamen': first_name,
-                # YTI From 2023, should be distinguished from volatile representation fees
-                # 'f10_2031_compensationwithstandards': round(mapped_total['REP.FEES'], 2),
-                'f10_2031_compensationwithstandards': 0,
-                'f10_2033_compensationwithdocuments': 0,
+                'f10_2031_associationactivity': 0,
                 'f10_2034_ex': 0,
                 'f10_2035_verantwoordingsstukken': 0,
                 'f10_2036_inwonersdeenfr': 0,
@@ -322,8 +347,8 @@ class L10nBe28110(models.Model):
                 'f10_2045_code': 0,
                 # 'f10_2055_datumvanindienstt': employee.first_contract_date.strftime('%d/%m/%Y') if employee.first_contract_date.year == self.reference_year else '',
                 'f10_2055_datumvanindienstt': first_contract_date.strftime('%d-%m-%Y') if first_contract_date else '',
-                'f10_2056_datumvanvertrek': employee.end_notice_period.strftime('%d-%m-%Y') if employee.end_notice_period else '',
-                'f10_2058_km': cycle_days_count * employee.km_home_work,
+                'f10_2056_datumvanvertrek': employee.end_notice_period.strftime('%d-%m-%Y') if employee.end_notice_period and employee.end_notice_period > first_contract_date else '',
+                'f10_2058_km': int(cycle_days_count * employee.km_home_work),
                 # f10_2059_totaalcontrole
                 'f10_2060_gewonebezoldiginge': _to_eurocent(round(common_gross, 2)),
                 'f10_2061_bedragoveruren300horeca': 0,
@@ -336,7 +361,7 @@ class L10nBe28110(models.Model):
                 'f10_2068_rechtvermindering57_75': 0,
                 'f10_2069_fidelitystamps': 0,
                 'f10_2070_decemberremuneration': 0,
-                'f10_2071_totalevergoeding': cycle_days_amount,
+                'f10_2071_totalevergoeding': _to_eurocent(round(cycle_days_amount, 2)),
                 'f10_2072_pensioentoezetting':  0,
                 'f10_2073_tipamount': 0,
                 'f10_2074_bedrijfsvoorheffing': _to_eurocent(round(mapped_total['PPTOTAL'] - mapped_total['DOUBLE.DECEMBER.P.P'], 2)),  # 2.074 = 2.131 + 2.133. YTI Is it ok to include PROF_TAX / should include Double holidays?
@@ -346,9 +371,7 @@ class L10nBe28110(models.Model):
                         0,
                         round(sum(mapped_total[code] for code in ['ATN.INT', 'ATN.MOB', 'ATN.LAP', 'ATN.CAR']) - other_transport_exemption, 2) if has_company_car else round(sum(mapped_total[code] for code in ['ATN.INT', 'ATN.MOB', 'ATN.LAP', 'ATN.CAR']), 2))),
                 # f10_2077_totaal
-                # YTI From 2023, should be distinguished from REP.FEES
-                # 'f10_2078_compensationamountwithoutstandards': round(mapped_total['REP.FEES.VOLATILE'], 2),
-                'f10_2078_compensationamountwithoutstandards': _to_eurocent(round(mapped_total['REP.FEES'], 2)),
+                'f10_2078_compensationamountwithoutstandards': _to_eurocent(round(mapped_total['REP.FEES.VOLATILE'], 2)),
                 'f10_2080_detacheringsvergoed': 0,
                 'f10_2081_gewonebijdragenenpremies': 0,
                 'f10_2082_bedrag': _to_eurocent(round(warrant_gross, 2)),
@@ -368,7 +391,7 @@ class L10nBe28110(models.Model):
                 'f10_2099_aard': self._get_atn_nature(payslips),
                 'f10_2102_kas': 0,
                 'f10_2103_kasvrijaanvullendpensioen': 0,
-                'f10_2106_percentages': '', # Note: No percentages for warrants
+                'f10_2106_percentages': '00,00' if _to_eurocent(round(warrant_gross, 2)) else '', # Note: No percentages for warrants
                 'f10_2109_fiscaalidentificat': '', # Use NISS instead
                 'f10_2110_aantaloveruren360': 0,
                 'f10_2111_achterstalloveruren300horeca': 0,
@@ -376,7 +399,7 @@ class L10nBe28110(models.Model):
                 'f10_2115_bonus': _to_eurocent(round(mapped_total['EmpBonus.1'], 2)),
                 'f10_2116_badweatherstamps': 0,
                 'f10_2117_nonrecurrentadvantages': 0,
-                'f10_2118_amountovertime180secondsemester': 0,
+                'f10_2118_overtimehours180': 0,
                 'f10_2119_sportremuneration': 0,
                 'f10_2120_sportvacancysavings': 0,
                 'f10_2121_sportoutdated': 0,
@@ -387,17 +410,17 @@ class L10nBe28110(models.Model):
                 'f10_2126_managerindemnificationofretraction': 0,
                 'f10_2127_nonrecurrentadvantagesoutdated': 0,
                 'f10_2128_vrijaanvullendpensioenwerknemers': 0,
+                'f10_2129_exemptincomesubjecttoprogressivity': 0,
                 'f10_2130_privatepc': 0,
                 'f10_2131_bedrijfsvoorheffingvanwerkgever': _to_eurocent(round(mapped_total['PPTOTAL'] - mapped_total['DOUBLE.DECEMBER.P.P'], 2)),
-                'f10_2132_amountovertime180firstsemester': 0,
+                'f10_2132_horeca': 0,
                 'f10_2133_bedrijfsvoorheffingbuitenlvenverbondenwerkgever': 0,
                 'f10_2134_totaalbedragmobiliteitsbudget': 0,
                 'f10_2135_amountpaidforvolontarysuplementaryhourscovid': 0,
                 'f10_2136_amountcontractofstudent': 0,
                 'f10_2137_amountstudent2020oruntilthirdquarter2021': 0,
-                'f10_2138_chequesofconsumptions': 0,
-                'f10_2141_occasionalworkhoreca': 0,
-                'f10_2142_aantaloveruren180': 0,
+                'f10_2141_total': 0,
+                'f10_2142_totalovertimehours180': 0,
                 'f10_2143_bedragoveruren360horeca': 0,
                 'f10_2165_achterstalloveruren360horeca': 0,
                 'f10_2166_flexi_job': 0,
@@ -405,7 +428,9 @@ class L10nBe28110(models.Model):
                 'f10_2168_achterstallaantaloveruren300horeca': 0,
                 'f10_2169_aantaloveruren360horeca': 0,
                 'f10_2170_achterstallaantaloveruren360horeca': 0,
+                'f10_2176_overtimehours180': 0,
                 'f10_2177_winstpremies': 0,
+                'f10_2178_pensioner': 0,
                 'f10_2179_startersjob': 0,
                 'f10_2180_onkostenbrandweerenambulanciers': 0,
                 'f10_2181_remunerationetrang': 0,
@@ -423,7 +448,15 @@ class L10nBe28110(models.Model):
                 'f10_2194_covidovertimehourstotal': 0,
                 'f10_2195_covidovertimehours2020': 0,
                 'f10_2196_covidovertimeremuneration2020': 0,
+                'f10_2197_covidovertimeremuneration2022': 0,
                 'f10_2198_coronabonus': 0,
+                'f10_2199_covidovertimehours2022': 0,
+                'f10_2200_compensationwithstandards': _to_eurocent(round(mapped_total['REP.FEES'], 2)),
+                'f10_2201_compensationwithdocuments': 0,
+                'f10_2202_amount': 0,
+                'f10_2203_amount': 0,
+                'f10_2204_repaidsums': 0,
+                'f10_2204_repaidsums': 0,
             }
             # Le code postal belge (2016) et le code postal étranger (2112) ne peuvent être
             # ni remplis, ni vides tous les deux.
@@ -432,13 +465,14 @@ class L10nBe28110(models.Model):
             else:
                 sheet_values.pop('f2016_postcodebelgisch')
 
-            # Somme de 2.060 + 2.076 + 2069 + 2.082 + 2.083
+            # Somme de 2.060 + 2.076 + 2069 + 2.082 + 2.083 + 2204
             sheet_values['f10_2062_totaal'] = sum(sheet_values[code] for code in [
                 'f10_2060_gewonebezoldiginge',
                 'f10_2076_voordelenaardbedrag',
                 'f10_2069_fidelitystamps',
                 'f10_2082_bedrag',
-                'f10_2083_bedrag'])
+                'f10_2083_bedrag',
+                'f10_2204_repaidsums'])
 
             # Somme de 2.086 + 2.087 + 2.088
             sheet_values['f10_2077_totaal'] = sum(sheet_values[code] for code in [

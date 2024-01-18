@@ -75,6 +75,20 @@ result_name = inputs.HIRINGBONUS.name
         <field name="struct_id" ref="l10n_be_hr_payroll.hr_payroll_structure_cp200_employee_salary"/>
     </record>
 
+    <record id="cp200_employees_salary_rep_fees_regul" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="name">Representation Fees Regularization</field>
+        <field name="code">REPFEESREGUL</field>
+        <field name="sequence">15</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = inputs.REPFEESREGUL</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = inputs.REPFEESREGUL.amount
+        </field>
+        <field name="struct_id" ref="l10n_be_hr_payroll.hr_payroll_structure_cp200_employee_salary"/>
+    </record>
+
     <record id="cp200_employees_salary_additional_gross" model="hr.salary.rule">
         <field name="category_id" ref="hr_payroll.ALW"/>
         <field name="name">Additional Gross</field>
@@ -191,6 +205,8 @@ if inputs.COMMISSION:
     result += result_rules['COMMISSION']['total']
 if inputs.HIRINGBONUS:
     result += result_rules['HIRINGBONUS']['total']
+if inputs.REPFEESREGUL:
+    result += result_rules['REPFEESREGUL']['total']
 if inputs.ADDITIONALGROSS:
     result += result_rules['ADDITIONALGROSS']['total']
 if inputs.AFTERPUB:
@@ -566,8 +582,11 @@ result = min(amount_max, amount_per_km * contract.employee_id.km_home_work * 2)
         <field name="amount_select">code</field>
         <field name="sequence">171</field>
         <field name="condition_select">python</field>
-        <field name="condition_python">result = contract.representation_fees and compute_representation_fees(payslip, categories, worked_days, inputs) &gt; 279.31</field>
-        <field name="amount_python_compute">result = compute_volatile_representation_fees(payslip, categories, worked_days, inputs)</field>
+        <field name="condition_python">result = contract.representation_fees and compute_representation_fees(payslip, categories, worked_days, inputs) &gt; payslip.rule_parameter('cp200_representation_fees_threshold')</field>
+        <field name="amount_python_compute">
+result = compute_volatile_representation_fees(payslip, categories, worked_days, inputs)
+if inputs.REPFEESREGUL:
+    result = max(0, result - inputs.REPFEESREGUL.amount)</field>
         <field name="struct_id" ref="hr_payroll_structure_cp200_employee_salary"/>
         <field name="appears_on_payroll_report" eval="True"/>
     </record>
@@ -753,7 +772,7 @@ result = inputs.EXPENSES.amount if inputs.EXPENSES else 0
         <field name="sequence">500</field>
         <field name="condition_select">none</field>
         <field name="amount_python_compute">
-result = categories.BASIC + categories.COMMISSION + result_rules['HIRINGBONUS']['total'] + result_rules['ADDITIONALGROSS']['total'] +  categories.AFTERPUB + result_rules['SIMPLE.DECEMBER']['total'] - abs(result_rules['IP']['total'] if contract.ip else 0)</field>
+result = categories.BASIC + categories.COMMISSION + result_rules['HIRINGBONUS']['total'] + result_rules['REPFEESREGUL']['total'] + result_rules['ADDITIONALGROSS']['total'] +  categories.AFTERPUB + result_rules['SIMPLE.DECEMBER']['total'] - abs(result_rules['IP']['total'] if contract.ip else 0)</field>
         <field name="struct_id" ref="hr_payroll_structure_cp200_employee_salary"/>
         <field name="appears_on_payslip" eval="False"/>
         <field name="appears_on_payroll_report" eval="True"/>

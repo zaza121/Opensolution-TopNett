@@ -44,7 +44,7 @@ class TestWorkEntryPlanning(TransactionCase):
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         self.assertFalse(work_entries)
         # This should generate one work entry per slot
-        self.contract._generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
+        self.contract.generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
 
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         self.assertEqual(len(slots), len(work_entries))
@@ -91,7 +91,7 @@ class TestWorkEntryPlanning(TransactionCase):
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         self.assertFalse(work_entries)
 
-        self.contract._generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
+        self.contract.generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         # One work entry per slot
         self.assertEqual(len(work_entries), len(slots))
@@ -114,7 +114,7 @@ class TestWorkEntryPlanning(TransactionCase):
             }
         ])
         boundaries_slots.action_publish()
-        self.contract._generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
+        self.contract.generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         self.assertEqual(len(work_entries), len(boundaries_slots))
 
@@ -163,7 +163,7 @@ class TestWorkEntryPlanning(TransactionCase):
             'allocated_hours': 38,
         })
         slot.action_publish()
-        self.contract._generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
+        self.contract.generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         self.assertTrue(work_entries)
         self.assertEqual(work_entries.duration, slot.allocated_hours)
@@ -179,7 +179,7 @@ class TestWorkEntryPlanning(TransactionCase):
             'end_datetime': datetime(2021, 9, 14, 17, 0, 0),
             'state': 'published',
         })
-        self.contract._generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
+        self.contract.generate_work_entries(date(2021, 9, 1), date(2021, 9, 30))
         work_entries = self.env['hr.work.entry'].search([('employee_id', '=', self.employee.id)])
         self.assertFalse(any(hwe.planning_slot_id for hwe in work_entries))
 

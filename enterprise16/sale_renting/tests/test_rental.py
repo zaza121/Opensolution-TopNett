@@ -346,6 +346,42 @@ class TestRentalCommon(TransactionCase):
         )._get_contextual_price()
         self.assertEqual(price, 7, "Contextual price should take pickup and return date into account")
 
+    def test_discount_on_sol_remains(self):
+        # Add group 'Discount on Lines' to the user
+        self.env.user.write({'groups_id': [(4, self.env.ref('product.group_discount_per_so_line').id)]})
+
+        now = fields.date.today()
+        one_day_later = now + relativedelta(days=1)
+        discount = 10
+
+        partner = self.env['res.partner'].create({'name': 'A partner'})
+        sale_order = self.env['sale.order'].create({
+            'partner_id': partner.id,
+        })
+
+        sol = self.env['sale.order.line'].create({
+            'product_id': self.product_id.id,
+            'product_uom_qty': 1,
+            'price_unit': 10,
+            'order_id': sale_order.id,
+            'reservation_begin': now,
+            'start_date': now,
+            'return_date': one_day_later,
+            'is_rental': True,
+            'discount': discount,
+        })
+
+        self.assertEqual(sol.discount, discount, 'Discount should not be updated')
+        sale_order.action_confirm()
+        self.assertEqual(sol.discount, discount, 'Discount should not be updated')
+        action_dict = sale_order.open_pickup()
+        pickup_wizard = self.env['rental.order.wizard'].with_context(
+            action_dict['context']
+        ).create({})
+        pickup_wizard._get_wizard_lines()
+        pickup_wizard.apply()
+        self.assertEqual(sol.discount, discount, 'Discount should not be updated')
+
     def test_renting_taxes_inc2ex(self):
 
         fiscal_position_inc2ex = self.env['account.fiscal.position'].create({'name': 'inc2ex'})

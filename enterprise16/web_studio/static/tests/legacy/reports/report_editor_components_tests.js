@@ -347,7 +347,7 @@ QUnit.module('ReportComponents', {
             }]
         }).then(function (res) {
             assert.deepEqual(res.inheritance,
-                [{content: '<span t-field="toto.image" t-options-widget="&quot;image&quot;"></span>', xpath: '/my/node/path/', view_id: 99, position: undefined}],
+                [{content: '<span t-field="toto.image" t-options-widget="&quot;image&quot;" t-options-qweb_img_raw_data="1"></span>', xpath: '/my/node/path/', view_id: 99, position: undefined}],
                 "image widget should be set");
         });
         await testUtils.nextTick();

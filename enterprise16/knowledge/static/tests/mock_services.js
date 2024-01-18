@@ -53,10 +53,22 @@ function makeFakeKnowledgeCommandsService() {
     };
 }
 
+function makeFakeKnowledgeEmbedsFiltersService() {
+    return {
+        start() {
+            return {
+                saveFilters: () => {},
+                applyFilter: () => {}
+            };
+        }
+    };
+}
+
 const serviceRegistry = registry.category('services');
 patch(utils, 'knowledge_test_registries', {
     prepareRegistriesWithCleanup() {
         prepareRegistriesWithCleanup(...arguments);
         serviceRegistry.add('knowledgeCommandsService', makeFakeKnowledgeCommandsService());
+        serviceRegistry.add('knowledgeEmbedViewsFilters', makeFakeKnowledgeEmbedsFiltersService());
     },
 });

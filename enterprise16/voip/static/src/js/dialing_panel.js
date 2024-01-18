@@ -48,6 +48,7 @@ const DialingPanel = Widget.extend({
     init() {
         this._super(...arguments);
 
+        this._hasIncomingCall = false;
         this._isFolded = false;
         this._isFoldedBeforeCall = false;
         this._isInCall = false;
@@ -248,7 +249,11 @@ const DialingPanel = Widget.extend({
             this.$('.o_dial_incoming_buttons').hide();
         } else {
             this.$el.removeClass('folded');
-            this.$('.o_dial_main_buttons').show();
+            if (this._hasIncomingCall) {
+                this._activeTab._phoneCallDetails.receivingCall();
+            } else {
+                this.$('.o_dial_main_buttons').show();
+            }
         }
     },
     /**
@@ -509,7 +514,7 @@ const DialingPanel = Widget.extend({
      */
     async _toggleFold({ isFolded }={}) {
         if (!config.device.isMobile) {
-            if (this._isFolded) {
+            if (this._isFolded && !this._hasIncomingCall) {
                 await this._refreshPhoneCallsStatus();
             }
             this._isFolded = _.isBoolean(isFolded) ? isFolded : !this._isFolded;
@@ -773,6 +778,7 @@ const DialingPanel = Widget.extend({
         await this._activeTab.onIncomingCall(detail);
         this._$mainButtons.hide();
         this._$incomingCallButtons.show();
+        this._hasIncomingCall = true;
     },
     /**
      * @private
@@ -788,7 +794,7 @@ const DialingPanel = Widget.extend({
      * @return {Promise}
      */
     _onInputSearch(ev) {
-        return this._activeTab.searchPhoneCall($(ev.currentTarget).val());
+        return this._activeTab.searchPhoneCall(ev.currentTarget.value.trim());
     },
     /**
      * @private
@@ -868,6 +874,7 @@ const DialingPanel = Widget.extend({
      * @return {Promise}
      */
     _onSipCancelIncoming({ detail }) {
+        this._hasIncomingCall = false;
         this._isInCall = false;
         this._isPostpone = false;
         this._missedCounter = this._missedCounter + 1;
@@ -954,6 +961,7 @@ const DialingPanel = Widget.extend({
      * @return {Promise}
      */
     _onSipRejected({ detail }) {
+        this._hasIncomingCall = false;
         this._cancelCall();
         return this._activeTab.onRejectedCall(detail);
     },

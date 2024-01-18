@@ -29,6 +29,7 @@ import { waitForDataSourcesLoaded } from "@spreadsheet/../tests/utils/model";
  * @param {object} [params.serverData] Data to be injected in the mock server
  * @param {function} [params.mockRPC] Mock rpc function
  * @param {any[]} [params.domain] Domain of the graph
+ * @param {object} [params.additionalContext] additional context for the action
  * @returns {Promise<object>} Webclient
  */
 export async function spawnGraphViewForSpreadsheet(params = {}) {
@@ -41,13 +42,19 @@ export async function spawnGraphViewForSpreadsheet(params = {}) {
         },
     });
 
-    await doAction(webClient, {
-        name: "graph view",
-        res_model: params.model || "partner",
-        type: "ir.actions.act_window",
-        views: [[false, "graph"]],
-        domain: params.domain,
-    });
+    await doAction(
+        webClient,
+        {
+            name: "graph view",
+            res_model: params.model || "partner",
+            type: "ir.actions.act_window",
+            views: [[false, "graph"]],
+            domain: params.domain,
+        },
+        {
+            additionalContext: params.additionalContext || {},
+        }
+    );
     return webClient;
 }
 
@@ -83,6 +90,7 @@ export async function createSpreadsheetFromGraphView(params = {}) {
         serverData: params.serverData,
         mockRPC: params.mockRPC,
         domain: params.domain,
+        additionalContext: params.additionalContext || {},
     });
     const target = getFixture();
     if (params.actions) {

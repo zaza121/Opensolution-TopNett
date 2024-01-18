@@ -5,10 +5,6 @@ from unittest.mock import patch
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.tests.common import tagged
 
-COUNTRIES_WITHOUT_CLOSING_ACCOUNT = {
-    'AR', 'AE', 'AT', 'AU', 'BG', 'BR', 'CH', 'CL', 'DK', 'ES', 'GB', 'HU', 'IN', 'MN', 'NL', 'NO', 'PT', 'SA', 'SE', 'SG', 'SI',
-}
-
 @tagged('post_install_l10n', 'post_install', '-at_install')
 class TestAllReportsGeneration(AccountTestInvoicingCommon):
 
@@ -20,7 +16,7 @@ class TestAllReportsGeneration(AccountTestInvoicingCommon):
         if cls.env.ref('l10n_generic_coa.configurable_chart_template', raise_if_not_found=False):
             available_country_ids += [cls.env.ref('base.us').id, False]
 
-        cls.reports = cls.env['account.report'].search([('country_id', 'in', available_country_ids)])
+        cls.reports = cls.env['account.report'].search([('country_id', 'in', available_country_ids)]).with_context(allowed_company_ids=cls.company_data['company'].ids)
         # The consolidation report needs a consolidation.period to be open, which we won't have by default.
         # Therefore, instead of testing it here, wse skip it and add a dedicated test in the consolidation module.
         conso_report = cls.env.ref('account_consolidation.consolidated_balance_report', raise_if_not_found=False)
@@ -48,11 +44,15 @@ class TestAllReportsGeneration(AccountTestInvoicingCommon):
 
     def test_generate_all_export_files(self):
         # Test values for the fields that become mandatory when doing exports on the reports, depending on the country
+        l10n_pl_reports_tax_office = self.env.ref('l10n_pl_jpk.pl_tax_office_0215', raise_if_not_found=False)
         company_test_values = {
             'LU': {'ecdf_prefix': '1234AB', 'matr_number': '1111111111111', 'vat': 'LU12345613'},
             'BR': {'vat': '01234567891251'},
             'AR': {'vat': '30714295698'},
             'AU': {'vat': '11225459588', 'street': 'Arrow Street', 'zip': '1348', 'city': 'Starling City', 'state_id': self.env.ref('base.state_au_1').id},
+            'DE': {'vat': 'DE123456788', 'l10n_de_stnr': '151/815/08156', 'state_id': self.env.ref('base.state_de_th').id},
+            'NO': {'vat': 'NO123456785', 'l10n_no_bronnoysund_number': '987654325'},
+            'PL': {'l10n_pl_reports_tax_office_id': l10n_pl_reports_tax_office and l10n_pl_reports_tax_office.id},
         }
 
         partner_test_values = {
@@ -86,11 +86,6 @@ class TestAllReportsGeneration(AccountTestInvoicingCommon):
             options = report._get_options({'report_id': report.id, '_running_export_test': True})
 
             for option_button in options['buttons']:
-                if option_button['action'] == 'action_periodic_vat_entries' and self.env.company.account_fiscal_country_id.code in COUNTRIES_WITHOUT_CLOSING_ACCOUNT:
-                    # Some countries don't have any default account set for tax closing. They raise a RedirectWarning; we don't want it
-                    # to make the test fail.
-                    continue
-
                 with self.subTest(f"Button '{option_button['name']}' from report {report.name} ({report.country_id.name or 'No Country'}) raised an error"):
                     with patch.object(type(self.env['ir.actions.report']), '_run_wkhtmltopdf', lambda *args, **kwargs: b"This is a pdf"):
                         action_dict = report.dispatch_report_action(options, option_button['action'], action_param=option_button.get('action_param'))

@@ -1,10 +1,23 @@
 #-*- coding:utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from datetime import date
+from datetime import date, datetime, time
 from dateutil.relativedelta import relativedelta
+from json import JSONEncoder
 
-from odoo import fields
+from odoo import fields, models
 
+BROWSABLE_OBJECT_SAFE_CLASSES = (models.BaseModel, set, datetime, date, time)
+
+class ValueChecker(JSONEncoder):
+    def default(self, value):
+        if isinstance(value, BROWSABLE_OBJECT_SAFE_CLASSES):
+            return repr(value)
+        return super().default(value)
+
+    def check(self, value):
+        self.encode(value)
+
+valueChecker = ValueChecker()
 
 class BrowsableObject(object):
     def __init__(self, employee_id, dict, env):
@@ -13,14 +26,22 @@ class BrowsableObject(object):
         self.env = env
 
     def __getattr__(self, attr):
-        return attr in self.dict and self.dict.__getitem__(attr) or 0.0
+        value = None
+        if attr in self.dict:
+            value = self.dict.__getitem__(attr)
+            valueChecker.check(value)
+        return value or 0.0
 
     def __getitem__(self, key):
         return self.dict[key] or 0.0
 
 class ResultRules(BrowsableObject):
     def __getattr__(self, attr):
-        return attr in self.dict and self.dict.__getitem__(attr) or {'total': 0, 'amount': 0, 'quantity': 0}
+        value = None
+        if attr in self.dict:
+            value = self.dict.__getitem__(attr)
+        valueChecker.check(value)
+        return value or {'total': 0, 'amount': 0, 'quantity': 0}
 
     def __getitem__(self, key):
         return self.dict[key] if key in self.dict else {'total': 0, 'amount': 0, 'quantity': 0}
@@ -33,7 +54,7 @@ class InputLine(BrowsableObject):
         self.env.cr.execute("""
             SELECT sum(amount) as sum
             FROM hr_payslip as hp, hr_payslip_input as pi
-            WHERE hp.employee_id = %s AND hp.state = 'done'
+            WHERE hp.employee_id = %s AND hp.state in ('done', 'paid')
             AND hp.date_from >= %s AND hp.date_to <= %s AND hp.id = pi.payslip_id AND pi.code = %s""",
             (self.employee_id, from_date, to_date, code))
         return self.env.cr.fetchone()[0] or 0.0
@@ -46,7 +67,7 @@ class WorkedDays(BrowsableObject):
         self.env.cr.execute("""
             SELECT sum(number_of_days) as number_of_days, sum(number_of_hours) as number_of_hours
             FROM hr_payslip as hp, hr_payslip_worked_days as pi
-            WHERE hp.employee_id = %s AND hp.state = 'done'
+            WHERE hp.employee_id = %s AND hp.state in ('done', 'paid')
             AND hp.date_from >= %s AND hp.date_to <= %s AND hp.id = pi.payslip_id AND pi.work_entry_type_id IN (SELECT id FROM hr_work_entry_type WHERE code = %s)""",
             (self.employee_id, from_date, to_date, code))
         return self.env.cr.fetchone()
@@ -69,7 +90,7 @@ class Payslips(BrowsableObject):
             SELECT sum(pl.total)
             FROM hr_payslip as hp, hr_payslip_line as pl
             WHERE hp.employee_id = %s
-            AND hp.state = 'done'
+            AND hp.state in ('done', 'paid')
             AND hp.date_from >= %s
             AND hp.date_to <= %s
             AND hp.id = pl.slip_id
@@ -92,7 +113,7 @@ class Payslips(BrowsableObject):
             SELECT sum(pl.total)
             FROM hr_payslip as hp, hr_payslip_line as pl, hr_salary_rule_category as rc
             WHERE hp.employee_id = %s
-            AND hp.state = 'done'
+            AND hp.state in ('done', 'paid')
             AND hp.date_from >= %s
             AND hp.date_to <= %s
             AND hp.id = pl.slip_id
@@ -108,7 +129,7 @@ class Payslips(BrowsableObject):
         query = """
             SELECT sum(hwd.amount)
             FROM hr_payslip hp, hr_payslip_worked_days hwd, hr_work_entry_type hwet
-            WHERE hp.state = 'done'
+            WHERE hp.state in ('done', 'paid')
             AND hp.id = hwd.payslip_id
             AND hwet.id = hwd.work_entry_type_id
             AND hp.employee_id = %(employee)s

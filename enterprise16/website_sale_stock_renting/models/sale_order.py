@@ -30,6 +30,7 @@ class SaleOrder(models.Model):
         qty_available = product.with_context(
             from_date=from_date, to_date=to_date, warehouse=self.warehouse_id.id
         ).qty_available
+        qty_available += product.with_context(warehouse=self.warehouse_id.id).qty_in_rent
         product_rented_qties, product_key_dates = product._get_rented_quantities(
             from_date, to_date, domain=[('order_id', '!=', self.id)]
         )

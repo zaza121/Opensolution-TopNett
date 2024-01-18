@@ -16,7 +16,6 @@ class StockMoveLine(models.Model):
     product_packaging_uom_qty = fields.Float('Packaging Quantity', compute='_compute_product_packaging_uom_qty', help="Quantity of the Packaging in the UoM of the Stock Move Line.")
     is_completed = fields.Boolean(compute='_compute_is_completed', help="Check if the quantity done matches the demand")
 
-    @api.depends('product_id', 'product_id.stock_quant_ids')
     def _compute_product_stock_quant_ids(self):
         for line in self:
             line.product_stock_quant_ids = line.product_id.stock_quant_ids.filtered(lambda q: q.company_id in self.env.companies and q.location_id.usage == 'internal')
@@ -54,4 +53,5 @@ class StockMoveLine(models.Model):
             'dummy_id',
             'product_packaging_id',
             'product_packaging_uom_qty',
+            'move_id',
         ]

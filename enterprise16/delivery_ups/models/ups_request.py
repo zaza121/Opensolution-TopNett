@@ -15,6 +15,7 @@ from zeep.wsdl.utils import etree_to_string
 
 from odoo import _, _lt
 from odoo.tools.float_utils import float_repr
+from odoo.exceptions import UserError
 
 
 _logger = logging.getLogger(__name__)
@@ -295,7 +296,7 @@ class UPSRequest():
 
             # Package and shipment reference text is only allowed for shipments within
             # the USA and within Puerto Rico. This is a UPS limitation.
-            if (p.name and ship_from.country_id.code in ('US') and ship_to.country_id.code in ('US')):
+            if (p.name and not ' ' in p.name and ship_from.country_id.code in ('US') and ship_to.country_id.code in ('US')):
                 reference_number = self.factory_ns2.ReferenceNumberType()
                 reference_number.Code = 'PM'
                 reference_number.Value = p.name
@@ -313,12 +314,14 @@ class UPSRequest():
             uom_type.Code = 'PC' if commodity.qty == 1 else 'PCS'
 
             unit_type = self.factory_ns4.UnitType()
-            unit_type.Number = commodity.qty
-            unit_type.Value = commodity.monetary_value
+            unit_type.Number = int(commodity.qty)
+            unit_type.Value = float_repr(commodity.monetary_value, 2)
             unit_type.UnitOfMeasurement = uom_type
 
             product = self.factory_ns4.ProductType()
-            product.Description = commodity.product_id.name
+            # split the name of the product to maximum 3 substrings of length 35
+            name = commodity.product_id.name
+            product.Description = [line for line in [name[35 * i:35 * (i + 1)] for i in range(3)] if line]
             product.Unit = unit_type
             product.OriginCountryCode = commodity.country_of_origin
 
@@ -333,7 +336,9 @@ class UPSRequest():
             address_sold_to.StateProvinceCode = ship_to.state_id.code or ''
 
         sold_to = self.factory_ns4.SoldToType()
-        sold_to.Name = ship_to.commercial_company_name
+        if len(ship_to.commercial_partner_id.name) > 35:
+            raise UserError(_('The name of the customer should be no more than 35 characters.'))
+        sold_to.Name = ship_to.commercial_partner_id.name
         sold_to.AttentionName = ship_to.name
         sold_to.Address = address_sold_to
 

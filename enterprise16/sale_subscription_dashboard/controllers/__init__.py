@@ -4,3 +4,4 @@
 from . import revenue_kpis_dashboard
 from . import salesman_dashboard
 from . import stat_types
+from . import stat_types_batch

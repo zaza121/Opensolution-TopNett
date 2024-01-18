@@ -7,20 +7,26 @@ import { AttachToMessageMacro, UseAsAttachmentMacro } from "@knowledge/macros/fi
 import { sprintf } from "@web/core/utils/strings";
 import { useService } from "@web/core/utils/hooks";
 import utils from "web.utils";
-
-const { markup } = owl;
+import {
+    encodeDataBehaviorProps,
+} from "@knowledge/js/knowledge_utils";
+import { configureBlobDownloadXHR, downloadFile } from "@web/core/network/download";
 
 
 export class FileBehavior extends AbstractBehavior {
     setup() {
         super.setup();
         this.dialogService = useService('dialog');
-        this.knowledgeCommandsService = useService('knowledgeCommandsService');
         this.rpcService = useService('rpc');
         this.uiService = useService('ui');
         this.targetRecordInfo = this.knowledgeCommandsService.getCommandsRecordInfo();
-        if (this.props.fileImage) {
-            this.props.fileImage = markup(this.props.fileImage);
+
+        // ensure that the fileName and extension are saved in data-behavior-props of the anchor element
+        if (!this.props.anchor.dataset.behaviorProps) {
+            this.props.anchor.dataset.behaviorProps = encodeDataBehaviorProps({
+                fileName: this.props.fileName,
+                fileExtension: this.props.fileExtension,
+            });
         }
     }
     /**
@@ -37,24 +43,17 @@ export class FileBehavior extends AbstractBehavior {
         }
         const title = fileLink.getAttribute('title');
         const href = fileLink.getAttribute('href');
-        try {
-            const response = await window.fetch(href);
-            const blob = await response.blob();
-            const file = new Blob([blob], {
-                type: 'application/octet-stream'
-            });
-            const downloadLink = document.createElement('a');
-            downloadLink.href = URL.createObjectURL(file);
-            downloadLink.download = title;
-            downloadLink.click();
-        } catch {
-            this.dialogService.add(AlertDialog, {
-                body: sprintf(_t('Oops, the file %s could not be found. Please replace this file box by a new one to re-upload the file.'), title),
-                title: _t('Missing File'),
-                confirm: () => {},
-                confirmLabel: _t('Ok'),
-            });
-        }
+        const xhr = downloadFile(href);
+        configureBlobDownloadXHR(xhr, {
+            onFailure: () => {
+                this.dialogService.add(AlertDialog, {
+                    body: sprintf(_t('Oops, the file %s could not be found. Please replace this file box by a new one to re-upload the file.'), title),
+                    title: _t('Missing File'),
+                    confirm: () => {},
+                    confirmLabel: _t('Ok'),
+                });
+            }
+        });
     }
     /**
      * Callback function called when the user clicks on the "Send as Message" button.
@@ -145,5 +144,5 @@ FileBehavior.props = {
     ...AbstractBehavior.props,
     fileName: { type: String, optional: true },
     fileExtension: { type: String, optional: true },
-    fileImage: { type: String, optional: true },
+    fileImage: { type: Object, optional: true },
 };

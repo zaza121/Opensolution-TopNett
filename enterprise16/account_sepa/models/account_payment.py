@@ -26,3 +26,12 @@ class AccountPayment(models.Model):
             if rec.payment_method_id == sepa_payment_method:
                 if not rec.journal_id.bank_account_id or not rec.journal_id.bank_account_id.acc_type == 'iban':
                     raise ValidationError(_("The journal '%s' requires a proper IBAN account to pay via SEPA. Please configure it first.", rec.journal_id.name))
+
+    def _get_payment_method_codes_to_exclude(self):
+        res = super()._get_payment_method_codes_to_exclude()
+        currency_codes = ['BGN', 'HRK', 'CZK', 'DKK', 'GIP', 'HUF', 'ISK', 'CHF', 'NOK', 'PLN', 'RON', 'SEK', 'GBP', 'EUR', 'XPF']
+        currency_ids = self.env['res.currency'].with_context(active_test=False).search([('name', 'in', currency_codes)])
+        sepa_ct = self.env.ref('account_sepa.account_payment_method_sepa_ct', raise_if_not_found=False)
+        if sepa_ct and self.currency_id not in currency_ids:
+            res.append(sepa_ct.code)
+        return res

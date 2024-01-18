@@ -429,7 +429,7 @@ class Payslip(models.Model):
     def _compute_presence_prorata(self, date_from, date_to, contracts):
         unpaid_work_entry_types = self.struct_id.unpaid_work_entry_type_ids
         paid_work_entry_types = self.env['hr.work.entry.type'].search([]) - unpaid_work_entry_types
-        hours = contracts._get_work_hours(date_from, date_to)
+        hours = contracts.get_work_hours(date_from, date_to)
         paid_hours = sum(v for k, v in hours.items() if k in paid_work_entry_types.ids)
         unpaid_hours = sum(v for k, v in hours.items() if k in unpaid_work_entry_types.ids)
         return paid_hours / (paid_hours + unpaid_hours) if paid_hours or unpaid_hours else 0
@@ -607,6 +607,10 @@ class Payslip(models.Model):
                 'data/cp200/employee_thirteen_month_data.xml',
                 'data/cp200/employee_warrant_salary_data.xml',
                 'data/student/student_regular_pay_data.xml',
+                'views/281_10_xml_export_template.xml',
+                'views/281_45_xml_export_template.xml',
+                'report/hr_281_10_templates.xml',
+                'report/hr_281_45_templates.xml',
             ])]
 
     @api.model
@@ -689,6 +693,35 @@ class Payslip(models.Model):
                     'action': self._dashboard_default_action(invalid_address_str, 'res.partner', invalid_addresses.ids),
                 })
 
+            # SICK MORE THAN 30 DAYS
+            sick_work_entry_type = self.env.ref('hr_work_entry_contract.work_entry_type_sick_leave')
+            partial_sick_work_entry_type = self.env.ref('l10n_be_hr_payroll.work_entry_type_part_sick')
+            long_sick_work_entry_type = self.env.ref('l10n_be_hr_payroll.work_entry_type_long_sick')
+            sick_work_entry_types = sick_work_entry_type + partial_sick_work_entry_type + long_sick_work_entry_type
+
+            sick_more_than_30days_leave = self.env['hr.leave'].search([
+                ('employee_company_id', '=', self.env.company.id),
+                ('date_from', '<=', date.today() + relativedelta(days=-31)),
+                ('holiday_status_id.work_entry_type_id', 'in', sick_work_entry_types.ids),
+                ('state', '=', 'validate'),
+            ])
+
+            employees_on_long_sick_leave = []
+            employee_ids = sick_more_than_30days_leave.mapped('employee_id').ids
+            for employee_id in employee_ids:
+                employee_leaves = sick_more_than_30days_leave.filtered(lambda l: l.employee_id.id == employee_id)
+                total_duration = sum([(leave.date_to - leave.date_from).days for leave in employee_leaves])
+                if total_duration > 30:
+                    employees_on_long_sick_leave.append(employee_id)
+
+            sick_more_than_30days_str = _('Employee on Mutual Health (> 30 days Illness)')
+            if employees_on_long_sick_leave:
+                res.append({
+                    'string': sick_more_than_30days_str,
+                    'count': len(employees_on_long_sick_leave),
+                    'action': self._dashboard_default_action(sick_more_than_30days_str, 'hr.employee', employees_on_long_sick_leave),
+                })
+
         return res
 
     def _get_ffe_contribution_rate(self, worker_count):
@@ -751,7 +784,10 @@ def compute_withholding_taxes(payslip, categories, worked_days, inputs):
 
     taxable_amount = categories.GROSS  # Base imposable
 
-    lower_bound = taxable_amount - taxable_amount % 15
+    if payslip.date_from.year < 2023:
+        lower_bound = taxable_amount - taxable_amount % 15
+    else:
+        lower_bound = taxable_amount
 
     # yearly_gross_revenue = Revenu Annuel Brut
     yearly_gross_revenue = lower_bound * 12.0
@@ -917,13 +953,25 @@ def compute_employment_bonus_employees(payslip, categories, worked_days, inputs)
     salary = categories.BRUT * total_hours / paid_hours  # S = (W/H) x U
 
     # 2. - Détermination du montant de base de la réduction (R)
-    if salary <= wage_lower_bound:
-        result = bonus_basic_amount
-    elif salary <= payslip.rule_parameter('work_bonus_reference_wage_high'):
-        coeff = payslip.rule_parameter('work_bonus_coeff')
-        result = bonus_basic_amount - (coeff * (salary - wage_lower_bound))
+    if payslip.date_from < date(2023, 6, 1):
+        if salary <= wage_lower_bound:
+            result = bonus_basic_amount
+        elif salary <= payslip.rule_parameter('work_bonus_reference_wage_high'):
+            coeff = payslip.rule_parameter('work_bonus_coeff')
+            result = bonus_basic_amount - (coeff * (salary - wage_lower_bound))
+        else:
+            result = 0
     else:
-        result = 0
+        if salary <= wage_lower_bound:
+            result = bonus_basic_amount
+        elif salary <= payslip.rule_parameter('l10n_be_work_bonus_reference_wage_middle'):
+            coeff = payslip.rule_parameter('l10n_be_work_bonus_coeff_low')
+            result = bonus_basic_amount - (coeff * (salary - wage_lower_bound))
+        elif salary <= payslip.rule_parameter('work_bonus_reference_wage_high'):
+            coeff = payslip.rule_parameter('work_bonus_coeff')
+            result = bonus_basic_amount - (coeff * (salary - wage_lower_bound))
+        else:
+            result = 0
 
     # 3. - Détermination du montant de la réduction (P)
     result = result * paid_hours / total_hours  # P = (H/U) x R
@@ -1160,10 +1208,10 @@ def compute_representation_fees(payslip, categories, worked_days, inputs):
         else:
             work_time_rate = contract.resource_calendar_id.work_time_rate
 
-        threshold = 0 if (worked_days.OUT and worked_days.OUT.number_of_hours) else 279.31
+        threshold = 0 if (worked_days.OUT and worked_days.OUT.number_of_hours) else payslip.rule_parameter('cp200_representation_fees_threshold')
         if days_per_week and contract.representation_fees > threshold:
             # Only part of the representation costs are pro-rated because certain costs are fully
-            # covered for the company (teleworking costs, mobile phone, internet, etc., namely:
+            # covered for the company (teleworking costs, mobile phone, internet, etc., namely (for 2021):
             # - 144.31 € (Tax, since 2021 - coronavirus)
             # - 30 € (internet)
             # - 25 € (phone)
@@ -1194,10 +1242,10 @@ def compute_representation_fees(payslip, categories, worked_days, inputs):
     return result
 
 def compute_serious_representation_fees(payslip, categories, worked_days, inputs):
-    return min(compute_representation_fees(payslip, categories, worked_days, inputs), 279.31)
+    return min(compute_representation_fees(payslip, categories, worked_days, inputs), payslip.rule_parameter('cp200_representation_fees_threshold'))
 
 def compute_volatile_representation_fees(payslip, categories, worked_days, inputs):
-    return max(compute_representation_fees(payslip, categories, worked_days, inputs) - 279.31, 0)
+    return max(compute_representation_fees(payslip, categories, worked_days, inputs) - payslip.rule_parameter('cp200_representation_fees_threshold'), 0)
 
 def compute_holiday_pay_recovery_n(payslip, categories, worked_days, inputs):
     """

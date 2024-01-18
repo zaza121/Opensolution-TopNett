@@ -20,6 +20,7 @@ class TestMarketAutoFlow(TestMACommon, CronMixinCase):
         super(TestMarketAutoFlow, cls).setUpClass()
         cls.date_reference = Datetime.from_string('2014-08-01 15:02:32')  # so long, little task
         cls._set_mock_datetime_now(cls.date_reference)
+        cls.env['res.lang']._activate_lang('fr_FR')
 
         # --------------------------------------------------
         # CAMPAIGN, based on marketing.test.sms (customers)
@@ -77,6 +78,51 @@ for record in records:
             cls.campaign, mailing=cls.act3_1_mailing, parent_id=cls.act2_1.id,
             trigger_type='sms_click', interval_number=0
         ).with_user(cls.user_markauto)
+
+    @mute_logger('odoo.addons.base.models.ir_model', 'odoo.addons.mail.models.mail_mail')
+    def test_domain_with_translated_terms(self):
+        """ Test that a campaign with a domain containing translated terms, in the language
+            of the responsible, does correctly sync participant and execute activities """
+
+        # init test variables to ease code reading
+        test_records = self.test_records
+        test_records_init = test_records.filtered(lambda r: r.name != 'Test_00')
+
+        test_records.write({'text_trans': 'Test EN'})
+        test_records.with_context(lang="fr_FR").write({'text_trans': 'Test FR'})
+
+        campaign = self.campaign.with_user(self.user_markauto)
+        campaign.user_id.write({'lang': 'en_US'})
+        campaign.write({
+            'domain': str([('name', '!=', 'Test_00'), ('text_trans', '=', 'Test FR')]),
+        })
+
+        # ensure initial data
+        self.assertEqual(len(test_records), 10)
+        self.assertEqual(len(test_records_init), 9)
+        self.assertEqual(campaign.state, 'draft')
+
+        campaign.action_start_campaign()
+
+        # With responsible language != language terms in campaign domain
+        campaign.sync_participants()
+
+        self.assertEqual(campaign.running_participant_count, 0)
+        self.assertFalse(campaign.participant_ids)
+
+        # With responsible language == language terms in campaign domain
+
+        campaign.user_id.write({'lang': 'fr_FR'})
+
+        campaign.sync_participants()
+
+        self.assertEqual(campaign.running_participant_count, len(test_records_init))
+        self.assertEqual(campaign.participant_ids.mapped('res_id'), test_records_init.ids)
+        self.assertEqual(set(campaign.participant_ids.mapped('state')), {'running'})
+
+        self.assertEqual(set(self.act1.trace_ids.mapped('state')), {'scheduled'})
+        campaign.execute_activities()
+        self.assertEqual(set(self.act1.trace_ids.mapped('state')), {'canceled', 'processed'})
 
     @mute_logger('odoo.addons.base.models.ir_model', 'odoo.addons.mail.models.mail_mail')
     @users('user_markauto')
@@ -175,7 +221,7 @@ for record in records:
             'schedule_date': date_reference,
             # no email -> trace set as canceled
             'trace_status': 'cancel',
-            'failure_type': 'mail_email_missing',
+            'trace_failure_type': 'mail_email_missing',
         }], act1)
 
         # Child traces should have been generated for all traces of parent activity as activity_domain
@@ -234,7 +280,7 @@ for record in records:
             'schedule_date': date_reference,
             # no email -> trace set as canceled
             'trace_status': 'cancel',
-            'failure_type': 'mail_email_missing',
+            'trace_failure_type': 'mail_email_missing',
         }], act1)
 
         # Replied records -> SMS scheduled

@@ -17,6 +17,7 @@ class TestAbstractBuilder(AccountConsolidationTestCase):
         super().setUp()
         self.ap = self._create_analysis_period(start_date="2019-02-01", end_date="2019-02-28")
         self.builder = ComparisonBuilder(self.env, self.ap._format_value)
+        self.report = self.env.ref('account_consolidation.consolidated_balance_report')
 
     @patch('odoo.addons.account_consolidation.report.builder.comparison.ComparisonBuilder._get_hierarchy')
     @patch('odoo.addons.account_consolidation.report.builder.comparison.ComparisonBuilder._get_plain')
@@ -36,7 +37,7 @@ class TestAbstractBuilder(AccountConsolidationTestCase):
             'include_percentage': True
         }
         # EMPTY OPTIONS
-        options = {}
+        options = self.report._get_options()
         self.assertListEqual(patched_get_hierarchy.return_value,
                              self.builder.get_lines(period_ids, options, None))
         patched_get_hierarchy.assert_called_once_with(options, None, **kwargs)
@@ -44,21 +45,21 @@ class TestAbstractBuilder(AccountConsolidationTestCase):
         patched_get_plain.assert_not_called()
 
         # WITH HIERARCHY
-        options = {'consolidation_hierarchy': True}
+        options = self.report._get_options({'consolidation_hierarchy': True})
         self.assertListEqual(patched_get_hierarchy.return_value, self.builder.get_lines(period_ids, options, None))
         patched_get_hierarchy.assert_called_once_with(options, None, **kwargs)
         patched_get_hierarchy.reset_mock()
         patched_get_plain.assert_not_called()
 
         # WITH HIERARCHY AND LINE ID
-        options = {'consolidation_hierarchy': True}
+        options = self.report._get_options({'consolidation_hierarchy': True})
         self.assertListEqual(patched_get_hierarchy.return_value, self.builder.get_lines(period_ids, options, 1))
         patched_get_hierarchy.assert_called_once_with(options, 1, **kwargs)
         patched_get_hierarchy.reset_mock()
         patched_get_plain.assert_not_called()
 
         # WITHOUT HIERARCHY
-        options = {'consolidation_hierarchy': False}
+        options = self.report._get_options({'consolidation_hierarchy': False})
         self.assertListEqual(patched_get_plain.return_value, self.builder.get_lines(period_ids, options, None))
         patched_get_plain.assert_called_once_with(options, **kwargs)
         patched_get_plain.reset_mock()

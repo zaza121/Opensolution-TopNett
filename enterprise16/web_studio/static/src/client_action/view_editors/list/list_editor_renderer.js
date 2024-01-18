@@ -1,6 +1,6 @@
 /** @odoo-module */
 import { listView } from "@web/views/list/list_view";
-import { debounce } from "@web/core/utils/timing";
+import { throttleForAnimation } from "@web/core/utils/timing";
 
 import { closest, touching } from "@web/core/utils/ui";
 
@@ -15,7 +15,7 @@ import {
 
 import { useDraggable } from "@web/core/utils/draggable";
 
-import { useEffect, useRef } from "@odoo/owl";
+import { useEffect, useRef, onWillUnmount } from "@odoo/owl";
 
 const colSelectedClass = "o-web-studio-editor--element-clicked";
 const colHoverClass = "o-web-studio--col-hovered";
@@ -44,7 +44,8 @@ function getSelectableCol(target, colSelector) {
 export class ListEditorRenderer extends listView.Renderer {
     setup() {
         super.setup();
-        this.onTableHover = debounce(this.onTableHover.bind(this), "animationFrame");
+        this.onTableHover = throttleForAnimation(this.onTableHover.bind(this));
+        onWillUnmount(this.onTableHover.cancel);
 
         // Prepare a legacy handler for JQuery UI's droppable
         const onLegacyDropped = useLegacyOnDropElement(this.rootRef);
@@ -241,6 +242,7 @@ export class ListEditorRenderer extends listView.Renderer {
 
     onTableClicked(ev) {
         ev.stopPropagation();
+        ev.preventDefault();
         const table = ev.currentTarget;
         cleanStyling(table, [colSelectedClass]);
         const colEl = getSelectableCol(ev.target, "[data-studio-xpath]");

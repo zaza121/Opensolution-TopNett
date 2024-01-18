@@ -6,7 +6,7 @@ from collections import namedtuple
 from dateutil.rrule import rrule, MONTHLY
 
 from odoo import models, fields, release, _
-from odoo.exceptions import UserError
+from odoo.exceptions import RedirectWarning, UserError
 from odoo.tools import get_lang
 from odoo.tools.misc import street_split
 
@@ -69,12 +69,43 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         def change_date_time(date):
             return date.strftime('%Y-%m-%dT%H:%M:%S')
 
+        def check_forbidden_countries(report, res_list, iso_country_codes):
+            if not iso_country_codes:
+                return
+            forbidden_country_ids = {
+                row['partner_country_id']
+                for row in res_list
+                if row['partner_country_code'] and row['partner_country_code'] not in iso_country_codes
+            }
+
+            if forbidden_country_ids and 'l10n_nl_skip_forbidden_countries' not in options:
+                skip_action = report.export_file(dict(options, l10n_nl_skip_forbidden_countries=True), 'l10n_nl_get_xaf')
+                skip_action['data']['model'] = self._name
+                forbidden_country_names = ''.join([
+                    '  •  ' + self.env['res.country'].browse(country_id).name + '\n'
+                    for country_id in forbidden_country_ids
+                ])
+                raise RedirectWarning(
+                    _('Some partners are located in countries forbidden in dutch audit reports.\n'
+                      'Those countries are:\n\n'
+                      '%s\n'
+                      'If you continue, please note that the fields <country> and <taxRegistrationCountry> '
+                      'will be skipped in the report for those partners.\n\n'
+                      'Otherwise, please change the address of the partners located in those countries.\n', forbidden_country_names),
+                    skip_action,
+                    _('Continue and skip country fields'),
+                )
+
         def get_vals_dict(report):
             tables, where_clause, where_params = report._query_get(options, 'strict_range')
 
             # Count the total number of lines to be used in the batching
             self.env.cr.execute(f"SELECT COUNT(*) FROM {tables} WHERE {where_clause}", where_params)
             count = self.env.cr.fetchone()[0]
+
+            if count == 0:
+                raise UserError(_("There is no data to export."))
+
             batch_size = self.env['ir.config_parameter'].sudo().get_param('l10n_nl_reports.general_ledger_batch_size', 10**4)
             # Create a list to store the query results during the batching
             res_list = []
@@ -182,6 +213,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 res_list += self.env.cr.dictfetchall()
                 min_row_number = res_list[-1]['row_number']
 
+            iso_country_codes = self.env['ir.attachment'].l10n_nl_reports_load_iso_country_codes()
+            check_forbidden_countries(report, res_list, iso_country_codes)
+
             vals_dict = {}
             for row in res_list:
                 # Aggregate taxes' values
@@ -210,7 +244,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                         # XAF XSD has maximum 50 characters for customer/supplier name
                         'partner_name': (row['partner_name']
                                          or row['partner_commercial_company_name']
-                                         or row['partner_commercial_partner_id']
+                                         or str(row['partner_commercial_partner_id'])
                                          or ('id: ' + str(row['partner_id'])))[:50],
                         'partner_is_company': row['partner_is_company'],
                         'partner_phone': row['partner_phone'],
@@ -225,7 +259,8 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                         'partner_zip': row['partner_zip'],
                         'partner_state_name': row['partner_state_name'],
                         'partner_country_id': row['partner_country_id'],
-                        'partner_country_code': row['partner_country_code'],
+                        'partner_country_code': row['partner_country_code']\
+                            if not iso_country_codes or row['partner_country_code'] in iso_country_codes else None,
                         'partner_write_uid': row['partner_write_uid'],
                         'partner_xaf_userid': self.env['res.users'].browse(row['partner_write_uid']).l10n_nl_report_xaf_userid,
                         'partner_write_date': change_date_time(row['partner_write_date']),
@@ -355,9 +390,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             'opening_lines': opening_lines,
             'company': company,
             'account_data': sorted(vals_dict['account_data'].values(), key=(lambda d: d['account_code'])),
-            'partner_data': list(vals_dict['partner_data'].values()),
+            'partner_data': list(vals_dict.get('partner_data', {}).values()),
             'journal_data': list(vals_dict['journal_data'].values()),
-            'tax_data': list(vals_dict['tax_data'].values()),
+            'tax_data': list(vals_dict.get('tax_data', {}).values()),
             'periods': periods,
             'fiscal_year': date_from[0:4],
             'date_from': date_from,
@@ -369,10 +404,10 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             'moves_credit': round(vals_dict['moves_credit'], 2) or 0.0,
         }
         audit_content = self.env['ir.qweb']._render('l10n_nl_reports.xaf_audit_file', values)
-        self.env['ir.attachment'].l10n_nl_reports_validate_xml_from_attachment(audit_content, 'XmlAuditfileFinancieel3.2.xsd')
+        self.env['ir.attachment'].l10n_nl_reports_validate_xml_from_attachment(audit_content)
 
         return {
             'file_name': report.get_default_report_filename('xaf'),
-            'file_content': audit_content,
-            'file_type': 'xml',
+            'file_content': audit_content.encode(),
+            'file_type': 'xaf',
         }

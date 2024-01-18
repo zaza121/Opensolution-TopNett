@@ -209,7 +209,9 @@ class AmazonAccount(models.Model):
             ], limit=1)
             if not location:
                 parent_location_data = self.env['stock.warehouse'].search_read(
-                    [('company_id', '=', vals.get('company_id'))], ['view_location_id'], limit=1
+                    ['|', ('company_id', '=', False), ('company_id', '=', vals.get('company_id'))],
+                    ['view_location_id'],
+                    limit=1,
                 )
                 location = self.env['stock.location'].create({
                     'name': 'Amazon',
@@ -428,11 +430,12 @@ class AmazonAccount(models.Model):
                                 # itself later, depending on which of the two called this method.
                                 raise
                             else:
-                                _logger.exception(
+                                _logger.warning(
                                     "A business error occurred while processing the order data "
                                     "with amazon_order_ref %s for Amazon account with id %s. "
                                     "Skipping the order data and moving to the next order.",
-                                    amazon_order_ref, account.id
+                                    amazon_order_ref, account.id,
+                                    exc_info=True
                                 )
                                 # Dismiss business errors to allow the synchronization to skip the
                                 # problematic orders and require synchronizing them manually.
@@ -601,7 +604,7 @@ class AmazonAccount(models.Model):
         country = self.env['res.country'].search([('code', '=', country_code)], limit=1)
         state = self.env['res.country.state'].search([
             ('country_id', '=', country.id),
-            '|', ('code', '=', state_code), ('name', '=', state_code),
+            '|', ('code', '=ilike', state_code), ('name', '=ilike', state_code),
         ], limit=1)
         if not state:
             state = self.env['res.country.state'].with_context(tracking_disable=True).create({
@@ -766,6 +769,13 @@ class AmazonAccount(models.Model):
             subtotal = self._recompute_subtotal(
                 original_subtotal, tax_amount, taxes, currency, fiscal_pos
             )
+            promo_discount = float(item_data.get('PromotionDiscount', {}).get('Amount', '0'))
+            promo_disc_tax = float(item_data.get('PromotionDiscountTax', {}).get('Amount', '0'))
+            original_promo_discount_subtotal = promo_discount - promo_disc_tax \
+                if marketplace.tax_included else promo_discount
+            promo_discount_subtotal = self._recompute_subtotal(
+                original_promo_discount_subtotal, promo_disc_tax, taxes, currency, fiscal_pos
+            )
             amazon_item_ref = item_data['OrderItemId']
             order_lines_values.append(convert_to_order_line_values(
                 product_id=offer.product_id.id,
@@ -773,7 +783,7 @@ class AmazonAccount(models.Model):
                 subtotal=subtotal,
                 tax_ids=taxes.ids,
                 quantity=item_data['QuantityOrdered'],
-                discount=float(item_data.get('PromotionDiscount', {}).get('Amount', '0')),
+                discount=promo_discount_subtotal,
                 amazon_item_ref=amazon_item_ref,
                 amazon_offer_id=offer.id,
             ))
@@ -835,6 +845,13 @@ class AmazonAccount(models.Model):
                 shipping_subtotal = self._recompute_subtotal(
                     origin_ship_subtotal, shipping_tax_amount, shipping_taxes, currency, fiscal_pos
                 )
+                ship_discount = float(item_data.get('ShippingDiscount', {}).get('Amount', '0'))
+                ship_disc_tax = float(item_data.get('ShippingDiscountTax', {}).get('Amount', '0'))
+                origin_ship_disc_subtotal = ship_discount - ship_disc_tax \
+                    if marketplace.tax_included else ship_discount
+                ship_discount_subtotal = self._recompute_subtotal(
+                    origin_ship_disc_subtotal, ship_disc_tax, shipping_taxes, currency, fiscal_pos
+                )
                 order_lines_values.append(convert_to_order_line_values(
                     product_id=shipping_product.id,
                     description=_(
@@ -842,7 +859,7 @@ class AmazonAccount(models.Model):
                     ),
                     subtotal=shipping_subtotal,
                     tax_ids=shipping_taxes.ids,
-                    discount=float(item_data.get('ShippingDiscount', {}).get('Amount', '0')),
+                    discount=ship_discount_subtotal,
                 ))
 
         return order_lines_values

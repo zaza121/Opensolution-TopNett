@@ -7,6 +7,7 @@
 # Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2022
 # Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2022
 # Marko Happonen <marko.happonen@sprintit.fi>, 2022
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023
 # 
 msgid ""
 msgstr ""
@@ -14,8 +15,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-12-07 10:57+0000\n"
 "PO-Revision-Date: 2022-09-22 05:48+0000\n"
-"Last-Translator: Marko Happonen <marko.happonen@sprintit.fi>, 2022\n"
-"Language-Team: Finnish (https://www.transifex.com/odoo/teams/41243/fi/)\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2023\n"
+"Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,18 +26,18 @@ msgstr ""
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_purchase_order__auto_generated
 msgid "Auto Generated Purchase Order"
-msgstr ""
+msgstr "Automaattisesti luotu ostotilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_sale_order__auto_generated
 msgid "Auto Generated Sales Order"
-msgstr ""
+msgstr "Automaattisesti luotu myyntitilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_res_company__auto_validation
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_res_config_settings__auto_validation
 msgid "Automatic Validation"
-msgstr ""
+msgstr "Automaattinen vahvistus"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/purchase_order.py:0
@@ -44,6 +45,7 @@ msgstr ""
 #, python-format
 msgid "Automatically generated from %(origin)s of company %(company)s."
 msgstr ""
+"Automaattisesti luotu %(origin)s - lähteestä ja yrityksestä %(company)s."
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model,name:sale_purchase_inter_company_rules.model_res_company
@@ -63,6 +65,8 @@ msgid ""
 "Configure correct warehouse for company(%s) from Menu: "
 "Settings/Users/Companies"
 msgstr ""
+"Määritä oikea varasto yritykselle(%s) valikosta: "
+"Asetukset/Käyttäjät/Yritykset"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,help:sale_purchase_inter_company_rules.field_res_company__warehouse_id
@@ -71,6 +75,8 @@ msgid ""
 "Default value to set on Purchase(Sales) Orders that will be created based on"
 " Sale(Purchase) Orders made to this company"
 msgstr ""
+"Oletusarvo, joka asetetaan osto(myynti)tilauksille, jotka luodaan tälle "
+"yritykselle tehtyjen myynti(osto)tilausten perusteella"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
@@ -80,6 +86,8 @@ msgid ""
 "warehouse %(warehouse)s when a company confirms a %(event_type)s for "
 "%(company)s."
 msgstr ""
+"Luo %(validation)s %(generated_object)s käyttäen varastoa %(warehouse)s, kun"
+" yritys vahvistaa %(event_type)s %(company)s:lle."
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
@@ -88,31 +96,35 @@ msgid ""
 "Generate a %(validation)s %(generated_object)s                when a company"
 " confirms a %(event_type)s for %(company)s."
 msgstr ""
+"Luo %(validation)s %(generated_object)s, kun yritys vahvistaa %(event_type)s"
+" %(company)s:lle."
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/purchase_order.py:0
 #, python-format
 msgid ""
 "Inter company user of company %(name)s doesn't have enough access rights"
-msgstr ""
+msgstr "Yrityksen %(name)s käyttäjällä ei ole riittävästi käyttöoikeuksia"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/sale_order.py:0
 #, python-format
 msgid "Inter company user of company %s doesn't have enough access rights"
 msgstr ""
+"Yrityksen %s intercompany-käyttäjällä ei ole riittävästi käyttöoikeuksia"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/purchase_order.py:0
 #, python-format
 msgid "Provide at least one user for inter company relation for %(name)s"
 msgstr ""
+"Anna vähintään yksi käyttäjä yritysten väliseen suhteeseen %(name)s varten"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/sale_order.py:0
 #, python-format
-msgid "Provide one user for intercompany relation for % "
-msgstr ""
+msgid "Provide one user for intercompany relation for %(name)s "
+msgstr "Anna yksi käyttäjä yritysten väliselle suhteelle %(name)s varten "
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model,name:sale_purchase_inter_company_rules.model_purchase_order
@@ -138,11 +150,13 @@ msgstr "Myyntitilausrivi"
 #: model:ir.model.fields,help:sale_purchase_inter_company_rules.field_res_company__rule_type
 msgid "Select the type to setup inter company rules in selected company."
 msgstr ""
+"Valitse tyyppi voidaksesi asettaa yritysten väliset säännöt tälle "
+"yritykselle."
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_sale_order__auto_purchase_order_id
 msgid "Source Purchase Order"
-msgstr ""
+msgstr "Lähteenä oleva ostotilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_purchase_order__auto_sale_order_id
@@ -152,22 +166,22 @@ msgstr "Lähteenä oleva myyntitilaus"
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields.selection,name:sale_purchase_inter_company_rules.selection__res_company__rule_type__purchase
 msgid "Synchronize Purchase Order"
-msgstr ""
+msgstr "Synkronoi ostotilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields.selection,name:sale_purchase_inter_company_rules.selection__res_company__rule_type__sale
 msgid "Synchronize Sales Order"
-msgstr ""
+msgstr "Synkronoi myyntitilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields.selection,name:sale_purchase_inter_company_rules.selection__res_company__rule_type__sale_purchase
 msgid "Synchronize Sales and Purchase Order"
-msgstr ""
+msgstr "Synkronoi myynti- ja ostotilaukset"
 
 #. module: sale_purchase_inter_company_rules
 #: model_terms:ir.ui.view,arch_db:sale_purchase_inter_company_rules.res_config_settings_view_form
 msgid "Use Warehouse"
-msgstr ""
+msgstr "Käytä varastoa"
 
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_res_company__warehouse_id
@@ -177,7 +191,7 @@ msgstr "Varasto"
 #. module: sale_purchase_inter_company_rules
 #: model:ir.model.fields,field_description:sale_purchase_inter_company_rules.field_res_config_settings__warehouse_id
 msgid "Warehouse For Purchase Orders"
-msgstr ""
+msgstr "Varasto ostotilauksia varten"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/purchase_order.py:0
@@ -188,41 +202,45 @@ msgid ""
 "\n"
 "(SO currency: %(so_currency)s, Pricelist: %(pricelist)s, Partner: %(partner)s (ID: %(id)s))"
 msgstr ""
+"Et voi luoda myyntitilausta tilauksesta, koska myyntihintaluettelon valuutta on eri kuin ostohintaluettelon valuutta.\n"
+"Myyntitilauksen valuutta saadaan yrityskumppanin hinnastosta.\n"
+"\n"
+"(Myyntitilauksen valuutta: %(so_currency)s, Hinnasto: %(pricelist)s, Kumppani: %(partner)s (ID: %(id)s)))"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #, python-format
 msgid "draft"
-msgstr ""
+msgstr "luonnos"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #, python-format
 msgid "purchase order"
-msgstr ""
+msgstr "ostotilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #, python-format
 msgid "purchase/sales order"
-msgstr ""
+msgstr "osto-/myyntitilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #, python-format
 msgid "sales order"
-msgstr ""
+msgstr "myyntitilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #, python-format
 msgid "sales/purchase order"
-msgstr ""
+msgstr "myynti-/ostotilaus"
 
 #. module: sale_purchase_inter_company_rules
 #: code:addons/sale_purchase_inter_company_rules/models/res_company.py:0
 #, python-format
 msgid "validated"
-msgstr ""
+msgstr "vahvistettu"

@@ -276,29 +276,31 @@
                                     <button name="action_view_question_answer_inputs" type="object" class="fa fa-bar-chart p-0" title="Answer Breakdown" />
                                 </tree>
                                 <form string="Questions" name="question_form">
-                                    <group>
-                                        <group name="question_form_left">
-                                            <field name="name" placeholder='e.g. "What are your symptoms ?"'/>
-                                            <field name="question_type" widget="radio"/>
+                                    <sheet>
+                                        <group>
+                                            <group name="question_form_left">
+                                                <field name="name" placeholder='e.g. "What are your symptoms ?"'/>
+                                                <field name="question_type" widget="radio"/>
+                                            </group>
+                                            <group name="question_form_right">
+                                                <field name="placeholder" placeholder='e.g. "I feel nauseous..."'
+                                                    attrs="{'invisible': [('question_type', 'in', ('select', 'radio', 'checkbox'))]}"/>
+                                                <field name="question_required"/>
+                                            </group>
                                         </group>
-                                        <group name="question_form_right">
-                                            <field name="placeholder" placeholder='e.g. "I feel nauseous..."'
-                                                attrs="{'invisible': [('question_type', 'in', ('select', 'radio', 'checkbox'))]}"/>
-                                            <field name="question_required"/>
-                                        </group>
-                                    </group>
-                                    <notebook attrs="{'invisible': [('question_type', 'in', ('char', 'text'))]}">
-                                        <page string="Answers" name="answers">
-                                            <field name="answer_ids">
-                                                <tree editable="bottom">
-                                                    <!-- 'display_name' is necessary for the many2many_tags to work on the appointment view -->
-                                                    <field name="display_name" invisible="1"/>
-                                                    <field name="sequence" widget="handle"/>
-                                                    <field name="name"/>
-                                                </tree>
-                                            </field>
-                                        </page>
-                                    </notebook>
+                                        <notebook attrs="{'invisible': [('question_type', 'in', ('char', 'text'))]}">
+                                            <page string="Answers" name="answers">
+                                                <field name="answer_ids">
+                                                    <tree editable="bottom">
+                                                        <!-- 'display_name' is necessary for the many2many_tags to work on the appointment view -->
+                                                        <field name="display_name" invisible="1"/>
+                                                        <field name="sequence" widget="handle"/>
+                                                        <field name="name"/>
+                                                    </tree>
+                                                </field>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
                                 </form>
                             </field>
                         </page>

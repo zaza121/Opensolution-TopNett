@@ -22,5 +22,5 @@ class res_company(models.Model):
 
     @api.model
     def _find_company_from_partner(self, partner_id):
-        company = self.sudo().search([('partner_id', '=', partner_id)], limit=1)
+        company = self.sudo().search([('partner_id', 'parent_of', partner_id)], limit=1)
         return company or False

@@ -2,6 +2,7 @@
 
 import { _t, _lt } from 'web.core';
 import { sprintf } from "@web/core/utils/strings";
+import { deserializeDateTime, momentToLuxon, serializeDateTime } from "@web/core/l10n/dates";
 
 export const msecPerUnit = {
     hour: 3600 * 1000,
@@ -21,8 +22,8 @@ export const RentingMixin = {
     /**
      * Get the message to display if the renting has invalid dates.
      *
-     * @param {moment} startDate
-     * @param {moment} endDate
+     * @param {DateTime} startDate
+     * @param {DateTime} endDate
      * @private
      */
     _getInvalidMessage(startDate, endDate, productId=false) {
@@ -31,15 +32,15 @@ export const RentingMixin = {
             return message;
         }
         if (startDate && endDate) {
-            if (this.rentingUnavailabilityDays[startDate.isoWeekday() % 7]) {
+            if (this.rentingUnavailabilityDays[startDate.weekday]) {
                 message = _t("You cannot pick up your rental on that day of the week.");
-            } else if (this.rentingUnavailabilityDays[endDate.isoWeekday() % 7]) {
+            } else if (this.rentingUnavailabilityDays[endDate.weekday]) {
                 message = _t("You cannot return your rental on that day of the week.");
             } else {
                 const rentingDuration = endDate - startDate;
                 if (rentingDuration < 0) {
                     message = _t("The return date should be after the pickup date.");
-                } else if (startDate.isBefore(moment(), 'day')) {
+                } else if (startDate.startOf("day") < luxon.DateTime.now().startOf("day")) {
                     message = _t("The pickup date cannot be in the past.");
                 } else if (['hour', 'day', 'week', 'month'].includes(this.rentingMinimalTime.unit)) {
                     const unit = this.rentingMinimalTime.unit;
@@ -75,9 +76,9 @@ export const RentingMixin = {
         let date = picker && picker[fieldName];
         if (!date || !date._isValid) {
             const $defaultDate = this.el.querySelector('input[name="default_' + inputName + '"]');
-            date = $defaultDate && $defaultDate.value;
+            date = $defaultDate && deserializeDateTime($defaultDate.value);
         } else {
-            date = date.toISOString();
+            date = momentToLuxon(date);
         }
         return date;
     },
@@ -85,6 +86,7 @@ export const RentingMixin = {
     /**
      * Get the renting pickup and return dates from the website sale renting daterange picker object.
      *
+     * @private
      * @param {$.Element} $product
      */
     _getRentingDates($product) {
@@ -98,5 +100,21 @@ export const RentingMixin = {
         }
         return {};
     },
+
+    /**
+     * Return serialized dates from `_getRentingDates`. Used for client-server exchange.
+     *
+     * @private
+     * @param {$.Element} $product
+     */
+    _getSerializedRentingDates($product) {
+        const { start_date, end_date } = this._getRentingDates($product);
+        if (start_date && end_date) {
+            return {
+                start_date: serializeDateTime(start_date),
+                end_date: serializeDateTime(end_date),
+            };
+        }
+    }
 
 };

@@ -198,7 +198,7 @@ odoo.define('sale_subscription_dashboard.sale_subscription_tests', function (req
                     value_3_months_ago: 0,
                     value_12_months_ago: 0
                 },
-                compute_stat: 10495,
+                compute_stat: [{0:'01/01/20', 1:10495}],
             };
 
             patchWithCleanup(SubscriptionDashBoard.sale_subscription_dashboard_main, {

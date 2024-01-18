@@ -220,9 +220,6 @@ class TestDeliveryUSPS(TransactionCase):
         self.assertEqual(delivery_order.state, 'draft', 'Shipment state should be draft.')
 
         delivery_order.action_confirm()
-        self.assertEqual(delivery_order.state, 'confirmed', 'Shipment state should be waiting(confirmed).')
-
-        delivery_order.action_assign()
         self.assertEqual(delivery_order.state, 'assigned', 'Shipment state should be ready(assigned).')
         delivery_order.move_ids_without_package.quantity_done = 1.0
 

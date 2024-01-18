@@ -44,12 +44,18 @@ class FetchmailServer(models.Model):
     @api.constrains('l10n_cl_is_dte', 'server_type')
     def _check_server_type(self):
         for record in self:
-            if record.l10n_cl_is_dte and record.server_type != 'imap':
+            if record.l10n_cl_is_dte and record.server_type not in ('imap', 'outlook', 'gmail'):
                 raise ValidationError(_('The server must be of type IMAP.'))
 
     def fetch_mail(self):
         for server in self.filtered(lambda s: s.l10n_cl_is_dte):
             _logger.info('Start checking for new emails on %s IMAP server %s', server.server_type, server.name)
+
+            # prevents the process from timing out when connecting for the first time
+            # to an edi email server with too many new emails to process
+            # e.g over 5k emails. We will only fetch the next 50 "new" emails
+            # based on their IMAP uid
+            default_batch_size = 50
 
             count, failed = 0, 0
             imap_server = None
@@ -59,7 +65,7 @@ class FetchmailServer(models.Model):
 
                 result, data = imap_server.uid('search', None, '(UID %s:*)' % server.l10n_cl_last_uid)
                 new_max_uid = server.l10n_cl_last_uid
-                for uid in data[0].split():
+                for uid in data[0].split()[:default_batch_size]:
                     if int(uid) <= server.l10n_cl_last_uid:
                         # We get always minimum 1 message.  If no new message, we receive the newest already managed.
                         continue
@@ -85,6 +91,7 @@ class FetchmailServer(models.Model):
                     try:
                         server._process_incoming_email(msg_txt)
                         new_max_uid = max(new_max_uid, int(uid))
+                        server.write({'l10n_cl_last_uid': new_max_uid})
                         self._cr.commit()
                     except Exception:
                         _logger.info('Failed to process mail from %s server %s.', server.server_type, server.name,
@@ -99,8 +106,11 @@ class FetchmailServer(models.Model):
                              server.name, exc_info=True)
             finally:
                 if imap_server:
-                    imap_server.close()
-                    imap_server.logout()
+                    try:
+                        imap_server.close()
+                        imap_server.logout()
+                    except Exception:  # pylint: disable=broad-except
+                        _logger.warning('Failed to properly finish connection: %s.', server.name, exc_info=True)
                 server.write({'date': fields.Datetime.now()})
         return super(FetchmailServer, self.filtered(lambda s: not s.l10n_cl_is_dte)).fetch_mail()
 
@@ -255,7 +265,7 @@ class FetchmailServer(models.Model):
 
             except Exception as error:
                 _logger.info(error)
-                with self.env['account.move'].with_context(
+                with self.env.cr.savepoint(), self.env['account.move'].with_context(
                         default_move_type=default_move_type, allowed_company_ids=[company_id],
                         account_predictive_bills_disable_prediction=True)._get_edi_creation() as invoice_form:
                     msgs.append(error)
@@ -269,7 +279,7 @@ class FetchmailServer(models.Model):
 
             dte_attachment = self.env['ir.attachment'].create({
                 'name': 'DTE_{}.xml'.format(document_number),
-                'res_model': self._name,
+                'res_model': move._name,
                 'res_id': move.id,
                 'type': 'binary',
                 'datas': base64.b64encode(etree.tostring(dte_xml))
@@ -306,7 +316,7 @@ class FetchmailServer(models.Model):
         """
         This method creates a draft vendor bill from the attached xml in the incoming email.
         """
-        with self.env['account.move'].with_context(
+        with self.env.cr.savepoint(), self.env['account.move'].with_context(
                 default_invoice_source_email=from_address,
                 default_move_type=default_move_type, allowed_company_ids=[company_id],
                 account_predictive_bills_disable_prediction=True)._get_edi_creation() as invoice_form:

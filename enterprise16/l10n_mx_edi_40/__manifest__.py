@@ -20,6 +20,7 @@ Convert CFDI XML documents to version 4.0 (from 3.3).
         'views/res_partner_view.xml',
         'views/l10n_mx_edi_report_bank_statement_line.xml',
         'views/l10n_mx_edi_report_payment.xml',
+        'views/l10n_mx_edi_report_invoice.xml',
     ],
     'demo': [
         'demo/res_partner.xml',

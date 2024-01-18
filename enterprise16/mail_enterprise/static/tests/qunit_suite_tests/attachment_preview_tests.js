@@ -9,6 +9,8 @@ import {
     startServer,
 } from '@mail/../tests/helpers/test_utils';
 
+import { click, contains } from "@web/../tests/utils";
+
 import testUtils, { file } from 'web.test_utils';
 const { createFile, inputFiles } = file;
 
@@ -63,8 +65,6 @@ QUnit.module('attachment_preview_tests.js', {}, function () {
     });
 
     QUnit.test('Attachment on side', async function (assert) {
-        assert.expect(9);
-
         const pyEnv = await startServer();
         const resPartnerId1 = pyEnv['res.partner'].create({});
         const irAttachmentId1 = pyEnv['ir.attachment'].create({
@@ -90,7 +90,7 @@ QUnit.module('attachment_preview_tests.js', {}, function () {
                 '</form>',
         };
         patchUiSize({ size: SIZES.XXL });
-        const { click, messaging, openFormView } = await start({
+        const { messaging, openFormView } = await start({
             mockRPC(route, args) {
                 if (_.str.contains(route, '/web/static/lib/pdfjs/web/viewer.html')) {
                     var canvas = document.createElement('canvas');
@@ -103,46 +103,23 @@ QUnit.module('attachment_preview_tests.js', {}, function () {
             res_id: resPartnerId1,
             res_model: 'res.partner',
         });
-
-        assert.containsOnce(document.body, '.o_attachment_preview_img > img',
-            "There should be an image for attachment preview");
-        assert.containsOnce(document.body, '.o_form_sheet_bg > .o_FormRenderer_chatterContainer',
-            "Chatter should moved inside sheet");
-        assert.doesNotHaveClass(
-            document.querySelector('.o_FormRenderer_chatterContainer'),
-            'o-aside',
-            "Chatter should not have o-aside class as it is below form view and not aside",
-        );
-        assert.containsOnce(document.body, '.o_form_view_container + .o_attachment_preview',
-            "Attachment preview should be next sibling to .o_form_view_container");
-
-        // Don't display arrow if there is no previous/next element
-        assert.containsNone(document.body, '.arrow',
-            "Don't display arrow if there is no previous/next attachment");
-
-        // send a message with attached PDF file
-        await click('.o_ChatterTopbar_buttonSendMessage');
-        const files = [
-            await createFile({ name: 'invoice.pdf', contentType: 'application/pdf' }),
-        ];
-        const chatter = messaging.models['Chatter'].all()[0];
-        await afterNextRender(() =>
-            inputFiles(chatter.composerView.fileUploader.fileInput, files)
-        );
-
-        await click('.o_Composer_buttonSend');
-        assert.containsN(document.body, '.arrow', 2,
-            "Display arrows if there multiple attachments");
-
-        await click('.o_move_next');
-        assert.containsNone(document.body, '.o_attachment_preview_img > img',
-            "Preview image should be removed");
-        assert.containsOnce(document.body, '.o_attachment_preview_container > iframe',
-            "There should be iframe for pdf viewer");
-
-        await click('.o_move_previous');
-        assert.containsOnce(document.body, '.o_attachment_preview_img > img',
-            "Display next attachment");
+        await contains(".o_attachment_preview_img > img");
+        await contains(".o_form_sheet_bg > .o_FormRenderer_chatterContainer");
+        await contains(".o_FormRenderer_chatterContainer:not(.o-aside)"); // Chatter should not have o-aside class as it is below form view and not aside
+        await contains(".o_form_view_container + .o_attachment_preview"); // Attachment preview should be next sibling to .o_form_view_container
+        await contains(".arrow", { count: 0 }); // Don't display arrow if there is no previous/next attachment
+        await click(".o_ChatterTopbar_buttonSendMessage");
+        await contains(".o_ComposerTextInput_textarea");
+        inputFiles(messaging.models["Chatter"].all()[0].composerView.fileUploader.fileInput, [
+            await createFile({ name: "invoice.pdf", contentType: "application/pdf" }),
+        ]);
+        await click(".o_Composer_buttonSend:enabled");
+        await contains(".arrow", { count: 2 }); // Display arrows when there multiple attachments
+        await click(".o_move_next");
+        await contains(".o_attachment_preview_img > img", { count: 0 });
+        await contains(".o_attachment_preview_container > iframe"); // There should be iframe for pdf viewer
+        await click(".o_move_previous");
+        await contains(".o_attachment_preview_img > img");
     });
 
     QUnit.test('After switching record with the form pager, when using the attachment preview navigation, the attachment should be switched',

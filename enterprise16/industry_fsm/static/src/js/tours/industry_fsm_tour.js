@@ -63,6 +63,9 @@ tour.register('industry_fsm_tour', {
     },
     position: 'bottom',
 }, {
+    trigger: ".o_form_button_save",
+    auto: true,
+}, {
     trigger: ".breadcrumb-item.o_back_button:nth-of-type(2)",
     content: Markup(_t("Use the breadcrumbs to return to your <b>task</b>.")),
     position: 'bottom'

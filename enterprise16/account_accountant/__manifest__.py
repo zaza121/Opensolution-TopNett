@@ -28,6 +28,7 @@ It assigns manager and user access rights to the Administrator for the accountin
         'views/account_journal_dashboard_views.xml',
         'views/account_move_views.xml',
         'views/account_payment_views.xml',
+        'views/account_reconcile_model_views.xml',
         'views/account_accountant_menuitems.xml',
         'views/digest_views.xml',
         'views/res_config_settings_views.xml',

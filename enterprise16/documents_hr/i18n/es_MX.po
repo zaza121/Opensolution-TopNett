@@ -4,16 +4,17 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Lucia Pacheco <lpo@odoo.com>, 2022
+# Lucia Pacheco, 2022
+# Iran Villalobos López, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-04 09:42+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Lucia Pacheco <lpo@odoo.com>, 2022\n"
-"Language-Team: Spanish (Mexico) (https://www.transifex.com/odoo/teams/41243/es_MX/)\n"
+"Last-Translator: Iran Villalobos López, 2023\n"
+"Language-Team: Spanish (Mexico) (https://app.transifex.com/odoo/teams/41243/es_MX/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -48,15 +49,15 @@ msgstr ""
 msgid ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "        <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"            Dear <t t-esc=\"object.name\"/>, your personal documents access link is available for you.<br/><br/>\n"
-"            You'll find all your personal HR documents in this folder.<br/><br/>\n"
-"            Please keep this link secure.<br/><br/>\n"
+"            Dear <t t-esc=\"object.name\"></t>, your personal documents access link is available for you.<br><br>\n"
+"            You'll find all your personal HR documents in this folder.<br><br>\n"
+"            Please keep this link secure.<br><br>\n"
 "            <div style=\"text-align: center; padding: 16px 0px 16px 0px; font-size: 14px;\">\n"
 "                <a t-attf-href=\"{{ object.documents_share_id.full_url }}\" target=\"_blank\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                    Your Documents\n"
 "                </a>\n"
 "            </div>\n"
-"            Have a nice day,<br/>\n"
+"            Have a nice day,<br>\n"
 "            The HR Team\n"
 "        </td></tr>\n"
 "    </tbody></table>\n"
@@ -64,16 +65,16 @@ msgid ""
 msgstr ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "        <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"            Apreciable <t t-esc=\"object.name\"/>, ya se encuentra disponible el enlace de acceso a sus documentos personales.<br/><br/>\n"
-"            En esta carpeta encontrará todos sus documentos personales de RRHH.<br/><br/>\n"
-"            Mantenga este enlace seguro.<br/><br/>\n"
+"            Apreciable <t t-esc=\"object.name\"></t>, ya se encuentra disponible el enlace de acceso a sus documentos personales.<br><br>\n"
+"            En esta carpeta encontrará todos sus documentos personales de RR.HH.<br><br>\n"
+"            Mantenga seguro este enlace.<br><br>\n"
 "            <div style=\"text-align: center; padding: 16px 0px 16px 0px; font-size: 14px;\">\n"
 "                <a t-attf-href=\"{{ object.documents_share_id.full_url }}\" target=\"_blank\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                    Sus documentos\n"
 "                </a>\n"
 "            </div>\n"
-"            Tenga un buen día,<br/>\n"
-"            El equipo de recursos humanos\n"
+"            Tenga un buen día,<br>\n"
+"            El equipo de RR.HH\n"
 "        </td></tr>\n"
 "    </tbody></table>\n"
 "                "
@@ -121,6 +122,7 @@ msgid "Document Count"
 msgstr "Número de documentos"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/res_users.py:0
 #: model:documents.facet,name:documents_hr.documents_hr_documents
 #: model:ir.model.fields,field_description:documents_hr.field_res_users__document_count
@@ -146,10 +148,11 @@ msgid "Employee"
 msgstr "Empleado"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid ""
-"Employee's private email must be set to use \"Send Access Link\" function:\n"
+"Employee's related user and private email must be set to use \"Send Access Link\" function:\n"
 "%s"
 msgstr ""
 "El correo electrónico privado del empleado debe estar configurado para utilizar la función \"Enviar enlace de acceso\":\n"
@@ -166,6 +169,7 @@ msgid "HR"
 msgstr "RRHH"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid "HR Documents: %s"
@@ -174,7 +178,7 @@ msgstr "Documentos de RRHH: %s"
 #. module: documents_hr
 #: model:mail.template,name:documents_hr.mail_template_document_folder_link
 msgid "HR: Document Access Link"
-msgstr ""
+msgstr "Enlace de acceso a los documentos de RR.HH."
 
 #. module: documents_hr
 #: model:ir.model.fields,field_description:documents_hr.field_res_config_settings__documents_hr_settings
@@ -202,9 +206,10 @@ msgstr ""
 #. module: documents_hr
 #: model:mail.template,description:documents_hr.mail_template_document_folder_link
 msgid "Sent manually when recording an employee departure"
-msgstr ""
+msgstr "Enviar manualmente al registrar la salida de un empleado"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid "The access link has been sent to the employee."
@@ -221,12 +226,15 @@ msgid "Workspace"
 msgstr "Espacio de trabajo"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
-msgid "You must set an address on the employee to use Documents features."
+msgid ""
+"You must set a private address on the Employee in order to use Document's "
+"features."
 msgstr ""
-"Debe establecer una dirección de empleado para utilizar las funciones de "
-"Documentos."
+"Debe establecer una dirección privada en la información del empleado para "
+"utilizar las funciones de la aplicación Documentos."
 
 #. module: documents_hr
 #: model:ir.model.fields,field_description:documents_hr.field_res_company__documents_hr_folder

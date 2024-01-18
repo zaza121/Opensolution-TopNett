@@ -28,10 +28,8 @@ class product_template(models.Model):
         """
         Raise a warning if the user has selected 'Storable Product'
         while the product has already been set as a 'Subscription Product'.
-        In this case, the 'type' field is reset.
         """
         if self.type == 'product' and self.recurring_invoice:
-            self.type = False
             return {'warning': {
                 'title': _("Warning"),
                 'message': _("A 'Subscription Product' cannot be a 'Storable Product' !")
@@ -50,4 +48,11 @@ class product_template(models.Model):
             return {'warning': {
                 'title': _("Warning"),
                 'message': _("A 'Storable Product' cannot be a 'Subscription Product' !")
+            }}
+        confirmed_lines = self.env['sale.order.line'].search([('product_template_id', 'in', self.ids), ('order_id.state', 'in', ('sale', 'done'))])
+        if confirmed_lines:
+            self.recurring_invoice = True
+            return {'warning': {
+                'title': _("Warning"),
+                'message': _("You can not change the recurring property of this product because it has been sold already.")
             }}

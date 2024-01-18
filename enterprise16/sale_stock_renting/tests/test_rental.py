@@ -251,6 +251,14 @@ class TestRentalCommon(common.TransactionCase):
             4
         )
 
+        ####################################
+        # Cancel deliver then re-apply
+        ####################################
+
+        self.order_line_id1.write({'qty_delivered': 0})
+        self.assertEqual(self.product_id.qty_available, 4)
+        self.order_line_id1.write({'qty_delivered': 3})
+
         """
             Partial Return
         """

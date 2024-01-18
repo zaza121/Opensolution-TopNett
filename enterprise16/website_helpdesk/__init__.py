@@ -5,7 +5,6 @@ from odoo import api, SUPERUSER_ID, Command, _
 
 from . import controllers
 from . import models
-from . import tests
 
 
 def _configure_teams(cr, registry):

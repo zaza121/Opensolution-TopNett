@@ -4,6 +4,7 @@ import BarcodeModel from '@stock_barcode/models/barcode_model';
 import {_t, _lt} from "web.core";
 import { sprintf } from '@web/core/utils/strings';
 import { session } from '@web/session';
+import { formatFloat } from "@web/views/fields/formatters";
 
 export default class BarcodePickingModel extends BarcodeModel {
     constructor(params) {
@@ -13,6 +14,7 @@ export default class BarcodePickingModel extends BarcodeModel {
         this.validateMethod = 'button_validate';
         this.lastScanned.destLocation = false;
         this.shouldShortenLocationName = true;
+        this.precision = params.action.context.precision;
     }
 
     setData(data) {
@@ -46,7 +48,8 @@ export default class BarcodePickingModel extends BarcodeModel {
     }
 
     getIncrementQuantity(line) {
-        return Math.max(this.getQtyDemand(line) - this.getQtyDone(line), 1);
+        const quantityToFormat = Math.max(this.getQtyDemand(line) - this.getQtyDone(line), 1);
+        return parseFloat(formatFloat(quantityToFormat, { digits: [false, this.precision], thousandsSep: "", decimalPoint: "." }));
     }
 
     getQtyDone(line) {
@@ -374,6 +377,13 @@ export default class BarcodePickingModel extends BarcodeModel {
         return true;
     }
 
+    get canScrap() {
+        const { picking_type_code, state } = this.record;
+        return (picking_type_code === "incoming" && state === "done") ||
+               (picking_type_code === "outgoing" && state !== "done") ||
+               (picking_type_code === "internal");
+    }
+
     get canSelectLocation() {
         return !(this.config.restrict_scan_source_location || this.config.restrict_scan_dest_location != 'optional');
     }
@@ -561,12 +571,7 @@ export default class BarcodePickingModel extends BarcodeModel {
                 method: 'action_print_packges',
             });
         }
-        const picking_type_code = this.record.picking_type_code;
-        const picking_state = this.record.state;
-        if ( (picking_type_code === 'incoming') && (picking_state === 'done') ||
-             (picking_type_code === 'outgoing') && (picking_state !== 'done') ||
-             (picking_type_code === 'internal')
-           ) {
+        if (this.canScrap) {
             buttons.push({
                 name: _t("Scrap"),
                 class: 'o_scrap',
@@ -803,6 +808,7 @@ export default class BarcodePickingModel extends BarcodeModel {
             'O-CMD.cancel': this._cancel.bind(this),
             'O-BTN.print-slip': this.print.bind(this, false, 'action_print_delivery_slip'),
             'O-BTN.print-op': this.print.bind(this, false, 'do_print_picking'),
+            "O-BTN.scrap": this._scrap.bind(this),
         });
     }
 
@@ -986,6 +992,7 @@ export default class BarcodePickingModel extends BarcodeModel {
                     return this.trigger('update');
                 }
                 for (const line of packageLine.lines) {
+                    this.selectedLineVirtualId = line.virtual_id;
                     await this._updateLineQty(line, { qty_done: line.reserved_uom_qty });
                     this._markLineAsDirty(line);
                 }
@@ -1121,6 +1128,15 @@ export default class BarcodePickingModel extends BarcodeModel {
         } else {
             this.trigger('refresh');
         }
+    }
+
+    async _scrap() {
+        if (!this.canScrap) {
+            const message = _t("You can't register scrap at this state of the operation");
+            return this.notification.add(message, { type: "warning" });
+        }
+        const action = await this.orm.call(this.params.model, "button_scrap", [[this.params.id]]);
+        this.trigger("do-action", { action });
     }
 
     /**

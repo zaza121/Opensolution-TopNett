@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import base64
-import zipfile
 import io
 import json
 import logging
-import os
+import zipfile
 from contextlib import ExitStack
+
+from markupsafe import Markup
+from werkzeug.exceptions import Forbidden
 
 from odoo import http
 from odoo.exceptions import AccessError
 from odoo.http import request, content_disposition
 from odoo.tools.translate import _
-from odoo.tools import image_process
-
-from werkzeug.exceptions import Forbidden
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +32,12 @@ class ShareRoute(http.Controller):
         if not record or not record.exists():
             raise request.not_found()
 
+        if record.type == 'url':
+            if isinstance(record.url, str):
+                url = record.url if record.url.startswith(('http://', 'https://', 'ftp://')) else 'http://' + record.url
+            else:
+                url = record.url
+            return request.redirect(url, code=307, local=False)
         return request.env['ir.binary']._get_stream_from(record, field).get_response()
 
     def _get_downloadable_documents(self, documents):
@@ -50,6 +55,7 @@ class ShareRoute(http.Controller):
         #       entire zip in memory and sending it all at once.
 
         stream = io.BytesIO()
+        documents.check_access_rule('read')
         try:
             with zipfile.ZipFile(stream, 'w') as doc_zip:
                 for document in self._get_downloadable_documents(documents):
@@ -263,13 +269,13 @@ class ShareRoute(http.Controller):
             env = request.env
             share = env['documents.share'].sudo().browse(share_id)
             if share._get_documents_and_check_access(access_token, document_ids=[], operation='read') is not False:
-                user_id = share.create_uid.id if not document_id else env['documents.document'].sudo().browse(int(document_id)).owner_id.id
-                image = env['res.users'].sudo().browse(user_id).avatar_128
-
-                if not image:
-                    return env['ir.binary']._image_placeholder()
-
-                return base64.b64decode(image)
+                if document_id:
+                    user = env['documents.document'].sudo().browse(int(document_id)).owner_id
+                    if not user:
+                        return env['ir.binary']._placeholder()
+                else:
+                    user = share.create_uid
+                return request.env['ir.binary']._get_stream_from(user, 'avatar_128').get_response()
             else:
                 return request.not_found()
         except Exception:
@@ -334,12 +340,12 @@ class ShareRoute(http.Controller):
         folder = share.folder_id
         folder_id = folder.id or False
         button_text = share.name or _('Share link')
-        chatter_message = _('''<b> File uploaded by: </b> %s <br/>
+        chatter_message = Markup(_('''<b> File uploaded by: </b> %s <br/>
                                <b> Link created by: </b> %s <br/>
                                <a class="btn btn-primary" href="/web#id=%s&model=documents.share&view_type=form" target="_blank">
                                   <b>%s</b>
                                </a>
-                             ''') % (
+                             ''')) % (
                 http.request.env.user.name,
                 share.create_uid.name,
                 share_id,
@@ -395,9 +401,9 @@ class ShareRoute(http.Controller):
                 logger.exception("Failed to upload document")
         else:
             return http.request.not_found()
-        return """<script type='text/javascript'>
+        return Markup("""<script type='text/javascript'>
                     window.open("/document/share/%s/%s", "_self");
-                </script>""" % (share_id, token)
+                </script>""") % (share_id, token)
 
     # Frontend portals #############################################################################
 

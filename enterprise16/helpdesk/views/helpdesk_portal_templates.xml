@@ -8,7 +8,7 @@
                 <a t-if="ticket or rating_page" t-attf-href="/my/tickets?{{ keep_query() }}">Tickets</a>
                 <t t-else="">Tickets</t>
             </li>
-            <li t-if="ticket" class="breadcrumb-item active">
+            <li t-if="ticket" class="breadcrumb-item active text-truncate">
                 <span t-field="ticket.name"/> (#<span t-field="ticket.ticket_ref"/>)
             </li>
             <li t-if="rating_page" t-attf-class="breadcrumb-item active">
@@ -95,7 +95,7 @@
 
             <div class="row mt16 o_project_portal_sidebar">
                 <t t-call="portal.portal_record_sidebar">
-                    <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
+                    <t t-set="classes" t-value="'col-lg-4 d-print-none'"/>
 
                     <t t-set="entries">
                         <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
@@ -107,7 +107,7 @@
                                 </div>
 
                                 <div class="modal" tabindex="-1" role="dialog" id="helpdesk_ticket_close_modal">
-                                    <div class="modal-dialog" role="document">
+                                    <div class="modal-dialog mt-5" role="document">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Close ticket</h5>
@@ -175,14 +175,14 @@
                         </ul>
                     </t>
                 </t>
-                <div id="ticket_content" class="col-12 col-lg justify-content-end">
+                <div id="ticket_content" class="col-lg-8 justify-content-end">
                     <div id="card" class="card">
                         <div id="card_header" class="card-header container" data-anchor="true">
                             <div class="row gs-0">
                                 <div class="col-md">
                                     <h5 class="row mx-1 mb-1 mb-md-0">
                                         <div class="col-9 text-truncate">
-                                            <span t-field="ticket.name"/>
+                                            <span t-field="ticket.name" t-att-title="ticket.name"/>
                                             <small class="text-muted "> (#<span t-field="ticket.ticket_ref"/>)</small>
                                         </div>
                                         <div class="col-3 text-end">

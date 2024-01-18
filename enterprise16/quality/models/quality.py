@@ -378,7 +378,7 @@ class QualityAlert(models.Model):
 
     def write(self, vals):
         res = super(QualityAlert, self).write(vals)
-        if self.stage_id.done and 'stage_id' in vals:
+        if 'stage_id' in vals and self.stage_id.done:
             self.write({'date_close': fields.Datetime.now()})
         return res
 

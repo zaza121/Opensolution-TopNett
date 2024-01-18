@@ -4,7 +4,8 @@
 # 
 # Translators:
 # Martin Trigaux, 2022
-# Sergio Zanchetta <primes2h@gmail.com>, 2022
+# Sergio Zanchetta <primes2h@gmail.com>, 2023
+# Marianna Ciofani, 2023
 # 
 msgid ""
 msgstr ""
@@ -12,8 +13,8 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-15 13:30+0000\n"
 "PO-Revision-Date: 2022-09-22 05:48+0000\n"
-"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2022\n"
-"Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
+"Last-Translator: Marianna Ciofani, 2023\n"
+"Language-Team: Italian (https://app.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -25,14 +26,14 @@ msgstr ""
 #: code:addons/sale_stock_renting/models/product_product.py:0
 #, python-format
 msgid "%(product)s (%(qty)s item)"
-msgstr ""
+msgstr "%(product)s (%(qty)s articolo)"
 
 #. module: sale_stock_renting
 #. odoo-python
 #: code:addons/sale_stock_renting/models/product_product.py:0
 #, python-format
 msgid "%(product)s (%(qty)s items)"
-msgstr ""
+msgstr "%(product)s (%(qty)s articoli)"
 
 #. module: sale_stock_renting
 #: model_terms:ir.ui.view,arch_db:sale_stock_renting.rental_order_wizard_view_form
@@ -42,11 +43,15 @@ msgid ""
 "                            Some products don't have the requested qty available for pickup\n"
 "                        </span>"
 msgstr ""
+"<i class=\"fa fa-warning\"/>\n"
+"                        <span>\n"
+"                            Alcuni prodotti non sono presenti in quantità sufficienti per il ritiro\n"
+"                        </span>"
 
 #. module: sale_stock_renting
 #: model_terms:ir.ui.view,arch_db:sale_stock_renting.res_config_settings_inherit_view_form
 msgid "<span class=\"o_form_label\">Default Padding Time</span>"
-msgstr ""
+msgstr "<span class=\"o_form_label\">Intervallo di tempo predefinito</span>"
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,help:sale_stock_renting.field_res_company__padding_time
@@ -108,7 +113,7 @@ msgstr ""
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_rental_order_wizard__has_lines_missing_stock
 msgid "Has lines whose products have insufficient stock"
-msgstr ""
+msgstr "Contiene righe i cui prodotti non hanno scorte sufficienti"
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_rental_order_wizard__has_tracked_lines
@@ -129,7 +134,7 @@ msgstr "È disponibile"
 #: model:ir.model.fields,field_description:sale_stock_renting.field_rental_order_wizard_line__is_product_storable
 #: model:ir.model.fields,field_description:sale_stock_renting.field_rental_wizard__is_product_storable
 msgid "Is Product Storable"
-msgstr "Il prodotto è immagazzinabile"
+msgstr "Il prodotto è stoccabile"
 
 #. module: sale_stock_renting
 #: model:ir.model,name:sale_stock_renting.model_account_move
@@ -152,6 +157,8 @@ msgstr "Periodo di tempo minimo tra due noleggi"
 #, python-format
 msgid "No valid quant has been found in location %s for serial number %s !"
 msgstr ""
+"Nell'ubicazione %s non è stato trovato alcun quantitativo valido per il "
+"numero di serie %s."
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,help:sale_stock_renting.field_rental_wizard__lot_ids
@@ -166,12 +173,12 @@ msgstr "Altri noleggi in conflitto."
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_res_config_settings__padding_time
 msgid "Padding"
-msgstr "Padding"
+msgstr "Intervallo"
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_res_company__padding_time
 msgid "Padding Time"
-msgstr ""
+msgstr "Intervallo di tempo"
 
 #. module: sale_stock_renting
 #: model:ir.model,name:sale_stock_renting.model_rental_order_wizard
@@ -265,7 +272,7 @@ msgstr "Movimento noleggio :"
 #. module: sale_stock_renting
 #: model:ir.model,name:sale_stock_renting.model_rental_order_wizard_line
 msgid "RentalOrderLine transient representation"
-msgstr ""
+msgstr "Rappresentazione transitoria di RentalOrderLine"
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_sale_order_line__reserved_lot_ids
@@ -317,7 +324,7 @@ msgstr "Numeri di serie"
 #. module: sale_stock_renting
 #: model_terms:ir.ui.view,arch_db:sale_stock_renting.rental_configurator_view_form
 msgid "Serials Tracking"
-msgstr ""
+msgstr "Monitoraggio seriali"
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_rental_wizard__rentable_lot_ids
@@ -366,6 +373,8 @@ msgid ""
 "Tracking by lots isn't supported for rental products.\n"
 "You should rather change the tracking mode to unique serial numbers."
 msgstr ""
+"Il monitoraggio in lotti non è supportato per i prodotti da noleggio.\n"
+"Dovresti piuttosto cambiare il tipo di mnitoraggio in numeri seriali unici."
 
 #. module: sale_stock_renting
 #: model:ir.model.fields,field_description:sale_stock_renting.field_sale_order_line__unavailable_lot_ids
@@ -398,6 +407,8 @@ msgstr "Impossibile cambiare il prodotto della riga di un ritiro."
 #, python-format
 msgid "You cannot change the product of lines linked to stock moves."
 msgstr ""
+"Non puoi modificare il prodotto di righe collegate a movimenti del "
+"magazzino."
 
 #. module: sale_stock_renting
 #: model_terms:ir.ui.view,arch_db:sale_stock_renting.res_config_settings_inherit_view_form

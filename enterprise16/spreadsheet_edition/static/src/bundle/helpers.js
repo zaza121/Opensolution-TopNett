@@ -46,3 +46,10 @@ export function jsonToBase64(json) {
 export function base64ToJson(string) {
     return JSON.parse(base64ToUtf8(string));
 }
+
+export function containsReferences(cell) {
+    if (!cell.isFormula()) {
+        return false;
+    }
+    return cell.compiledFormula.tokens.some((token) => token.type === "REFERENCE");
+}

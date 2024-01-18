@@ -32,6 +32,8 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
         ACH\tACHATS\tACH000003\t20180910\t61320000\tLOCATIONS PARTNER 01\t\t\t3\t20180910\tPARTNER 01\t41,50\t0,00\t\t\t20190725\t\t
         ACH\tACHATS\tACH000003\t20180910\t44566000\tTVA SUR AUTRES BIEN ET SERVICE\t\t\t3\t20180910\tPARTNER 01\t8,30\t0,00\tAA\t\t20190725\t\t
         ACH\tACHATS\tACH000003\t20180910\t40100000\tFOURNISSEURS DIVERS\tPARTNER01\tPARTNER 01\t3\t20180910\tPARTNER 01\t0,00\t49,80\tAA\t\t20190725\t\t
+        ACH\tACHATS\tACH000004\t20180910\t61320000\tPRIMES D'ASSURANCES\t\t\t3\t20180910\tASSURANCE\t200,50\t0,00\t\t\t20190725\t\tEUR
+        ACH\tACHATS\tACH000004\t20180910\t44566000\tASSURANCE\t\t\t3\t20180910\tASSURANCE\t0,00\t200,50\t\t\t20190725\t\tEUR
     """
 
     # ----------------------------------------
@@ -233,7 +235,7 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
 
         self.wizard._import_files(['account.account', 'account.journal', 'res.partner', 'account.move'])
 
-        move_names = ('ACH000001', 'ACH000002', 'ACH000003')
+        move_names = ('ACH000001', 'ACH000002', 'ACH000003', 'ACH000004')
         domain = [('company_id', '=', self.company.id), ('move_name', 'in', move_names)]
         move_lines = self.env['account.move.line'].search(domain, order='move_name, id')
         columns = ['name', 'credit', 'debit', 'fec_matching_number']
@@ -247,6 +249,8 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
             ('PARTNER 01', 0.00, 41.50, False),
             ('PARTNER 01', 0.00, 8.30, 'AA'),
             ('PARTNER 01', 49.80, 0.00, 'AA'),
+            ('ASSURANCE', 0.00, 200.50, False),
+            ('ASSURANCE', 200.50, 0.00, False),
         ]
         expected_values = [dict(zip(columns, line)) for line in lines]
         self.assertRecordValues(move_lines, expected_values)
@@ -271,12 +275,12 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
         # Verify Reconciliation
         domain = [('company_id', '=', self.company.id), ('reconciled', '=', True)]
         move_lines = self.env['account.move.line'].search(domain)
-        self.assertEqual(100, len(move_lines))
+        self.assertEqual(256, len(move_lines))
 
         # Verify Full Reconciliation
         domain = [('company_id', '=', self.company.id), ('full_reconcile_id', '!=', False)]
         move_lines = self.env['account.move.line'].search(domain)
-        self.assertEqual(100, len(move_lines))
+        self.assertEqual(256, len(move_lines))
 
         # Verify Journal types
         domain = [('company_id', '=', self.company.id), ('name', '=', 'FEC-BQ 552')]
@@ -337,6 +341,8 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
                 ('ACH/20180808', 'DOMICILIATION'),
                 ('ACH/20180808', 'DOMICILIATION'),
                 ('ACH/20180808', 'DOMICILIATION'),
+                ('ACH/20180910', 'ASSURANCE'),
+                ('ACH/20180910', 'ASSURANCE'),
                 ('ACH/20180910', 'PARTNER 01'),
                 ('ACH/20180910', 'PARTNER 01'),
                 ('ACH/20180910', 'PARTNER 01'),
@@ -359,6 +365,8 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
                 ('ACH/201808', 'DOMICILIATION'),
                 ('ACH/201808', 'DOMICILIATION'),
                 ('ACH/201808', 'DOMICILIATION'),
+                ('ACH/201809', 'ASSURANCE'),
+                ('ACH/201809', 'ASSURANCE'),
                 ('ACH/201809', 'PARTNER 01'),
                 ('ACH/201809', 'PARTNER 01'),
                 ('ACH/201809', 'PARTNER 01'),
@@ -370,3 +378,19 @@ class AccountTestFecImport(AccountTestInvoicingCommon):
         self._attach_file_to_wizard(self.test_content_imbalanced_none, self.wizard)
         with self.assertRaises(UserError):
             self.wizard._import_files(['account.account', 'account.journal', 'res.partner', 'account.move'])
+
+    def test_positive_montant_devise(self):
+        """
+        Test that it doesn't fail even when the MontantDevise is not signed, i.e. MontantDevise is positive even
+        when the line is credited, or the opposite case: MontantDevise is negative while the line is
+        debited.
+        """
+        test_content = """
+            JournalCode\tJournalLib\tEcritureNum\tEcritureDate\tCompteNum\tCompteLib\tCompAuxNum\tCompAuxLib\tPieceRef\tPieceDate\tEcritureLib\tDebit\tCredit\tEcritureLet\tDateLet\tValidDate\tMontantdevise\tIdevise
+            ACH\tACHATS\tTEST_MONTANT_DEVISE\t20180808\t62270000\tFRAIS D'ACTES ET CONTENTIEUX\t\t\t1\t20180808\tACOMPTE FORMALITES ENTREPRISE\t100,00\t0,00\t\t\t20190725\t100,00\tEUR
+            ACH\tACHATS\tTEST_MONTANT_DEVISE\t20180808\t44566000\tTVA SUR AUTRES BIEN ET SERVICE\t\t\t1\t20180808\tACOMPTE FORMALITES ENTREPRISE\t0,00\t100,00\t\t\t20190725\t100,00\tEUR
+            ACH\tACHATS\tTEST_MONTANT_DEVISE2\t20180808\t62270000\tFRAIS D'ACTES ET CONTENTIEUX\t\t\t1\t20180808\tACOMPTE FORMALITES ENTREPRISE\t0,00\t100,00\t\t\t20190725\t-100,00\tEUR
+            ACH\tACHATS\tTEST_MONTANT_DEVISE2\t20180808\t44566000\tTVA SUR AUTRES BIEN ET SERVICE\t\t\t1\t20180808\tACOMPTE FORMALITES ENTREPRISE\t100,00\t0,00\t\t\t20190725\t-100,00\tEUR
+        """
+        self._attach_file_to_wizard(test_content, self.wizard)
+        self.wizard._import_files()

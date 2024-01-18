@@ -82,7 +82,7 @@ class StudioApprovalRule(models.Model):
     @api.constrains('responsible_id', 'group_id')
     def _constraint_user_has_group(self):
         if self.responsible_id and not self.group_id in self.responsible_id.groups_id:
-            raise ValidationError('User is not a member of the selected group.')
+            raise ValidationError(_('User is not a member of the selected group.'))
 
     @api.ondelete(at_uninstall=False)
     def _unlink_except_existing_entries(self):

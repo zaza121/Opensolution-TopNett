@@ -132,7 +132,7 @@ var PaymentIOT = PaymentInterface.extend({
         if (line && terminal_proxy && (!data.owner || data.owner === this.pos.env.services.iot_longpolling._session_id)) {
             this._waitingResponse(resolve, data, line);
             if (data.Ticket) {
-                line.set_receipt_info(data.Ticket.replace(/\n/g, "<br />"));
+                line.set_receipt_info(data.Ticket);
             }
             if (data.Card) {
                 line.card_type = data.Card;

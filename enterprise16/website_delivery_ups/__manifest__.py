@@ -18,6 +18,7 @@ This module allows ecommerce users to enter their UPS account number and deliver
     'assets': {
         'web.assets_common': [
             'website_delivery_ups/static/src/**/*',
+            ('remove', 'website_delivery_ups/static/src/js/checkout_form.js'),
         ],
         'web.assets_frontend': [
             'website_delivery_ups/static/src/**/*',

@@ -357,7 +357,7 @@
                 t-att-applies-on="personal_info.applies_on"
                 t-att-data-field-type="personal_info.display_type"
                 t-att-class="'form-control personal_info' + (' advantage_input' if personal_info.impacts_net_salary else '')"
-                t-att-value="initial_values[personal_info.field]"
+                t-att-value="initial_values[personal_info.field] or '0'"
                 t-att-required="personal_info.is_required and not hidden_children"/>
         </t>
         <t t-if="personal_info.display_type == 'email'">
@@ -430,7 +430,7 @@
                                 <t t-esc="responsible_phone"/>
                             </a>
                         </p>
-                        <p>He/She will review your contract.<br/> Feel free to contact him/her if you have further questions.</p>
+                        <p>They will review your contract.<br/> Feel free to contact them if you have any questions.</p>
                     </div>
                 </div>
             </div>

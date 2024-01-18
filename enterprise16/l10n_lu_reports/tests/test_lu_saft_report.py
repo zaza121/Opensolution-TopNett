@@ -30,6 +30,13 @@ class TestLuSaftReport(TestAccountReportsCommon):
             'country_id': cls.env.ref('base.lu').id,
         })
 
+        cls.env['res.partner'].create({
+            'name': 'Mr Big CEO',
+            'is_company': False,
+            'phone': '+352 24 11 12 34',
+            'parent_id': cls.company_data['company'].partner_id.id,
+        })
+
         cls.product_a.default_code = 'PA'
         cls.product_b.default_code = 'PB'
 
@@ -101,10 +108,10 @@ class TestLuSaftReport(TestAccountReportsCommon):
                             </Address>
                             <Contact>
                                 <ContactPerson>
-                                    <FirstName>company_1_data</FirstName>
+                                    <FirstName>Mr Big CEO</FirstName>
                                     <LastName/>
                                 </ContactPerson>
-                                <Telephone>+352 11 11 11 11</Telephone>
+                                <Telephone>+352 24 11 12 34</Telephone>
                             </Contact>
                         </Company>
                         <DefaultCurrencyCode>EUR</DefaultCurrencyCode>
@@ -222,10 +229,10 @@ class TestLuSaftReport(TestAccountReportsCommon):
                                 </Address>
                                 <Contact>
                                     <ContactPerson>
-                                        <FirstName>company_1_data</FirstName>
+                                        <FirstName>Mr Big CEO</FirstName>
                                         <LastName/>
                                     </ContactPerson>
-                                    <Telephone>+352 11 11 11 11</Telephone>
+                                    <Telephone>+352 24 11 12 34</Telephone>
                                 </Contact>
                                 <OwnerID>___ignore___</OwnerID>
                             </Owner>

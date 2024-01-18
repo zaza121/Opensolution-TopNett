@@ -57,7 +57,9 @@ class AccountReport(models.Model):
             {where_journals};
 
             WITH payment_table AS (
-                SELECT aml.move_id, aml2.date,
+                SELECT
+                    aml.move_id,
+                    GREATEST(aml.date, aml2.date) AS date,
                     CASE WHEN (aml.balance = 0 OR sub_aml.total_per_account = 0)
                         THEN 0
                         ELSE part.amount / ABS(sub_aml.total_per_account)
@@ -68,7 +70,7 @@ class AccountReport(models.Model):
                     (aml2.id = part.credit_move_id OR aml2.id = part.debit_move_id)
                     AND aml.id != aml2.id
                 JOIN (
-                    SELECT move_id, account_id, ABS(SUM(balance)) AS total_per_account
+                    SELECT move_id, account_id, SUM(ABS(balance)) AS total_per_account
                     FROM ONLY account_move_line account_move_line
                     GROUP BY move_id, account_id
                 ) sub_aml ON (aml.account_id = sub_aml.account_id AND aml.move_id=sub_aml.move_id)
@@ -114,6 +116,12 @@ class AccountReport(models.Model):
     def open_document(self, options, params=None):
         action = super().open_document(options, params)
         action['context'].pop('cash_basis', '')
+        return action
+
+    def action_audit_cell(self, options, params):
+        action = super().action_audit_cell(options, params)
+        if options.get('report_cash_basis'):
+            action['domain'].append(('move_id.payment_state', 'in', ('in_payment', 'paid', 'partial', 'reversed')))
         return action
 
 

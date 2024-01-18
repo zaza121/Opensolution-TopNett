@@ -199,7 +199,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
         return self.env['account.bank.statement'].search([
             ('journal_id', '=', journal.id),
             ('date', '<=', options['date']['date_to']),
-            ('is_complete', '=', False),
+            ('is_valid', '=', False),
         ])
 
     def _get_bank_miscellaneous_move_lines_domain(self, options, journal):
@@ -215,14 +215,17 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
 
         domain = [
             ('display_type', 'not in', ('line_section', 'line_note')),
-            ('move_id.state', '!=', 'cancel'),
+            ('parent_state', '!=', 'cancel'),
             ('account_id', '=', journal.default_account_id.id),
             ('statement_line_id', '=', False),
             ('date', '<=', options['date']['date_to']),
         ]
 
+        if journal.company_id.fiscalyear_lock_date:
+            domain.append(('date', '>', journal.company_id.fiscalyear_lock_date))
+
         if not options['all_entries']:
-            domain.append(('move_id.state', '=', 'posted'))
+            domain.append(('parent_state', '=', 'posted'))
 
         if journal.company_id.account_opening_move_id:
             domain.append(('move_id', '!=', journal.company_id.account_opening_move_id.id))
@@ -373,7 +376,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
 
             is_parent_unfolded = unfold_all or st_report_line['parent_id'] in options['unfolded_lines']
             if not is_parent_unfolded:
-                st_report_line['style'] = 'display: none;'
+                st_report_line['class'] = 'o_account_reports_filtered_lines'
 
         return (
             self._build_section_report_lines(report, options, journal, plus_report_lines, plus_totals,
@@ -466,7 +469,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
         self._cr.execute(query, params)
 
         for results in self._cr.dictfetchall():
-            grouped_results.setdefault(results['payment_id'], {}).setdefault(results['column_group_key'], results)
+            grouped_results.setdefault(results['move_id'], {}).setdefault(results['column_group_key'], results)
 
         for column_group_results in grouped_results.values():
 
@@ -522,9 +525,9 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
                     elif col_expr_label == 'date':
                         col_class = 'date'
                         formatted_value = format_date(self.env, col_value)
+                    elif col_expr_label == 'currency' and no_convert:
+                        col_value = ''
                     else:
-                        if no_convert:
-                            col_value = ''
                         formatted_value = report.format_value(col_value, figure_type=column['figure_type'])
 
                     columns.append({
@@ -559,7 +562,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
 
             is_parent_unfolded = unfold_all or pay_report_line['parent_id'] in options['unfolded_lines']
             if not is_parent_unfolded:
-                pay_report_line['style'] = 'display: none;'
+                pay_report_line['class'] = 'o_account_reports_filtered_lines'
 
         return (
             self._build_section_report_lines(report, options, journal, plus_report_lines, plus_totals,
@@ -691,4 +694,3 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
             default_context={'create': False},
             name=last_statement.display_name,
         )
-

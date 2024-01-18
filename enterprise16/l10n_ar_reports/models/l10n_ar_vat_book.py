@@ -43,6 +43,9 @@ class ArgentinianReportCustomHandler(models.AbstractModel):
             move_id = result['id']
             column_group_key = result['column_group_key']
 
+            # Convert date to string to be displayed in the xlsx report
+            result['date'] = result['date'].strftime("%Y-%m-%d")
+
             # For number rendering, take the opposite for sales taxes
             sign = -1.0 if result['tax_type'] == 'sale' else 1.0
 
@@ -96,6 +99,11 @@ class ArgentinianReportCustomHandler(models.AbstractModel):
         else:
             options['ar_vat_book_tax_type_selected'] = previous_options.get('ar_vat_book_tax_type_selected', 'all')
 
+        options['forced_domain'] = [
+             *options.get('forced_domain', []),
+             ('journal_id.l10n_latam_use_documents', '!=', False),
+         ]
+
         tax_types = self._vat_book_get_selected_tax_types(options)
 
         # 2 columns are conditional, depending on some taxes being active or inactive
@@ -130,10 +138,16 @@ class ArgentinianReportCustomHandler(models.AbstractModel):
             expression_label = column['expression_label']
             value = move_vals.get(column['column_group_key'], {}).get(expression_label)
 
+            class_value = ''
+            if expression_label in number_values:
+                class_value = 'number'
+            elif expression_label == 'partner_name':
+                class_value = 'o_account_report_line_ellipsis'
+
             columns.append({
                 'name': report.format_value(value, figure_type=column['figure_type']) if value is not None else None,
                 'no_format': value,
-                'class': 'number' if expression_label in number_values else '',
+                'class': class_value,
             })
 
         return {
@@ -278,7 +292,7 @@ class ArgentinianReportCustomHandler(models.AbstractModel):
         else:
             doc_number = partner.ensure_vat()
             doc_code = '80'
-        return doc_code, doc_number.rjust(20, '0')
+        return doc_code, (doc_number or '').rjust(20, '0')
 
     @api.model
     def _vat_book_get_pos_and_invoice_invoice_number(self, invoice):
@@ -478,8 +492,10 @@ class ArgentinianReportCustomHandler(models.AbstractModel):
             lines = []
             vat_taxes = inv._get_vat()
 
-            # tipically this is for invoices with zero amount
-            if not vat_taxes and inv.l10n_latam_document_type_id.purchase_aliquots == 'not_zero':
+            # typically this is for invoices with zero amount
+            if not vat_taxes and any(t.tax_group_id.l10n_ar_vat_afip_code
+                                     and t.tax_group_id.l10n_ar_vat_afip_code != '0'
+                                     for t in inv.invoice_line_ids.mapped('tax_ids')):
                 lines.append(''.join(self._vat_book_get_tax_row(inv, 0.0, 3, 0.0, options, tax_type)))
 
             # we group by afip_code

@@ -47,6 +47,7 @@
         <field name="requires_allocation">no</field>
         <field name="work_entry_type_id" ref="l10n_be_hr_payroll.work_entry_type_training"/>
         <field name="company_id" ref="l10n_be_hr_payroll.res_company_be"/>
+        <field name="icon_id" ref="hr_holidays.icon_26"/>
     </record>
 
     <!-- ++++++++++++++ June ++++++++++++++ -->
@@ -1846,6 +1847,7 @@
         <field name="responsible_id" ref="base.user_admin"/>
         <field name="company_id" ref="l10n_be_hr_payroll.res_company_be"/>
         <field name="work_entry_type_id" ref="hr_work_entry_contract.work_entry_type_sick_leave"></field>
+        <field name="icon_id" ref="hr_holidays.icon_11"/>
     </record>
 
     <!-- YTI TODO master: move this in data -->
@@ -1884,7 +1886,7 @@
 
     <record id="hr_holidays_allocation_cl" model="hr.leave.allocation">
         <field name="name">Paid Time Off for Mitchell Admin</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_admin"/>
         <field name="employee_ids" eval="[(4, ref('employee_admin'))]"/>
@@ -1894,7 +1896,7 @@
 
     <record id="hr_holidays_int_tour" model="hr.leave.allocation">
         <field name="name">International Tour</field>
-        <field name="holiday_status_id" ref="holiday_status_comp"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_comp"/>
         <field name="number_of_days">7</field>
         <field name="employee_id" ref="employee_admin"/>
         <field name="employee_ids" eval="[(4, ref('employee_admin'))]"/>
@@ -1904,7 +1906,7 @@
 
     <record id="hr_holidays_vc" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">7</field>
         <field name="employee_id" ref="employee_admin"/>
         <field name="employee_ids" eval="[(4, ref('employee_admin'))]"/>
@@ -1914,7 +1916,7 @@
 
     <record id='hr_holidays_cl_allocation' model="hr.leave.allocation">
         <field name="name">Compensation</field>
-        <field name="holiday_status_id" ref="holiday_status_comp"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_comp"/>
         <field name="number_of_days">12</field>
         <field name="employee_id" ref="employee_admin"/>
         <field name="employee_ids" eval="[(4, ref('employee_admin'))]"/>
@@ -1924,7 +1926,7 @@
 
     <record id="hr_holidays_allocation_cl_al" model="hr.leave.allocation">
         <field name="name">Paid Time Off for Ronnie Hart</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_al"/>
         <field name="employee_ids" eval="[(4, ref('employee_al'))]"/>
@@ -1944,7 +1946,7 @@
 
     <record id="hr_holidays_vc_al" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">12</field>
         <field name="employee_id" ref="employee_al"/>
         <field name="employee_ids" eval="[(4, ref('employee_al'))]"/>
@@ -1954,7 +1956,7 @@
 
     <record id="hr_holidays_allocation_cl_mit" model="hr.leave.allocation">
         <field name="name">Paid Time Off for Anita Oliver</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_mit"/>
         <field name="employee_ids" eval="[(4, ref('employee_mit'))]"/>
@@ -1964,7 +1966,7 @@
 
     <record id="hr_holidays_vc_mit" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">7</field>
         <field name="employee_id" ref="employee_mit"/>
         <field name="employee_ids" eval="[(4, ref('employee_mit'))]"/>
@@ -1974,7 +1976,7 @@
 
     <record id="hr_holidays_allocation_cl_qdp" model="hr.leave.allocation">
         <field name="name">Paid Time Off for Marc Demo</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_qdp"/>
         <field name="employee_ids" eval="[(4, ref('employee_qdp'))]"/>
@@ -1984,7 +1986,7 @@
 
     <record id="hr_holidays_vc_qdp" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">7</field>
         <field name="employee_id" ref="employee_qdp"/>
         <field name="employee_ids" eval="[(4, ref('employee_qdp'))]"/>
@@ -1993,8 +1995,8 @@
     </record>
 
     <record id="hr_holidays_allocation_cl_fpi" model="hr.leave.allocation">
-        <field name="name">Paid Time Off for Audrey Peterson</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="name">Paid Time Off for Rene Chapman</field>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_fpi"/>
         <field name="employee_ids" eval="[(4, ref('employee_fpi'))]"/>
@@ -2004,7 +2006,7 @@
 
     <record id="hr_holidays_vc_fpi" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">7</field>
         <field name="employee_id" ref="employee_fpi"/>
         <field name="employee_ids" eval="[(4, ref('employee_fpi'))]"/>
@@ -2014,7 +2016,7 @@
 
     <record id="hr_holidays_allocation_cl_vad" model="hr.leave.allocation">
         <field name="name">Paid Time Off for Olivia</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_niv"/>
         <field name="employee_ids" eval="[(4, ref('employee_niv'))]"/>
@@ -2024,7 +2026,7 @@
 
     <record id="hr_holidays_vc_vad" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">5</field>
         <field name="employee_id" ref="employee_niv"/>
         <field name="employee_ids" eval="[(4, ref('employee_niv'))]"/>
@@ -2034,7 +2036,7 @@
 
     <record id="hr_holidays_allocation_cl_kim" model="hr.leave.allocation">
         <field name="name">Paid Time Off for Kim</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="employee_jve"/>
         <field name="employee_ids" eval="[(4, ref('employee_jve'))]"/>
@@ -2044,7 +2046,7 @@
 
     <record id="hr_holidays_vc_kim" model="hr.leave.allocation">
         <field name="name">Summer Vacation</field>
-        <field name="holiday_status_id" ref="holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="number_of_days">5</field>
         <field name="employee_id" ref="employee_jve"/>
         <field name="employee_ids" eval="[(4, ref('employee_jve'))]"/>
@@ -2063,7 +2065,7 @@
 
     <record id="hr_holidays_cl" model="hr.leave">
         <field name="name">Trip with Family</field>
-        <field name="holiday_status_id" ref="holiday_status_comp"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_comp"/>
         <field eval="time.strftime('%Y-%m-01')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-03')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-01')" name="request_date_from"/>
@@ -2075,7 +2077,7 @@
 
     <record id="hr_holidays_sl" model="hr.leave">
         <field name="name">Doctor Appointment</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="time.strftime('%Y-%m-20')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-22')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-20')" name="request_date_from"/>
@@ -2087,7 +2089,7 @@
 
     <record id="hr_holidays_cl_al" model="hr.leave">
         <field name="name">Trip with Friends</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field eval="time.strftime('%Y-%m-04')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-10')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-04')" name="request_date_from"/>
@@ -2099,7 +2101,7 @@
 
     <record id="hr_holidays_sl_al" model="hr.leave">
         <field name="name">Dentist appointment</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-17')" name="date_from"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-19')" name="date_to"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-17')" name="request_date_from"/>
@@ -2111,7 +2113,7 @@
 
     <record id="hr_holidays_cl_mit" model="hr.leave">
         <field name="name">Trip to Paris</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field eval="time.strftime('%Y-%m-18')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-24')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-18')" name="request_date_from"/>
@@ -2123,7 +2125,7 @@
 
     <record id="hr_holidays_cl_mit_2" model="hr.leave">
         <field name="name">Trip</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field eval="time.strftime('%Y-%m-05')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-07')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-05')" name="request_date_from"/>
@@ -2135,7 +2137,7 @@
 
     <record id="hr_holidays_cl_qdp" model="hr.leave">
         <field name="name">Sick day</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-03 01:00:00')" name="date_from"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-05 23:00:00')" name="date_to"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-03 01:00:00')" name="request_date_from"/>
@@ -2147,7 +2149,7 @@
 
     <record id="hr_holidays_sl_qdp" model="hr.leave">
         <field name="name">Sick day</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="time.strftime('%Y-%m-01 01:00:00')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-03 23:00:00')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-01 01:00:00')" name="request_date_from"/>
@@ -2159,7 +2161,7 @@
 
     <record id="hr_holidays_cl_vad" model="hr.leave">
         <field name="name">Trip to London</field>
-        <field name="holiday_status_id" ref="holiday_status_cl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field eval="time.strftime('%Y-%m-09')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-16')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-09')" name="request_date_from"/>
@@ -2171,7 +2173,7 @@
 
     <record id="hr_holidays_sl_vad" model="hr.leave">
         <field name="name">Doctor Appointment</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="time.strftime('%Y-%m-25 01:00:00')" name="date_from"/>
         <field eval="time.strftime('%Y-%m-26 23:00:00')" name="date_to"/>
         <field eval="time.strftime('%Y-%m-25 01:00:00')" name="request_date_from"/>
@@ -2183,7 +2185,7 @@
 
     <record id="hr_holidays_sl_kim" model="hr.leave">
         <field name="name">Dentist appointment</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-01 01:00:00')" name="date_from"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-01 23:00:00')" name="date_to"/>
         <field eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-01 01:00:00')" name="request_date_from"/>
@@ -2195,7 +2197,7 @@
 
     <record id="hr_holidays_sl_kim_2" model="hr.leave">
         <field name="name">Second dentist appointment</field>
-        <field name="holiday_status_id" ref="holiday_status_sl"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_sl"/>
         <field eval="(datetime.now()+relativedelta(months=4)).strftime('%Y-%m-03 01:00:00')" name="date_from"/>
         <field eval="(datetime.now()+relativedelta(months=4)).strftime('%Y-%m-03 23:00:00')" name="date_to"/>
         <field eval="(datetime.now()+relativedelta(months=4)).strftime('%Y-%m-03 01:00:00')" name="request_date_from"/>
@@ -2378,7 +2380,7 @@
 
     <record id="hr_holidays_allocation_joseph_noluck_2019" model="hr.leave.allocation">
         <field name="name">Paid Time Off Joseph Noluck - 2019</field>
-        <field name="holiday_status_id" ref="holiday_status_paid_time_off_2019"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="hr_employee_joseph_noluck"/>
         <field name="employee_ids" eval="[(4, ref('hr_employee_joseph_noluck'))]"/>
@@ -2389,7 +2391,7 @@
 
     <record id="hr_holidays_allocation_joseph_noluck_2020" model="hr.leave.allocation">
         <field name="name">Paid Time Off Joseph NolucK - 2020</field>
-        <field name="holiday_status_id" ref="holiday_status_paid_time_off_2020"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="number_of_days">20</field>
         <field name="employee_id" ref="hr_employee_joseph_noluck"/>
         <field name="employee_ids" eval="[(4, ref('hr_employee_joseph_noluck'))]"/>
@@ -2418,7 +2420,7 @@
 
     <record id="hr_holidays_joseph_noluck_unpaid" model="hr.leave">
         <field name="name">Joseph Noluck Unpaid</field>
-        <field name="holiday_status_id" ref="test_l10n_be_hr_payroll_account.holiday_status_unpaid"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_unpaid"/>
         <field name="date_from" eval="time.strftime('2019-03-04 01:00:00')"/>
         <field name="date_to" eval="time.strftime('2019-03-15 23:00:00')"/>
         <field name="request_date_from" eval="time.strftime('2019-03-04 01:00:00')"/>
@@ -2430,7 +2432,7 @@
 
     <record id="hr_holidays_joseph_noluck_legal_2019" model="hr.leave">
         <field name="name">Joseph Noluck Legal Time Off</field>
-        <field name="holiday_status_id" ref="holiday_status_paid_time_off_2019"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="date_from" eval="time.strftime('2019-05-06 01:00:00')"/>
         <field name="date_to" eval="time.strftime('2019-05-31 23:00:00')"/>
         <field name="request_date_from" eval="time.strftime('2019-05-06 01:00:00')"/>
@@ -2442,7 +2444,7 @@
 
     <record id="hr_holidays_joseph_noluck_legal_2020" model="hr.leave">
         <field name="name">Joseph Noluck Legal Time Off</field>
-        <field name="holiday_status_id" ref="holiday_status_paid_time_off_2020"/>
+        <field name="holiday_status_id" ref="hr_holidays.holiday_status_cl"/>
         <field name="date_from" eval="time.strftime('2020-01-13 01:00:00')"/>
         <field name="date_to" eval="time.strftime('2020-01-17 23:00:00')"/>
         <field name="request_date_from" eval="time.strftime('2020-01-13 01:00:00')"/>
@@ -2471,16 +2473,16 @@
         ]).ids"/>
     </function>
 
-    <function model="hr.contract" name="_generate_work_entries">
+    <function model="hr.contract" name="generate_work_entries">
         <value eval="[ref('test_l10n_be_hr_payroll_account.hr_contract_cdi_joseph_noluck_1')]"/>
-        <value eval="time.strftime('2019-01-01')"/>
-        <value eval="time.strftime('2019-12-31')"/>
+        <value eval="DateTime(2019, 1, 1).date()"/>
+        <value eval="DateTime(2019, 12, 31).date()"/>
     </function>
 
-    <function model="hr.contract" name="_generate_work_entries">
+    <function model="hr.contract" name="generate_work_entries">
         <value eval="[ref('test_l10n_be_hr_payroll_account.hr_contract_cdi_joseph_noluck_2')]"/>
-        <value eval="time.strftime('2020-01-01')"/>
-        <value eval="time.strftime('2020-03-31')"/>
+        <value eval="DateTime(2020, 1, 1).date()"/>
+        <value eval="DateTime(2020, 3, 31).date()"/>
     </function>
 
     <record id="hr_payslip_batch_joseph_no_luck" model="hr.payslip.run">
@@ -2976,7 +2978,7 @@
 
     <function model="hr.employee" name="generate_work_entries">
         <value model="hr.employee" eval="obj().search([('company_id', '=', ref('l10n_be_hr_payroll.res_company_be'))]).ids"/>
-        <value eval="(DateTime.today() + relativedelta(day=1, months=-1))"/> 
-        <value eval="(DateTime.today() + relativedelta(day=31))"/>
+        <value eval="(DateTime.today() + relativedelta(day=1, months=-1)).date()"/>
+        <value eval="(DateTime.today() + relativedelta(day=31)).date()"/>
     </function>
 </odoo>

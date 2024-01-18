@@ -18,13 +18,13 @@ tour.register('helpdesk_tour', {
 }, {
     trigger: '.oe_kanban_action_button',
     extra_trigger: '.o_kanban_primary_left',
-    content: _t('Let\'s view your <b>team\'s tickets</b>.'),
+    content: Markup(_t('Let\'s view your <b>team\'s tickets</b>.')),
     position: 'bottom',
     width: 200,
 }, {
     trigger: '.o-kanban-button-new',
     extra_trigger: '.o_kanban_helpdesk_ticket',
-    content: _t('Let\'s create your first <b>ticket</b>.'),
+    content: Markup(_t('Let\'s create your first <b>ticket</b>.')),
     position: 'bottom',
     width: 200,
 }, {
@@ -40,29 +40,27 @@ tour.register('helpdesk_tour', {
 }, {
     trigger: '.o_field_widget.field_user_id',
     extra_trigger: '.o_form_editable',
-    content: _t('Assign the ticket to a <b>member of your team</b>.'),
+    content: Markup(_t('Assign the ticket to a <b>member of your team</b>.')),
     position: 'right',
 }, {
-    trigger: '.o_form_button_save',
-    content: _t('Save this ticket and the modifications you\'ve made to it.'),
-    position: 'bottom',
-}, {
     trigger: ".o_ChatterTopbar_buttonSendMessage",
-    content: _t("Use the chatter to <b>send emails</b> and communicate efficiently with your customers. \
-    Add new people to the followers' list to make them aware of the progress of this ticket."),
+    extra_trigger: '.o_form_view',
+    content: Markup(_t("Use the chatter to <b>send emails</b> and communicate efficiently with your customers. \
+    Add new people to the followers' list to make them aware of the progress of this ticket.")),
     width: 350,
     position: "bottom",
 }, {
     trigger: ".o_ChatterTopbar_buttonLogNote",
-    content: _t("<b>Log notes</b> for internal communications (you will only notify the persons you specifically tag). \
+    extra_trigger: '.o_form_view',
+    content: Markup(_t("<b>Log notes</b> for internal communications (you will only notify the persons you specifically tag). \
     Use <b>@ mentions</b> to ping a colleague \
-    or <b># mentions</b> to contact a group of people."),
+    or <b># mentions</b> to contact a group of people.")),
     width: 350,
     position: "bottom"
 }, {
     trigger: ".o_ChatterTopbar_buttonScheduleActivity",
-    extra_trigger: '.o_form_view .o_form_saved',
-    content: _t("Use <b>activities</b> to organize your daily work."),
+    extra_trigger: '.o_form_view',
+    content: Markup(_t("Use <b>activities</b> to organize your daily work.")),
 }, {
     trigger: ".modal-dialog .btn-primary",
     content: _t("Schedule your <b>activity</b>."),
@@ -70,7 +68,7 @@ tour.register('helpdesk_tour', {
     run: "click",
 }, {
     trigger: '.o_back_button',
-    extra_trigger: '.o_form_view .o_form_saved',
+    extra_trigger: '.o_form_view',
     content: _t("Let's go back to the <b>kanban view</b> to get an overview of your next tickets."),
     position: 'bottom',
 }, {

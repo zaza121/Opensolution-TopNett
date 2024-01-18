@@ -13,6 +13,11 @@ def pre_init_hook(cr):
     if root_menu and not root_menu.active:
         root_menu.write({'active': True})
 
+def post_init_hook(cr, registry):
+    env = api.Environment(cr, SUPERUSER_ID, {})
+    companies = env['res.company'].search([('timesheet_mail_employee_nextdate', '=', False), ('timesheet_mail_manager_nextdate', '=', False)])
+    companies._calculate_timesheet_mail_employee_nextdate()
+    companies._calculate_timesheet_mail_manager_nextdate()
 
 def uninstall_hook(cr, registry):
     """

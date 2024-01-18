@@ -4,7 +4,7 @@ import { device } from "web.config";
 import * as LegacyControlPanel from "web.ControlPanel";
 import { useBackButton } from "web_mobile.hooks";
 import { patch } from "@web/core/utils/patch";
-import { ControlPanel } from "@web/search/control_panel/control_panel";
+import { ControlPanelSearchDialog } from "@web/search/control_panel/control_panel";
 
 
 if (device.isMobile) {
@@ -27,10 +27,10 @@ if (device.isMobile) {
         },
     });
 
-    patch(ControlPanel.prototype, "web_mobile", {
+    patch(ControlPanelSearchDialog.prototype, "web_mobile", {
         setup() {
             this._super(...arguments);
-            useBackButton(this._onBackButton.bind(this), () => this.state.showMobileSearch);
+            useBackButton(this._onBackButton.bind(this));
         },
 
         //---------------------------------------------------------------------
@@ -42,7 +42,7 @@ if (device.isMobile) {
          * @private
          */
         _onBackButton() {
-            this.resetSearchState();
+            this.props.close();
         },
     });
 }

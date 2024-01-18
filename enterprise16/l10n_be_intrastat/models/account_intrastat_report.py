@@ -50,6 +50,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             }
             raise RedirectWarning(error_msg, action_error, _('Add company registry'))
 
+        self.env.cr.flush()
         query, params = self._prepare_query(options)
         self._cr.execute(query, params)
         query_res = self._cr.dictfetchall()
@@ -67,6 +68,8 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             'out_vals': out_vals,
             'extended': options.get('intrastat_extended'),
             'date': date,
+            'incl_arrivals': options['intrastat_type'][0]['selected'] or not options['intrastat_type'][1]['selected'],
+            'incl_dispatches': options['intrastat_type'][1]['selected'] or not options['intrastat_type'][0]['selected'],
             '_get_reception_code': self._get_reception_code,
             '_get_reception_form': self._get_reception_form,
             '_get_expedition_code': self._get_expedition_code,

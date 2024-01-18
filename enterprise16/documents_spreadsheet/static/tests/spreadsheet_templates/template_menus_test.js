@@ -15,6 +15,42 @@ import { setCellContent } from "@spreadsheet/../tests/utils/commands";
 const { topbarMenuRegistry } = spreadsheet.registries;
 
 QUnit.module("documents_spreadsheet > template menu", {}, () => {
+    QUnit.test("new template menu", async function (assert) {
+        const serviceRegistry = registry.category("services");
+        serviceRegistry.add("actionMain", actionService);
+        let afterNew = false;
+        const fakeActionService = {
+            dependencies: ["actionMain"],
+            start(env, { actionMain }) {
+                return {
+                    ...actionMain,
+                    doAction: (actionRequest, options = {}) => {
+                        if (actionRequest.tag === "action_open_template" && afterNew) {
+                            assert.step("redirect");
+                        }
+                        return actionMain.doAction(actionRequest, options);
+                    },
+                };
+            },
+        };
+        serviceRegistry.add("action", fakeActionService, { force: true });
+        const models = getBasicData();
+        const { env } = await createSpreadsheetTemplate({
+            serverData: { models },
+            mockRPC: function (route, args) {
+                if (args.model == "spreadsheet.template" && args.method === "create") {
+                    assert.step("new_template");
+                    afterNew = true;
+                }
+            },
+        });
+        const file = topbarMenuRegistry.getAll().find((item) => item.id === "file");
+        const newTemplate = file.children.find((item) => item.id === "new_sheet");
+        newTemplate.action(env);
+        await nextTick();
+        assert.verifySteps(["new_template", "redirect"]);
+    });
+
     QUnit.test("copy template menu", async function (assert) {
         const serviceRegistry = registry.category("services");
         serviceRegistry.add("actionMain", actionService);
@@ -175,52 +211,5 @@ QUnit.module("documents_spreadsheet > template menu", {}, () => {
         saveAsTemplate.action(env);
         await nextTick();
         assert.verifySteps(["create_template_wizard"]);
-    });
-
-    QUnit.test("copy template menu", async function (assert) {
-        const serviceRegistry = registry.category("services");
-        serviceRegistry.add("actionMain", actionService);
-        const fakeActionService = {
-            dependencies: ["actionMain"],
-            start(env, { actionMain }) {
-                return {
-                    ...actionMain,
-                    doAction: (actionRequest, options = {}) => {
-                        if (
-                            actionRequest.tag === "action_open_template" &&
-                            actionRequest.params.spreadsheet_id === 111
-                        ) {
-                            assert.step("redirect");
-                        }
-                        return actionMain.doAction(actionRequest, options);
-                    },
-                };
-            },
-        };
-        serviceRegistry.add("action", fakeActionService, { force: true });
-        const models = getBasicData();
-        const { env } = await createSpreadsheetTemplate({
-            serverData: { models },
-            mockRPC: function (route, args) {
-                if (args.model == "spreadsheet.template" && args.method === "copy") {
-                    assert.step("template_copied");
-                    const { data, thumbnail } = args.kwargs.default;
-                    assert.ok(data);
-                    assert.ok(thumbnail);
-                    models["spreadsheet.template"].records.push({
-                        id: 111,
-                        name: "template",
-                        data,
-                        thumbnail,
-                    });
-                    return 111;
-                }
-            },
-        });
-        const file = topbarMenuRegistry.getAll().find((item) => item.id === "file");
-        const makeACopy = file.children.find((item) => item.id === "make_copy");
-        makeACopy.action(env);
-        await nextTick();
-        assert.verifySteps(["template_copied", "redirect"]);
     });
 });

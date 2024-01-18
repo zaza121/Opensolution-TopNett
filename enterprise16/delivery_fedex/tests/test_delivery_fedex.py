@@ -297,3 +297,37 @@ class TestMockDeliveryFedex(TestDeliveryFedex):
     def test_04_fedex_international_delivery_from_delivery_order(self):
         with self.patch_fedex_requests():
             super().test_04_fedex_international_delivery_from_delivery_order()
+
+    def test_05_fedex_multistep_delivery_tracking(self):
+        with self.patch_fedex_requests():
+            # Set Warehouse as multi steps delivery
+            self.env.ref("stock.warehouse0").delivery_steps = "pick_pack_ship"
+
+            sale_order = self.env['sale.order'].create({
+                'partner_id': self.agrolait.id,
+                'order_line': [(0, None, {
+                    'product_id': self.iPadMini.id,
+                    'name': "[A1232] iPad Mini",
+                    'product_uom': self.uom_unit.id,
+                    'product_uom_qty': 1.0,
+                    'price_unit': self.iPadMini.lst_price,
+                })],
+            })
+            # I add delivery cost in Sales order
+            delivery_wizard = Form(self.env['choose.delivery.carrier'].with_context({
+                'default_order_id': sale_order.id,
+                'default_carrier_id': self.env.ref('delivery_fedex.delivery_carrier_fedex_inter').id
+            }))
+            choose_delivery_carrier = delivery_wizard.save()
+            choose_delivery_carrier.update_price()
+            choose_delivery_carrier.button_confirm()
+
+            # Confirm the picking and send to shipper
+            sale_order.action_confirm()
+            picking = sale_order.picking_ids[0]
+            picking.move_ids.quantity_done = 1.0
+            picking._action_done()
+            picking.send_to_shipper()
+
+            for p in sale_order.picking_ids:
+                self.assertTrue(any("Tracking Numbers:" in m for m in p.message_ids.mapped('preview')))

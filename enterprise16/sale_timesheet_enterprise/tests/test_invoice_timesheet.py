@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from datetime import timedelta
+
+from odoo import fields
 from odoo.addons.sale_timesheet.tests.common import TestCommonSaleTimesheet
 from odoo.tests import tagged
 
@@ -39,6 +43,7 @@ class TestInvoiceTimesheet(TestCommonSaleTimesheet):
 
         # let's log some timesheets
         timesheet_1 = self.env['account.analytic.line'].create({
+            'date': fields.Date.today() - timedelta(days=1),
             'name': 'Line 1',
             'project_id': project_id.id,
             'task_id': task_id.id,
@@ -46,6 +51,7 @@ class TestInvoiceTimesheet(TestCommonSaleTimesheet):
             'employee_id': self.employee_manager.id,
         })
         timesheet_2 = self.env['account.analytic.line'].create({
+            'date': fields.Date.today() - timedelta(days=1),
             'name': 'Line 2',
             'project_id': project_id.id,
             'task_id': task_id.id,

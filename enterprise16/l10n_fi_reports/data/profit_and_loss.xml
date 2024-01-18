@@ -2071,7 +2071,7 @@
                             <record id="account_financial_report_l10n_fi_pl_line_9_12_balance" model="account.report.expression">
                                 <field name="label">balance</field>
                                 <field name="engine">aggregation</field>
-                                <field name="formula">FIPL_9_12_1.balance + FIPL_9_12_2.balance + FIPL_9_12_3.balance + FIPL_9_12_4.balance</field>
+                                <field name="formula">FIPL_9_12_1.balance + FIPL_9_12_2.balance + FIPL_9_12_3.balance + FIPL_9_12_4.balance + FIPL_9_12_5.balance</field>
                                 <field name="date_scope">normal</field>
                             </record>
                         </field>
@@ -2086,13 +2086,13 @@
                                     <record id="account_financial_report_l10n_fi_pl_line_9_12_1_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">account_codes</field>
-                                        <field name="formula">-871 - 870 - 873 - 872</field>
+                                        <field name="formula">-871 - 873 - 872</field>
                                         <field name="date_scope">normal</field>
                                     </record>
                                 </field>
                             </record>
                             <record id="account_financial_report_l10n_fi_pl_line_9_12_2" model="account.report.line">
-                                <field name="name">2. Vähennyskelpoiset muut liikekulut</field>
+                                <field name="name">2. Muut liikekulut</field>
                                 <field name="code">FIPL_9_12_2</field>
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="1"/>
@@ -2101,13 +2101,13 @@
                                     <record id="account_financial_report_l10n_fi_pl_line_9_12_2_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">account_codes</field>
-                                        <field name="formula">-876 - 875 - 874</field>
+                                        <field name="formula">-870</field>
                                         <field name="date_scope">normal</field>
                                     </record>
                                 </field>
                             </record>
                             <record id="account_financial_report_l10n_fi_pl_line_9_12_3" model="account.report.line">
-                                <field name="name">3. Vähennyskelvottomat muut liikekulut</field>
+                                <field name="name">3. Vähennyskelpoiset muut liikekulut</field>
                                 <field name="code">FIPL_9_12_3</field>
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="1"/>
@@ -2116,13 +2116,13 @@
                                     <record id="account_financial_report_l10n_fi_pl_line_9_12_3_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">account_codes</field>
-                                        <field name="formula">-880 - 877 - 879 - 878 - 884</field>
+                                        <field name="formula">-874 - 875 - 876</field>
                                         <field name="date_scope">normal</field>
                                     </record>
                                 </field>
                             </record>
                             <record id="account_financial_report_l10n_fi_pl_line_9_12_4" model="account.report.line">
-                                <field name="name">4. Käyttöomaisuuden luovutustappiot</field>
+                                <field name="name">4. Vähennyskelvottomat muut liikekulut</field>
                                 <field name="code">FIPL_9_12_4</field>
                                 <field name="groupby">account_id</field>
                                 <field name="hide_if_zero" eval="1"/>
@@ -2131,7 +2131,22 @@
                                     <record id="account_financial_report_l10n_fi_pl_line_9_12_4_balance" model="account.report.expression">
                                         <field name="label">balance</field>
                                         <field name="engine">account_codes</field>
-                                        <field name="formula">-887 - 885 - 886</field>
+                                        <field name="formula">-877 - 878 - 879 - 880 - 884</field>
+                                        <field name="date_scope">normal</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="account_financial_report_l10n_fi_pl_line_9_12_5" model="account.report.line">
+                                <field name="name">5. Käyttöomaisuuden luovutustappiot</field>
+                                <field name="code">FIPL_9_12_5</field>
+                                <field name="groupby">account_id</field>
+                                <field name="hide_if_zero" eval="1"/>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="account_financial_report_l10n_fi_pl_line_9_12_5_balance" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">account_codes</field>
+                                        <field name="formula">-885 - 886 - 887</field>
                                         <field name="date_scope">normal</field>
                                     </record>
                                 </field>

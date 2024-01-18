@@ -739,7 +739,7 @@ QUnit.module('ReportEditorManager', {
 
             // remove the span from the dom
             await testUtils.dom.click(rem.$('.o_web_studio_active .o_web_studio_remove'));
-            await testUtils.dom.click($('.modal-content .btn-primary'));
+            await testUtils.dom.click($('.modal-content:visible .btn-primary'));
             assert.hasAttrValue(rem.$('.o_web_studio_sidebar_header .active'), 'name', 'new',
                 "after the remove, 'Add' tab should be active");
 

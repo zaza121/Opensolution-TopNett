@@ -34,11 +34,20 @@ class AccountAvatax(models.AbstractModel):
 
     @api.constrains('partner_id', 'fiscal_position_id')
     def _check_address(self):
-        for record in self.filtered('fiscal_position_id.is_avatax'):
+        incomplete_partner_to_records = {}
+        for record in self.filtered(lambda r: r._perform_address_validation()):
             partner = record.partner_id
             country = partner.country_id
             if not country or (country.zip_required and not partner.zip) or (country.state_required and not partner.state_id):
-                raise ValidationError(_('Customers are required to have a zip, state and country when using Avatax.'))
+                incomplete_partner_to_records.setdefault(partner, []).append(record)
+
+        if incomplete_partner_to_records:
+            error = _("The following customer(s) need to have a zip, state and country when using Avatax:")
+            partner_errors = [
+                _("- %s (ID: %s) on %s") % (partner.display_name, partner.id, ", ".join(record.display_name for record in records))
+                for partner, records in incomplete_partner_to_records.items()
+            ]
+            raise ValidationError(error + "\n" + "\n".join(partner_errors))
 
     @api.depends('company_id', 'fiscal_position_id')
     def _compute_is_avatax(self):
@@ -85,6 +94,13 @@ class AccountAvatax(models.AbstractModel):
         """
         return self.partner_shipping_id or self.partner_id
 
+    def _perform_address_validation(self):
+        """Allows to bypass the _check_address constraint.
+
+        :return (bool): whether to execute the _check_address constraint
+        """
+        return self.fiscal_position_id.is_avatax
+
     # #############################################################################################
     # HELPERS
     # #############################################################################################
@@ -111,7 +127,7 @@ class AccountAvatax(models.AbstractModel):
         return {
             'amount': price_subtotal,
             'description': product.display_name,
-            'quantity': quantity,
+            'quantity': abs(quantity),
             'taxCode': product._get_avatax_category_id().code,
             'itemCode': item_code,
             'number': line_id,
@@ -131,14 +147,7 @@ class AccountAvatax(models.AbstractModel):
         :param partner (Model<res.partner>): the partner we need the addresses of.
         :return (dict): the AddressesModel to return to Avatax
         """
-        return {
-            'shipTo': {
-                'city': partner.city,
-                'country': partner.country_id.code,
-                'region': partner.state_id.code,
-                'postalCode': partner.zip,
-                'line1': partner.street,
-            },
+        res = {
             'shipFrom': {
                 'city': self.company_id.partner_id.city,
                 'country': self.company_id.partner_id.country_id.code,
@@ -147,6 +156,24 @@ class AccountAvatax(models.AbstractModel):
                 'line1': self.company_id.partner_id.street,
             },
         }
+        if partner.partner_latitude and partner.partner_longitude:
+            res.update({
+                'shipTo': {
+                    'latitude': partner.partner_latitude,
+                    'longitude': partner.partner_longitude,
+                },
+            })
+        else:
+            res.update({
+                'shipTo': {
+                    'city': partner.city,
+                    'country': partner.country_id.code,
+                    'region': partner.state_id.code,
+                    'postalCode': partner.zip,
+                    'line1': partner.street,
+                },
+            })
+        return res
 
     def _get_avatax_taxes(self, commit):
         """Get the transaction values.

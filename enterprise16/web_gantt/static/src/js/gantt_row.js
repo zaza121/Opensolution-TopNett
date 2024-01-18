@@ -144,7 +144,7 @@ var GanttRow = Widget.extend({
         }
         this._super();
     },
- 
+
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
@@ -892,7 +892,7 @@ var GanttRow = Widget.extend({
                 },
                 helper: 'clone',
             });
-        } else {
+        } else if (!$pill.hasClass("o_gantt_consolidated_pill")) {
             if ($pill.draggable( "instance")) {
                 return;
             }

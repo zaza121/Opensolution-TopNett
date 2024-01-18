@@ -17,6 +17,7 @@ import Widget from "web.Widget";
 import { registry } from "@web/core/registry";
 import { sortBy } from "@web/core/utils/arrays";
 import { SIDEBAR_SAFE_FIELDS } from "@web_studio/legacy/js/views/sidebar_safe_fields";
+import { omit, pick } from "@web/core/utils/objects";
 
 const form_component_widget_registry = view_components.registry;
 const _lt = core._lt;
@@ -49,9 +50,8 @@ export const OPTIONS_BY_WIDGET = {
         {name: 'no_create', type: 'boolean', string: _lt("Disable creation"), leaveEmpty: 'unchecked'},
         {name: 'no_open', type: 'boolean', string: _lt("Disable opening"), leaveEmpty: 'unchecked'},
     ],
-    product_configurator: [
+    sol_product_many2one: [
         { name: 'no_create', type: 'boolean', string: _lt("Disable creation"), leaveEmpty: 'unchecked' },
-        { name: 'no_open', type: 'boolean', string: _lt("Disable opening"), leaveEmpty: 'unchecked' },
     ],
     many2many_tags: [
         { name: 'no_create', type: 'boolean', string: _lt("Disable creation"), leaveEmpty: 'unchecked' },
@@ -109,12 +109,23 @@ function getWowlFieldWidgets(fieldType, currentKey="", blacklistedKeys=[], debug
     return sortBy(widgets, (el) => el[1] || el[0]);
 }
 
-function fieldComponentToRegistryKey(Component) {
-    for (const [key, Cp] of wowlFieldRegistry.getEntries()) {
-        if (Cp === Component) {
-            return key.includes(".") ? key.split(".")[1] : key;
+export function getFieldWidgetKey(fieldType, viewType, jsClass) {
+    const prefixes = jsClass ? [jsClass, viewType, ""] : [viewType, ""];
+    for (const prefix of prefixes) {
+        const _key = prefix ? `${prefix}.${fieldType}` : fieldType;
+        if (wowlFieldRegistry.contains(_key)) {
+            return _key;
         }
     }
+}
+
+function getWidgetDefaultOptions(widgetKey) {
+     if (!(widgetKey in OPTIONS_BY_WIDGET)) {
+        return {};
+    }
+    return Object.fromEntries(Object.values(OPTIONS_BY_WIDGET[widgetKey]).map(opt => {
+        return [opt.name, opt.default]
+    }))
 }
 
 export const ViewEditorSidebar = Widget.extend(StandaloneFieldManagerMixin, {
@@ -217,9 +228,20 @@ export const ViewEditorSidebar = Widget.extend(StandaloneFieldManagerMixin, {
         const hasWowlFieldWidgets = ["kanban", "form", "list"].includes(this.view_type);
         const Widget = this.state.attrs.Widget;
         let propsFromAttrs;
-        if (hasWowlFieldWidgets) {
-            propsFromAttrs = this.state.attrs.propsFromAttrs;
-            this.widgetKey = this.state.attrs.widget || fieldComponentToRegistryKey(this.state.attrs.FieldComponent);
+        if (hasWowlFieldWidgets && this.state.mode === "properties" && this.state.node.tag === "field") {
+            const nodeAttrs = this.state.attrs;
+            const field = this.fields[nodeAttrs.name];
+            this.widgetKey = nodeAttrs.widget || getFieldWidgetKey(field.type, this.view_type);
+
+            let defaultOptions = getWidgetDefaultOptions(this.widgetKey);
+            defaultOptions = omit(defaultOptions, ...Object.keys(nodeAttrs.options));
+            nodeAttrs.options = { ...nodeAttrs.options, ...defaultOptions };
+
+            const Component = wowlFieldRegistry.get(this.widgetKey, null);
+            if (Component && Component.extractProps) {
+                const rawAttrs = Object.fromEntries(Object.entries(nodeAttrs).filter(e => !e[0].startsWith("t-att")));
+                propsFromAttrs = Component.extractProps({ field, attrs: { ...rawAttrs, options: nodeAttrs.options}});
+            }
         } else {
             this.widgetKey = this._getWidgetKey(Widget);
         }
@@ -515,6 +537,19 @@ export const ViewEditorSidebar = Widget.extend(StandaloneFieldManagerMixin, {
         this.state.attrs.context = this.state.attrs.context || this.state.field.context;
         this.state.attrs.related = this.state.field.related ? this.state.field.related : false;
     },
+
+    _getCalendarModesFromScales() {
+        const allModes = {
+            day: _t("day"),
+            week: _t("week"),
+            month: _t("month"),
+            year: _t("year"),
+        }
+        if (this.state.attrs.scales) {
+            return pick(allModes, ...this.state.attrs.scales.split(","))
+        }
+        return allModes;
+    },
     /**
      * @private
      * @param {Object} modifiers
@@ -537,7 +572,7 @@ export const ViewEditorSidebar = Widget.extend(StandaloneFieldManagerMixin, {
                 } else if (keyFromView || !trueValue) { // modifier not applied or under certain condition, remove modifier attribute and use attrs if any
                     newAttributes[key] = "";
                     if (value !== false) {
-                        attrs.push(_.str.sprintf("\"%s\": %s", key, Domain.prototype.arrayToString(value)));
+                        attrs.push(_.str.sprintf("\"%s\": \"%s\"", key, Domain.prototype.arrayToString(value)));
                     }
                 }
         });
@@ -1140,7 +1175,7 @@ export const ViewEditorSidebar = Widget.extend(StandaloneFieldManagerMixin, {
                     var newModifiers = _.extend({}, this.state.modifiers);
                     newModifiers[attribute] = $input.is(':checked');
                     new_attrs = this._getNewAttrsFromModifiers(newModifiers);
-                    if (attribute === 'readonly' && $input.is(':checked')) {
+                    if (this.view_type == "form" && attribute === 'readonly' && $input.is(':checked')) {
                         new_attrs.force_save = 'True';
                     }
                 }

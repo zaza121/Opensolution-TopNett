@@ -2,11 +2,19 @@
 
 import { formView } from "@web/views/form/form_view";
 
-function rebindLegacyDatapoint(datapoint, basicModel) {
+function rebindLegacyDatapoint(datapoint, basicModel, evalContext) {
     const newDp = {};
 
     const descrs = Object.getOwnPropertyDescriptors(datapoint);
     Object.defineProperties(newDp, descrs);
+
+    const getRecordEvalContext = basicModel._getRecordEvalContext.bind(basicModel);
+    basicModel._getRecordEvalContext = (record, forDomain) => {
+        if (record.id === "__can'ttouchthis__") {
+            return evalContext;
+        }
+        return getRecordEvalContext(record, forDomain);
+    };
 
     newDp.id = "__can'ttouchthis__";
     newDp.evalModifiers = basicModel._evalModifiers.bind(basicModel, newDp);
@@ -21,13 +29,14 @@ function rebindLegacyDatapoint(datapoint, basicModel) {
 function applyParentRecordOnModel(model, parentRecord) {
     const legacyHandle = parentRecord.__bm_handle__;
     const legacyDp = parentRecord.model.__bm__.localData[legacyHandle];
+    const evalContext = parentRecord.model.__bm__._getRecordEvalContext(legacyDp);
 
     const load = model.load;
     model.load = async (...args) => {
         const res = await load.call(model, ...args);
         const localData = model.__bm__.localData;
 
-        const parentDp = rebindLegacyDatapoint(legacyDp, model.__bm__);
+        const parentDp = rebindLegacyDatapoint(legacyDp, model.__bm__, evalContext);
         localData[parentDp.id] = parentDp;
 
         const rootDp = localData[model.root.__bm_handle__];

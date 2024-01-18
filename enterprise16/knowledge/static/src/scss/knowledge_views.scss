@@ -46,20 +46,8 @@
         max-width: 70vw;
     }
 
-    .o_knowledge_option_button {
-        visibility: hidden;
-        opacity: 0;
-        transition: visibility 0.3s, opacity 0.3s linear;
-    }
-    
     .o_knowledge_icon_cover_buttons {
         background-color: var(--knowledge-view-bg, $o-white);
-    }
-
-    .o_knowledge_icon_cover_buttons:hover > a,
-    .o_knowledge_cover:hover .o_knowledge_edit_cover_buttons > a {
-        visibility: visible;
-        opacity: 1;
     }
 
     .o_knowledge_icon.o_large,
@@ -201,13 +189,6 @@
             z-index: 0;
         }
 
-        .o_section_header:not(:hover) .o_section_create,
-        .o_article_handle > div:not(:hover) .o_article_create {
-            visibility: hidden;
-        }
-        .o_article_create, .o_article_caret {
-            border: none;
-        }
         .o_article_name a {
             color: inherit;
         }
@@ -260,6 +241,10 @@
         .o_knowledge_share_panel_invite .form-control {
             color: $gray-400 !important;
         }
+    }
+    .dropdown-menu.o_knowledge_more_options_panel,
+    .dropdown-menu.o_knowledge_share_panel {
+        max-width: 100vw;
     }
 
     .o_knowledge_properties {
@@ -382,9 +367,22 @@
         .o_knowledge_aside {
             width: 100%;
         }
-        .o_knowledge_option_button {
-            visibility: visible;
-            opacity: 1;
+    }
+}
+
+@media (hover: hover) { // Devices supporting hover
+    .o_knowledge_form_view {
+        .o_knowledge_edit_cover_buttons,
+        .o_knowledge_icon_cover_buttons {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .o_knowledge_cover:not(:hover) .o_knowledge_edit_cover_buttons,
+        .o_knowledge_icon_cover_buttons:not(:hover) {
+            opacity: 0;
+        }
+        .o_section_header:not(:hover) .o_section_create,
+        .o_article_handle:not(:hover) .o_article_create {
+            visibility: hidden;
         }
     }
 }

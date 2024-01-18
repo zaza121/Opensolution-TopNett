@@ -7,31 +7,33 @@
             <field name="priority">100</field>
             <field name="arch" type="xml">
                 <form string="Bank Statement">
+                    <div class="alert alert-warning text-center" role="alert" attrs="{
+                                'invisible': [('is_valid','=',True), ('is_complete','=',True)]}">
+                        <field name="problem_description"/>
+                    </div>
                     <sheet>
                         <group>
+                            <field name="create_date" invisible="1"/>
+                            <field name="is_valid" invisible="1"/>
+                            <field name="is_complete" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
-                            <field name="journal_id" invisible="1"/> <!--required for computing name -->
+                            <field name="journal_id" invisible="1"/>
                             <field name="name" required="1" />
                             <field name="balance_start"/>
-                            <field name="balance_end_real" />
+                            <field name="balance_end_real"/>
                             <field name="attachment_ids" widget="many2many_binary"/>
                         </group>
                     </sheet>
-                    <footer>
-                        <button string="Save" special="save" data-hotkey="v" class="oe_highlight"/>
-                        <button string="Discard" special="cancel" data-hotkey="z"/>
-                    </footer>
                 </form>
             </field>
         </record>
 
         <record id="action_bank_statement_form_bank_rec_widget" model="ir.actions.act_window">
+            <!-- Binding removed since the same can be achieved with multi-edit -->
             <field name="name">Create Statement</field>
             <field name="res_model">account.bank.statement</field>
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_bank_statement_form_bank_rec_widget"/>
-            <field name="binding_model_id" ref="account.model_account_bank_statement_line"/>
-            <field name="binding_view_types">list</field>
             <field name="target">new</field>
         </record>
 
@@ -62,8 +64,8 @@
                            filter_domain="['|', ('move_id.name', 'ilike', self), ('move_id.ref', 'ilike', self)]"/>
                     <field name="statement_line_id" string="Statement Line"/>
                     <separator/>
-                    <filter name="deposits" string="Deposits" domain="[('amount', '&lt;', 0.0)]"/>
-                    <filter name="payments" string="Payments" domain="[('amount', '>', 0.0)]"/>
+                    <filter name="deposits" string="Deposits" domain="[('amount', '>', 0.0)]"/>
+                    <filter name="payments" string="Payments" domain="[('amount', '&lt;', 0.0)]"/>
                     <separator/>
                     <filter name="no_statement" string="No statement" domain="[('statement_id', '=', False)]"/>
                     <filter name="invalid_statement" string="Invalid statements"
@@ -103,12 +105,13 @@
                     <field name="partner_bank_id" invisible="1"/>
                     <field name="currency_id" invisible="1"/>
                     <field name="foreign_currency_id" invisible="1"/>
+                    <field name="statement_line_id" invisible="1"/>
                     <templates>
                         <t t-name="kanban-box">
                             <div t-if="!record.statement_complete.raw_value"
                                  class="statement_separator text-center">
                                 <a role="button" class="btn btn-secondary btn-sm"
-                                   context="{'split_line_id':active_id}"
+                                   context="{'split_line_id':active_id, 'default_journal_id': journal_id}"
                                    tabindex="-1"
                                    type="action" name="%(account_accountant.action_bank_statement_form_bank_rec_widget)d">
                                     Statement
@@ -181,7 +184,6 @@
                       decoration-muted="state == 'draft'"
                       default_order="internal_index desc">
                     <!--Invisible fields-->
-                    <field name="id" invisible="1"/>
                     <field name="statement_complete" invisible="1"/>
                     <field name="statement_valid" invisible="1"/>
                     <field name="state" invisible="1"/>
@@ -207,6 +209,7 @@
                     <field name="foreign_currency_id"
                            optional="hidden"
                            groups="base.group_multi_currency"
+                           domain="[('id', '!=', currency_id)]"
                            options="{'no_open': True, 'no_create': True}"
                            attrs="{'readonly': [('is_reconciled', '=', True),('amount', '!=', 0)]}"
                     />
@@ -219,7 +222,7 @@
                     <field name="journal_id"
                            domain="[('type', 'in', ['bank','cash'])]"
                            attrs="{'readonly': ['|',('statement_id', '!=', False),('is_reconciled', '=', True),('amount', '!=', 0)]}"
-                           invisible="context.get('default_journal_id')"/>
+                           invisible="bool(context.get('default_journal_id'))"/>
                     <field name="running_balance" class="oe_read_only"/>
                     <field name="account_number" optional="hidden"/>
                     <field name="statement_id"
@@ -230,24 +233,13 @@
                                 'default_journal_id':journal_id,
                                 'form_view_ref': 'account_accountant.view_bank_statement_form_bank_rec_widget',
                                 'st_line_id':id,
-                                'st_line_date':date,
-                                'st_line_journal_id':journal_id}"
+                            }"
                            decoration-danger="statement_complete == False or statement_valid == False"
+                           widget="bankrec_many2one_multi_id"
+                           attrs="{'readonly':[('id', '=', False)]}"
                     />
-                    <button class="btn btn-sm btn-secondary"
-                            title="Match"
-                            type="object"
-                            name="action_open_recon_st_line"
-                            string="Match"
-                            attrs="{'invisible':['|', ('id', '=', False), ('is_reconciled', '=', True)]}">
-                    </button>
-                    <button class="btn btn-sm btn-secondary"
-                            title="View"
-                            type="object"
-                            name="action_open_recon_st_line"
-                            string="View"
-                            attrs="{'invisible':['|', ('id', '=', False), ('is_reconciled', '=', False)]}">
-                    </button>
+                    <field name="id" widget="bank_rec_widget_view_switcher"
+                           attrs="{'invisible':[('id', '=', False)]}"/>
                 </tree>
             </field>
         </record>
@@ -263,6 +255,7 @@
                     <field name="statement_valid" invisible="1"/>
                     <field name="is_reconciled" invisible="1"/>
                     <field name="suitable_journal_ids" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
                     <group>
                         <group>
                             <field name="date" attrs="{'readonly': [('is_reconciled', '=', True),('amount', '!=', 0)]}"/>
@@ -275,23 +268,12 @@
                             <field name="amount" attrs="{'readonly': [('is_reconciled', '=', True), ('amount', '!=', 0)]}"/>
                             <field name="foreign_currency_id"
                                    groups="base.group_multi_currency"
+                                   domain="[('id', '!=', currency_id)]"
+                                   options="{'no_open': True, 'no_create': True}"
                                    attrs="{'readonly': [('is_reconciled', '=', True), ('amount', '!=', 0)]}"/>
                             <field name="amount_currency"
                                    groups="base.group_multi_currency"
                                    attrs="{'invisible': [('foreign_currency_id', '=', False)], 'readonly': [('is_reconciled', '=', True), ('amount', '!=', 0)]}"/>
-                            <field name="statement_id"
-                                   options="{'no_quick_create': True}"
-                                   domain="['|', ('journal_id', '=', journal_id), ('journal_id', '=', False)]"
-                                   attrs="{'readonly': [('is_reconciled', '=', True), ('amount', '!=', 0), ('statement_complete', '=', True)]}"
-                                   context="{
-                                       'default_journal_id': journal_id,
-                                       'form_view_ref': 'account_accountant.view_bank_statement_form_bank_rec_widget',
-                                       'st_line_id': id,
-                                       'st_line_date': date,
-                                       'st_line_journal_id': journal_id}"
-                                   decoration-danger="statement_complete == False or statement_valid == False"
-                                   invisible="context.get('default_statement_id')"
-                            />
                             <field name="journal_id"
                                    domain="[('type', 'in', ['bank', 'cash'])]"
                                    attrs="{'readonly': [('is_reconciled', '=', True),('amount', '!=', 0)]}"
@@ -432,7 +414,7 @@
                                 <group>
                                     <field name="form_partner_id"
                                            string="Partner"
-                                           options="{'no_open': True, 'no_quick_create': True}"
+                                           options="{'no_quick_create': True}"
                                            attrs="{'readonly': [('form_flag', 'in', ('tax_line', 'new_aml', 'exchange_diff'))], 'invisible': [('form_index', '=', False)]}"/>
                                     <label for="button_form_partner_receivable"
                                            string=""
@@ -465,7 +447,7 @@
                                            attrs="{'invisible': ['|', ('form_flag', '=', 'liquidity'), ('form_index', '=', False)]}"/>
                                     <field name="form_date"
                                            string="Date"
-                                           attrs="{'invisible': ['|', ('form_flag', '!=', 'liquidity'), ('form_index', '=', False)], 'required': [('form_flag', '=', 'liquidity')]}"/>/>
+                                           attrs="{'invisible': ['|', ('form_flag', '!=', 'liquidity'), ('form_index', '=', False)], 'required': [('form_flag', '=', 'liquidity')]}"/>
                                 </group>
                                 <group>
                                     <field name="form_name"
@@ -510,7 +492,20 @@
                                            nolabel="1"
                                            attrs="{'invisible': ['|', ('form_extra_text', '=', False), ('form_index', '=', False)]}"
                                            widget="bank_rec_html"/>
+                                    <label for="st_line_narration"
+                                           string="Notes"
+                                           attrs="{'invisible': [('st_line_narration', '=', False)]}"/>
+                                    <field name="st_line_narration"
+                                           nolabel="1"
+                                           attrs="{'invisible': [('st_line_narration', '=', False)]}"/>
                                 </group>
+                            </group>
+                        </page>
+                        <page name="transaction_details_tab"
+                              string="Transaction Details"
+                              attrs="{'invisible': ['|', ('state', '!=', 'reconciled'), ('st_line_narration', '=', False)]}">
+                            <group>
+                                <field name="st_line_narration" string="Notes" readonly="1"/>
                             </group>
                         </page>
                         <page name="discuss_tab" string="Discuss">
@@ -542,8 +537,8 @@
                            string="Journal Entry"
                            filter_domain="['|', ('move_id.name', 'ilike', self), ('move_id.ref', 'ilike', self)]"/>
                     <separator/>
-                    <filter name="amount_received" string="Received" domain="[('balance', '>', 0.0)]"/>
-                    <filter name="amount_paid" string="Paid" domain="[('balance', '&lt;', 0.0)]"/>
+                    <filter name="amount_received" string="Incoming" domain="[('balance', '>', 0.0)]"/>
+                    <filter name="amount_paid" string="Outgoing" domain="[('balance', '&lt;', 0.0)]"/>
                     <separator name="inject_after"/>
                     <filter name="date" string="Date" date="date"/>
                 </search>
@@ -559,6 +554,8 @@
                 <tree string="Suggestions"
                       create="false"
                       edit="false"
+                      limit="40"
+                      count_limit="40"
                       js_class="bank_rec_widget_form_amls_list">
                     <!-- Invisible fields -->
                     <field name="company_id" invisible="1"/>
@@ -611,6 +608,18 @@
                 <field name="name" position="attributes">
                     <attribute name="widget">bank_rec_widget_open</attribute>
                 </field>
+            </field>
+        </record>
+
+        <record model="ir.actions.server" id="action_bank_statement_attachment">
+            <field name="name">Statement</field>
+            <field name="model_id" ref="model_account_bank_statement"/>
+            <field name="binding_model_id" ref="model_account_bank_statement" />
+            <field name="binding_type">report</field>
+            <field name="state">code</field>
+            <field name="code">
+if records:
+    action = records.action_generate_attachment()
             </field>
         </record>
     </data>

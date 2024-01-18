@@ -68,7 +68,7 @@ tour.register('account_reports_widgets', {
         },
         {
             content: "wait refresh",
-            trigger: ".o_account_reports_header_hierarchy th:contains('2019')",
+            trigger: ".o_account_reports_filter_date button:contains('2019')",
             run: function(){},
         },
         {

@@ -16,7 +16,7 @@
     <t t-name="web_grid.AddLineRow" owl="1">
         <tr class="o_grid_add_line_row">
             <th t-if="showTimerButton" class="o_grid_timer_header">
-                \u00A0
+                <div t-esc="'\u00A0'"/>
             </th>
             <th>
                 <div class="ms-3">
@@ -200,7 +200,7 @@
     <t t-name="web_grid.GridEmptyRows" owl="1">
         <t t-foreach="emptyRows" t-as="row" t-key="row_index">
             <tr class="o_grid_padding">
-                <th><div>\u00A0</div></th>
+                <th><div t-esc="'\u00A0'"/></th>
                 <t t-foreach="props.data[0].cols" t-as="col" t-key="col_index">
                     <td t-att-class="{o_grid_current: col.is_current, o_grid_unavailable: col.is_unavailable}"></td>
                 </t>

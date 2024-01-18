@@ -256,7 +256,7 @@ class L10nBe274XX(models.Model):
 
         year_period_code = {
             2022: '6',
-            2019: '7',
+            2023: '7',
             2020: '8',
             2021: '9',
         }

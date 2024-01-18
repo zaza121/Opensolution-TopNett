@@ -15,13 +15,14 @@
             </xpath>
             <xpath expr="//header" position="after">
                 <field name="l10n_cl_dte_file" invisible="1"/>
-                <div class="alert alert-warning text-center" role="alert" attrs="{'invisible': ['|', ('l10n_cl_dte_file', '!=', False), ('l10n_cl_draft_status', '=', False)]}">Sequence not found for delivery guide. Please, set the first number into Delivery Guide Number field</div>
+                <field name="l10n_cl_is_return" invisible="1"/>
+                <div class="alert alert-warning text-center" role="alert" attrs="{'invisible': ['|', '|', ('l10n_cl_is_return', '=', True),  ('l10n_cl_dte_file', '!=', False), ('l10n_cl_draft_status', '=', False)]}">Sequence not found for delivery guide. Please, set the first number into Delivery Guide Number field</div>
             </xpath>
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="l10n_cl_draft_status" invisible="1"/>
-                <label for="l10n_latam_document_number" attrs="{'invisible': [('l10n_cl_draft_status', '=', False), ('l10n_latam_document_number', '=', False)]}"/>
-                <div attrs="{'invisible': [('l10n_cl_draft_status', '=', False), ('l10n_latam_document_number', '=', False)]}">
-                    <field name="l10n_latam_document_number" attrs="{'readonly': [('l10n_cl_draft_status', '=', False)]}"/>
+                <label for="l10n_latam_document_number" attrs="{'invisible': ['|', ('l10n_cl_is_return', '=', True), '&amp;', ('l10n_cl_draft_status', '=', False), ('l10n_latam_document_number', '=', False)]}"/>
+                <div attrs="{'invisible': ['|', ('l10n_cl_is_return', '=', True), '&amp;', ('l10n_cl_draft_status', '=', False), ('l10n_latam_document_number', '=', False)]}">
+                    <field name="l10n_latam_document_number" attrs="{'readonly': ['|', ('l10n_cl_is_return', '=', True), ('l10n_cl_draft_status', '=', False), ('country_code', '=', 'CL')]}"/>
                     <button name="l10n_cl_set_delivery_guide_to_draft" type="object" attrs="{'invisible': [('l10n_cl_dte_status', 'not in', ['not_sent', 'rejected'])]}" string="⇒ Set to Draft" class="oe_inline oe_link" groups="base.group_user"/>
                     <button name="l10n_cl_confirm_draft_delivery_guide" type="object" attrs="{'invisible': ['|', ('l10n_cl_draft_status', '=', False), ('l10n_latam_document_number', '=', False)]}" string="⇒ Confirm" class="oe_inline oe_link" groups="base.group_user"/>
                 </div>

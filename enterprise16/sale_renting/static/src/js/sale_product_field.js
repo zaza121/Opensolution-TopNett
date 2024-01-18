@@ -2,6 +2,7 @@
 
 import { patch } from "@web/core/utils/patch";
 import { SaleOrderLineProductField } from '@sale/js/sale_product_field';
+import { serializeDateTime } from "@web/core/l10n/dates";
 
 
 patch(SaleOrderLineProductField.prototype, 'sale_renting', {
@@ -55,8 +56,8 @@ patch(SaleOrderLineProductField.prototype, 'sale_renting', {
             data.default_warehouse_id = saleOrderRecord.data.warehouse_id[0];
         }
         if (edit) {
-            data.default_pickup_date = recordData.start_date.setZone('UTC').toFormat('yyyy-MM-dd TT');;
-            data.default_return_date = recordData.return_date.setZone('UTC').toFormat('yyyy-MM-dd TT');;
+            data.default_pickup_date = serializeDateTime(recordData.start_date);
+            data.default_return_date = serializeDateTime(recordData.return_date);
 
             if (recordData.tax_id) {
                 // NOTE: this is not a true default, but a data used by business python code
@@ -85,15 +86,17 @@ patch(SaleOrderLineProductField.prototype, 'sale_renting', {
 
             if (saleOrderLines.length) {
                 saleOrderLines.forEach(function (line) {
-                    defaultPickupDate = line.data.start_date;
-                    defaultReturnDate = line.data.return_date;
+                    if (line.data.is_rental) {
+                        defaultPickupDate = line.data.start_date;
+                        defaultReturnDate = line.data.return_date;
+                    }
                 });
 
                 if (defaultPickupDate) {
-                    data.default_pickup_date = defaultPickupDate.setZone('UTC').toFormat('yyyy-MM-dd TT');
+                    data.default_pickup_date = serializeDateTime(defaultPickupDate);
                 }
                 if (defaultReturnDate) {
-                    data.default_return_date = defaultReturnDate.setZone('UTC').toFormat('yyyy-MM-dd TT');
+                    data.default_return_date = serializeDateTime(defaultReturnDate);
                 }
             }
         }

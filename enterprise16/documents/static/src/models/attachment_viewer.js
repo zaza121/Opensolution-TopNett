@@ -35,6 +35,15 @@ registerPatch({
             }
             return this._super();
         },
+        /**
+         * @override
+         */
+        onClick(ev) {
+            if (this.documentListOwner) {
+                ev.stopPropagation();
+            }
+            return this._super();
+        },
     },
     fields: {
         attachmentViewerViewable: {
@@ -62,6 +71,11 @@ registerPatch({
         }),
         hasPdfSplit: attr({
             default: false,
+        }),
+        withDownload: attr({
+            compute() {
+                return this.attachmentViewerViewable.isUrlYoutube;
+            },
         }),
         withPdfSplit: attr({
             /**

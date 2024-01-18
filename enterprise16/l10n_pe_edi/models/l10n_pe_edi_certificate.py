@@ -5,6 +5,8 @@ import hashlib
 import ssl
 from base64 import b64decode, b64encode
 from copy import deepcopy
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import pkcs12
 from lxml import etree
 from pytz import timezone
 from datetime import datetime
@@ -43,11 +45,9 @@ class Certificate(models.Model):
         http://www.vauxoo.com/r/manualdeautorizacion#page=21
         """
         self.ensure_one()
-        decrypted_content = crypto.load_pkcs12(b64decode(self.content), self.password.encode())
-        certificate = decrypted_content.get_certificate()
-        private_key = decrypted_content.get_privatekey()
-        pem_certificate = crypto.dump_certificate(crypto.FILETYPE_PEM, certificate)
-        pem_private_key = crypto.dump_privatekey(crypto.FILETYPE_PEM, private_key)
+        private_key, certificate, _ = pkcs12.load_key_and_certificates(b64decode(self.content), self.password.encode())
+        pem_certificate = certificate.public_bytes(serialization.Encoding.PEM)
+        pem_private_key = private_key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
 
         # Cleanup pem_content.
         for to_clean in ('\n', ssl.PEM_HEADER, ssl.PEM_FOOTER):
@@ -69,10 +69,10 @@ class Certificate(models.Model):
         for certificate in certificates:
             try:
                 dummy, dummy, certif = certificate._decode_certificate()
-                cert_date_start = peruvian_tz.localize(datetime.strptime(certif.get_notBefore().decode(), date_format))
-                cert_date_end = peruvian_tz.localize(datetime.strptime(certif.get_notAfter().decode(), date_format))
-                serial_number = certif.get_serial_number()
-            except crypto.Error:
+                cert_date_start = peruvian_tz.localize(certif.not_valid_before, date_format)
+                cert_date_end = peruvian_tz.localize(certif.not_valid_after, date_format)
+                serial_number = certif.serial_number
+            except:
                 raise ValidationError(_('There has been a problem with the certificate, some usual problems can be:\n'
                                         '- The password given or the certificate are not valid.\n'
                                         '- The certificate content is invalid.'))

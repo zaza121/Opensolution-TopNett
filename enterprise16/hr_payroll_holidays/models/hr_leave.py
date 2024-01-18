@@ -3,7 +3,6 @@
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import calendar
 
 from odoo import api, fields, models, _
 from odoo.fields import Datetime
@@ -116,14 +115,11 @@ class HrLeave(models.Model):
                 raise UserError(_('Only an employee time off to defer can be reported to next month'))
             if (leave.date_to.year - leave.date_from.year) * 12 + leave.date_to.month - leave.date_from.month > 1:
                 raise UserError(_('The time off %s can not be reported because it is defined over more than 2 months', leave.display_name))
-            last_day = calendar.monthrange(leave.date_from.year, leave.date_from.month)[1]
-            last_day_of_first_month = leave.date_to.replace(month=leave.date_from.month, day=last_day)
-            date_to = min(last_day_of_first_month, leave.date_to)
             leave_work_entries = self.env['hr.work.entry'].search([
                 ('employee_id', '=', leave.employee_id.id),
                 ('company_id', '=', self.env.company.id),
                 ('date_start', '>=', leave.date_from),
-                ('date_stop', '<=', date_to),
+                ('date_stop', '<=', leave.date_to),
             ])
             next_month_work_entries = self.env['hr.work.entry'].search([
                 ('employee_id', '=', leave.employee_id.id),

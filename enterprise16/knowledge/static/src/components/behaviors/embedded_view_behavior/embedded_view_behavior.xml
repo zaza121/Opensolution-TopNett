@@ -19,17 +19,11 @@
             </div>
         </t>
         <t t-else="">
-            <EmbeddedViewManager
-                el="props.anchor"
-                action="props.act_window"
-                context="props.context"
-                viewType="props.view_type"
-                onLoadStart.bind="onEmbeddedViewLoadStart"
-                onLoadEnd.bind="onEmbeddedViewLoadEnd"
-                setTitle.bind="setTitle"
-                getTitle.bind="getTitle"
-                readonly="props.readonly"
-            />
+            <EmbeddedViewManager t-props="this.embeddedViewManagerProps"/>
         </t>
+        <div t-if="props.action_help" class="o_knowledge_content d-none" data-prop-name="action_help"
+            contenteditable="false">
+            <t t-out="props.action_help"/>
+        </div>
     </t>
 </templates>

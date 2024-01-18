@@ -2,8 +2,8 @@
 
 from odoo import models, fields, _, release
 from odoo.tools.float_utils import float_repr
+from odoo.tools.safe_eval import safe_eval
 from odoo.exceptions import UserError
-import ast
 import uuid
 
 COUNTRY_CODE_MAP = {
@@ -45,9 +45,15 @@ class PosSession(models.Model):
 
     def _validate_session(self, balancing_account=False, amount_to_balance=0, bank_payment_method_diffs=None):
         res = super()._validate_session(balancing_account, amount_to_balance, bank_payment_method_diffs)
+
+        # If the result is a dict, this means that there was a problem and the _validate_session was not completed.
+        # In this case, a wizard should show up which is represented by the returned dictionary.
+        # Return the dictionary to prevent running the remaining code.
+        if isinstance(res, dict):
+            return res
         orders = self.order_ids.filtered(lambda o: o.state in ['done', 'invoiced'])
         # We don't want to block the user that need to validate his session order in order to create his TSS
-        if self.config_id.is_company_country_germany and self.config_id.l10n_de_fiskaly_tss_id and self.order_ids:
+        if self.config_id.is_company_country_germany and self.config_id.l10n_de_fiskaly_tss_id and orders:
             orders = orders.sorted('l10n_de_fiskaly_time_end')
             json = self._l10n_de_create_cash_point_closing_json(orders)
             self._l10n_de_send_fiskaly_cash_point_closing(json)
@@ -63,7 +69,7 @@ class PosSession(models.Model):
                 LEFT JOIN pos_payment_method pm ON p.payment_method_id=pm.id
                 JOIN account_journal journal ON pm.journal_id=journal.id
             WHERE p.session_id=%s AND journal.type IN ('cash', 'bank')
-            GROUP BY pm.is_cash_count 
+            GROUP BY pm.is_cash_count
         """, [self.id])
         total_payment_result = self.env.cr.dictfetchall()
 
@@ -76,14 +82,14 @@ class PosSession(models.Model):
                 total_bank = payment['amount']
 
         self.env.cr.execute("""
-            SELECT account_tax.amount, 
-                   sum(pos_order_line.price_subtotal) as excl_vat, 
-                   sum(pos_order_line.price_subtotal_incl) as incl_vat 
-            FROM pos_order 
-            JOIN pos_order_line ON pos_order.id=pos_order_line.order_id 
-            JOIN account_tax_pos_order_line_rel ON account_tax_pos_order_line_rel.pos_order_line_id=pos_order_line.id 
+            SELECT account_tax.amount,
+                   sum(pos_order_line.price_subtotal) as excl_vat,
+                   sum(pos_order_line.price_subtotal_incl) as incl_vat
+            FROM pos_order
+            JOIN pos_order_line ON pos_order.id=pos_order_line.order_id
+            JOIN account_tax_pos_order_line_rel ON account_tax_pos_order_line_rel.pos_order_line_id=pos_order_line.id
             JOIN account_tax ON account_tax_pos_order_line_rel.account_tax_id=account_tax.id
-            WHERE pos_order.session_id=%s 
+            WHERE pos_order.session_id=%s
             GROUP BY account_tax.amount
         """, [self.id])
 
@@ -102,7 +108,12 @@ class PosSession(models.Model):
             'amounts_per_vat_id': amounts_per_vat_id_result
         })
 
-        return ast.literal_eval(json.strip())
+        # We have swapped ast.literal_eval for literal_eval because
+        # the inputted data exceeds 100kib.
+        #
+        # This restriction is  due to the changement made in this pull request:
+        # https://github.com/odoo/odoo/pull/121530
+        return safe_eval(json.strip())
 
     def _l10n_de_send_fiskaly_cash_point_closing(self, json):
         cash_point_closing_uuid = str(uuid.uuid4())

@@ -181,6 +181,11 @@ class MarketingCampaign(models.Model):
                              "Either update your activity actions to match the new Target Model or delete them.")
             }}
 
+    def write(self, vals):
+        if not vals.get('active', True):
+            vals['state'] = 'stopped'
+        return super().write(vals)
+
     def action_set_synchronized(self):
         self.write({'last_sync_date': Datetime.now()})
         self.mapped('marketing_activity_ids').write({'require_sync': False})
@@ -212,7 +217,7 @@ class MarketingCampaign(models.Model):
                 elif trigger_type in ['activity', 'mail_not_open', 'mail_not_click', 'mail_not_reply'] and trace.parent_id:
                     trace.schedule_date = Datetime.from_string(trace.parent_id.schedule_date) + trace_offset
                 elif trace.parent_id:
-                    process_dt = trace.parent_id.mailing_trace_ids.state_update
+                    process_dt = (trace.parent_id.mailing_trace_ids.mapped('write_date') + [fields.Datetime().now()])[0]
                     trace.schedule_date = Datetime.from_string(process_dt) + trace_offset
 
             # Action 2: On activity creation
@@ -317,7 +322,8 @@ class MarketingCampaign(models.Model):
             if not campaign.last_sync_date:
                 campaign.last_sync_date = now
 
-            RecordModel = self.env[campaign.model_name]
+            user_id = campaign.user_id or self.env.user
+            RecordModel = self.env[campaign.model_name].with_context(lang=user_id.lang)
 
             # Fetch existing participants
             participants_data = participants.search_read([('campaign_id', '=', campaign.id)], ['res_id'])

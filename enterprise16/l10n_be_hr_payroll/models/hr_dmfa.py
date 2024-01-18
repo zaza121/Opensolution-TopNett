@@ -277,19 +277,19 @@ class DMFAWorker(DMFANode):
             return []
 
         contributions = [
-            DMFAWorkerContribution(contribution_payslips, basis)
+            DMFAWorkerContribution(contribution_payslips, basis, self.quarter_start)
         ] + [
-            DMFAWorkerContributionFFE(contribution_payslips, basis, self.worker_count)
+            DMFAWorkerContributionFFE(contribution_payslips, basis, self.worker_count, self.quarter_start)
         ] + [
-            DMFAWorkerContributionSpecialFFE(contribution_payslips, basis)
+            DMFAWorkerContributionSpecialFFE(contribution_payslips, basis, self.quarter_start)
         ] + [
-            DMFAWorkerContributionCPAE(contribution_payslips, basis)
+            DMFAWorkerContributionCPAE(contribution_payslips, basis, self.quarter_start)
         ] + ([
-            DMFAWorkerContributionWageRestraint(contribution_payslips, basis)
+            DMFAWorkerContributionWageRestraint(contribution_payslips, basis, self.quarter_start)
         ] if self.worker_count >= 10 else []) + [
-            DMFAWorkerContributionSpecialSocialCotisation(contribution_payslips, basis)
+            DMFAWorkerContributionSpecialSocialCotisation(contribution_payslips, basis, self.quarter_start)
         ] + [
-            DMFAWorkerContributionTemporaryUnemployment(contribution_payslips, basis)
+            DMFAWorkerContributionTemporaryUnemployment(contribution_payslips, basis, self.quarter_start)
         ]
 
         # Check if special cotisations on termination fees are needed
@@ -401,6 +401,8 @@ class DMFAWorker(DMFANode):
                 employee = termination_payslips.employee_id
                 if not employee.start_notice_period or not employee.end_notice_period:
                     raise UserError(_('No start/end notice period defined for %s', termination_payslips.employee_id.name))
+                if employee.start_notice_period > employee.end_notice_period:
+                    raise UserError(_('Start notice period is defined after end notice period for %s', termination_payslips.employee_id.name))
                 # YTI Check Termination fees
                 # Les indemnités considérées comme de la rémunération sont déclarées
                 # en DmfA, avec le code rémunération 3 et en mentionnant, pour la période correspondante
@@ -491,23 +493,27 @@ class DMFAWorkerContribution(DMFANode):
     Represents the paid amounts on the employee payslips
     """
 
-    def __init__(self, payslips, basis, sequence=None):
+    def __init__(self, payslips, basis, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         self.worker_code = WORKER_CODE
+        self.quarter_start = quarter_start
         # Though 2 is the only code for worker 495; see annexe 3
         # the correct value is 0 for 4xx numbers.
         self.contribution_type = 0
         self.calculation_basis = format_amount(basis)
-        self.amount = format_amount(round(basis * 0.3810, 2))
+        rate = payslips.env['hr.rule.parameter'].sudo()._get_parameter_from_code(
+            'l10n_be_global_rate', date=self.quarter_start, raise_if_not_found=False)
+        self.amount = format_amount(round(basis * rate / 100, 2))
         self.first_hiring_date = -1
 
 class DMFAWorkerContributionFFE(DMFANode):
     """
     Represents the paid amounts on the employee payslips - FFE Fond fermeture Entreprise
     """
-    def __init__(self, payslips, basis, worker_count, sequence=None):
+    def __init__(self, payslips, basis, worker_count, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         self.worker_code = 809
+        self.quarter_start = quarter_start
         self.contribution_type = 5
         self.calculation_basis = format_amount(basis)
         self.worker_count = worker_count
@@ -521,9 +527,10 @@ class DMFAWorkerContributionSpecialFFE(DMFANode):
     """
     Represents the paid amounts on the employee payslips - Special FFE Fond fermeture Entreprise
     """
-    def __init__(self, payslips, basis, sequence=None):
+    def __init__(self, payslips, basis, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         self.worker_code = 810
+        self.quarter_start = quarter_start
         self.contribution_type = 0
         self.calculation_basis = format_amount(basis)
         # Cotisations de base FFE
@@ -531,7 +538,9 @@ class DMFAWorkerContributionSpecialFFE(DMFANode):
         # Pour tous les travailleurs soumis à la réglementation sur le chômage
         # 0,13% (0,14%)
         # Source: https://www.socialsecurity.be/employer/instructions/dmfa/fr/latest/instructions/special_contributions/other_specialcontributions/basiccontributions_closingcompanyfunds.html
-        self.amount = format_amount(round(basis * 0.0010, 2))
+        rate = payslips.env['hr.rule.parameter'].sudo()._get_parameter_from_code(
+            'l10n_be_special_ffe_rate', date=self.quarter_start, raise_if_not_found=False)
+        self.amount = format_amount(round(basis * rate / 100, 2))
         self.first_hiring_date = -1
 
 
@@ -539,9 +548,10 @@ class DMFAWorkerContributionCPAE(DMFANode):
     """
     Represents the paid amounts on the employee payslips - CPAE
     """
-    def __init__(self, payslips, basis, sequence=None):
+    def __init__(self, payslips, basis, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         self.worker_code = 831
+        self.quarter_start = quarter_start
         self.contribution_type = 0
         self.calculation_basis = format_amount(basis)
         # Le Fonds social est financé par la contribution trimestrielle que versent à son profit
@@ -550,7 +560,9 @@ class DMFAWorkerContributionCPAE(DMFANode):
         # Les cotisations sont fixées comme suit:
         # Chaque trimestre : 0,23 % de la masse salariale brute
         # Source: https://www.sfonds200.be/fonds-social/qui-sommes-nous
-        self.amount = format_amount(round(basis * 0.0023, 2))
+        rate = payslips.env['hr.rule.parameter'].sudo()._get_parameter_from_code(
+            'l10n_be_cpae_rate', date=self.quarter_start, raise_if_not_found=False)
+        self.amount = format_amount(round(basis * rate / 100, 2))
         self.first_hiring_date = -1
 
 
@@ -558,25 +570,29 @@ class DMFAWorkerContributionWageRestraint(DMFANode):
     """
     Represents the paid amounts on the employee payslips - Wage Restreint (modération salariale)
     """
-    def __init__(self, payslips, basis, sequence=None):
+    def __init__(self, payslips, basis, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         self.worker_code = 855
+        self.quarter_start = quarter_start
         self.contribution_type = 0
         self.calculation_basis = format_amount(basis)
         # La cotisation de 1,60 % (portée à 1,69 % par l'effet de la cotisation de modération
         # salariale) n'est pas due par tous les employeurs. Elle n'est due que par les employeurs
         # qui, pendant la période de référence, occupaient en moyenne au moins 10 travailleurs.
         # Source: https://www.socialsecurity.be/employer/instructions/dmfa/fr/latest/instructions/socialsecuritycontributions/contributions.html
-        self.amount = format_amount(round(basis * 0.0169, 2))
+        rate = payslips.env['hr.rule.parameter'].sudo()._get_parameter_from_code(
+            'l10n_be_wage_restreint', date=self.quarter_start, raise_if_not_found=False)
+        self.amount = format_amount(round(basis * rate / 100, 2))
         self.first_hiring_date = -1
 
 class DMFAWorkerContributionSpecialSocialCotisation(DMFANode):
     """
     Represents the paid amounts on the employee payslips - Special Social Cotisation
     """
-    def __init__(self, payslips, basis, sequence=None):
+    def __init__(self, payslips, basis, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         self.worker_code = 856
+        self.quarter_start = quarter_start
         self.contribution_type = 0
         self.calculation_basis = -1
         self.amount = format_amount(round(-payslips._get_line_values(['M.ONSS'], compute_sum=True)['M.ONSS']['sum']['total'], 2))
@@ -586,13 +602,16 @@ class DMFAWorkerContributionTemporaryUnemployment(DMFANode):
     """
     Represents the paid amounts on the employee payslips - Temporary Unemployment
     """
-    def __init__(self, payslips, basis, sequence=None):
+    def __init__(self, payslips, basis, quarter_start, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
         # Source: https://www.socialsecurity.be/employer/instructions/dmfa/fr/latest/instructions/special_contributions/other_specialcontributions/temporary_oldunemployed.html
         self.worker_code = 859
+        self.quarter_start = quarter_start
         self.contribution_type = 0
         self.calculation_basis = format_amount(basis)
-        self.amount = format_amount(round(basis * 0.0010, 2))
+        rate = payslips.env['hr.rule.parameter'].sudo()._get_parameter_from_code(
+            'l10n_be_temporary_unemployment_rate', date=self.quarter_start, raise_if_not_found=False)
+        self.amount = format_amount(round(basis * rate / 100, 2))
         self.first_hiring_date = -1
 
 
@@ -916,7 +935,7 @@ class HrDMFAReport(models.Model):
         dmfa_schema_file_path = get_resource_path(
             'l10n_be_hr_payroll',
             'data',
-            'DmfAOriginal_20214.xsd',
+            'DmfAOriginal_20231.xsd',
         )
         xsd_root = etree.parse(dmfa_schema_file_path)
         schema = etree.XMLSchema(xsd_root)
@@ -1089,8 +1108,9 @@ class HrDMFAReport(models.Model):
         work_addresses = employees.mapped('address_id')
         location_units = self.env['l10n_be.dmfa.location.unit'].search([('partner_id', 'in', work_addresses.ids)])
         invalid_addresses = work_addresses - location_units.mapped('partner_id')
+        invalid_employees = employees.filtered(lambda e: e.address_id in invalid_addresses)
         if invalid_addresses:
-            raise UserError(_('The following work addesses do not have any ONSS identification code:\n %s', '\n'.join(invalid_addresses.mapped('name'))))
+            raise UserError(_('The following employees are linked to work addresses without any ONSS identification code:\n %s', '\n'.join(invalid_employees.mapped('name'))))
         # Check valid work entry types
         work_entry_types = payslips.mapped('worked_days_line_ids.work_entry_type_id')
         invalid_types = work_entry_types.filtered(lambda t: not t.dmfa_code)
@@ -1127,7 +1147,36 @@ class HrDMFAReport(models.Model):
             'group_insurance_amount': format_amount(group_onss),
             'pretty_format': lambda a: str(round(int(a) / 100.0, 2)),
         }
-        result['global_contribution'] = format_amount(self._get_global_contribution(result['natural_persons'], format_amount(double_onss)))
+
+        # Special employer contribution reduction due to 2023 index
+        contribution_reduction = 0
+        if self.quarter_start.year == 2023 and self.quarter_start.month < 4:
+            # The 7.07% contribution reduction is calculated on the overall net basic
+            # employer contributions. These are the employer contributions calculated
+            # on all the remuneration codes on which the basic employer contributions
+            # are calculated (remuneration codes 1, 2, 3, 4, 5, 6, 7, 9, 51, 61, 62,
+            # 65 and 66 ) after deduction of applicable employer contribution reductions
+            # with the exception of the maribel social package.
+            # Source: https://www.socialsecurity.be/employer/instructions/dmfa/fr/latest/instructions/deductions/otheremployersreductions/competitivity_reduction.html
+            total_employer_contribution = 0
+            # Sum all employer contributions
+            for natural_person in result['natural_persons']:
+                for worker_record in natural_person.worker_records:
+                    for contribution in worker_record.contributions:
+                        total_employer_contribution += int(contribution.amount) / 100.0
+                    for contribution in worker_record.student_contributions:
+                        total_employer_contribution += int(contribution.student_contribution_amount) / 100.0
+            # Sum all employee deductions
+            for natural_person in result['natural_persons']:
+                for worker_record in natural_person.worker_records:
+                    for deduction in worker_record.deductions:
+                        total_employer_contribution -= int(deduction.amount) / 100.00
+            contribution_reduction = round(total_employer_contribution * 7.07 / 100, 2)
+            result['employer_compensation'] = format_amount(contribution_reduction)
+        else:
+            result['employer_compensation'] = 0
+
+        result['global_contribution'] = format_amount(self._get_global_contribution(result['natural_persons'], format_amount(double_onss - contribution_reduction)))
         return result
 
     def _get_global_contribution(self, employees_infos, double_onss):

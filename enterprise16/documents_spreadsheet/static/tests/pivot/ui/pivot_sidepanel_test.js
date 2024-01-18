@@ -291,5 +291,35 @@ QUnit.module(
             assert.deepEqual(model.getters.getPivotDefinition(pivotId).domain, [["id", "=", 1]]);
             assert.equal(fixture.querySelector(".o_domain_selector_row").innerText, "ID\n= 1");
         });
+
+        QUnit.test(
+            "Opening the sidepanel of a pivot while the panel of another pivot is open updates the side panel",
+            async function (assert) {
+                const { model, env } = await createSpreadsheetFromPivotView();
+                const arch = /* xml */ `
+                    <pivot string="Product">
+                        <field name="name" type="col"/>
+                        <field name="active" type="row"/>
+                        <field name="__count" type="measure"/>
+                    </pivot>`;
+                await insertPivotInSpreadsheet(model, {
+                    arch,
+                    resModel: "product",
+                });
+                const pivotIds = model.getters.getPivotIds();
+
+                model.dispatch("SELECT_PIVOT", { pivotId: pivotIds[0] });
+                env.openSidePanel("PIVOT_PROPERTIES_PANEL", {});
+                await nextTick();
+                let modelName = target.querySelector(".o_side_panel_section .o_model_name");
+                assert.equal(modelName.innerText, "Partner (partner)");
+
+                model.dispatch("SELECT_PIVOT", { pivotId: pivotIds[1] });
+                env.openSidePanel("PIVOT_PROPERTIES_PANEL", {});
+                await nextTick();
+                modelName = target.querySelector(".o_side_panel_section .o_model_name");
+                assert.equal(modelName.innerText, "Product (product)");
+            }
+        );
     }
 );

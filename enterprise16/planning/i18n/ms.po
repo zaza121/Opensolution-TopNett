@@ -4,16 +4,16 @@
 # 
 # Translators:
 # Niyas Raphy, 2022
-# Mehjabin Farsana, 2022
+# Mehjabin Farsana, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-15 13:27+0000\n"
+"POT-Creation-Date: 2023-05-23 08:35+0000\n"
 "PO-Revision-Date: 2022-09-22 05:47+0000\n"
-"Last-Translator: Mehjabin Farsana, 2022\n"
-"Language-Team: Malay (https://www.transifex.com/odoo/teams/41243/ms/)\n"
+"Last-Translator: Mehjabin Farsana, 2023\n"
+"Language-Team: Malay (https://app.transifex.com/odoo/teams/41243/ms/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -139,12 +139,12 @@ msgid ""
 "<div>\n"
 "                    <p>\n"
 "                    <t t-if=\"ctx.get('employee')\">\n"
-"                        Dear <t t-out=\"ctx['employee'].name or ''\"/>,\n"
+"                        Dear <t t-out=\"ctx['employee'].name or ''\"></t>,\n"
 "                    </t>\n"
 "                    <t t-else=\"\">\n"
 "                        Hello,\n"
 "                    </t>\n"
-"                        <br/><br/>\n"
+"                        <br><br>\n"
 "                    <t t-if=\"ctx.get('assigned_new_shift')\">\n"
 "                        You have been assigned new shifts:\n"
 "                    </t>\n"
@@ -152,7 +152,7 @@ msgid ""
 "                        Please, find your planning for the following period:\n"
 "                    </t>\n"
 "                    </p>\n"
-"                    <br/>\n"
+"                    <br>\n"
 "\n"
 "                    <table style=\"table-layout: fixed; width: 80%; margin: auto;\">\n"
 "                        <tr>\n"
@@ -172,10 +172,10 @@ msgid ""
 "                    <div t-if=\"ctx.get('slot_unassigned_count')\">\n"
 "                        <p>There are new open shifts available. Please, assign yourself if you are available.</p>\n"
 "                    </div>\n"
-"                    <br/>\n"
+"                    <br>\n"
 "\n"
 "                    <t t-if=\"ctx.get('message')\">\n"
-"                        <p t-out=\"ctx['message'] or ''\"/>\n"
+"                        <p t-out=\"ctx['message'] or ''\"></p>\n"
 "                    </t>\n"
 "\n"
 "                    <p t-if=\"hasattr(object, 'allow_self_unassign') and object.allow_self_unassign and hasattr(object, 'self_unassign_days_before') and object.self_unassign_days_before\">\n"
@@ -189,14 +189,14 @@ msgstr ""
 #: model:mail.template,body_html:planning.email_template_slot_single
 msgid ""
 "<div>\n"
-"                    <p>Dear <t t-out=\"ctx.get('employee_name', '')\">Anita Oliver</t>,<br/><br/></p>\n"
+"                    <p>Dear <t t-out=\"ctx.get('employee_name', '')\">Anita Oliver</t>,<br><br></p>\n"
 "                    <t t-if=\"ctx.get('open_shift_available')\">\n"
 "                        <p>A new open shift is available:</p>\n"
 "                    </t>\n"
 "                    <t t-else=\"\">\n"
 "                        <p>You have been assigned the following schedule:</p>\n"
 "                    </t>\n"
-"                    <br/>\n"
+"                    <br>\n"
 "                    <table style=\"width: 80%; margin: auto;\">\n"
 "                        <tr>\n"
 "                            <th style=\"padding: 5px;text-align: left;\">From</th>\n"
@@ -212,7 +212,7 @@ msgid ""
 "                        </tr>\n"
 "                        <tr t-if=\"hasattr(object, 'sale_line_id') and object.sale_line_id\">\n"
 "                            <th style=\"padding: 5px;text-align: left;\">Sale Order Item</th>\n"
-"                            <td style=\"padding: 5px;\" t-out=\"object.sudo().sale_line_id.name or ''\"/>\n"
+"                            <td style=\"padding: 5px;\" t-out=\"object.sudo().sale_line_id.name or ''\"></td>\n"
 "                        </tr>\n"
 "                        <tr t-if=\"hasattr(object, 'project_id') and object.project_id\">\n"
 "                            <th style=\"padding: 5px;text-align: left;\">Project</th>\n"
@@ -244,11 +244,6 @@ msgid ""
 "<i class=\"fa fa-check-circle text-success\"/> You were successfully "
 "assigned this open shift."
 msgstr ""
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
-msgid "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
-msgstr "<i class=\"fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_slot_template_view_kanban
@@ -307,6 +302,11 @@ msgstr ""
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "<i class=\"fa small fa-minus\"></i> Role: Waiter"
+msgstr ""
+
+#. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
+msgid "<i class=\"me-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
 msgstr ""
 
 #. module: planning
@@ -500,7 +500,7 @@ msgstr ""
 #. module: planning
 #: model:res.groups,name:planning.group_planning_manager
 msgid "Administrator"
-msgstr ""
+msgstr "Pentadbir"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form_in_gantt
@@ -637,7 +637,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:planning.field_planning_slot__color
 #: model:ir.model.fields,field_description:planning.field_resource_resource__color
 msgid "Color"
-msgstr ""
+msgstr "Warna"
 
 #. module: planning
 #: model:planning.role,name:planning.planning_role_cm
@@ -670,7 +670,7 @@ msgstr ""
 #. module: planning
 #: model:ir.model,name:planning.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "Tetapan Konfigurasi"
 
 #. module: planning
 #: model:ir.ui.menu,name:planning.planning_menu_settings
@@ -734,18 +734,18 @@ msgstr "Tarikh"
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__date_end
 msgid "Date End"
-msgstr ""
+msgstr "Tarikh Tamat"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__date_start
 msgid "Date Start"
-msgstr ""
+msgstr "Tarikh Mula"
 
 #. module: planning
 #: model:ir.model.fields.selection,name:planning.selection__planning_recurrency__repeat_unit__day
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__repeat_unit__day
 msgid "Days"
-msgstr ""
+msgstr "Hari"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__self_unassign_days_before
@@ -813,7 +813,7 @@ msgstr "Padam"
 #: model_terms:ir.ui.view,arch_db:planning.planning_analysis_report_view_search
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "Department"
-msgstr ""
+msgstr "Jabatan"
 
 #. module: planning
 #: model:ir.model,name:planning.model_hr_departure_wizard
@@ -891,7 +891,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:planning.field_planning_slot__duration
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__duration
 msgid "Duration"
-msgstr ""
+msgstr "Tempoh"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__duration_days
@@ -936,12 +936,12 @@ msgstr "Pekerja"
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Employee Name"
-msgstr ""
+msgstr "Nama Pekerja"
 
 #. module: planning
 #: model:ir.ui.menu,name:planning.planning_menu_settings_employee
 msgid "Employees"
-msgstr ""
+msgstr "Pekerja"
 
 #. module: planning
 #: model:ir.model.fields,help:planning.field_planning_send__employee_ids
@@ -970,7 +970,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:planning.planning_analysis_report_view_search
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "End Date"
-msgstr ""
+msgstr "Tarikh tamat"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__end_time
@@ -1390,7 +1390,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:planning.period_report_template
 #: model_terms:ir.ui.view,arch_db:planning.resource_planning
 msgid "Note"
-msgstr ""
+msgstr "Nota"
 
 #. module: planning
 #. odoo-javascript
@@ -1673,7 +1673,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:planning.planning_analysis_report_view_search
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "Resource"
-msgstr ""
+msgstr "Sumber"
 
 #. module: planning
 #: model:ir.model,name:planning.model_resource_resource
@@ -1693,7 +1693,7 @@ msgstr "Sumber"
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 #: model_terms:ir.ui.view,arch_db:planning.resource_planning
 msgid "Role"
-msgstr ""
+msgstr "Peranan"
 
 #. module: planning
 #: model:ir.model.fields,help:planning.field_hr_employee__default_planning_role_id
@@ -1708,7 +1708,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:planning.field_resource_resource__role_ids
 #: model:ir.ui.menu,name:planning.planning_menu_settings_role
 msgid "Roles"
-msgstr ""
+msgstr "Peranan"
 
 #. module: planning
 #: model:ir.model.fields,help:planning.field_hr_employee__planning_role_ids
@@ -1783,7 +1783,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form_in_gantt
 #: model_terms:ir.ui.view,arch_db:planning.slot_planning_select_send_view_form
 msgid "Send"
-msgstr ""
+msgstr "Hantar"
 
 #. module: planning
 #: model:ir.model,name:planning.model_planning_send
@@ -1955,6 +1955,13 @@ msgstr ""
 #. module: planning
 #: model:ir.model.constraint,message:planning.constraint_planning_slot_template_check_duration_positive
 msgid "The duration cannot be negative."
+msgstr ""
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning_template.py:0
+#, python-format
+msgid "The duration is too long."
 msgstr ""
 
 #. module: planning

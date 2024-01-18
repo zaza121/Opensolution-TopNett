@@ -202,7 +202,7 @@ class CrossoveredBudgetLines(models.Model):
                            line.general_budget_id.account_ids.ids),
                           ('date', '>=', date_from),
                           ('date', '<=', date_to),
-                          ('move_id.state', '=', 'posted')
+                          ('parent_state', '=', 'posted')
                           ]
                 where_query = aml_obj._where_calc(domain)
                 aml_obj._apply_ir_rules(where_query, 'read')

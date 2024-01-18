@@ -219,7 +219,7 @@ class MailThread(models.AbstractModel):
         if message.subtype_id and message.subtype_id.description:
             tracking_message = return_line + message.subtype_id.description + return_line
 
-        for value in message.sudo().tracking_value_ids:
+        for value in message.sudo().tracking_value_ids.filtered(lambda tracking: not tracking.field_groups):
             if value.field_type == 'boolean':
                 old_value = str(bool(value.old_value_integer))
                 new_value = str(bool(value.new_value_integer))

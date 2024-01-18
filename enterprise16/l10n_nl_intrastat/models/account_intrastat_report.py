@@ -113,7 +113,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
         for res in query_res:
             line = line_map[res['id']]
             inv = line.move_id
-            country_dest_code = inv.partner_id.country_id and inv.partner_id.country_id.code or ''
+            country_dest_code = inv.partner_shipping_id.country_id and inv.partner_shipping_id.country_id.code or ''
             country_origin_code = res['intrastat_product_origin_country_code'] if res['type'] == 'Dispatch' and fields.Date.to_date(date_to) > date(2022, 1, 1) else ''
             country = inv.intrastat_country_id.code and inv.intrastat_country_id.code or '' if res['type'] == 'Arrival' else country_dest_code
 

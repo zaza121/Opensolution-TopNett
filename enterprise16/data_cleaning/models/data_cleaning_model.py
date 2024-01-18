@@ -110,6 +110,7 @@ class DataCleaningModel(models.Model):
     def _clean_records(self, batch_commits=False):
         self.env.flush_all()
 
+        lang = self.env.user.lang
         records_to_clean = []
         for cleaning_model in self:
             records_to_create = []
@@ -124,8 +125,23 @@ class DataCleaningModel(models.Model):
                     values = cleaner(actions, field)
                     records_to_create += values
                 else:
-                    active_name = self.env[cleaning_model.res_model_name]._active_name
+                    active_model = self.env[cleaning_model.res_model_name]
+                    active_name = active_model._active_name
                     active_cond = sql.SQL("AND {}").format(sql.Identifier(active_name)) if active_name else sql.SQL('')
+
+                    field_name = sql.Identifier(field)
+                    cleaned_field_expr = sql.SQL(action.format(field))
+
+                    if active_model._fields[field].translate:
+                        field_name = sql.SQL("COALESCE({field}->>{lang}, {field}->>'en_US')").format(
+                            field=sql.Identifier(field),
+                            lang=sql.Literal(lang)
+                        )
+                        action = action.format("COALESCE({field}->>{lang}, {field}->>'en_US')")
+                        cleaned_field_expr = sql.SQL(action).format(
+                            field=sql.Identifier(field),
+                            lang=sql.Literal(lang)
+                        )
 
                     query = sql.SQL("""
                         SELECT
@@ -143,12 +159,12 @@ class DataCleaningModel(models.Model):
                             {active_cond}
                     """).format(
                         table=sql.Identifier(self.env[cleaning_model.res_model_name]._table),
-                        field_name=sql.Identifier(field),
+                        field_name=field_name,
                         operator=sql.SQL(operator),
                         # can be complex sql expression & multiple actions get
                         # combined through string formatting, so doesn't seem
                         # to be a smarter solution than whitelisting the entire thing
-                        cleaned_field_expr=sql.SQL(action.format(field)),
+                        cleaned_field_expr=cleaned_field_expr,
                         cleaning_record_table=sql.Identifier(self.env['data_cleaning.record']._table),
                         active_cond=active_cond
                     )

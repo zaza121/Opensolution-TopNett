@@ -6,15 +6,16 @@
 # Martin Trigaux, 2022
 # Gunther Clauwaert <gclauwae@hotmail.com>, 2022
 # Erwin van der Ploeg <erwin@odooexperts.nl>, 2022
+# Jolien De Paepe, 2023
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0beta+e\n"
+"Project-Id-Version: Odoo Server 16.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-04 09:42+0000\n"
+"POT-Creation-Date: 2023-05-23 08:36+0000\n"
 "PO-Revision-Date: 2022-09-22 05:46+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2022\n"
-"Language-Team: Dutch (https://www.transifex.com/odoo/teams/41243/nl/)\n"
+"Last-Translator: Jolien De Paepe, 2023\n"
+"Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
@@ -49,15 +50,15 @@ msgstr ""
 msgid ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "        <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"            Dear <t t-esc=\"object.name\"/>, your personal documents access link is available for you.<br/><br/>\n"
-"            You'll find all your personal HR documents in this folder.<br/><br/>\n"
-"            Please keep this link secure.<br/><br/>\n"
+"            Dear <t t-esc=\"object.name\"></t>, your personal documents access link is available for you.<br><br>\n"
+"            You'll find all your personal HR documents in this folder.<br><br>\n"
+"            Please keep this link secure.<br><br>\n"
 "            <div style=\"text-align: center; padding: 16px 0px 16px 0px; font-size: 14px;\">\n"
 "                <a t-attf-href=\"{{ object.documents_share_id.full_url }}\" target=\"_blank\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                    Your Documents\n"
 "                </a>\n"
 "            </div>\n"
-"            Have a nice day,<br/>\n"
+"            Have a nice day,<br>\n"
 "            The HR Team\n"
 "        </td></tr>\n"
 "    </tbody></table>\n"
@@ -65,16 +66,16 @@ msgid ""
 msgstr ""
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; margin:0px auto;\"><tbody>\n"
 "        <tr><td valign=\"top\" style=\"text-align: left; font-size: 14px;\">\n"
-"            Hallo <t t-esc=\"object.name\"/>, je persoonlijke documenten toegang link is beschikbaar voor je.<br/><br/>\n"
-"            In deze map vind je al je persoonlijke HR-documenten.<br/><br/>\n"
-"            Bewaar deze link veilig.<br/><br/>\n"
+"            Beste <t t-esc=\"object.name\"></t>, de toegangslink tot je persoonlijke documenten is beschikbaar.<br><br>\n"
+"            In deze map vind je al je persoonlijke HR-documenten.<br><br>\n"
+"            Bewaar deze link op een veilige plaats.<br><br>\n"
 "            <div style=\"text-align: center; padding: 16px 0px 16px 0px; font-size: 14px;\">\n"
 "                <a t-attf-href=\"{{ object.documents_share_id.full_url }}\" target=\"_blank\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
-"                    Je Documenten\n"
+"                    Je documenten\n"
 "                </a>\n"
 "            </div>\n"
-"           Prettige Dag,<br/>\n"
-"           Het HR Team\n"
+"            Prettige dag,<br>\n"
+"            Het HR-team\n"
 "        </td></tr>\n"
 "    </tbody></table>\n"
 "                "
@@ -121,6 +122,7 @@ msgid "Document Count"
 msgstr "Document aantal"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/res_users.py:0
 #: model:documents.facet,name:documents_hr.documents_hr_documents
 #: model:ir.model.fields,field_description:documents_hr.field_res_users__document_count
@@ -146,13 +148,14 @@ msgid "Employee"
 msgstr "Werknemer"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid ""
-"Employee's private email must be set to use \"Send Access Link\" function:\n"
+"Employee's related user and private email must be set to use \"Send Access Link\" function:\n"
 "%s"
 msgstr ""
-"De privé e-mail van de werknemer moet worden ingesteld om de functie \"Verzend Toegangslink\" te gebruiken::\n"
+"De gekoppelde gebruiker en privé e-mail van de werknemer moeten zijn ingesteld om de functie \"Toegangslink verzenden\" te gebruiken:\n"
 "%s"
 
 #. module: documents_hr
@@ -166,6 +169,7 @@ msgid "HR"
 msgstr "HR"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid "HR Documents: %s"
@@ -206,6 +210,7 @@ msgstr ""
 "Handmatig verzonden bij de registratie van het vertrek van een werknemer"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
 msgid "The access link has been sent to the employee."
@@ -222,12 +227,15 @@ msgid "Workspace"
 msgstr "Werkruimte"
 
 #. module: documents_hr
+#. odoo-python
 #: code:addons/documents_hr/models/hr_employee.py:0
 #, python-format
-msgid "You must set an address on the employee to use Documents features."
+msgid ""
+"You must set a private address on the Employee in order to use Document's "
+"features."
 msgstr ""
-"Je moet een adres voor de werknemer instellen om de Documenten-functies te "
-"kunnen gebruiken."
+"Je moet een persoonlijk adres op het Werknemer instellen om de Documenten-"
+"functies te kunnen gebruiken."
 
 #. module: documents_hr
 #: model:ir.model.fields,field_description:documents_hr.field_res_company__documents_hr_folder

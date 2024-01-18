@@ -188,6 +188,10 @@ const timesheetUomTimerService = {
             const parser = fieldUtils.parse[FieldTimesheetUom.prototype.formatType];
             return parser(value, field, options);
         };
+
+        if (!registry.category("formatters").contains("timesheet_uom_timer")) {
+            registry.category("formatters").add("timesheet_uom_timer", fieldUtils.format.timesheet_uom_timer);
+        }
     },
 };
 

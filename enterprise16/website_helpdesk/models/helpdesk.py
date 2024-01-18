@@ -98,7 +98,7 @@ class HelpdeskTeam(models.Model):
                     'name': xmlid,
                     'key': xmlid
                 })
-                self.env['ir.model.data'].create({
+                self.env['ir.model.data'].sudo().create({
                     'module': 'website_helpdesk',
                     'name': xmlid.split('.')[1],
                     'model': 'ir.ui.view',
@@ -112,12 +112,9 @@ class HelpdeskTeam(models.Model):
         without_website = self - with_website
         without_website.website_menu_id.unlink()
 
-        if not with_website:
-            return
-
         team_count_data = self.env['helpdesk.team']._read_group([
             ('use_website_helpdesk_form', '=', True),
-        ], ['website_id'], ['website_id'])
+        ], ['website_id', 'ids:array_agg(id)'], ['website_id'])
         team_count = {t['website_id'][0] if t['website_id'] else False: t['website_id_count'] for t in team_count_data}
 
         for team in with_website:
@@ -132,6 +129,22 @@ class HelpdeskTeam(models.Model):
                         'website_id': team.website_id.id,
                     })
                     team.website_menu_id = menu.id
+
+        for team_ids, team_count in ((t.get('ids', []), t.get('website_id_count', 0)) for t in team_count_data):
+            # Rename team menu from "{Team Name}" -> "Help"
+            if team_count == 1:
+                team = self.env['helpdesk.team'].browse(team_ids).filtered(
+                    lambda t: t.website_menu_id.name == t.name
+                )
+                if team:
+                    team.website_menu_id.name = _('Help')
+            # Rename team menu from "Help" -> "{Team Name}"
+            elif team_count > 1:
+                teams = self.env['helpdesk.team'].browse(team_ids).filtered(
+                    lambda t: t.website_menu_id.name != t.name
+                )
+                for team in teams:
+                    team.website_menu_id.name = team.name
 
     @api.depends('name', 'use_website_helpdesk_form', 'company_id')
     def _compute_form_url(self):

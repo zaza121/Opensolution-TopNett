@@ -136,6 +136,51 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         url = f"/web#action={action_id.id}"
         self.start_tour(url, "test_inventory_adjustment_tracked_product_multilocation", login="admin", timeout=180)
 
+    def test_inventory_adjustment_tracked_product_permissive_quants(self):
+        """Make an inventory adjustment for a product tracked by lot having quants without lot.
+           The following actions are made in the barcode app:
+            - Scan productlot1
+            - Scan lot1 twice
+            - Set productlot1 quantity without lot to available
+            - Validate
+        """
+        self.clean_access_rights()
+
+        lot1 = self.env["stock.lot"].create({
+            'name': 'lot1',
+            'product_id': self.productlot1.id,
+            'company_id': self.env.company.id
+        })
+        self.env["stock.quant"].create({
+            'product_id': self.productlot1.id,
+            'inventory_quantity': 5,
+            'lot_id': None,
+            'location_id': self.stock_location.id,
+        })
+        self.env["stock.quant"].create({
+            'product_id': self.productlot1.id,
+            'inventory_quantity': 1,
+            'lot_id': lot1.id,
+            'location_id': self.stock_location.id,
+        })
+
+        action_id = self.env.ref('stock_barcode.stock_barcode_action_main_menu')
+        url = "/web#action=" + str(action_id.id)
+
+        self.start_tour(url, 'test_inventory_adjustment_tracked_product_permissive_quants', login='admin', timeout=180)
+
+        inventory_moves = self.env['stock.move'].search([('product_id', '=', self.productlot1.id),
+                                                         ('is_inventory', '=', True)])
+        self.assertEqual(len(inventory_moves), 2)
+        self.assertEqual(inventory_moves.mapped('state'), ['done', 'done'])
+        self.assertEqual(inventory_moves.mapped('product_id'), self.productlot1)
+
+        self.assertEqual(len(inventory_moves.move_line_ids), 2)
+        move_line_1, move_line_2 = inventory_moves.move_line_ids
+        self.assertEqual(move_line_1.qty_done, 0)
+        self.assertEqual(move_line_2.lot_id.name, 'lot1')
+        self.assertEqual(move_line_2.qty_done, 2)
+
     def test_inventory_create_quant(self):
         """ Creates a quant and checks it will not be deleted until the inventory was validated.
         """
@@ -204,6 +249,25 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
             {q.product_id: q.quantity for q in pack.quant_ids},
             {self.product1: 7, self.product2: 21}
         )
+
+    def test_inventory_packaging(self):
+        """ Scans a product's packaging and ensures its quantity is correctly
+        counted regardless if there is already products in stock or not.
+        """
+        self.clean_access_rights()
+        grp_pack = self.env.ref('product.group_stock_packaging')
+        self.env.user.write({'groups_id': [(4, grp_pack.id, 0)]})
+
+        self.env['product.packaging'].create({
+            'name': 'product1 x15',
+            'qty': 15,
+            'barcode': 'pack007',
+            'product_id': self.product1.id
+        })
+
+        action_id = self.env.ref('stock_barcode.stock_barcode_action_main_menu')
+        url = "/web#action=" + str(action_id.id)
+        self.start_tour(url, 'test_inventory_packaging', login='admin', timeout=180)
 
     def test_inventory_owner_scan_package(self):
         group_owner = self.env.ref('stock.group_tracking_owner')
@@ -339,9 +403,11 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
 
     def test_gs1_inventory_lot_serial(self):
         """ Checks tracking numbers and quantites are correctly got from GS1
-        barcodes for tracked products."""
+        barcodes for tracked products.
+        Also, this test is an opportunity to ensure custom GS1 separators are used clientside."""
         self.clean_access_rights()
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
+        self.env.company.nomenclature_id.gs1_separator_fnc1 = r'(#|\x1D|~)'
 
         product_lot = self.env['product.product'].create({
             'name': 'PRO_GTIN_12_lot',
@@ -394,3 +460,31 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
             smls_serial.lot_id.mapped('name'),
             ['Serial1', 'Serial2', 'Serial3', 'Serial4']
         )
+
+    def test_scan_product_lot_with_package(self):
+        """
+        Check that a lot can be scanned in the inventory Adjustments,
+        when the package is set in the quant.
+        """
+        # Enable the package option
+        self.env['res.config.settings'].create({'group_stock_tracking_lot': True}).execute()
+        product = self.env['product.product'].create({
+            'name': 'Product',
+            'type': 'product',
+            'tracking': 'lot',
+        })
+        self.env["stock.quant"].create({
+            'product_id': product.id,
+            'location_id': self.env.ref('stock.stock_location_stock').id,
+            'quantity': 10,
+            'package_id': self.env['stock.quant.package'].create({
+                'name': 'Package-test',
+            }).id,
+            'lot_id': self.env['stock.lot'].create({
+                'name': 'Lot-test',
+                'product_id': product.id,
+                'company_id': self.env.company.id,
+            }).id,
+        })
+        self.assertEqual(product.qty_available, 10)
+        self.start_tour("/web", 'stock_barcode_package_with_lot', login="admin")

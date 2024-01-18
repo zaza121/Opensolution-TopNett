@@ -185,6 +185,10 @@ class AccountBatchPayment(models.Model):
             return self.env['ir.sequence'].with_context(sequence_date=sequence_date).next_by_code(sequence_code)
         return vals['name']
 
+    def name_get(self):
+        state_values = dict(self._fields['state'].selection)
+        return [(batch.id, f'{batch.name} ({state_values.get(batch.state)})') for batch in self]
+
     def validate_batch(self):
         """ Verifies the content of a batch and proceeds to its sending if possible.
         If not, opens a wizard listing the errors and/or warnings encountered.

@@ -82,8 +82,8 @@ class TestSubscriptionController(PaymentHttpCommon, PaymentCommon, TestSubscript
             res = self.url_open(url, allow_redirects=False)
             self.assertEqual(res.status_code, 303, "Response should redirection")
             self.env.invalidate_all()
-            self.assertEqual(self.subscription.end_date, date(2025, 11, 17),
-                             'The end date of the subscription should be updated according to the template')
+            self.assertEqual(self.subscription.end_date, date(2023, 11, 17),
+                             'The end date of the subscription should not be updated by the user.')
 
     def test_close_contract(self):
         """ Test subscription close """
@@ -99,7 +99,7 @@ class TestSubscriptionController(PaymentHttpCommon, PaymentCommon, TestSubscript
             self.assertEqual(res.status_code, 303)
             self.env.invalidate_all()
             self.assertEqual(self.subscription.stage_category, 'closed', 'The subscription should be closed.')
-            self.assertEqual(self.subscription.end_date, date(2021, 11, 18), 'The end date of the subscription should be updated.')
+            self.assertEqual(self.subscription.end_date, date(2023, 11, 17), 'The end date of the subscription should not be updated.')
 
     def test_prevents_assigning_not_owned_payment_tokens_to_subscriptions(self):
         malicious_user_subscription = self.env['sale.order'].create({
@@ -245,5 +245,5 @@ class TestSubscriptionController(PaymentHttpCommon, PaymentCommon, TestSubscript
                          "The reference should come from the prefix")
         last_transaction_id._set_done()
         self.assertEqual(subscription.invoice_ids.mapped('state'), ['posted'])
-        self.assertEqual(subscription.invoice_ids.payment_state, 'in_payment')
+        self.assertTrue(subscription.invoice_ids.payment_state in ['paid', 'in_payment'])
         return subscription

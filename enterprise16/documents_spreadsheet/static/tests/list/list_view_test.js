@@ -15,6 +15,7 @@ import { createSpreadsheetFromListView } from "../utils/list_helpers";
 import { dom } from "web.test_utils";
 import { doMenuAction } from "@spreadsheet/../tests/utils/ui";
 import { session } from "@web/session";
+import { insertListInSpreadsheet } from "@spreadsheet/../tests/utils/list";
 
 const { getMenuChildren } = spreadsheet.helpers;
 const { topbarMenuRegistry, cellMenuRegistry } = spreadsheet.registries;
@@ -48,6 +49,23 @@ QUnit.module("document_spreadsheet > list view", {}, () => {
                                 <field name="foo" widget="handle"/>
                                 <field name="bar"/>
                             </tree>`,
+                    "partner,false,search": "<search/>",
+                },
+            },
+        });
+        assert.deepEqual(model.getters.getListDefinition("1").columns, ["bar"]);
+    });
+
+    QUnit.test("json fields are not exported", async (assert) => {
+        const { model } = await createSpreadsheetFromListView({
+            serverData: {
+                models: getBasicData(),
+                views: {
+                    "partner,false,list": `
+                        <tree string="Partners">
+                            <field name="jsonField"/>
+                            <field name="bar"/>
+                        </tree>`,
                     "partner,false,search": "<search/>",
                 },
             },
@@ -402,4 +420,30 @@ QUnit.module("document_spreadsheet > list view", {}, () => {
         await click(fixture, ".o_refresh_list");
         assert.strictEqual(sortingSection.querySelectorAll("div")[1].innerText, "Foo (ascending)");
     });
+
+    QUnit.test(
+        "Opening the sidepanel of a list while the panel of another list is open updates the side panel",
+        async function (assert) {
+            const { model, env } = await createSpreadsheetFromListView({});
+            insertListInSpreadsheet(model, {
+                model: "product",
+                columns: ["name", "active"],
+            });
+
+            const listIds = model.getters.getListIds();
+            const fixture = getFixture();
+
+            model.dispatch("SELECT_ODOO_LIST", { listId: listIds[0] });
+            env.openSidePanel("LIST_PROPERTIES_PANEL", {});
+            await nextTick();
+            let modelName = fixture.querySelector(".o_side_panel_section .o_model_name");
+            assert.equal(modelName.innerText, "Partner (partner)");
+
+            model.dispatch("SELECT_ODOO_LIST", { listId: listIds[1] });
+            env.openSidePanel("LIST_PROPERTIES_PANEL", {});
+            await nextTick();
+            modelName = fixture.querySelector(".o_side_panel_section .o_model_name");
+            assert.equal(modelName.innerText, "Product (product)");
+        }
+    );
 });

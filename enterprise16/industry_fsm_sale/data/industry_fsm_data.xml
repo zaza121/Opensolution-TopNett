@@ -8,16 +8,17 @@
             <field name="legend_blocked">Blocked</field>
         </record>
 
-        <record id="industry_fsm.fsm_project" model="project.project">
-            <field name="allow_billable" eval="True"/>
-            <field name="allow_material" eval="True"/>
-            <field name="timesheet_product_id" ref="sale_timesheet.time_product"/>
-            <field name="type_ids" eval="[(4, ref('field_service_project_stage_0'))]"/>
-        </record>
+        <function model="project.project" name="write">
+            <value model="project.project" search="[('id', '=', ref('industry_fsm.fsm_project', raise_if_not_found=False))]"/>
+            <value eval="{'allow_billable': 'True',
+            'allow_material': 'True',
+            'timesheet_product_id' : ref('sale_timesheet.time_product'),
+            'type_ids': [(4, ref('field_service_project_stage_0'))]}"/>
+        </function>
 
         <record id="field_service_product" model="product.product">
             <field name="name">Field Service</field>
-            <field name="project_id" ref="industry_fsm.fsm_project"/>
+            <field name="project_id" search="[('id', '=?', ref('industry_fsm.fsm_project', raise_if_not_found=False)), ('is_fsm', '=', True)]"/>
             <field name="service_tracking">task_global_project</field>
             <field name="type">service</field>
             <field name="list_price">100</field>

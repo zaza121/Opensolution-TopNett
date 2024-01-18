@@ -27,7 +27,6 @@ screen devices.
         ],
         'web.assets_backend': [
             'mail_enterprise/static/src/components/*/*.js',
-            'mail_enterprise/static/src/scss/mail_enterprise_mobile.scss',
             'mail_enterprise/static/src/widgets/*/*.js',
             'mail_enterprise/static/src/components/*/*.xml',
         ],

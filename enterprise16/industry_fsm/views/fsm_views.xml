@@ -15,8 +15,8 @@
                 <field name="partner_id" optional="show" required="True"/>
                 <field name="user_ids" widget="many2many_avatar_user" optional="show" invisible="context.get('user_invisible', False)" domain="[('share', '=', False), ('active', '=', True)]"/>
                 <field name="company_id" optional="show" groups="base.group_multi_company" readonly="1"/>
-                <field name="planned_date_begin" widget="daterange" options="{'related_end_date': 'planned_date_end'}" optional="show" attrs="{'required': [('planned_date_end', '!=', False)]}"/>
-                <field name="planned_date_end" widget="daterange" options="{'related_end_date': 'planned_date_begin'}" optional="show" attrs="{'required': [('planned_date_begin', '!=', False)]}"/>
+                <field name="planned_date_begin" widget="daterange" options="{'related_end_date': 'planned_date_end'}" optional="show"/>
+                <field name="planned_date_end" widget="daterange" options="{'related_end_date': 'planned_date_begin'}" optional="show"/>
                 <field name="planned_hours" widget="timesheet_uom_no_toggle" sum="Initially Planned Hours" optional="hide"/>
                 <field name="effective_hours" widget="timesheet_uom" sum="Effective Hours" optional="hide"/>
                 <field name="remaining_hours" widget="timesheet_uom" sum="Remaining Hours" optional="hide" decoration-danger="progress &gt;= 100" decoration-warning="progress &gt;= 80 and progress &lt; 100"/>
@@ -177,6 +177,14 @@
             <xpath expr="//kanban" position="attributes">
                 <attribute name="quick_create">0</attribute>
                 <attribute name="default_group_by">planned_date_begin:day</attribute>
+            </xpath>
+            <xpath expr="//field[@name='planned_date_begin']" position="attributes">
+                <attribute name="widget">fsm_date</attribute>
+            </xpath>
+            <xpath expr="//i[hasclass('fa-long-arrow-right')]" position="replace"/>
+            <xpath expr="//field[@name='planned_date_end']" position="attributes">
+                <attribute name="widget">fsm_date</attribute>
+                <attribute name="invisible">1</attribute>
             </xpath>
         </field>
     </record>
@@ -608,7 +616,7 @@
         <field name="view_mode">gantt,calendar,map,tree,kanban,pivot,graph,form,activity</field>
         <field name="search_view_id" ref="project_task_view_search_fsm"/>
         <field name="domain">[('is_fsm', '=', True), ('display_project_id', '!=', False)]</field>
-        <field name="context" eval="{'fsm_mode': 1, 'task_nameget_with_hours': 1, 'default_scale': 'week'}"/>
+        <field name="context" eval="{'fsm_mode': 1, 'task_nameget_with_hours': 1, 'default_scale': 'week', 'default_user_ids': False}"/>
         <field name="help" type="html">
             <p class='o_view_nocontent_smiling_face'>
                 No tasks found. Let's create one!
@@ -674,7 +682,7 @@
         <field name="view_mode">gantt,calendar,map,tree,kanban,pivot,graph,activity</field>
         <field name="search_view_id" ref="project_task_view_search_fsm"/>
         <field name="domain">[('is_fsm', '=', True), ('display_project_id', '!=', False)]</field>
-        <field name="context" eval="{'fsm_mode': 1, 'task_nameget_with_hours': 1, 'default_scale': 'week'}"/>
+        <field name="context" eval="{'fsm_mode': 1, 'task_nameget_with_hours': 1, 'default_scale': 'week', 'default_user_ids': False}"/>
         <field name="help" type="html">
             <p class='o_view_nocontent_smiling_face'>
                 No tasks found. Let's create one!
@@ -866,6 +874,9 @@
         <field name="view_mode">tree,kanban,form</field>
         <field name="domain">[('project_ids.is_fsm', '=', True)]</field>
         <field name="view_id" ref="project.task_type_tree"/>
+        <field name="context">{
+            'fsm_mode': True,
+        }</field>
         <field name="help" type="html">
           <p class="o_view_nocontent_smiling_face">
             No stages found. Let's create one!

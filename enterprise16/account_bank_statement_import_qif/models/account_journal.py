@@ -76,7 +76,7 @@ class AccountJournal(models.Model):
                 vals_line['sequence'] = len(transactions) + 1
                 data = line[1:]
                 if line[:1] == DATE_OF_TRANSACTION:
-                    dayfirst = self.env.context.get('qif_date_format') == 'day_first'
+                    dayfirst = self.qif_date_format == 'day_first'
                     vals_line['date'] = dateutil.parser.parse(data, fuzzy=True, dayfirst=dayfirst).date()
                 elif line[:1] == TOTAL_AMOUNT:
                     amount = float(data.replace(b',', b'.' if self.qif_decimal_point == ',' else b''))

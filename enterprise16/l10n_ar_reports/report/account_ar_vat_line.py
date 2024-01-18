@@ -145,7 +145,7 @@ class AccountArVatLine(models.Model):
                     AND (nt.type_tax_use in %s OR bt.type_tax_use in %s)
                     {where_clause}
                 GROUP BY
-                    account_move.id, art.name, rp.id, lit.id, tax_type
+                    account_move.id, art.name, rp.id, lit.id,  COALESCE(nt.type_tax_use, bt.type_tax_use)
                 ORDER BY
                     account_move.date, account_move.name"""
         return query, [column_group_key, tax_types, tax_types, *where_params]

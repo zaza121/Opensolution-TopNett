@@ -10,8 +10,8 @@ class EmployeesYearlySalaryReport(models.AbstractModel):
     _name = 'report.l10n_in_hr_payroll.report_hryearlysalary'
     _description = "Indian Yearly Salary Report"
 
-    def get_periods(self, form):
-        self.mnths = []
+    def get_periods_new(self, form):
+        months = []
 #       Get start year-month-date and end year-month-date
         first_year = int(form['date_from'][0:4])
         last_year = int(form['date_to'][0:4])
@@ -23,50 +23,52 @@ class EmployeesYearlySalaryReport(models.AbstractModel):
         current_year = first_year
 
 #       Get name of the months from integer
-        mnth_name = []
+        month_name = []
         for count in range(0, no_months):
             m = date(current_year, current_month, 1).strftime('%b')
-            mnth_name.append(m)
-            self.mnths.append(str(current_month) + '-' + str(current_year))
+            month_name.append(m)
+            months.append(str(current_month) + '-' + str(current_year))
             if current_month == 12:
                 current_month = 0
                 current_year = last_year
             current_month = current_month + 1
         for c in range(0, (12 - no_months)):
-            mnth_name.append('')
-            self.mnths.append('')
-        return [mnth_name]
+            month_name.append('')
+            months.append('')
+        return [month_name], months
 
     def get_employee(self, form):
         return self.env['hr.employee'].browse(form.get('employee_ids', []))
 
-    def get_employee_detail(self, form, obj):
-        self.allow_list = []
-        self.deduct_list = []
-        self.total = 0.00
+    def get_employee_detail_new(self, form, employees, months):
+        allow_list = []
+        deduct_list = []
+        total = 0.0
         gross = False
         net = False
-
-        payslip_lines = self.cal_monthly_amt(form, obj.id)
-        for line in payslip_lines:
-            for line[0] in line:
-                if line[0][0] == "Gross":
-                    gross = line[0]
-                elif line[0][0] == "Net":
-                    net = line[0]
-                elif line[0][13] > 0.0 and line[0][0] != "Net":
-                    self.total += line[0][len(line[0]) - 1]
-                    self.allow_list.append(line[0])
-                elif line[0][13] < 0.0:
-                    self.total += line[0][len(line[0]) - 1]
-                    self.deduct_list.append(line[0])
+        payslip_lines = []
+        for employee in employees:
+            payslip_lines.append(self.cal_monthly_amt(form, employee.id, months))
+        for payslip_lines_per_employee in payslip_lines:
+            for line in payslip_lines_per_employee:
+                for line[0] in line:
+                    if line[0][0] == "Gross":
+                        gross = line[0]
+                    elif line[0][0] == "Net":
+                        net = line[0]
+                    elif line[0][13] > 0.0 and line[0][0] != "Net":
+                        total += line[0][len(line[0]) - 1]
+                        allow_list.append(line[0])
+                    elif line[0][13] < 0.0:
+                        total += line[0][len(line[0]) - 1]
+                        deduct_list.append(line[0])
         if gross:
-            self.allow_list.append(gross)
+            allow_list.append(gross)
         if net:
-            self.deduct_list.append(net)
-        return None
+            deduct_list.append(net)
+        return allow_list, deduct_list, total
 
-    def cal_monthly_amt(self, form, emp_id):
+    def cal_monthly_amt(self, form, emp_id, months):
         result = []
         res = []
         salaries = {}
@@ -92,17 +94,17 @@ class EmployeesYearlySalaryReport(models.AbstractModel):
         categories = self.env['hr.salary.rule.category'].search([]).mapped('code')
         for code in categories:
             if code in salaries:
-                res = self.salary_list(salaries[code])
+                res = self.salary_list(salaries[code], months)
             result.append(res)
         return result
 
-    def salary_list(self, salaries):
+    def salary_list(self, salaries, months):
         cat_salary_all = []
         for category_name, amount in salaries.items():
             cat_salary = []
             total = 0.0
             cat_salary.append(category_name)
-            for mnth in self.mnths:
+            for mnth in months:
                 if mnth != 'None':
                     if len(mnth) != 7:
                         mnth = '0' + str(mnth)
@@ -117,14 +119,8 @@ class EmployeesYearlySalaryReport(models.AbstractModel):
             cat_salary_all.append(cat_salary)
         return cat_salary_all
 
-    def get_allow(self):
-        return self.allow_list
-
-    def get_deduct(self):
-        return self.deduct_list
-
-    def get_total(self):
-        return self.total
+    def get_employee_detail(self, form, obj):
+        return None
 
     @api.model
     def _get_report_values(self, docids, data=None):
@@ -133,6 +129,10 @@ class EmployeesYearlySalaryReport(models.AbstractModel):
 
         model = self.env.context.get('active_model')
         docs = self.env[model].browse(self.env.context.get('active_id'))
+        employee = self.get_employee(data['form'])
+        month_name, months = self.get_periods_new(data['form'])
+        allow_list, deduct_list, total = self.get_employee_detail_new(data['form'], employee, months)
+
         return {
             'doc_ids': docids,
             'doc_model': model,
@@ -141,8 +141,8 @@ class EmployeesYearlySalaryReport(models.AbstractModel):
             'get_employee': self.get_employee,
             'get_employee_detail': self.get_employee_detail,
             'cal_monthly_amt': self.cal_monthly_amt,
-            'get_periods': self.get_periods,
-            'get_total': self.get_total,
-            'get_allow': self.get_allow,
-            'get_deduct': self.get_deduct,
+            'get_periods': lambda form: month_name,
+            'get_total': lambda: total,
+            'get_allow': lambda: allow_list,
+            'get_deduct': lambda: deduct_list,
         }

@@ -175,17 +175,17 @@ class AccountMoveL10NDe(models.Model):
                     aml_debit += aml
                 if aml.credit > 0:
                     aml_credit += aml
-            if len(aml_debit) == 1:
-                value = aml_debit[0].account_id
-            elif len(aml_credit) == 1:
-                value = aml_credit[0].account_id
+            if len(aml_debit.account_id) == 1:
+                value = aml_debit.account_id
+            elif len(aml_credit.account_id) == 1:
+                value = aml_credit.account_id
             else:
-                aml_debit_wo_tax = [a for a in aml_debit if not a.tax_line_id]
-                aml_credit_wo_tax = [a for a in aml_credit if not a.tax_line_id]
-                if len(aml_debit_wo_tax) == 1:
-                    value = aml_debit_wo_tax[0].account_id
-                elif len(aml_credit_wo_tax) == 1:
-                    value = aml_credit_wo_tax[0].account_id
+                aml_debit_wo_tax_accounts = [a.account_id for a in aml_debit if not a.tax_line_id]
+                aml_credit_wo_tax_accounts = [a.account_id for a in aml_credit if not a.tax_line_id]
+                if len(aml_debit_wo_tax_accounts) == 1:
+                    value = aml_debit_wo_tax_accounts[0]
+                elif len(aml_credit_wo_tax_accounts) == 1:
+                    value = aml_credit_wo_tax_accounts[0]
             move.l10n_de_datev_main_account_id = value
 
 
@@ -199,7 +199,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         :param dict previous_options: Previous report options
         """
         super()._custom_options_initializer(report, options, previous_options)
-        if self.env.company.country_code == 'DE':
+        if self.env.company.country_code in ('DE', 'CH', 'AT'):
             options.setdefault('buttons', []).extend((
                 {
                     'name': _('Datev (zip)'),
@@ -233,7 +233,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         with tempfile.NamedTemporaryFile(mode='w+b', delete=True) as buf:
             with zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED, allowZip64=False) as zf:
                 move_line_ids = []
-                for line in report._get_lines({**options, 'unfold_all': True}):
+                for line in report.with_context(print_mode=True)._get_lines({**options, 'unfold_all': True}):
                     model, model_id = report._get_model_info_from_id(line['id'])
                     if model == 'account.move.line':
                         move_line_ids.append(model_id)
@@ -251,9 +251,10 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     # cannot set date_from on move as domain depends on the move line account if "strict_range" is False
                 domain += report._get_options_journals_domain(options)
                 moves = self.env['account.move'].search(domain)
+                set_move_line_ids = set(move_line_ids)
                 zf.writestr('EXTF_accounting_entries.csv', self._l10n_de_datev_get_csv(options, moves))
-                zf.writestr('EXTF_customer_accounts.csv', self._l10n_de_datev_get_partner_list(options, customer=True))
-                zf.writestr('EXTF_vendor_accounts.csv', self._l10n_de_datev_get_partner_list(options, customer=False))
+                zf.writestr('EXTF_customer_accounts.csv', self._l10n_de_datev_get_partner_list(options, set_move_line_ids, customer=True))
+                zf.writestr('EXTF_vendor_accounts.csv', self._l10n_de_datev_get_partner_list(options, set_move_line_ids, customer=False))
                 if options.get('add_attachments'):
                     # add all moves attachments in zip file, this is not part of DATEV specs
                     slash_re = re.compile('[\\/]')
@@ -286,7 +287,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             client_number = 999
         return [consultant_number, client_number]
 
-    def _l10n_de_datev_get_partner_list(self, options, customer=True):
+    def _l10n_de_datev_get_partner_list(self, options, move_line_ids, customer=True):
         date_to = fields.Date.from_string(options.get('date').get('date_to'))
         fy = self.env.company.compute_fiscalyear_dates(date_to)
 
@@ -300,13 +301,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
         header = ['Konto', 'Name (AdressatentypUnternehmen)', 'Name (Adressatentypnatürl. Person)', '', '', '', 'Adressatentyp']
         lines = [preheader, header]
-
-        move_line_ids = set()
-        report = self.env['account.report'].browse(options['report_id'])
-        for line in report._get_lines({**options, 'unfold_all': True}):
-            model, model_id = report._parse_line_id(line['id'])[-1][-2:]
-            if model == 'account.move.line':
-                move_line_ids.add(str(model_id))
 
         if len(move_line_ids):
             if customer:
@@ -366,7 +360,8 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             account = partner.property_account_receivable_id if account.account_type == 'asset_receivable' else partner.property_account_payable_id
             fname = "property_account_receivable_id"         if account.account_type == 'asset_receivable' else "property_account_payable_id"
             prop = self.env['ir.property']._get(fname, "res.partner", partner.id)
-            if prop == account:
+            force_datev_id = self.env['ir.config_parameter'].sudo().get_param('l10n_de.force_datev_id', False)
+            if not force_datev_id and prop == account:
                 return str(account.code).ljust(len_param - 1, '0') if account else ''
             return self._l10n_de_datev_get_account_identifier(account, partner)
         return str(account.code).ljust(len_param - 1, '0') if account else ''
@@ -401,14 +396,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             date_from, date_to, '', '', '', '', 0, 'EUR', '', '', '', '', '', '', '', '', '']
         header = ['Umsatz (ohne Soll/Haben-Kz)', 'Soll/Haben-Kennzeichen', 'WKZ Umsatz', 'Kurs', 'Basis-Umsatz', 'WKZ Basis-Umsatz', 'Konto', 'Gegenkonto (ohne BU-Schlüssel)', 'BU-Schlüssel', 'Belegdatum', 'Belegfeld 1', 'Belegfeld 2', 'Skonto', 'Buchungstext']
 
-        # if we do _get_lines with some unfolded lines, only those will be returned, but we want all of them
-        move_line_ids = []
-        report = self.env['account.report'].browse(options['report_id'])
-        for line in report._get_lines({**options, 'unfold_all': True}):
-            model, model_id = report._parse_line_id(line['id'])[-1][-2:]
-            if model == 'account.move.line':
-                move_line_ids.append(int(model_id))
-
         lines = [preheader, header]
 
         for m in moves:
@@ -420,6 +407,22 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 if aml.debit == aml.credit:
                     # Ignore debit = credit = 0
                     continue
+
+                # account and counterpart account
+                to_account_code = str(self._l10n_de_datev_find_partner_account(aml.move_id.l10n_de_datev_main_account_id, aml.partner_id))
+                account_code = u'{code}'.format(code=self._l10n_de_datev_find_partner_account(aml.account_id, aml.partner_id))
+
+                # We don't want to have lines with our outstanding payment/receipt as they don't represent real moves
+                # So if payment skip one move line to write, while keeping the account
+                # and replace bank account for outstanding payment/receipt for the other line
+
+                if aml.payment_id:
+                    if payment_account == 0:
+                        payment_account = account_code
+                        continue
+                    else:
+                        to_account_code = payment_account
+
                 # If both account and counteraccount are the same, ignore the line
                 if aml.account_id == aml.move_id.l10n_de_datev_main_account_id:
                     continue
@@ -437,21 +440,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     if len(codes) == 1:
                         # there should only be one max, else skip code
                         code_correction = codes.pop() or ''
-
-                # account and counterpart account
-                to_account_code = str(self._l10n_de_datev_find_partner_account(aml.move_id.l10n_de_datev_main_account_id, aml.partner_id))
-                account_code = u'{code}'.format(code=self._l10n_de_datev_find_partner_account(aml.account_id, aml.partner_id))
-
-                # We don't want to have lines with our outstanding payment/receipt as they don't represent real moves
-                # So if payment skip one move line to write, while keeping the account
-                # and replace bank account for outstanding payment/receipt for the other line
-
-                if aml.payment_id:
-                    if payment_account == 0:
-                        payment_account = account_code
-                        continue
-                    else:
-                        to_account_code = payment_account
 
                 # group lines by account, to_account & partner
                 match_key = BalanceKey(from_code=account_code, to_code=to_account_code, partner_id=aml.partner_id,

@@ -23,30 +23,31 @@ class HrPayroll(Controller):
         payslips = request.env['hr.payslip'].browse(ids)
 
         pdf_writer = PdfFileWriter()
+        payslip_reports = payslips._get_pdf_reports()
 
-        for payslip in payslips:
-            if not payslip.struct_id or not payslip.struct_id.report_id:
-                report = request.env.ref('hr_payroll.action_report_payslip', False)
-            else:
-                report = payslip.struct_id.report_id
-            pdf_content, _ = request.env['ir.actions.report'].\
-                with_context(lang=payslip.employee_id.sudo().address_home_id.lang).\
-                sudo().\
-                _render_qweb_pdf(report, payslip.id, data={'company_id': payslip.company_id})
-            reader = PdfFileReader(io.BytesIO(pdf_content), strict=False, overwriteWarnings=False)
+        for report, slips in payslip_reports.items():
+            for payslip in slips:
+                pdf_content, _ = request.env['ir.actions.report'].\
+                    with_context(lang=payslip.employee_id.sudo().address_home_id.lang).\
+                    sudo().\
+                    _render_qweb_pdf(report, payslip.id, data={'company_id': payslip.company_id})
+                reader = PdfFileReader(io.BytesIO(pdf_content), strict=False, overwriteWarnings=False)
 
-            for page in range(reader.getNumPages()):
-                pdf_writer.addPage(reader.getPage(page))
+                for page in range(reader.getNumPages()):
+                    pdf_writer.addPage(reader.getPage(page))
 
         _buffer = io.BytesIO()
         pdf_writer.write(_buffer)
         merged_pdf = _buffer.getvalue()
         _buffer.close()
 
-        if len(payslips) == 1 and payslips.struct_id.report_id.print_report_name:
+        if len(payslip_reports) == 1 and len(payslips) == 1 and payslips.struct_id.report_id.print_report_name:
             report_name = safe_eval(payslips.struct_id.report_id.print_report_name, {'object': payslips})
         else:
-            report_name = "Payslips"
+            report_name = ' - '.join(r.name for r in list(payslip_reports.keys()))
+            employees = payslips.employee_id.mapped('name')
+            if len(employees) == 1:
+                report_name = '%s - %s' % (report_name, employees[0])
 
         pdfhttpheaders = [
             ('Content-Type', 'application/pdf'),

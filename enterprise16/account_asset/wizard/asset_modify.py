@@ -69,6 +69,8 @@ class AssetModify(models.TransientModel):
     def _get_selection_modify_options(self):
         if self.env.context.get('resume_after_pause'):
             return [('resume', _('Resume'))]
+        if self.env.context.get('asset_type') in ('sale', 'expense'):
+            return [('modify', _('Re-evaluate'))]
         return [
             ('dispose', _("Dispose")),
             ('sell', _("Sell")),
@@ -107,9 +109,10 @@ class AssetModify(models.TransientModel):
     def _compute_gain_or_loss(self):
         for record in self:
             balances = abs(sum([invoice.balance for invoice in record.invoice_line_ids]))
-            if record.modify_action in ('sell', 'dispose') and record.asset_id.value_residual < balances:
+            comparison = record.company_id.currency_id.compare_amounts(record.asset_id.value_residual + record.asset_id.salvage_value, balances)
+            if record.modify_action in ('sell', 'dispose') and comparison < 0:
                 record.gain_or_loss = 'gain'
-            elif record.modify_action in ('sell', 'dispose') and record.asset_id.value_residual > balances:
+            elif record.modify_action in ('sell', 'dispose') and comparison > 0:
                 record.gain_or_loss = 'loss'
             else:
                 record.gain_or_loss = 'no'
@@ -200,6 +203,9 @@ class AssetModify(models.TransientModel):
         """ Modifies the duration of asset for calculating depreciation
         and maintains the history of old values, in the chatter.
         """
+        if self.date <= self.asset_id.company_id._get_user_fiscal_lock_date():
+            raise UserError(_("You can't re-evaluate the asset before the lock date."))
+
         old_values = {
             'method_number': self.asset_id.method_number,
             'method_period': self.asset_id.method_period,
@@ -334,8 +340,9 @@ class AssetModify(models.TransientModel):
 
     def sell_dispose(self):
         self.ensure_one()
+        if self.gain_account_id == self.asset_id.account_depreciation_id or self.loss_account_id == self.asset_id.account_depreciation_id:
+            raise UserError(_("You cannot select the same account as the Depreciation Account"))
         invoice_lines = self.env['account.move.line'] if self.modify_action == 'dispose' else self.invoice_line_ids
-        #TODO to check with TSB
         return self.asset_id.set_to_close(invoice_line_ids=invoice_lines, date=self.date, message=self.name)
 
     @api.depends('asset_id', 'value_residual', 'salvage_value')

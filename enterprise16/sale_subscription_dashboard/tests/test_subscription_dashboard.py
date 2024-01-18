@@ -13,7 +13,7 @@ class TestSubscriptionDashboard(HttpCase):
     def setUp(self):
         super().setUp()
         TestSubscriptionDashboard._create_test_objects(self)
-        mail_new_test_user(self.env, "test_user_1", email="test_user_1@nowhere.com", password="P@ssw0rd!")
+        mail_new_test_user(self.env, "test_user_1", email="test_user_1@nowhere.com", password="P@ssw0rd!", groups='sales_team.group_sale_manager')
 
     @staticmethod
     def _create_test_objects(container):
@@ -188,7 +188,7 @@ class TestSubscriptionDashboard(HttpCase):
                 {
                     "params": {
                         "stat_type": "mrr",
-                        "start_date": start_date,
+                        "start_date": end_date,
                         "end_date": end_date,
                         "filters": {},
                     },
@@ -196,4 +196,4 @@ class TestSubscriptionDashboard(HttpCase):
             ),
             headers={"Content-Type": "application/json"},
         )
-        self.assertEqual(res.json()['result'], value)
+        self.assertEqual(res.json()['result'][0][1], value)
