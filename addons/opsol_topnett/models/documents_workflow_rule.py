@@ -278,19 +278,16 @@ class WorkflowRules(models.Model):
                 return value
             elif key in ['date_start', 'date_end']:                
                 return get_date_formated(value)
-            elif key == 'registration_number':
-                vals = value.split("/") if value and type(value) == str else []
-                return len(vals) > 1 and vals[-1].strip() or value
             else:
                 return value.strip() if type(value) == str else value
 
         _logger.info("Start transform..............................")
-        # map_croisement = {'Motif': 'code_conge', 'Employé': 'matricule', 'Du': 'date_start', 'Au': 'date_end', 'Nb Heures': 'nb_heures', 'Nb Jours': 'nb_jours'}
+        map_croisement = {'matricule': 'matricule', 'retra_comp_a': 'retra_comp_a', 'retra_comp_b': 'retra_comp_b', 'date_salaire': 'date_salaire'}
         transformed = []
         for line in data_retraite:
             line['date_salaire'] = line.get('date_salaire', False) or get_date_formated(datetime.today())
-            transformed.append(line)
-            # transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
+            # transformed.append(line)
+            transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
 
         # _logger.info(f"{str(transformed[:5])}")
         # _logger.info("end transform..............................")

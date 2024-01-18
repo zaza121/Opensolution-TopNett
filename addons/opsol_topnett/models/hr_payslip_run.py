@@ -81,6 +81,15 @@ class HrPayslipRun(models.Model):
         string='Resume du Lot',
         compute="compute_info_cotisation"
     )
+    retraite_inf_count = fields.Integer(
+        string='Nombres retraite info',
+        compute="compute_contracts_ids"
+    )
+    retraite_info_ids = fields.One2many(
+        comodel_name='opsol_topnett.retraite_info',
+        compute="compute_contracts_ids",
+        string='Retraite Infos',
+    )
 
     @api.depends()
 
@@ -90,6 +99,7 @@ class HrPayslipRun(models.Model):
             employes = rec.slip_ids.mapped('employee_id')
             importation_conges = rec.mapped('importation_sal_ids.conges_ids')
             structures = rec.mapped('slip_ids.struct_id')
+            retraite_info_ids = rec.slip_ids.mapped('retraite_info_ids')
 
             rec.contracts_ids = contracts
             rec.contracts_count = len(contracts)
@@ -100,6 +110,8 @@ class HrPayslipRun(models.Model):
             rec.importation_con_ids = importation_conges
             rec.pay_struct_count = len(structures)
             rec.structure_ids = structures
+            rec.retraite_info_ids = retraite_info_ids
+            rec.retraite_inf_count = len(retraite_info_ids)
 
     def compute_info_cotisation(self):
         for rec in self:
@@ -238,6 +250,13 @@ class HrPayslipRun(models.Model):
         action['context'] = {}
         return action
 
+    def action_open_retaite_info(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("opsol_topnett.action_opsol_topnett_retraite_info")
+        action['domain'] = [('id', 'in', self.retraite_info_ids.ids)]
+        action['context'] = {}
+        return action
+
     def action_open_structures(self):
         self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id("hr_payroll.action_view_hr_payroll_structure_list_form")
@@ -334,14 +353,15 @@ class HrPayslipRun(models.Model):
             v_salaire_brut = sum(_lines.filtered(lambda x: x.code == 'GROSS').mapped(lambda x: x.amount))
             v_base_ccss = sum(_lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped(lambda x: x.amount))
             v_base_car = sum(_lines.filtered(lambda x: x.code == 'BASE_CAR').mapped(lambda x: x.amount))
-            v_base_assur = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped(lambda x: x.amount))
+            v_base_assura = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped(lambda x: x.amount))
+            v_base_assurb = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped(lambda x: x.amount))
 
             salaireBrut.text = f"{v_salaire_brut}"
             heuresTotales.text = f"{imp_sal.h_travailles}"
             baseCCSS.text = f"{v_base_ccss}"
             baseCAR.text = f"{v_base_car}"
-            baseCMRCTA.text = f"{v_base_assur}"
-            baseCMRCTB.text = f"{5504}"
+            baseCMRCTA.text = f"{v_base_assura}"
+            baseCMRCTB.text = f"{v_base_assurb}"
 
             # evenements
             prime_montant = imp_sal and imp_sal.prime or 0
