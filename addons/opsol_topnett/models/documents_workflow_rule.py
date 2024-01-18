@@ -90,7 +90,8 @@ class WorkflowRules(models.Model):
                 if self.topnet_action == "load_emp":
                     msg = self.execute_load_employee(document)
                 if self.topnet_action == "load_sal":
-                    msg = self.execute_load_salaire(document)
+                    msg = self.with_delay().execute_load_salaire(document)
+                    msg = f"Verifiez si la tache {msg} est terminee"
                 if self.topnet_action == "load_hol":
                     msg = self.execute_load_holiday(document)
                 if self.topnet_action == "load_ret":
