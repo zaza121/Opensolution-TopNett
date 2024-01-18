@@ -10,7 +10,7 @@
     'summary': '',
     'sequence': 11,
     'website': 'https://www.opensolution.mc',
-    'depends': ['hr', 'hr_payroll', 'documents'],
+    'depends': ['hr', 'hr_payroll', 'documents', 'queue_job'],
     'license': 'LGPL-3',
     'data': [
         # data
@@ -29,6 +29,7 @@
         'views/hr_contract_views.xml',
         'views/documents_workflow_rule_views.xml',
         'views/res_company_views.xml',
+        'views/retraite_info_views.xml',
         # wizards
         'wizards/genxml_cot_wiz_views.xml',
         # reports

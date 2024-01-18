@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_opsol_topnett_retraite_info_tree" model="ir.ui.view">
+        <field name="name">opsol_topnett.retraite_info.tree</field>
+        <field name="model">opsol_topnett.retraite_info</field>
+        <field name="arch" type="xml">
+            <tree string="Retraite Info" editable="top">
+                <field name="code"/>
+                <field name="matricule"/>
+                <field name="retra_comp_a" />
+                <field name="retra_comp_b" />
+                <field name="date_salaire" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="retraite_info_view_search" model="ir.ui.view">
+        <field name="name">opsol_topnett.retraite_info.view.search</field>
+        <field name="model">opsol_topnett.retraite_info</field>
+        <field name="arch" type="xml">
+            <search string="Search Retraite Info">
+                <field name="code"/>
+                <field name="date_salaire"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Date conge" name="groupby_date" domain="[]" context="{'group_by': 'date_salaire'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_opsol_topnett_retraite_info" model="ir.actions.act_window">
+        <field name="name">Retraite Info</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">opsol_topnett.retraite_info</field>
+        <field name="context">{'search_default_groupby_date': 1}</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_opsol_topnett_retraite_info"
+              name="Retraite Info"
+              sequence="65"
+              action="action_opsol_topnett_retraite_info"
+              groups=""
+              parent="hr_payroll.menu_hr_payroll_payslips"/>
+
+</odoo>

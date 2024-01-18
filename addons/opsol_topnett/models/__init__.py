@@ -10,3 +10,4 @@ from . import hr_payslip_input_type
 from . import hr_contract
 from . import documents_workflow_rule
 from . import res_company
+from . import retraite_info
