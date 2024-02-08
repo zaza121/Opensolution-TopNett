@@ -438,7 +438,7 @@ class WorkflowRules(models.Model):
         url = document.raw
         datas = self.file_to_dict(
             url, line_header=3, line_first_row=2, handler=None,
-            column_header=['matricule', 'retra_comp_a', 'retra_comp_b'], column_index=[0,44,45]
+            column_header=['matricule', 'retra_comp_a', 'retra_comp_b'], column_index=[0,40,41]
         )
         transformed = self.transform_retraite(datas)
         msg = self.update_retraite(transformed)
