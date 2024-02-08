@@ -244,7 +244,8 @@ class WorkflowRules(models.Model):
             if not lp_.get('matricule', False) or not lp_.get('date_start', False):
                 continue
 
-            exist = list(filter(lambda x: x['matricule'] and str(x['matricule']) == str(lp_['matricule']) and x['date_start'] and str(x['date_start'])[:7] == str(lp_['date_start'])[:7], holi_lines))
+            exist = list(filter(
+                lambda x: x['matricule'] and str(x['matricule']) == str(lp_['matricule']) and x['code_conge'] and str(x['code_conge']) == str(lp_['code_conge']) and x['date_start'] and str(x['date_start'])[:10] == str(lp_['date_start'])[:10], holi_lines))
             if exist:
                 existing_holi.append((exist[0]['id'], lp_))
             else:
