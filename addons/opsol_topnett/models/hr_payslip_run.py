@@ -327,8 +327,8 @@ class HrPayslipRun(models.Model):
             administrateurSalarie.text = "Oui" if contract.administrateur_salarie else "Non"
             teletravail = ET.SubElement(salarie, 'teletravail')
             teletravail.text = "Oui" if contract.teletravail else "Non"
-            tempsPartiel = ET.SubElement(salarie, 'tempsPartiel')
-            tempsPartiel.text = "Oui" if contract.temps_partiel else "Non"
+            # tempsPartiel = ET.SubElement(salarie, 'tempsPartiel')
+            # tempsPartiel.text = "Oui" if contract.temps_partiel else "Non"
             if contract.teletravail:
                 paysTeletravail = ET.SubElement(salarie, 'paysTeletravail')
                 paysTeletravail.text = f"{contract.teletravail_country_id and contract.teletravail_country_id.name or ''}"
