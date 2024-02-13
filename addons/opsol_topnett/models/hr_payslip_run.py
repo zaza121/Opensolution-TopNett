@@ -383,14 +383,14 @@ class HrPayslipRun(models.Model):
             # ==> Entree du salarie
             if contract and contract.date_start and contract.date_start.strftime("%Y-%m") == period:
                 delEvent = False
-                entree_salarie = ET.SubElement(evenements, "entreeDuSalarie")
+                entree_salarie = ET.SubElement(evenements, "entree")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start.strftime(DATE_FORMAT)
 
             # ==> Entree du salarie
             if contract and contract.date_start_2 and contract.date_start_2.strftime("%Y-%m") == period:
                 delEvent = False
-                entree_salarie = ET.SubElement(evenements, "entreeDuSalarie")
+                entree_salarie = ET.SubElement(evenements, "entree")
                 es_dateDebut = ET.SubElement(entree_salarie, "dateDebut")
                 es_dateDebut.text = contract.date_start_2.strftime(DATE_FORMAT)
 
