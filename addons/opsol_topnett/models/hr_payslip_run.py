@@ -123,21 +123,21 @@ class HrPayslipRun(models.Model):
             lines_cumul = cumul_lot.mapped('slip_ids.line_ids')
 
             effectif = len(rec.slip_ids.mapped('employee_id'))
-            assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2)
-            car = round(sum(lines.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 2)
-            ccss = round(sum(lines.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 2)
+            assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 0)
+            car = round(sum(lines.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 0)
+            ccss = round(sum(lines.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 0)
 
-            cumul_assur = round(sum(lines_cumul.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2) if lines_cumul else 0
-            cumul_car = round(sum(lines_cumul.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 2) if lines_cumul else 0
-            cumul_ccss = round(sum(lines_cumul.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 2) if lines_cumul else 0
+            cumul_assur = round(sum(lines_cumul.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 0) if lines_cumul else 0
+            cumul_car = round(sum(lines_cumul.filtered(lambda x: x.code == 'CAR_EMP').mapped('total')), 0) if lines_cumul else 0
+            cumul_ccss = round(sum(lines_cumul.filtered(lambda x: x.code == 'CCSS_EMP').mapped('total')), 0) if lines_cumul else 0
             
-            ccss_total = round(sum(lines.filtered(lambda x: x.code == 'CCSS').mapped('total')), 2)
-            car_total = round(sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total')), 2)
+            ccss_total = round(sum(lines.filtered(lambda x: x.code == 'CCSS').mapped('total')), 0)
+            car_total = round(sum(lines.filtered(lambda x: x.code == 'CAR').mapped('total')), 0)
             
-            gross = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 2)
-            base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 2)
-            base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 2)
-            base_assur = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
+            gross = round(sum(lines.filtered(lambda x: x.code == 'GROSS').mapped('total')), 0)
+            base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 0)
+            base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 0)
+            base_assur = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 0)
 
             rate_ccss = round(ccss / base_ccss * 100 if base_ccss else 0, 2)
             rate_car = round(car / base_car * 100 if base_car else 0, 2)
@@ -169,9 +169,9 @@ class HrPayslipRun(models.Model):
                             </tr>
                             <tr>
                                 <td>REMUNERATION BRUTES</td>
-                                <td class="text-end">{gross}</td>
-                                <td class="text-end">{gross}</td>
-                                <td class="text-end">{gross}</td>
+                                <td class="text-end">{int(gross)}</td>
+                                <td class="text-end">{int(gross)}</td>
+                                <td class="text-end">{int(gross)}</td>
                             </tr>
                             <tr>
                                 <td>DEPASSEMENTS</td>
@@ -181,9 +181,9 @@ class HrPayslipRun(models.Model):
                             </tr>
                             <tr>
                                 <td>SALAIRES SOUMIS A COTISATIONS</td>
-                                <td class="text-end">{base_ccss}</td>
-                                <td class="text-end">{base_car}</td>
-                                <td class="text-end">{base_assur}</td>
+                                <td class="text-end">{int(base_ccss)}</td>
+                                <td class="text-end">{int(base_car)}</td>
+                                <td class="text-end">{int(base_assur)}</td>)
                             </tr>
                             <tr>
                                 <td>TAUX APPLIQUES</td>
@@ -205,15 +205,15 @@ class HrPayslipRun(models.Model):
                             </tr>
                             <tr>
                                 <td>COTISATION DU MOIS</td>
-                                <td class="text-end">{ccss}</td>
-                                <td class="text-end">{car}</td>
-                                <td class="text-end">{assur}</td>
+                                <td class="text-end">{int(ccss)}</td>
+                                <td class="text-end">{int(car)}</td>
+                                <td class="text-end">{int(assur)}</td>
                             </tr>
                              <tr>
                                 <td>TOTAUX CUMULES</td>
-                                <td class="text-end">{cumul_ccss}</td>
-                                <td class="text-end">{cumul_car}</td>
-                                <td class="text-end">{cumul_assur}</td>
+                                <td class="text-end">{int(cumul_ccss)}</td>
+                                <td class="text-end">{int(cumul_car)}</td>
+                                <td class="text-end">{int(cumul_assur)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -342,14 +342,14 @@ class HrPayslipRun(models.Model):
             baseCMRCTA = ET.SubElement(remuneration, "baseCMRCTA")
             baseCMRCTB = ET.SubElement(remuneration, "baseCMRCTB")
             
-            v_salaire_brut = sum(_lines.filtered(lambda x: x.code == 'GROSS').mapped(lambda x: x.amount))
-            v_base_ccss = sum(_lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped(lambda x: x.amount))
-            v_base_car = sum(_lines.filtered(lambda x: x.code == 'BASE_CAR').mapped(lambda x: x.amount))
-            v_base_assura = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped(lambda x: x.amount))
-            v_base_assurb = sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped(lambda x: x.amount))
+            v_salaire_brut = round(sum(_lines.filtered(lambda x: x.code == 'GROSS').mapped(lambda x: x.amount)))
+            v_base_ccss = round(sum(_lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped(lambda x: x.amount)))
+            v_base_car = round(sum(_lines.filtered(lambda x: x.code == 'BASE_CAR').mapped(lambda x: x.amount)))
+            v_base_assura = round(sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped(lambda x: x.amount)))
+            v_base_assurb = round(sum(_lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped(lambda x: x.amount)))
 
             salaireBrut.text = f"{v_salaire_brut}"
-            heuresTotales.text = f"{imp_sal.h_travailles}"
+            heuresTotales.text = f"{int(imp_sal.h_travailles)}"
             baseCCSS.text = f"{v_base_ccss}"
             baseCAR.text = f"{v_base_car}"
             baseCMRCTA.text = f"{v_base_assura}"
@@ -375,7 +375,10 @@ class HrPayslipRun(models.Model):
                 DateFin.text = data_conge['date_end']
                 if data_conge['nb_heures']:
                     heures = ET.SubElement(congesPayes, "heures")
-                    heures.text = data_conge['nb_heures']
+                    try:
+                        heures.text = "%d" % int(float(data_conge['nb_heures']))
+                    except:
+                        heures.text = data_conge['nb_heures']
 
             # ==> Entree du salarie
             if contract and contract.date_start and contract.date_start.strftime("%Y-%m") == period:
@@ -415,7 +418,7 @@ class HrPayslipRun(models.Model):
                 delEvent = False
                 prime = ET.SubElement(evenements, "prime")
                 montant = ET.SubElement(prime, "montant")
-                montant.text = f"{prime_montant}"
+                montant.text = f"{int(float(prime_montant))}"
 
             if delEvent:
                 salarie.remove(evenements)
@@ -429,17 +432,17 @@ class HrPayslipRun(models.Model):
         ass_assur = ET.SubElement(assiettes, 'AssuranceChomage')
 
         lines = self.slip_ids.line_ids
-        base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 2)
-        base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 2)
-        base_crmcta = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
-        base_crmctb = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped('total')), 2)
-        base_assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2)
-        
+        base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 0)
+        base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 0)
+        base_crmcta = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 0)
+        base_crmctb = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped('total')), 0)
+        base_assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 0)
+
         ass_assur.text = f"{base_assur}"
-        ass_car.text = ass_assur.text = f"{base_car}"
-        ass_ccss.text = ass_assur.text = f"{base_ccss}"
-        ass_cmrcta.text = ass_assur.text = f"{base_crmcta}"
-        ass_cmrctb.text = ass_assur.text = f"{base_crmctb}"
+        ass_car.text = f"{int(base_car)}"
+        ass_ccss.text = f"{int(base_ccss)}"
+        ass_cmrcta.text = f"{int(base_crmcta)}"
+        ass_cmrctb.text = f"{int(base_crmctb)}"
 
         # Converting the xml data to byte object,
         # for allowing flushing data to file 
