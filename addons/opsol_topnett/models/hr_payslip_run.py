@@ -438,7 +438,7 @@ class HrPayslipRun(models.Model):
         base_crmctb = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped('total')), 0)
         base_assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 0)
 
-        ass_assur.text = f"{base_assur}"
+        ass_assur.text = f"{int(base_assur)}"
         ass_car.text = f"{int(base_car)}"
         ass_ccss.text = f"{int(base_ccss)}"
         ass_cmrcta.text = f"{int(base_crmcta)}"
