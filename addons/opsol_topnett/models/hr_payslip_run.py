@@ -292,6 +292,12 @@ class HrPayslipRun(models.Model):
         declaration.set('xmlns:xsi', "http://www.w3.org/2001/XMLSchema-instance")
         declaration.set('xsi:schemaLocation', "http://www.caisses-sociales.mc/DSM/2.0 http://www.caisses-sociales.mc/DSM/2.0/dsm.xsd")
 
+        # ajoute employeur et periode
+        employeur = ET.SubElement(declaration, "employeur")
+        periode = ET.SubElement(declaration, "periode")
+        employeur.text = f"{company and company.code_employeur or 9999}"
+        periode.text = self.date_start.strftime("%Y-%m") or ""
+
         # ajoute les effectifs a declarer
         effectif = ET.SubElement(declaration, "effectif")
 
@@ -414,26 +420,26 @@ class HrPayslipRun(models.Model):
             if delEvent:
                 salarie.remove(evenements)
 
-        
-        # ajoute employeur et periode
-        employeur = ET.SubElement(declaration, "employeur")
-        periode = ET.SubElement(declaration, "periode")
-        employeur.text = f"{company and company.code_employeur or 9999}"
-        periode.text = self.date_start.strftime("%Y-%m") or ""
-
         # Ajout des assiettes
         assiettes = ET.SubElement(declaration, "assiettes")
-        ass_assur = ET.SubElement(assiettes, 'AssuranceChomage')
-        ass_car = ET.SubElement(assiettes, 'CAR')
         ass_ccss = ET.SubElement(assiettes, 'CCSS')
+        ass_car = ET.SubElement(assiettes, 'CAR')
+        ass_cmrcta = ET.SubElement(assiettes, 'CMRCTA')
+        ass_cmrctb = ET.SubElement(assiettes, 'CMRCTB')
+        ass_assur = ET.SubElement(assiettes, 'AssuranceChomage')
 
         lines = self.slip_ids.line_ids
         base_ccss = round(sum(lines.filtered(lambda x: x.code == 'BASE_CCSS').mapped('total')), 2)
         base_car = round(sum(lines.filtered(lambda x: x.code == 'BASE_CAR').mapped('total')), 2)
-        base_assur = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
+        base_crmcta = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTA').mapped('total')), 2)
+        base_crmctb = round(sum(lines.filtered(lambda x: x.code == 'BASE_CRMCTB').mapped('total')), 2)
+        base_assur = round(sum(lines.filtered(lambda x: x.code == 'ASSUR_EMP').mapped('total')), 2)
+        
         ass_assur.text = f"{base_assur}"
         ass_car.text = ass_assur.text = f"{base_car}"
         ass_ccss.text = ass_assur.text = f"{base_ccss}"
+        ass_cmrcta.text = ass_assur.text = f"{base_crmcta}"
+        ass_cmrctb.text = ass_assur.text = f"{base_crmctb}"
 
         # Converting the xml data to byte object,
         # for allowing flushing data to file 
