@@ -2,6 +2,8 @@
 import pandas as pd
 import numpy as np
 import logging
+import openpyxl
+import io
 from datetime import datetime
 
 from odoo import api, fields, models
@@ -115,8 +117,47 @@ class WorkflowRules(models.Model):
         if handler == 'spreadsheet':
             raise UserError("EXTENSION NON PRISE EN COMPTE")
             excel_file = pd.read_json(url)
+        elif handler == 'openxl':
+            datas = []
+            input_b = io.BytesIO(url)
+            dataframe = openpyxl.load_workbook(filename=input_b)
+            dataframe1 = dataframe.active
+            for row in range(0, dataframe1.max_row):
+                line = []
+                for col in dataframe1.iter_cols(1, dataframe1.max_column):
+                    line.append(col[row].value)
+                datas.append(line)
+            clean_datas = datas[6:] if len(datas) > 6 else datas
+            clean_datas = [line for line in clean_datas if any(line)]
+            arr_np = np.array(clean_datas)
+            transposed_array = np.transpose(arr_np)
+            array_list = transposed_array.tolist()
+            array_list = [line for line in array_list if any(line)]
+            header = array_list[0]
+            datas_traites = array_list[1:]
+
+            zip_datas = []
+            i = 0
+            if len(datas_traites) % 2 != 0:
+                raise UserError("Mauvais fichier les donnees des employes doivent etre en double")
+
+            while i < len(datas_traites):
+               new_list = list(zip(datas_traites[i], datas_traites[i+1]))
+               zip_datas.append(new_list)
+               i += 2
+
+            _clean_zip_datas = [list(map(lambda x: type(x) == tuple and tuple(filter(lambda a: a, x)) or [] ,line)) for line in zip_datas]
+            clean_zip_datas = [list(map(lambda x: x and type(x) == tuple and x[-1] or '' ,line)) for line in _clean_zip_datas]
+
+            header[0] = 'matricule'
+            header[1] = 'nom'
+            header[2] = 'prenom'
+            df_data = pd.DataFrame.from_records(clean_zip_datas, columns=header)
+            datas = df_data.to_dict('records')
+            _logger.debug(f" template line: {str(datas[:0])}")
+            _logger.debug("end extract..............................")
+            return datas
         else:
-            import io
             input_b = io.BytesIO(url)
             excel_file = pd.read_excel(input_b, keep_default_na=False, na_values=['nan', 'NAN', 'NaN', 'Nan', 'NA']) # get excel file for salary
             excel_file.replace(np.nan, "")
@@ -271,27 +312,21 @@ class WorkflowRules(models.Model):
         def v_get_value(value, key):
             if not value:                
                 return value
-            elif key in ['nb_heures', 'nb_jours']:
-                try:
-                    value = value and int(value)
-                except ValueError:
-                    value = None
-                return value
             elif key in ['date_start', 'date_end']:                
                 return get_date_formated(value)
+            elif key == 'matricule':
+                vals = value.split("/") if value and type(value) == str else []
+                return len(vals) > 1 and vals[-1].strip() or value
             else:
                 return value.strip() if type(value) == str else value
 
-        _logger.info("Start transform..............................")
-        map_croisement = {'matricule': 'matricule', 'retra_comp_a': 'retra_comp_a', 'retra_comp_b': 'retra_comp_b', 'date_salaire': 'date_salaire'}
+        _logger.debug("Start transform..............................")
+        map_croisement = {'matricule': 'matricule', 'EWC1   RETRAITE COMPL TR A': 'retra_comp_a', 'EWC2   RETRAITE COMPL TR B': 'retra_comp_b', 'date_salaire': 'date_salaire'}
         transformed = []
         for line in data_retraite:
             line['date_salaire'] = line.get('date_salaire', False) or get_date_formated(datetime.today())
             # transformed.append(line)
             transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
-
-        # _logger.info(f"{str(transformed[:5])}")
-        # _logger.info("end transform..............................")
         return transformed
 
     def update_retraite(self, transformed):
@@ -438,7 +473,7 @@ class WorkflowRules(models.Model):
         # load retaite
         url = document.raw
         datas = self.file_to_dict(
-            url, line_header=3, line_first_row=2, handler=None,
+            url, line_header=3, line_first_row=2, handler="openxl",
             column_header=['matricule', 'retra_comp_a', 'retra_comp_b'], column_index=[0,40,41]
         )
         transformed = self.transform_retraite(datas)
