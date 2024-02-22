@@ -41,7 +41,7 @@ class RetraiteInfo(models.Model):
     def compute_employee(self):
         emp_obj = self.env["hr.employee"]
         for rec in self:
-            if rec.matricule.isdecimal():
+            if rec.matricule and rec.matricule.isdecimal():
                 rec.employee_id = emp_obj.search([('numero', '=', rec.matricule)], limit=1)
             else:
                 rec.employee_id = None
