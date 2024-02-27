@@ -4,22 +4,27 @@ import numpy as np
 import logging
 import openpyxl
 import io
-from datetime import datetime
+import re
+from datetime import datetime, date
 
 from odoo import api, fields, models
 from odoo.fields import Command
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
+DATE_FORMAT = "%Y-%m-%d"
 
 def get_date_formated(date):
-   if date and type(date) in [pd.Timestamp]:
-       return _date.strftime("%Y-%m-%d")
-   elif date and type(date) in [str, datetime, date]:
+
+    if date and re.match(r'\d{4}-\d{1,2}-\d{1,2}', date):
+        return date
+    elif date and type(date) in [pd.Timestamp]:
+       return _date.strftime(DATE_FORMAT)
+    elif date and type(date) in [str, datetime, date]:
        _date = datetime.strptime(date, "%d/%m/%Y") if type(date) not in [datetime, date] else date
-       return _date.strftime("%Y-%m-%d")
-   else:
-       return "" 
+       return _date.strftime(DATE_FORMAT)
+    else:
+       return ""
 
 
 class WorkflowRules(models.Model):
@@ -110,10 +115,51 @@ class WorkflowRules(models.Model):
         else:
             return super(WorkflowRules, others).apply_actions(document_ids)
 
-    def file_to_dict(self, url, line_header=3, line_first_row=4, handler=None, column_header=[], column_index=[]):
+    def get_period_importation(self, url_file, filename=""):
+        datas = []
+        default_period = "Période : 14/23"
+        input_b = io.BytesIO(url_file)
+        dataframe = openpyxl.load_workbook(filename=input_b)
+        dataframe1 = dataframe.active
+
+        month_year = []
+        date_salaire = date.today()
+
+        if filename:
+            matches = re.findall(r"(\d{2})_(\d{2})", filename)
+            if matches:
+                month_year = list(map(lambda x: x.isdecimal() and int(x) or 0, matches[0]))
+                if len(month_year) < 2 or month_year[0] > 12:
+                    month_year = []
+
+        for row in range(0, dataframe1.max_row):
+            if len(month_year) > 0:
+                    break
+
+            for col in dataframe1.iter_cols(1, dataframe1.max_column):
+                if len(month_year) > 0:
+                    break
+
+                value = str(col[row].value)
+                if value:
+                    matches = re.findall(r"[Period|Période] : (\d{2})/(\d{2})", value)
+                    if len(matches) > 0:
+                        try:
+                            month_year = list(map(lambda x: x.isdecimal() and int(x) or 0, matches[0]))
+                        except:
+                            continue
+
+        if len(month_year) == 2:
+            month, year = month_year
+            if month > 0 and year > 0:
+                date_salaire = date(2000+year, month, 1)
+        return date_salaire.strftime(DATE_FORMAT)
+
+    def file_to_dict(self, url, line_header=3, line_first_row=4, handler=None, column_header=[], column_index=[], filename=""):
         """Get the data from URL."""
         _logger.info("Start get excel file ..............................")
 
+        date_salaire = self.get_period_importation(url, filename=filename)
         if handler == 'spreadsheet':
             raise UserError("EXTENSION NON PRISE EN COMPTE")
             excel_file = pd.read_json(url)
@@ -156,7 +202,7 @@ class WorkflowRules(models.Model):
             datas = df_data.to_dict('records')
             _logger.debug(f" template line: {str(datas[:0])}")
             _logger.debug("end extract..............................")
-            return datas
+            return datas, date_salaire
         else:
             input_b = io.BytesIO(url)
             excel_file = pd.read_excel(input_b, keep_default_na=False, na_values=['nan', 'NAN', 'NaN', 'Nan', 'NA']) # get excel file for salary
@@ -180,7 +226,7 @@ class WorkflowRules(models.Model):
 
         _logger.info(f" template line: {str(datas[:0])}")
         _logger.info("end extract..............................")
-        return datas
+        return datas, date_salaire
 
     def transform_employee(self, data_employee):
         """Changement du nom des colonnes employes et adaptation des valeurs"""
@@ -305,7 +351,7 @@ class WorkflowRules(models.Model):
         _logger.info("end updating holiday..............................")
         return msg
 
-    def transform_retraite(self, data_retraite):
+    def transform_retraite(self, data_retraite, date_salaire=None):
         """Changement du nom des colonnes conges et adaptation des valeurs"""
         _logger.info("Start transform conge data ..............................")
 
@@ -324,8 +370,7 @@ class WorkflowRules(models.Model):
         map_croisement = {'matricule': 'matricule', 'EWC1   RETRAITE COMPL TR A': 'retra_comp_a', 'EWC2   RETRAITE COMPL TR B': 'retra_comp_b', 'date_salaire': 'date_salaire'}
         transformed = []
         for line in data_retraite:
-            line['date_salaire'] = line.get('date_salaire', False) or get_date_formated(datetime.today())
-            # transformed.append(line)
+            line['date_salaire'] = date_salaire or get_date_formated(datetime.today())
             transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
         return transformed
 
@@ -359,7 +404,7 @@ class WorkflowRules(models.Model):
         _logger.info("end updating retraite..............................")
         return msg
 
-    def transform(self, datas):
+    def transform(self, datas, date_salaire=None):
         """Change les nom des colonnes de salaire."""
         def v_get_value(value, key):
             if key in ['standard_price', 'supplier_stock']:
@@ -379,6 +424,7 @@ class WorkflowRules(models.Model):
         }
         transformed = []
         for line in datas:
+            line['date_salaire'] = date_salaire or line.get('date_salaire', None) or date.today().strftime(DATE_FORMAT)
             transformed.append({ map_croisement.get(key): v_get_value(line[key], map_croisement.get(key)) for key in line.keys() if key in map_croisement.keys()})
 
         _logger.info(f"{str(transformed[:5])}")
@@ -456,7 +502,7 @@ class WorkflowRules(models.Model):
     def execute_load_employee(self, document):  
         # load employee
         url = document.raw
-        datas = self.file_to_dict(url, handler=document.handler)
+        datas, date_salaire = self.file_to_dict(url, handler=document.handler, filename=document.name)
         transformed = self.transform_employee(datas)
         msg = self.update_employee(transformed)
         return msg
@@ -464,7 +510,7 @@ class WorkflowRules(models.Model):
     def execute_load_holiday(self, document):
         # load holiday
         url = document.raw
-        datas = self.file_to_dict(url, handler=document.handler)
+        datas, date_salaire = self.file_to_dict(url, handler=document.handler, filename=document.name)
         transformed = self.transform_holiday(datas)
         msg = self.update_holiday(transformed)
         return msg
@@ -472,19 +518,20 @@ class WorkflowRules(models.Model):
     def execute_load_retraite(self, document):
         # load retaite
         url = document.raw
-        datas = self.file_to_dict(
+        datas, date_salaire = self.file_to_dict(
             url, line_header=3, line_first_row=2, handler="openxl",
-            column_header=['matricule', 'retra_comp_a', 'retra_comp_b'], column_index=[0,40,41]
+            column_header=['matricule', 'retra_comp_a', 'retra_comp_b'], column_index=[0,40,41],
+            filename=document.name
         )
-        transformed = self.transform_retraite(datas)
+        transformed = self.transform_retraite(datas, date_salaire=date_salaire)
         msg = self.update_retraite(transformed)
         return msg
 
     def execute_load_salaire(self, document):
         # load salaire
         url = document.raw
-        datas = self.file_to_dict(url, handler=document.handler)
-        transformed = self.transform(datas)
+        datas, date_salaire = self.file_to_dict(url, handler=document.handler, filename=document.name)
+        transformed = self.transform(datas, date_salaire=date_salaire)
         transformed = self.transform2(transformed)
         result = self.split_nouveau_existant(transformed)
         self.mettre_a_jour_line(result['exist'])
