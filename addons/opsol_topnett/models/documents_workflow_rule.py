@@ -362,7 +362,7 @@ class WorkflowRules(models.Model):
                 return get_date_formated(value)
             elif key == 'matricule':
                 vals = value.split("/") if value and type(value) == str else []
-                return len(vals) > 1 and vals[-1].strip() or value
+                return len(vals) > 1 and vals[-1].strip() or type(value) == str and value.strip() or value
             else:
                 return value.strip() if type(value) == str else value
 
